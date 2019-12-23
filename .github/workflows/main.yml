@@ -11,7 +11,7 @@ jobs:
     - uses: ./ # Uses an action in the root directory
     - name: Hello world action step
       id: hello
-      uses: shalb/cluster.dev
+      uses: shalb/cluster.dev@master
       with:
         who-to-greet: 'Cluster.dev by SHALB'
     # Use the output from the `hello` step

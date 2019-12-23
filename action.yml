@@ -14,3 +14,6 @@ runs:
   image: 'Dockerfile'
   args:
     - ${{ inputs.who-to-greet }}
+branding:
+    icon: 'server'  
+    color: 'green'
