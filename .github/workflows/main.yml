@@ -1,7 +1,7 @@
 on: [push]
 
 jobs:
-  hello_world_job:
+  deploy_cluster_job:
     runs-on: ubuntu-latest
     name: A job to read cluster yaml definition
     steps:
