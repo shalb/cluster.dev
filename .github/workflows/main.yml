@@ -11,7 +11,7 @@ jobs:
     - uses: ./ # Uses an action in the root directory
     - name: Hello world action step
       id: hello
-      uses: actions/hello-world-docker-action@v1
+      uses: shalb/cluster.dev@v1
       with:
         who-to-greet: 'Cluster.dev by SHALB'
     # Use the output from the `hello` step
