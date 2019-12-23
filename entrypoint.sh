@@ -2,4 +2,5 @@
 
 echo "Hello $1"
 time=$(date)
-echo ::set-output name=time::$tim
+find .
+echo ::set-output name=time::$time
