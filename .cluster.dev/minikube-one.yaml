@@ -1,0 +1,7 @@
+cluster:
+  name: minikube-two
+  clould: 
+    provider: aws
+  provisioner:
+    type: minikube
+    instanceType: "m4.large"

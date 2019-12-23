@@ -1,0 +1,19 @@
+on: [push]
+
+jobs:
+  hello_world_job:
+    runs-on: ubuntu-latest
+    name: A job to read cluster yaml definition
+    steps:
+    # To use this repository's private action, you must check out the repository
+    - name: Checkout
+      uses: actions/checkout@v1
+    - uses: ./ # Uses an action in the root directory
+    - name: Hello world action step
+      id: hello
+      uses: actions/hello-world-docker-action@v1
+      with:
+        who-to-greet: 'Cluster.dev by SHALB'
+    # Use the output from the `hello` step
+    - name: Get the output time
+      run: echo "The time was ${{ steps.hello.outputs.time }}"
