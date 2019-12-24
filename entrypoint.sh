@@ -5,7 +5,7 @@ CLUSTER_CONFIG_PATH=$1
 CLOUD_USER=$2
 CLOUD_PASS=$3
 
-echo "Starting job with arguments CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER" 
+echo "Starting job in repo: $GITHUB_REPOSITORY with arguments CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER" 
 
 source ./bin/yaml.sh
 
