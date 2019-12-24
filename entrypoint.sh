@@ -16,7 +16,7 @@ create_variables $CLUSTER_MANIFEST_FILE
 case $cluster_provisioner_type in
 minikube)
 echo "AWS Mikikube Password:" $cluster_clould_awsPassword
-terraform init
+terraform init 
 ;;
 eks)
 echo "AWS EKS Password:" $cluster_clould_awsPassword
@@ -25,4 +25,4 @@ esac
 
 done
 
-echo ::set-output name=time::$time
+echo ::set-output name=status::exitstatus=$?  

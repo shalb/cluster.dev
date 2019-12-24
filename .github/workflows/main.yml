@@ -16,6 +16,6 @@ jobs:
         cluster-config: './.cluster.dev/minikube-one.yaml'
         cloud-user: 'someuser'
         cloud-pass: 'somepass'
-    # Use the output from the `hello` step
+    # Use the output from the `validate` step
     - name: Get the execution status
       run: echo "The status ${{ steps.validate.outputs.status }}"
