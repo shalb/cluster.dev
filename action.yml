@@ -3,17 +3,15 @@ name: 'Create/Update K8s Cluster'
 description: 'Create or Update Kubernetes Cluster'
 inputs:
   cluster-config:  # id of input
-    description: 'path for cluster config/s file or directory'
+    description: 'Path for cluster config/s file or directory'
     required: true
     default: '.cluster.dev'
   cloud-user:  
-    description: 'Cloud Username or ID'
+    description: 'Cloud username or ID'
     required: true
-    default: 'UUUUUUUUUUUUUU'
   cloud-pass:  
-    description: 'Cloud Username or ID'
+    description: 'Cloud password or secret key'
     required: true
-    default: 'PASSSSSSSSSSWORD'        
 outputs:
   status: # id of output
     description: 'An status for the job'
@@ -24,7 +22,6 @@ runs:
     - ${{ inputs.cluster-config }}
     - ${{ inputs.cloud-user }}
     - ${{ inputs.cloud-pass }}
-    - ${{ inputs.cloud-region }}
 branding:
     icon: 'server'  
     color: 'green'
