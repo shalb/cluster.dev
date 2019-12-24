@@ -13,16 +13,19 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
 parse_yaml $CLUSTER_MANIFEST_FILE
 create_variables $CLUSTER_MANIFEST_FILE
 
-case $cluster_provisioner_type in
-minikube)
-echo "AWS Mikikube Password:" $cluster_clould_awsPassword
+case $cluster_clould_provider in
+aws)
+echo "Cloud Provider AWS" 
 terraform init 
 ;;
-eks)
-echo "AWS EKS Password:" $cluster_clould_awsPassword
+gcp)
+echo "Cloud Provider Google"
+;;
+azure)
+echo "Cloud Provider Azure"
 ;;
 esac
 
 done
 
-echo ::set-output name=status::exitstatus=$?  
+echo ::set-output name=status::\ exit_status=$?  
