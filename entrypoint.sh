@@ -29,7 +29,7 @@ terraform init  \
 -backend-config="key=$cluster_name/terraform.state" \
 -backend-config="region=$cluster_cloud_region" \
 -backend-config="access_key=$CLOUD_USER" \
--backend-config="secret_key=$CLOUD_PASS" \
+-backend-config="secret_key=$CLOUD_PASS" 
 ;;
 
 eks)
