@@ -1,19 +1,29 @@
 # action.yml
-name: 'Hello World'
-description: 'Greet someone and record the time'
+name: 'Create/Update K8s Cluster'
+description: 'Create or Update Kubernetes Cluster'
 inputs:
-  who-to-greet:  # id of input
-    description: 'Who to greet'
+  cluster-config:  # id of input
+    description: 'path for cluster config/s file or directory'
     required: true
-    default: 'World'
+    default: '.cluster.dev'
+  cloud-user:  
+    description: 'Cloud Username or ID'
+    required: true
+    default: 'UUUUUUUUUUUUUU'
+  cloud-pass:  
+    description: 'Cloud Username or ID'
+    required: true
+    default: 'PASSSSSSSSSSWORD'        
 outputs:
-  time: # id of output
-    description: 'The time we greeted you'
+  status: # id of output
+    description: 'An status for the job'
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - ${{ inputs.who-to-greet }}
+    - ${{ inputs.cluster-config }}
+    - ${{ inputs.cloud-user }}
+    - ${{ inputs.cloud-pass }}
 branding:
     icon: 'server'  
     color: 'green'

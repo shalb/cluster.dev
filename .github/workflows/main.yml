@@ -9,11 +9,13 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v1
     - uses: ./ # Uses an action in the root directory
-    - name: Hello world action step
-      id: hello
+    - name: Valiadte Target
+      id: validate
       uses: shalb/cluster.dev@master
       with:
-        who-to-greet: 'Cluster.dev by SHALB'
+        cluster-config: './.cluster.dev/minikube-one.yaml'
+        cloud-user: 'someuser'
+        cloud-pass: 'somepass'
     # Use the output from the `hello` step
-    - name: Get the output time
-      run: echo "The time was ${{ steps.hello.outputs.time }}"
+    - name: Get the execution status
+      run: echo "The status ${{ steps.validate.outputs.status }}"
