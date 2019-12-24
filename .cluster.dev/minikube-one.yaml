@@ -1,7 +1,8 @@
 cluster:
   name: minikube-one
-  clould: 
+  cloud: 
     provider: aws
+    region: "eu-central-1"
   provisioner:
     type: minikube
     instanceType: "m4.large"

@@ -1,7 +1,8 @@
 cluster:
   name: eks-two
-  clould: 
-    provider: aws   
+  cloud: 
+    provider: aws
+    region: "eu-central-1"   
   provisioner:
     type: eks
     instanceType: "m5.large"
