@@ -24,6 +24,7 @@ runs:
     - ${{ inputs.cluster-config }}
     - ${{ inputs.cloud-user }}
     - ${{ inputs.cloud-pass }}
+    - ${{ inputs.cloud-region }}
 branding:
     icon: 'server'  
     color: 'green'
