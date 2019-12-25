@@ -1,12 +1,13 @@
 # Create a separate permanent backend for terraform state
 # https://stackoverflow.com/a/48362341
 # TODO: refactor it to working sample, research encryption
+# check https://github.com/opendatacube/datacube-k8s-eks/blob/master/examples/quickstart/backend/terraform-backend.tf
 provider "aws" {
-  region = "eu-central-1"
+  region = var.region
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "tfstate"
+  bucket = var.bucket
 
   versioning {
     enabled = true
