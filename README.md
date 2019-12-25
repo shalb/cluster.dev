@@ -1,7 +1,7 @@
 # Create Complete Kubernetes dev Enviornment
 ## Deploy Cluster
 
-Create Kubernetes Cluster Based on manifest:
+Create Kubernetes Cluster Based on manifest, ex: `.cluster.dev/minikube-one.yaml` into repository
 ```yaml
 cluster:
   name: minikube-one
@@ -12,9 +12,7 @@ cluster:
     type: minikube
     instanceType: "m4.large"
 ```
-Cluster should be deployed by adding `.cluster.dev/minikube-one.yaml` into repository
-And also requires a GitHub Workflow to be added to `.github/workflows/main.yml`:
-
+Also requires a GitHub Workflow to be added to `.github/workflows/main.yml`:
 ```yaml
 on: [push]
 jobs:
