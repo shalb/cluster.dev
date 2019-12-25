@@ -31,7 +31,7 @@ terraform init  \
         -backend-config="access_key=$CLOUD_USER" \
         -backend-config="secret_key=$CLOUD_PASS" 
 
-terraform plan -var="region=$cluster_cloud_region" -var="bucket=$GITHUB_REPOSITORY"
+terraform plan -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$GITHUB_REPOSITORY"
 
 ;;
 
