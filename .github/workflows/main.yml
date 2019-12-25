@@ -16,7 +16,6 @@ jobs:
         cluster-config: './.cluster.dev/minikube-one.yaml'
         cloud-user: ${{ secrets.aws_access_key_id }}
         cloud-pass: ${{ secrets.aws_secret_access_key }}
-        cloud-region: 'eu-central-1'
     # Use the output from the `validate` step
     - name: Get the execution status
       run: echo "The status ${{ steps.validate.outputs.status }}"
