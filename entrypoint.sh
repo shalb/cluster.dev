@@ -25,7 +25,11 @@ minikube)
 echo "Cloud Provider AWS. Provisioner: Minikube" 
 
 S3_BACKEND_BUCKET=$cluster_name-cluster-dev
+export AWS_ACCESS_KEY_ID=$CLOUD_USER
+export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
+export AWS_DEFAULT_REGION=$cluster_cloud_region
 
+# Create and init backend.
 cd terraform/aws/backend/
 terraform init && terraform apply -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
 
