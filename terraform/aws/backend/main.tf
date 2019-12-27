@@ -2,9 +2,9 @@
 # https://stackoverflow.com/a/48362341
 # TODO: refactor it to working sample, research encryption
 # check https://github.com/opendatacube/datacube-k8s-eks/blob/master/examples/quickstart/backend/terraform-backend.tf
-terraform {
-  backend "s3" {}
-}
+#terraform {
+#  backend "s3" {}
+#}
 provider "aws" {
   region = var.region
 }
