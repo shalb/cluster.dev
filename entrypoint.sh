@@ -23,15 +23,18 @@ aws)
 case $cluster_provisioner_type in 
 minikube)
 echo "Cloud Provider AWS. Provisioner: Minikube" 
+
+S3_BACKEND_BUCKET=$cluster_name-cluster-dev
+
 cd terraform/aws/backend/
 terraform init  \
-        -backend-config="bucket=$GITHUB_REPOSITORY" \
+        -backend-config="bucket=$S3_BACKEND_BUCKET" \
         -backend-config="key=$cluster_name/terraform.state" \
         -backend-config="region=$cluster_cloud_region" \
         -backend-config="access_key=$CLOUD_USER" \
         -backend-config="secret_key=$CLOUD_PASS" 
 
-terraform plan -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$GITHUB_REPOSITORY"
+terraform plan -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
 
 ;;
 
