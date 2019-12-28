@@ -19,15 +19,17 @@ create_variables $CLUSTER_MANIFEST_FILE
 
 case $cluster_cloud_provider in
 aws)
+# Define AWS credentials
+export AWS_ACCESS_KEY_ID=$CLOUD_USER
+export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
+export AWS_DEFAULT_REGION=$cluster_cloud_region
 
 case $cluster_provisioner_type in 
 minikube)
 echo "Cloud Provider AWS. Provisioner: Minikube" 
 
-S3_BACKEND_BUCKET=$cluster_name-cluster-dev
-export AWS_ACCESS_KEY_ID=$CLOUD_USER
-export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
-export AWS_DEFAULT_REGION=$cluster_cloud_region
+
+S3_BACKEND_BUCKET=${split("/", $GITHUB_REPOSITORY ).0}-$cluster_name
 
 # Create and init backend.
 cd terraform/aws/backend/
