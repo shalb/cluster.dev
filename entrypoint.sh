@@ -28,12 +28,17 @@ case $cluster_provisioner_type in
 minikube)
 echo "Cloud Provider AWS. Provisioner: Minikube" 
 
-# create uniqe s3 bucket name with requirements to be not larger then 63 symbols
-S3_BACKEND_BUCKET=${substr(split("/", $GITHUB_REPOSITORY ).0}-$cluster_name, 0, 63) 
+#GITHUB_REPOSITORY="shalb/cluster.dev"
+# create uniqe s3 bucket from repo name and cluster name
+S3_BACKEND_BUCKET=$(echo $GITHUB_REPOSITORY|awk -F "/" '{print$1}')-$cluster_name
+# make sure it is not larger than 63 symbols 
+S3_BACKEND_BUCKET=$(echo $S3_BACKEND_BUCKET| cut -c 1-63)
+echo "Terrafrom S3 bucket:" $S3_BACKEND_BUCKET
+#exit 1
 
 # Create and init backend.
 cd terraform/aws/backend/
-terraform init && terraform apply -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
+terraform init && terraform --auto-approve apply -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
 
 #        -backend-config="bucket=$S3_BACKEND_BUCKET" \
 #        -backend-config="key=$cluster_name/terraform.state" \
