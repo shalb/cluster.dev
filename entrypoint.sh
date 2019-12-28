@@ -37,13 +37,17 @@ echo "Terrafrom S3 bucket:" $S3_BACKEND_BUCKET
 
 # Create and init backend.
 cd terraform/aws/backend/
-terraform init && terraform apply -auto-approve -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
-aws s3 
+TF_INIT_STATUS=$(terraform init && terraform apply -auto-approve -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET")
 #        -backend-config="bucket=$S3_BACKEND_BUCKET" \
 #        -backend-config="key=$cluster_name/terraform.state" \
 #        -backend-config="region=$cluster_cloud_region" \
 #        -backend-config="access_key=$CLOUD_USER" \
 #        -backend-config="secret_key=$CLOUD_PASS" 
+if ( echo "$TF_INIT_STATUS" | grep -e BucketAlreadyOwnedByYou ); then 
+echo "Bucket Already Created";
+else
+echo "Bucket Was initated"
+fi
 
 ;;
 
