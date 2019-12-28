@@ -28,8 +28,8 @@ case $cluster_provisioner_type in
 minikube)
 echo "Cloud Provider AWS. Provisioner: Minikube" 
 
-
-S3_BACKEND_BUCKET=${split("/", $GITHUB_REPOSITORY ).0}-$cluster_name
+# create uniqe s3 bucket name with requirements to be not larger then 63 symbols
+S3_BACKEND_BUCKET=${substr(split("/", $GITHUB_REPOSITORY ).0}-$cluster_name, 0, 63) 
 
 # Create and init backend.
 cd terraform/aws/backend/
