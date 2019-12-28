@@ -38,7 +38,7 @@ echo "Terrafrom S3 bucket:" $S3_BACKEND_BUCKET
 
 # Create and init backend.
 cd terraform/aws/backend/
-terraform init && terraform --auto-approve apply -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
+terraform init && terraform -auto-approve apply -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
 
 #        -backend-config="bucket=$S3_BACKEND_BUCKET" \
 #        -backend-config="key=$cluster_name/terraform.state" \
