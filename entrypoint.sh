@@ -34,12 +34,11 @@ S3_BACKEND_BUCKET=$(echo $GITHUB_REPOSITORY|awk -F "/" '{print$1}')-$cluster_nam
 # make sure it is not larger than 63 symbols 
 S3_BACKEND_BUCKET=$(echo $S3_BACKEND_BUCKET| cut -c 1-63)
 echo "Terrafrom S3 bucket:" $S3_BACKEND_BUCKET
-#exit 1
 
 # Create and init backend.
 cd terraform/aws/backend/
 terraform init && terraform apply -auto-approve -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
-
+aws s3 
 #        -backend-config="bucket=$S3_BACKEND_BUCKET" \
 #        -backend-config="key=$cluster_name/terraform.state" \
 #        -backend-config="region=$cluster_cloud_region" \
