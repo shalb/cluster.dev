@@ -47,7 +47,7 @@ fi
 
 # Deploy main Terraform code
 echo "Apply terraform code"
-cd terraform/aws/minikube/
+cd ../minikube/
 terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
                -backend-config="key=$cluster_name/terraform.state" \
                -backend-config="region=$cluster_cloud_region" \
