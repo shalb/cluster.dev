@@ -27,7 +27,7 @@ export AWS_DEFAULT_REGION=$cluster_cloud_region
 
 case $cluster_provisioner_type in 
 minikube)
-echo "Provisioner: Minikube." 
+echo "Provisioner: Minikube" 
 # create uniqe s3 bucket from repo name and cluster name
 S3_BACKEND_BUCKET=$(echo $GITHUB_REPOSITORY|awk -F "/" '{print$1}')-$cluster_name
 # make sure it is not larger than 63 symbols 
@@ -36,19 +36,23 @@ S3_BACKEND_BUCKET=$(echo $S3_BACKEND_BUCKET| cut -c 1-63)
 # Create and init backend.
 cd terraform/aws/backend/
 terraform init
-# Check if bucket already exist trying to import it
+
+# Check if bucket already exist by trying to import it
 if ( terraform import -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET" aws_s3_bucket.terraform_state $S3_BACKEND_BUCKET ); then
-echo "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET exist";
+echo "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET already exist";
 else
-echo "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET not exist. Creating one:"
+echo "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET not exist. Creating one..."
 terraform apply -auto-approve -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
 fi
 
-#        -backend-config="bucket=$S3_BACKEND_BUCKET" \
-#        -backend-config="key=$cluster_name/terraform.state" \
-#        -backend-config="region=$cluster_cloud_region" \
-#        -backend-config="access_key=$CLOUD_USER" \
-#        -backend-config="secret_key=$CLOUD_PASS" 
+# Deploy main Terraform code
+echo "Apply terraform code"
+cd terraform/aws/minikube/
+terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+               -backend-config="key=$cluster_name/terraform.state" \
+               -backend-config="region=$cluster_cloud_region" \
+#               -backend-config="access_key=$CLOUD_USER" \
+#               -backend-config="secret_key=$CLOUD_PASS"
 ;;
 
 eks)
