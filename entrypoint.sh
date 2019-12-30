@@ -47,14 +47,19 @@ minikube)
 echo "Provisioner: Minikube" 
 
 # Deploy main Terraform code
-echo "Apply terraform code"
+echo "Init Terraform code with s3 backend"
 cd ../minikube/
 terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
                -backend-config="key=$cluster_name/terraform.state" \
                -backend-config="region=$cluster_cloud_region" \
-#               -backend-config="access_key=$CLOUD_USER" \
-#               -backend-config="secret_key=$CLOUD_PASS"
-terraform plan -var="region=$cluster_cloud_region" -var="cluster_name=$cluster_name" -var="aws_instance_type=$cluster_provisioner_instanceType"
+
+# HACK: need to add Publick key
+mkdir ~/.ssh/
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCi6UIVruH0CfKewYlSjA7oR6gjahZrkJ+k/0cj46nvYrORVcds2cijZPT34ACWkvXV8oYvXGWmvlGXV5H1sD0356zpjhRnGo6j4UZVS6KYX5HwObdZ6H/i+A9knEyXxOCyo6p4VeJIYGhVYcQT4GDAkxb8WXHVP0Ax/kUqrKx0a2tK9JjGkuLbufQc3yWhqcfZSVRU2a+M8f8EUmGLOc2VEi2mGoxVgikrelJ0uIGjLn63L6trrsbvasoBuILeXOAO1xICwtYFek/MexQ179NKqQ1Wx/+9Yx4Xc63MB0vR7kde6wxx2Auzp7CjJBFcSTz0TXSRsvF3mnUUoUrclNkr voa@auth.shalb.com" > ~/.ssh/id_rsa.pub
+
+echo "Plan Terraform code execution"
+terraform plan -compact-warnings -var="region=$cluster_cloud_region" -var="cluster_name=$cluster_name" -var="aws_instance_type=$cluster_provisioner_instanceType"
+
 
 ;;
 
