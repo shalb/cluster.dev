@@ -2,7 +2,7 @@ provider "aws" {
   version    = ">= 2.23.0"
   region = var.region
 }
-// TODO: replace all locals with vars
+# TODO: replace all locals with vars
 locals {
    hosted_zone = "shalb.net"
 }
@@ -14,7 +14,9 @@ resource "aws_default_vpc" "default" {
 }
 
 resource "aws_default_subnet" "default" {
+  availability_zone = "${var.region}a"  # TODO check if always default zone has A zone
   vpc_id = aws_default_vpc.default.id
+
   tags = {
     Name = "Default subnet for cluster.dev"
   }
