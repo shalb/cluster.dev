@@ -1,11 +1,23 @@
-locals {
-   aws_subnet_id = "subnet-304b7f7a"
-   hosted_zone = "shalb.net"
-}
-
 provider "aws" {
   version    = ">= 2.23.0"
   region = var.region
+}
+// TODO: replace all locals with vars
+locals {
+   hosted_zone = "shalb.net"
+}
+
+resource "aws_default_vpc" "default" {
+  tags = {
+    Name = "Default VPC"
+  }
+}
+
+resource "aws_default_subnet" "default" {
+  vpc_id = aws_default_vpc.default.id
+  tags = {
+    Name = "Default subnet for cluster.dev"
+  }
 }
 
 module "minikube" {
@@ -14,7 +26,7 @@ module "minikube" {
   cluster_name = var.cluster_name
   aws_instance_type = var.aws_instance_type
   aws_region = var.region
-  aws_subnet_id = local.aws_subnet_id
+  aws_subnet_id = aws_default_subnet.default.id 
   hosted_zone = local.hosted_zone
 
   tags = {
