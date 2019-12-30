@@ -15,8 +15,6 @@ resource "aws_default_vpc" "default" {
 
 resource "aws_default_subnet" "default" {
   availability_zone = "${var.region}a"  # TODO check if always default zone has A zone
-  vpc_id = aws_default_vpc.default.id
-
   tags = {
     Name = "Default subnet for cluster.dev"
   }
