@@ -1,6 +1,6 @@
 locals {
-   aws_subnet_id = "local"
-   hosted_zone = "cluster.dev"
+   aws_subnet_id = "subnet-304b7f7a"
+   hosted_zone = "shalb.net"
 }
 
 provider "aws" {
