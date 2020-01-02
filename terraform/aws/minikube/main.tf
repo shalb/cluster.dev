@@ -2,16 +2,6 @@ provider "aws" {
   version    = ">= 2.23.0"
   region = var.region
 }
-# TODO: replace all locals with vars
-locals {
-   hosted_zone = "shalb.net"
-}
-
-resource "aws_default_vpc" "default" {
-  tags = {
-    Name = "Default VPC"
-  }
-}
 
 resource "aws_default_subnet" "default" {
   availability_zone = "${var.region}a"  # TODO check if always default zone has A zone
@@ -27,7 +17,7 @@ module "minikube" {
   aws_instance_type = var.aws_instance_type
   aws_region = var.region
   aws_subnet_id = aws_default_subnet.default.id 
-  hosted_zone = local.hosted_zone
+  hosted_zone = var.hosted_zone
 
   tags = {
     Application = "${var.cluster_name}"

@@ -17,6 +17,7 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
 parse_yaml $CLUSTER_MANIFEST_FILE
 create_variables $CLUSTER_MANIFEST_FILE
 
+# Cloud selection
 case $cluster_cloud_provider in
 aws)
 
@@ -25,11 +26,14 @@ echo "Cloud Provider AWS. Initing access variables"
 export AWS_ACCESS_KEY_ID=$CLOUD_USER
 export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
 export AWS_DEFAULT_REGION=$cluster_cloud_region
+
 # create uniqe s3 bucket from repo name and cluster name
 # TODO: ensure uniqnes: https://shalb.slack.com/archives/CRFSNTDGX/p1577644315023400
 S3_BACKEND_BUCKET=$(echo $GITHUB_REPOSITORY|awk -F "/" '{print$1}')-$cluster_name
 # make sure it is not larger than 63 symbols 
 S3_BACKEND_BUCKET=$(echo $S3_BACKEND_BUCKET| cut -c 1-63)
+# The same name would be used for domains
+CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
 
 # Create and init backend.
 cd terraform/aws/backend/
@@ -42,6 +46,31 @@ echo "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET not exist. Creating one...
 terraform apply -auto-approve -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
 fi
 
+# Create a DNS domains/records if required
+# TODO: implement switch for domain
+if [ -z $cluster_cloud_domain ] ; then 
+echo "The cluster domain is unset. Creating default one"
+cd ../route53/
+# init terraform
+terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+               -backend-config="key=$cluster_name/terraform.state" \
+               -backend-config="region=$cluster_cloud_region" 
+               
+else
+echo "The cluster domain is defined. So applying Terraform configuration for it"
+cd ../route53/
+fi
+
+# Create a VPC or use existing defined 
+# TODO: implement switch for VPC
+if [ -z $cluster_cloud_vpc ] ; then 
+echo "The VPC is unset. Using default one"
+else
+echo "The VPC is defined. Applying Terraform configuration for VPC"
+cd ../vpc/
+fi
+
+# Provisioner selection
 case $cluster_provisioner_type in 
 minikube)
 echo "Provisioner: Minikube" 
@@ -53,13 +82,16 @@ terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
                -backend-config="key=$cluster_name/terraform.state" \
                -backend-config="region=$cluster_cloud_region" \
 
-# HACK: need to add Publick key
+# TODO HACK: need to add Publick key
 mkdir ~/.ssh/
 echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCi6UIVruH0CfKewYlSjA7oR6gjahZrkJ+k/0cj46nvYrORVcds2cijZPT34ACWkvXV8oYvXGWmvlGXV5H1sD0356zpjhRnGo6j4UZVS6KYX5HwObdZ6H/i+A9knEyXxOCyo6p4VeJIYGhVYcQT4GDAkxb8WXHVP0Ax/kUqrKx0a2tK9JjGkuLbufQc3yWhqcfZSVRU2a+M8f8EUmGLOc2VEi2mGoxVgikrelJ0uIGjLn63L6trrsbvasoBuILeXOAO1xICwtYFek/MexQ179NKqQ1Wx/+9Yx4Xc63MB0vR7kde6wxx2Auzp7CjJBFcSTz0TXSRsvF3mnUUoUrclNkr voa@auth.shalb.com" > ~/.ssh/id_rsa.pub
 
 echo "Plan Terraform code execution"
-terraform plan -compact-warnings -var="region=$cluster_cloud_region" -var="cluster_name=$cluster_name" -var="aws_instance_type=$cluster_provisioner_instanceType"
-
+terraform plan -compact-warnings \
+                  -var="region=$cluster_cloud_region" \
+                  -var="cluster_name=$cluster_name" \
+                  -var="aws_instance_type=$cluster_provisioner_instanceType" \
+                  -var="hosted_zone=$cluster_cloud_domain"
 
 ;;
 
