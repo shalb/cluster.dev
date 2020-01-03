@@ -3,8 +3,8 @@ cluster:
   cloud: 
     provider: aws
     region: eu-central-1
-    vpc: default       # optional, if not set - use default for region, if create - creates new one
-    domain: shalb.net  # optional, default: GHrepo-clusterName.cluster.dev
+    vpc: default
+    domain: shalb.net
   provisioner:
     type: minikube
     instanceType: "m4.large"
