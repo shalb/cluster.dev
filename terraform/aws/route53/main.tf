@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 resource "aws_route53_zone" "main" {
-  name = "${var.cluster_domain}"
+  name = var.cluster_domain
 }
 
 resource "aws_route53_zone" "sub" {
