@@ -59,6 +59,10 @@ terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
 else
 echo "The cluster domain is defined. So applying Terraform configuration for it"
 cd ../route53/
+terraform plan -compact-warnings \
+                  -var="region=$cluster_cloud_region" \
+                  -var="cluster_fullname=$CLUSTER_FULLNAME" \
+                  -var="cluster_domain=$cluster_cloud_domain"
 fi
 
 # Create a VPC or use existing defined 

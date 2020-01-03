@@ -9,5 +9,11 @@ variable "cluster_name" {
 }
 
 variable "aws_instance_type" {
+  type         = string
+  description = "Instance size"
+}
+
+variable "hosted_zone" {
   type = string
+  description = "DNS zone to use in cluster"
 }
