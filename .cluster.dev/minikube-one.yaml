@@ -8,4 +8,4 @@ cluster:
     domain: shalb.net
   provisioner:
     type: minikube
-    instanceType: "m5.large"
+    instanceType: m5.large
