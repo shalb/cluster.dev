@@ -50,25 +50,25 @@ fi
 # TODO: implement switch for domain
 if [ -z $cluster_cloud_domain ] ; then 
 echo "*** The cluster domain is unset. Creating default one"
-cd ../route53/
-terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-               -backend-config="key=$cluster_name/terraform.state" \
-               -backend-config="region=$cluster_cloud_region" 
-terraform plan -compact-warnings \
-                  -var="region=$cluster_cloud_region" \
-                  -var="cluster_fullname=$CLUSTER_FULLNAME" \
-                  -var="cluster_domain=$cluster_cloud_domain"               
+#cd ../route53/
+#terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+#               -backend-config="key=$cluster_name/terraform.state" \
+#               -backend-config="region=$cluster_cloud_region" 
+#terraform plan -compact-warnings \
+#                  -var="region=$cluster_cloud_region" \
+#                  -var="cluster_fullname=$CLUSTER_FULLNAME" \
+#                  -var="cluster_domain=$cluster_cloud_domain"               
                
 else
 echo "*** The cluster domain is defined. So applying Terraform configuration for it"
-cd ../route53/
-terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-               -backend-config="key=$cluster_name/terraform.state" \
-               -backend-config="region=$cluster_cloud_region" 
-terraform plan -compact-warnings \
-                  -var="region=$cluster_cloud_region" \
-                  -var="cluster_fullname=$CLUSTER_FULLNAME" \
-                  -var="cluster_domain=$cluster_cloud_domain"
+#cd ../route53/
+#terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+#               -backend-config="key=$cluster_name/terraform.state" \
+#               -backend-config="region=$cluster_cloud_region" 
+#terraform plan -compact-warnings \
+#                  -var="region=$cluster_cloud_region" \
+#                  -var="cluster_fullname=$CLUSTER_FULLNAME" \
+#                  -var="cluster_domain=$cluster_cloud_domain"
 fi
 
 # Create a VPC or use existing defined 
@@ -77,7 +77,7 @@ if [ -z $cluster_cloud_vpc ] ; then
 echo "*** The VPC is unset. Using default one"
 else
 echo "*** The VPC is defined. Applying Terraform configuration for VPC"
-cd ../vpc/
+#cd ../vpc/
 fi
 
 # Provisioner selection
@@ -97,7 +97,7 @@ mkdir ~/.ssh/
 echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCi6UIVruH0CfKewYlSjA7oR6gjahZrkJ+k/0cj46nvYrORVcds2cijZPT34ACWkvXV8oYvXGWmvlGXV5H1sD0356zpjhRnGo6j4UZVS6KYX5HwObdZ6H/i+A9knEyXxOCyo6p4VeJIYGhVYcQT4GDAkxb8WXHVP0Ax/kUqrKx0a2tK9JjGkuLbufQc3yWhqcfZSVRU2a+M8f8EUmGLOc2VEi2mGoxVgikrelJ0uIGjLn63L6trrsbvasoBuILeXOAO1xICwtYFek/MexQ179NKqQ1Wx/+9Yx4Xc63MB0vR7kde6wxx2Auzp7CjJBFcSTz0TXSRsvF3mnUUoUrclNkr voa@auth.shalb.com" > ~/.ssh/id_rsa.pub
 
 echo "*** Plan Terraform code execution"
-terraform plan -compact-warnings \
+terraform apply -auto-approve -compact-warnings \
                   -var="region=$cluster_cloud_region" \
                   -var="cluster_name=$cluster_name" \
                   -var="aws_instance_type=$cluster_provisioner_instanceType" \
