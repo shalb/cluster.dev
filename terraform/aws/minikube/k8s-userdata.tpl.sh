@@ -3,7 +3,7 @@ echo "test" > /tmp/test-file.txt
 pwd
 
 # Install AWS utils
-yum install -y wget
+yum install -y wget unzip
 cd /usr/local/bin
 wget http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip
 unzip ec2-api-tools.zip
