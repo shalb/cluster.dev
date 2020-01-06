@@ -11,14 +11,15 @@ resource "aws_default_subnet" "default" {
 }
 
 module "minikube" {
-  source  = "scholzj/minikube/aws"
-  version = "1.10.0"  
+  #source  = "scholzj/minikube/aws"
+  #version = "1.10.0"  
+  source =  "git::https://github.com/shalb/terraform-aws-minikube.git"
   cluster_name = var.cluster_name
   aws_instance_type = var.aws_instance_type
   aws_region = var.region
   aws_subnet_id = aws_default_subnet.default.id 
   hosted_zone = var.hosted_zone
-
+  additional_userdata = "touch /root/user-data.txt"
   tags = {
     Application = "${var.cluster_name}"
     CreatedBy   = "cluster.dev"
