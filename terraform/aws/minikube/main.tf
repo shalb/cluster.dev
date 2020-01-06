@@ -10,6 +10,13 @@ resource "aws_default_subnet" "default" {
   }
 }
 
+data "template_file" "k8s_userdata" {
+  template = "${file("k8s-userdata.tpl.sh")}"
+  vars = {
+   # env_name = "${var.environment}"
+  }
+}
+
 module "minikube" {
   #source  = "scholzj/minikube/aws"
   #version = "1.10.0"  
@@ -19,7 +26,7 @@ module "minikube" {
   aws_region = var.region
   aws_subnet_id = aws_default_subnet.default.id 
   hosted_zone = var.hosted_zone
-  additional_userdata = "touch /root/user-data.txt"
+  additional_userdata = data.template_file.k8s_userdata.rendered
   tags = {
     Application = "${var.cluster_name}"
     CreatedBy   = "cluster.dev"
