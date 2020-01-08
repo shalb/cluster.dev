@@ -77,7 +77,7 @@ if [ -z $cluster_cloud_vpc ] ; then
 echo "*** The VPC is unset. Using default one"
 else
 echo "*** The VPC is defined. Applying Terraform configuration for VPC"
-#cd ../vpc/
+cd ../vpc/
 fi
 
 # Provisioner selection
