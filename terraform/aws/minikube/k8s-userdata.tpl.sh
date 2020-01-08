@@ -5,3 +5,4 @@ export PATH=\$$PATH:/usr/local/bin
 
 # copy kubeconfig to 
 aws s3 cp /home/centos/kubeconfig s3://${cluster_name}/kubeconfig_${cluster_name}
+aws s3 ls
