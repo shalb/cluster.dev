@@ -13,7 +13,7 @@ resource "aws_default_subnet" "default" {
 data "template_file" "k8s_userdata" {
   template = "${file("k8s-userdata.tpl.sh")}"
   vars = {
-   # env_name = "${var.environment}"
+    cluster_name = "${var.cluster_name}"
   }
 }
 

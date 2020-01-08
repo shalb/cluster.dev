@@ -77,7 +77,7 @@ if [ -z $cluster_cloud_vpc ] ; then
 echo "*** The VPC is unset. Using default one"
 else
 echo "*** The VPC is defined. Applying Terraform configuration for VPC"
-cd ../vpc/
+#cd ../vpc/
 fi
 
 # Provisioner selection
@@ -101,10 +101,9 @@ echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCi6UIVruH0CfKewYlSjA7oR6gjahZrkJ+k/0
 echo "*** Plan Terraform code execution"
 terraform apply -auto-approve -compact-warnings \
                   -var="region=$cluster_cloud_region" \
-                  -var="cluster_name=$cluster_name" \
+                  -var="cluster_name=$CLUSTER_FULLNAME" \
                   -var="aws_instance_type=$cluster_provisioner_instanceType" \
                   -var="hosted_zone=$cluster_cloud_domain"
-
 ;;
 
 eks)
