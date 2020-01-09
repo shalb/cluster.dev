@@ -98,13 +98,15 @@ echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCi6UIVruH0CfKewYlSjA7oR6gjahZrkJ+k/0
 # TODO Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace:
 # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
-echo "*** Plan Terraform code execution"
+echo "*** Apply Terraform code execution"
 terraform apply -auto-approve -compact-warnings \
                   -var="region=$cluster_cloud_region" \
                   -var="cluster_name=$CLUSTER_FULLNAME" \
                   -var="aws_instance_type=$cluster_provisioner_instanceType" \
                   -var="hosted_zone=$cluster_cloud_domain"
 ;;
+
+echo "*** Download your kubeconfig using command aws s3 cp  s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/kubeconfig_${CLUSTER_FULLNAME}"
 
 eks)
 echo "*** Cloud Provider AWS. Provisioner: EKS" 
