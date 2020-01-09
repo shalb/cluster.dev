@@ -104,9 +104,11 @@ terraform apply -auto-approve -compact-warnings \
                   -var="cluster_name=$CLUSTER_FULLNAME" \
                   -var="aws_instance_type=$cluster_provisioner_instanceType" \
                   -var="hosted_zone=$cluster_cloud_domain"
-;;
 
-echo "*** Download your kubeconfig using command aws s3 cp  s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/kubeconfig_${CLUSTER_FULLNAME}"
+echo "*** Download your kubeconfig using command aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/kubeconfig_${CLUSTER_FULLNAME}"
+
+;; # end of minikube
+
 
 eks)
 echo "*** Cloud Provider AWS. Provisioner: EKS" 
