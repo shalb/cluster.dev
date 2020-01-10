@@ -27,7 +27,7 @@ module "minikube" {
   aws_subnet_id = aws_default_subnet.default.id 
   hosted_zone = var.hosted_zone
   additional_userdata = data.template_file.k8s_userdata.rendered
-  ssh_public_key = "~/id_rsa.pubs" # file generated in bastion.tf 
+  ssh_public_key = local_file.bastion_key.filename # file generated in bastion.tf 
   tags = {
     Application = "${var.cluster_name}"
     CreatedBy   = "cluster.dev"
