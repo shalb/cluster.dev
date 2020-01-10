@@ -14,6 +14,7 @@ data "template_file" "k8s_userdata" {
   template = "${file("k8s-userdata.tpl.sh")}"
   vars = {
     cluster_name = "${var.cluster_name}"
+    ssh_public_key = local_file.bastion_key.filename
   }
 }
 
