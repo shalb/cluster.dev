@@ -14,7 +14,6 @@ data "template_file" "k8s_userdata" {
   template = "${file("k8s-userdata.tpl.sh")}"
   vars = {
     cluster_name = "${var.cluster_name}"
-    ssh_public_key = local_file.bastion_key.filename
   }
 }
 
@@ -28,7 +27,7 @@ module "minikube" {
   aws_subnet_id = aws_default_subnet.default.id 
   hosted_zone = var.hosted_zone
   additional_userdata = data.template_file.k8s_userdata.rendered
-  ssh_public_key = local_file.bastion_key.filename # file generated in bastion.tf 
+  ssh_public_key = tls_private_key.bastion_key.public_key_openssh # generated in bastion.tf 
   tags = {
     Application = "${var.cluster_name}"
     CreatedBy   = "cluster.dev"
