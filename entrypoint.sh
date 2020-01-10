@@ -109,12 +109,12 @@ terraform apply -auto-approve -compact-warnings \
 
 # Apply output for user
 PURPLE='\033[0;35m'
-echo -e "\${PURPLE}*** Download and apply your kubeconfig using commands: 
+echo -e "${PURPLE}*** Download and apply your kubeconfig using commands: 
 aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
 export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
 kubectl get ns"
 
-echo -e "\${PURPLE}*** Download your bastion ssh key using commands: 
+echo -e "${PURPLE}*** Download your bastion ssh key using commands: 
 aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
 ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain"
 
