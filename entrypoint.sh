@@ -108,13 +108,13 @@ terraform apply -auto-approve -compact-warnings \
 
 # Apply output for user
 echo -e "*** Download and apply your kubeconfig using commands: 
-             aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
-             export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
-             kubectl get ns"
+aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
+export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+kubectl get ns"
 
 echo -e "*** Download your bastion ssh key using commands: 
-             aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${cluster_name}.pem ~/.ssh/id_rsa_${cluster_name}.pem
-             ssh -i ~/.ssh/id_rsa_${cluster_name}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain"
+aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${cluster_name}.pem ~/.ssh/id_rsa_${cluster_name}.pem
+ssh -i ~/.ssh/id_rsa_${cluster_name}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain"
 
 ;; # end of minikube
 
