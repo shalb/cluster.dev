@@ -5,7 +5,7 @@ resource "tls_private_key" "bastion_key" {
 # Generate file with key to pass to minikube module
 resource "local_file" "bastion_key" {
     content     = tls_private_key.bastion_key.public_key_openssh
-    filename = "~/.ssh/id_rsa.pub"
+    filename = "~/id_rsa.pub"
 }
 
 output "bastion_public_key_openssh" {
