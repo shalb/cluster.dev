@@ -29,6 +29,7 @@ export AWS_DEFAULT_REGION=$cluster_cloud_region
 
 # create uniqe s3 bucket from repo name and cluster name
 # TODO: ensure uniqnes: https://shalb.slack.com/archives/CRFSNTDGX/p1577644315023400
+# TODO: Implement CLUSTER_PREFIX instead of GITHUB_REPOSITORY 
 S3_BACKEND_BUCKET=$(echo $GITHUB_REPOSITORY|awk -F "/" '{print$1}')-$cluster_name
 # make sure it is not larger than 63 symbols 
 S3_BACKEND_BUCKET=$(echo $S3_BACKEND_BUCKET| cut -c 1-63)
@@ -113,8 +114,8 @@ export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
 kubectl get ns"
 
 echo -e "*** Download your bastion ssh key using commands: 
-aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${cluster_name}.pem ~/.ssh/id_rsa_${cluster_name}.pem
-ssh -i ~/.ssh/id_rsa_${cluster_name}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain"
+aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
+ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain"
 
 ;; # end of minikube
 
