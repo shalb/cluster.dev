@@ -108,13 +108,14 @@ terraform apply -auto-approve -compact-warnings \
                   -var="hosted_zone=$cluster_cloud_domain"
 
 # Apply output for user
-echo -e "*** Download and apply your kubeconfig using commands: 
+PURPLE='\033[0;35m'
+echo -e "\${PURPLE}*** Download and apply your kubeconfig using commands: 
 aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
 export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
 kubectl get ns"
 
-echo -e "*** Download your bastion ssh key using commands: 
-aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
+echo -e "\${PURPLE}*** Download your bastion ssh key using commands: 
+aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
 ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain"
 
 ;; # end of minikube
