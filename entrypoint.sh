@@ -97,6 +97,12 @@ terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
 # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
 echo "*** Apply Terraform code execution"
+terraform plan \
+                  -var="region=$cluster_cloud_region" \
+                  -var="cluster_name=$CLUSTER_FULLNAME" \
+                  -var="aws_instance_type=$cluster_provisioner_instanceType" \
+                  -var="hosted_zone=$cluster_cloud_domain"
+
 terraform apply -auto-approve -compact-warnings \
                   -var="region=$cluster_cloud_region" \
                   -var="cluster_name=$CLUSTER_FULLNAME" \
