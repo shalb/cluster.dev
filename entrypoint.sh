@@ -92,6 +92,9 @@ cd ../minikube/
 terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
                -backend-config="key=$cluster_name/terraform.state" \
                -backend-config="region=$cluster_cloud_region" \
+# TODO HACK: need to add Publick keys. Move to terraform state
+mkdir ~/.ssh/
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCi6UIVruH0CfKewYlSjA7oR6gjahZrkJ+k/0cj46nvYrORVcds2cijZPT34ACWkvXV8oYvXGWmvlGXV5H1sD0356zpjhRnGo6j4UZVS6KYX5HwObdZ6H/i+A9knEyXxOCyo6p4VeJIYGhVYcQT4GDAkxb8WXHVP0Ax/kUqrKx0a2tK9JjGkuLbufQc3yWhqcfZSVRU2a+M8f8EUmGLOc2VEi2mGoxVgikrelJ0uIGjLn63L6trrsbvasoBuILeXOAO1xICwtYFek/MexQ179NKqQ1Wx/+9Yx4Xc63MB0vR7kde6wxx2Auzp7CjJBFcSTz0TXSRsvF3mnUUoUrclNkr voa@auth.shalb.com" > ~/.ssh/id_rsa.pub
 
 # TODO Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace:
 # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
@@ -120,10 +123,8 @@ kubectl get ns
 
 echo -e "${PURPLE}*** Download your bastion ssh key using commands: 
 aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
-ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain"
-
-## test aws tools
-aws s3 ls 
+ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain
+"
 
 ;; # end of minikube
 
