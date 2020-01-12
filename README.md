@@ -1,10 +1,19 @@
 # Create Complete Kubernetes dev Enviornment
-## Deploy Cluster
+## Cluster.dev 
+Container Image and GitHub Action to create and manage Kubernetes clusters with simple manifests.
 
-Create Kubernetes Cluster Based on manifest, ex: `.cluster.dev/minikube-one.yaml` into repository
+Designed for developers that are bored to configure all that Kubernetes stuff and just need kubeconfig, dashboard, logging and monitoring out of the box.
+
+Based on best-practices with GitOps application devivery. 
+
+Easy extandable by pre-condigured applications and modules. Supports different Cloud Providers.
+
+## Quick Start
+
+Just create file in your repository  `.cluster.dev/minikube-a.yaml` 
 ```yaml
 cluster:
-  name: minikube-one
+  name: minikube-a
   cloud: 
     provider: aws
     region: eu-central-1
@@ -12,7 +21,9 @@ cluster:
     type: minikube
     instanceType: "m4.large"
 ```
-Also requires a GitHub Workflow to be added to `.github/workflows/main.yml`:
+
+
+Add a GitHub Workflow: `.github/workflows/main.yml`:  
 ```yaml
 on: [push]
 jobs:
@@ -33,6 +44,17 @@ jobs:
       run: echo "The status ${{ steps.validate.reconcile.status }}"
 ```
 
-In background there should be: 
- - Terraform module which creates Minikube instance with AWS Account credentials
+Also you need to add cloud credentials to your repo secrets, ex: 
+```yaml
+aws_access_key_id =  ATIAAJSXDBUVOQ4JR
+aws_secret_access_key = SuperAwsSecret
+```
+
+Thats it! Just push update and cluster.dev would create you a cluster in minutes.
+
+## How it works
+
+In background: 
+ - Terraform create remote state
+ - Terraform modules creates Minikube instance with AWS Account credentials
  - Produced kubeconfig should be generated and passed to value into target git repo credentials
