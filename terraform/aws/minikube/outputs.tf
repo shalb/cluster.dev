@@ -1,4 +1,4 @@
-# FIXME debug purpose only 
+# FIXME debug purpose only  
 output "cloud_init_sh" {
   value = module.minikube.cloud_init_sh 
 }
