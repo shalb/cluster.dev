@@ -14,7 +14,7 @@ data "template_file" "k8s_userdata" {
   template = "${file("k8s-userdata.tpl.sh")}"
   vars = {
     cluster_name = "${var.cluster_name}"
-    #private_key = tls_private_key.bastion_key.private_key_pem
+     #private_key = tls_private_key.bastion_key.private_key_pem
   }
 }
 
