@@ -48,7 +48,7 @@ terraform apply -auto-approve -var="region=$cluster_cloud_region" -var="s3_backe
 fi
 
 # Create a DNS domains/records if required
-# TODO: implement switch for domain
+# TODO: implement switch for domain. https://github.com/shalb/cluster.dev/issues/2
 if [ -z $cluster_cloud_domain ] ; then 
 echo "*** The cluster domain is unset. Creating default one"
 #cd ../route53/
@@ -137,6 +137,10 @@ echo "*** Cloud Provider Google"
 ;;
 
 azure)
+echo "*** Cloud Provider Azure"
+;;
+
+digitalocean)
 echo "*** Cloud Provider Azure"
 ;;
 
