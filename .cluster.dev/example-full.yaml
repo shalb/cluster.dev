@@ -1,0 +1,37 @@
+cluster:
+  name: minikube-aws
+  installed: true
+  cloud: 
+    provider: aws
+    region: eu-central-1
+    vpc: default
+    domain: shalb.net
+  provisioner:
+    type: minikube
+    instanceType: m5.large
+---
+envs:
+  - namespace: observability
+    apps:
+    - elk-logging
+    - prometheus-operator
+    - grafana
+  - namespace: stage
+    apps:
+     - nginx-ingress
+     - micro-services
+  - namespace: github-runner
+    apps:
+     - github-runner
+---   
+apps:
+  - name: elk-logging
+    helmfile: 
+      path: git://github.shalb.com/cluster.dev/helmfile-logging.git?v=12
+      version: 0.11.04
+  - name: prometheus-operator
+    helm:
+      repo: stable/prometheus-operator
+      version: 0.1.0
+  - name: micro-services
+    execScript: "kustomize -k minikube/manifests/company-serives | kubectl apply -f"
