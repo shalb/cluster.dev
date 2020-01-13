@@ -7,6 +7,7 @@ CLUSTER_CONFIG_PATH=$1
 CLOUD_USER=$2
 CLOUD_PASS=$3
 # For local testing run: ./entrypoint.sh .cluster.dev/minikube-one.yaml AWSUSER AWSPASS
+# 
 
 echo "*** Starting job in repo: $GITHUB_REPOSITORY with arguments  \
       CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER" 
