@@ -124,8 +124,11 @@ aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_
 ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain
 "
 
-# Test helmfile Docker
+# Output software versions
 helmfile -v
+kubectl version
+git --version
+aws --version
 ;; # end of minikube
 
 
