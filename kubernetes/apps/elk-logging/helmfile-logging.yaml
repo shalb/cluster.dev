@@ -1,0 +1,29 @@
+repositories:
+- name: elastic
+  url: https://helm.elastic.co
+
+helmDefaults:
+  tillerless: true
+
+releases:
+  - name: filebeat
+    installed: true
+    namespace: logging
+    chart: elastic/filebeat
+    version: 7.5.1
+    values:
+     - filebeat/values.yaml        
+   
+  - name: kibana
+    installed: true
+    namespace: logging
+    chart: elastic/kibana
+    version: 7.5.1 
+
+  - name: elasticsearch-logging
+    installed: true
+    namespace: logging
+    chart: elastic/elasticsearch
+    version: 7.5.1
+    values:
+     - elasticsearch/values-logging.yaml
