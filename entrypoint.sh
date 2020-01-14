@@ -102,13 +102,11 @@ terraform plan \
                   -var="region=$cluster_cloud_region" \
                   -var="cluster_name=$CLUSTER_FULLNAME" \
                   -var="aws_instance_type=$cluster_provisioner_instanceType" \
-                  -var="hosted_zone=$cluster_cloud_domain"
+                  -var="hosted_zone=$cluster_cloud_domain" \
+                  -input=false \
+                  -out=tfplan 
 
-terraform apply -auto-approve -compact-warnings \
-                  -var="region=$cluster_cloud_region" \
-                  -var="cluster_name=$CLUSTER_FULLNAME" \
-                  -var="aws_instance_type=$cluster_provisioner_instanceType" \
-                  -var="hosted_zone=$cluster_cloud_domain"
+terraform apply -auto-approve -compact-warnings -input=false tfplan
 
 # Apply output for user
 # TODO Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
