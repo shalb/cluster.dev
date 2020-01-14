@@ -1,7 +1,8 @@
 FROM hashicorp/terraform:light as terraform
 
 ### Install Helmfile
-# code pulled from https://hub.docker.com/r/chatwork/helmfile/dockerfile
+# Image pulled from https://hub.docker.com/r/chatwork/helmfile/dockerfile
+# TODO create own image with terraform and helmfile versioning
 
 FROM chatwork/helmfile:latest
 
