@@ -3,19 +3,19 @@ on: [push]
 jobs:
   deploy_cluster_job:
     runs-on: ubuntu-latest
-    name: Deploy and Update K8s Cluster
+    name: Deploy and Update K8s Clusters
     steps:
     # To use this repository's private action, you must check out the repository
     - name: Checkout Repo
       uses: actions/checkout@v1
     # - uses: ./ # Uses an action in the root directory
-    - name: Valiadte Target
-      id: validate
+    - name: Reconcile Clusters
+      id: reconcile
       uses: shalb/cluster.dev@master
       with:
         cluster-config: './.cluster.dev/minikube-one.yaml'
         cloud-user: ${{ secrets.aws_access_key_id }}
         cloud-pass: ${{ secrets.aws_secret_access_key }}
-    # Use the output from the `validate` step
+    # Use the output from the `reconcile` step
     - name: Get the execution status
-      run: echo "The status ${{ steps.validate.outputs.status }}"
+      run: echo "The status ${{ steps.reconcile.outputs.status }}"

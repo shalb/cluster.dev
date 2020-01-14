@@ -3,12 +3,12 @@
 ## Create Complete Kubernetes-based Dev Enviornment in Minutes
 Cluster.dev is open source system delivered as Docker Image or GitHub Action 
 for creating and managing Kubernetes clusters with simple manifests.  
-Designed for developers that are bored to configure all that Kubernetes stuff
+Designed for developers that are bored to configure Kubernetes stuff
 and just need: kubeconfig, dashboard, logging and monitoring out of the box.  
 
-Based on best-practices with GitOps application devivery. Simple CICD integration. 
-Easy extandable by pre-condigured applications and modules. 
-Supports different Cloud Providers.
+Based on DevOps and SRE best-practices. GitOps cluster management and application delivery.
+Simple CICD integration. Easy extandable by pre-condigured applications and modules. 
+Supports different Cloud Providers and Kubernetes versions.
 
 ----
 
