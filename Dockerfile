@@ -5,7 +5,7 @@ FROM hashicorp/terraform:light as terraform
 
 FROM chatwork/helmfile:latest
 
-COPY --from=terraform /usr/local/bin/terraform /usr/local/bin/terraform
+COPY --from=terraform /bin/terraform /bin/terraform
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
