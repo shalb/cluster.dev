@@ -19,7 +19,7 @@ resource "kubernetes_cluster_role_binding" "tiller" {
     kind  = "ClusterRole"
     name = "cluster-admin"
   }
-  depends_on = ["kubernetes_service_account.tiller"]
+  depends_on = [kubernetes_service_account.tiller]
 }
 
 provider "helm" {
