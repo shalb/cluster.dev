@@ -27,7 +27,7 @@ provider "helm" {
     install_tiller = true
     service_account = "tiller"
     namespace = "kube-system"
-    debug = true
+    load_config_file = true
 }
 
 data "helm_repository" "argo" {
