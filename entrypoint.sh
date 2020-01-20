@@ -127,6 +127,13 @@ helmfile -v
 kubectl version
 git --version
 aws --version
+
+# Pull a kubeconfig
+aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
+export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+echo -e "${PURPLE}*** Test Access to k8s cluster"
+kubectl get ns
+
 ;; # end of minikube
 
 
