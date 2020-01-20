@@ -113,26 +113,20 @@ terraform apply -auto-approve -compact-warnings -input=false tfplan
 aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
 export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
 
+
 ## Deploy ArgoCD
 echo -e "${PURPLE}*** Installing ArgoCD..."
-
 cd ../argocd/
 terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
                -backend-config="key=$cluster_name/terraform.state" \
                -backend-config="region=$cluster_cloud_region" \
 
 echo "*** Apply Terraform code execution"
-terraform plan \
-                  -var="region=$cluster_cloud_region" \
-                  -var="cluster_name=$CLUSTER_FULLNAME" \
-                  -var="hosted_zone=$cluster_cloud_domain" \
-                  -input=false \
-                  -out=tfplan-argocd 
-
+terraform plan -input=false -out=tfplan-argocd 
 terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd
 
 
-# Apply output for user
+## Apply output for user
 # TODO Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
 PURPLE='\033[0;35m'
 echo -e "${PURPLE}*** Download and apply your kubeconfig using commands: 
@@ -146,7 +140,7 @@ aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_
 ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain
 "
 
-# Output software versions
+## Output software versions
 helmfile -v
 kubectl version
 git --version
