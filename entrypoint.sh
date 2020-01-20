@@ -131,8 +131,25 @@ aws --version
 # Pull a kubeconfig
 aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
 export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
-echo -e "${PURPLE}*** Test Access to k8s cluster"
-kubectl get ns
+
+## Deploy ArgoCD
+echo -e "${PURPLE}*** Installing ArgoCD..."
+
+cd ../argocd/
+terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+               -backend-config="key=$cluster_name/terraform.state" \
+               -backend-config="region=$cluster_cloud_region" \
+
+echo "*** Apply Terraform code execution"
+terraform plan \
+                  -var="region=$cluster_cloud_region" \
+                  -var="cluster_name=$CLUSTER_FULLNAME" \
+                  -var="hosted_zone=$cluster_cloud_domain" \
+                  -input=false \
+                  -out=tfplan-argocd 
+
+terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd
+
 
 ;; # end of minikube
 
