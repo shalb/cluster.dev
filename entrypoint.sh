@@ -118,7 +118,7 @@ export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
 echo -e "${PURPLE}*** Installing ArgoCD..."
 cd ../argocd/
 terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-               -backend-config="key=$cluster_name/terraform.state" \
+               -backend-config="key=$cluster_name/terraform-argocd.state" \
                -backend-config="region=$cluster_cloud_region" \
 
 echo "*** Apply Terraform code execution"
