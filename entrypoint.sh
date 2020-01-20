@@ -87,7 +87,7 @@ case $cluster_provisioner_type in
 minikube)
 echo "*** Provisioner: Minikube" 
 
-# Deploy main Terraform code
+## Deploy main Terraform code
 echo "*** Init Terraform code with s3 backend"
 cd ../minikube/
 terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
@@ -107,26 +107,7 @@ terraform plan \
                   -out=tfplan 
 
 terraform apply -auto-approve -compact-warnings -input=false tfplan
-
-# Apply output for user
-# TODO Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
-PURPLE='\033[0;35m'
-echo -e "${PURPLE}*** Download and apply your kubeconfig using commands: 
-aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
-export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
-kubectl get ns
-"
-
-echo -e "${PURPLE}*** Download your bastion ssh key using commands: 
-aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
-ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain
-"
-
-# Output software versions
-helmfile -v
-kubectl version
-git --version
-aws --version
+## End of Deploy Minikube 
 
 # Pull a kubeconfig
 aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
@@ -149,6 +130,27 @@ terraform plan \
                   -out=tfplan-argocd 
 
 terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd
+
+
+# Apply output for user
+# TODO Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
+PURPLE='\033[0;35m'
+echo -e "${PURPLE}*** Download and apply your kubeconfig using commands: 
+aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
+export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+kubectl get ns
+"
+
+echo -e "${PURPLE}*** Download your bastion ssh key using commands: 
+aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
+ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain
+"
+
+# Output software versions
+helmfile -v
+kubectl version
+git --version
+aws --version
 
 
 ;; # end of minikube
