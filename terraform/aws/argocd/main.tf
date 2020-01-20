@@ -1,7 +1,14 @@
-/*
+provider "helm" {
+  install_tiller = true
+  version = "~> 0.10.0"
+  service_account = "${kubernetes_service_account.tiller.metadata.0.name}"
+  namespace = "${kubernetes_service_account.tiller.metadata.0.namespace}"
+  tiller_image = "gcr.io/kubernetes-helm/tiller:v2.14.1"
+}
+
 resource "kubernetes_service_account" "tiller" {
   metadata {
-    name      = "tiller"
+    name = "terraform-tiller"
     namespace = "kube-system"
   }
 
@@ -10,30 +17,23 @@ resource "kubernetes_service_account" "tiller" {
 
 resource "kubernetes_cluster_role_binding" "tiller" {
   metadata {
-    name = "tiller"
+    name = "terraform-tiller"
   }
 
   role_ref {
-    kind      = "ClusterRole"
-    name      = "cluster-admin"
+    kind = "ClusterRole"
+    name = "cluster-admin"
     api_group = "rbac.authorization.k8s.io"
   }
 
   subject {
     kind = "ServiceAccount"
-    name = "tiller"
+    name = "terraform-tiller"
 
     api_group = ""
     namespace = "kube-system"
   }
-}
-*/
 
-provider "helm" {
-    tiller_image = "gcr.io/kubernetes-helm/tiller:v2.12.3"
-    install_tiller = true
-    service_account = "tiller"
-    namespace = "kube-system"
 }
 
 data "helm_repository" "argo" {
