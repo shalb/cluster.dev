@@ -1,25 +1,30 @@
 resource "kubernetes_service_account" "tiller" {
   metadata {
-    name = "tiller"
+    name      = "tiller"
     namespace = "kube-system"
   }
+
+  automount_service_account_token = true
 }
+
 resource "kubernetes_cluster_role_binding" "tiller" {
   metadata {
-        name = "tiller"
-  }
-  subject {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "User"
-    name      = "system:serviceaccount:kube-system:tiller"
+    name = "tiller"
   }
 
   role_ref {
+    kind      = "ClusterRole"
+    name      = "cluster-admin"
     api_group = "rbac.authorization.k8s.io"
-    kind  = "ClusterRole"
-    name = "cluster-admin"
   }
-  depends_on = [kubernetes_service_account.tiller]
+
+  subject {
+    kind = "ServiceAccount"
+    name = "tiller"
+
+    api_group = ""
+    namespace = "kube-system"
+  }
 }
 
 provider "helm" {
@@ -27,9 +32,6 @@ provider "helm" {
     install_tiller = true
     service_account = "tiller"
     namespace = "kube-system"
-    kubernetes {
-      load_config_file = false
-    }
 }
 
 data "helm_repository" "argo" {

@@ -112,6 +112,7 @@ terraform apply -auto-approve -compact-warnings -input=false tfplan
 # Pull a kubeconfig
 aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
 export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+cp ~/.kube/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/config
 
 ## Deploy ArgoCD
 echo -e "${PURPLE}*** Installing ArgoCD..."
