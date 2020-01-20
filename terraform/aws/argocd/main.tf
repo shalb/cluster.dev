@@ -1,3 +1,4 @@
+/*
 resource "kubernetes_service_account" "tiller" {
   metadata {
     name      = "tiller"
@@ -6,7 +7,7 @@ resource "kubernetes_service_account" "tiller" {
 
   automount_service_account_token = true
 }
-/*
+
 resource "kubernetes_cluster_role_binding" "tiller" {
   metadata {
     name = "tiller"
