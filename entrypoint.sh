@@ -27,11 +27,10 @@ echo "*** Cloud Provider AWS. Initing access variables"
 export AWS_ACCESS_KEY_ID=$CLOUD_USER
 export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
 export AWS_DEFAULT_REGION=$cluster_cloud_region
+export CLUSTER_PREFIX=$GITHUB_REPOSITORY # CLUSTER_PREFIX equals git organisation/username could be changed in other repo
 
 # create uniqe s3 bucket from repo name and cluster name
-# TODO: ensure uniqnes: https://shalb.slack.com/archives/CRFSNTDGX/p1577644315023400
-# TODO: Implement CLUSTER_PREFIX instead of GITHUB_REPOSITORY 
-S3_BACKEND_BUCKET=$(echo $GITHUB_REPOSITORY|awk -F "/" '{print$1}')-$cluster_name
+S3_BACKEND_BUCKET=$(echo $CLUSTER_PREFIX|awk -F "/" '{print$1}')-$cluster_name
 # make sure it is not larger than 63 symbols 
 S3_BACKEND_BUCKET=$(echo $S3_BACKEND_BUCKET| cut -c 1-63)
 # The same name would be used for domains
