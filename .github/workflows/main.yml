@@ -1,5 +1,12 @@
-on: [push]
-
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - '_config.yml'
+      - '**.png'
+      - 'README.md'
+    branches:
+      - master
 jobs:
   deploy_cluster_job:
     runs-on: ubuntu-latest

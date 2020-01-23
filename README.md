@@ -65,3 +65,7 @@ In background:
    Typically it is defined on Cloud Object Storage like AWS S3.
  - Terraform modules creates Minikube/EKS/GKE/etc.. cluster within your Cloud Proivder using      Account credentials
  - Produced kubeconfig should be generated and passed to value into target git repo credentials
+
+## Contributing 
+
+If you want to spread the project with own code, you could start contribute following next instructions: [docs/contributing](docs/contributing)
