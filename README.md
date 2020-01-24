@@ -1,8 +1,7 @@
 # Cluster.dev - Kubernetes-based Dev Enviornment in Minutes
-![cluster.dev](https://img.shields.io/badge/cluster-.dev-purple?style=plastic)
 
-Cluster.dev is open source system delivered as Docker Image or GitHub Action 
-for creating and managing Kubernetes clusters with simple manifests.  
+Cluster.dev is open source system delivered as GitHub Action or Docker Image 
+for creating and managing Kubernetes clusters with simple manifests by GitOps approach.  
 Designed for developers that are bored to configure Kubernetes stuff
 and just need: kubeconfig, dashboard, logging and monitoring out of the box.  
 
