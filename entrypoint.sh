@@ -110,11 +110,12 @@ terraform apply -auto-approve -compact-warnings -input=false tfplan
 
 # Pull a kubeconfig
 function pull_kubeconfig {
-  until kubectl version --request-timeout=3s > /dev/null; do  
+  WAIT_TIMEOUT=5;
+  until kubectl version --request-timeout=5s > /dev/null; do  
       aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 
       export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
-      cp ~/.kube/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/config
-      echo "*** Waiting for Kubernetes Cluster gets ready"; sleep 1; 
+      cp ~/.kube/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/config > /dev/null
+      echo "*** Waiting $WAIT_TIMEOUT seconds for Kubernetes Cluster gets ready"; sleep $WAIT_TIMEOUT; 
   done
 }
 
