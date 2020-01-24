@@ -53,3 +53,9 @@ jobs:
 5. Commit and push both files with comment, ex: `GH-3 Initial Commit`
 
 6. Check the [GH Actions](https://github.com/shalb/cluster.dev/actions) for the env build process in the logs. And check if the cluster is ready in target provider.
+
+7. Add your changes to code and open a Pull Request, assigning it to `voatsap` or `MaxymVlasov` for review.
+
+8. After successful review merge branch to master with comment `Resolve GH-3`.
+
+9. Delete all resources (ec2 instances, elastic ip's, etc..) assotiated with the issue.
