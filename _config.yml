@@ -1,2 +1,4 @@
 theme: jekyll-theme-minimal
 logo: docs/logo-blue.png
+masthead_title: ""
+minimal_mistakes_skin: air
