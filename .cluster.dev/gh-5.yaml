@@ -1,5 +1,5 @@
 cluster:
-  name: gh-3
+  name: gh-5
   installed: true
   cloud: 
     provider: aws

@@ -1,7 +1,7 @@
 on:
   push:
       branches:
-        - feature/GH-3
+        - feature/GH-5
 jobs:
   deploy_cluster_job:
     runs-on: ubuntu-latest
@@ -11,13 +11,13 @@ jobs:
     - name: Checkout Repo
       uses: actions/checkout@v2
       with:
-        ref: 'feature/GH-3'
+        ref: 'feature/GH-5'
     # - uses: ./ # Uses an action in the root directory
     - name: Reconcile Clusters
       id: reconcile
-      uses: shalb/cluster.dev@feature/GH-3
+      uses: shalb/cluster.dev@feature/GH-5
       with:
-        cluster-config: './.cluster.dev/gh-3.yaml'
+        cluster-config: './.cluster.dev/gh-5.yaml'
         cloud-user: ${{ secrets.aws_access_key_id }}
         cloud-pass: ${{ secrets.aws_secret_access_key }}
     # Use the output from the `reconcile` step
