@@ -386,7 +386,7 @@ server:
     hosts:
       - shalb-gh-5.shalb.net
     paths:
-      - /
+      - /argocd
     tls:     
       - secretName: argocd-example-tls
         hosts:
