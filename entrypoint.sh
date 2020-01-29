@@ -120,6 +120,7 @@ function pull_kubeconfig {
 }
 
 pull_kubeconfig
+PULLED_KUBECONFIG=$(cat ~/.kube/kubeconfig_${CLUSTER_FULLNAME})
 
 ## Deploy ArgoCD
 echo -e "${PURPLE}*** Installing ArgoCD...."
@@ -129,7 +130,7 @@ terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
                -backend-config="region=$cluster_cloud_region" \
 
 echo "*** Apply Terraform code execution..."
-terraform plan -input=false -out=tfplan-argocd 
+terraform plan -input=false -out=tfplan-argocd -var="kubeconfig=$PULLED_KUBECONFIG"
 terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd
 
 
