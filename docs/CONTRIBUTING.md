@@ -29,7 +29,8 @@ cluster:
 ```
 
 4. Create a new workflow in `.github/workflows` and name it corresponding to your issue: `gh-3.yaml`.  
-Set the required branch and file name in placeholders (marked with `#CHANGE ME`), for example:
+Set the required branch and file name in placeholders (marked with `#CHANGE ME`), for example:  
+
 ```yaml
 on:
   push:
