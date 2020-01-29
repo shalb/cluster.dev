@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: default
 title: "Contributing code to Cluster.dev"
 permalink: /contributing/
 ---
