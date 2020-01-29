@@ -1,4 +1,3 @@
 theme: jekyll-theme-minimal
 logo: images/cluster-dev-logo-site.png
-masthead_title: " "
-minimal_mistakes_skin: air
+google_analytics: UA-157259461-1
