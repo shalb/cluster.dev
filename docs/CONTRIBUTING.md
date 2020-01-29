@@ -1,7 +1,8 @@
+---
 layout: page
 title: "Contributing code to Cluster.dev"
 permalink: /contributing/
-
+---
 # Development
 
 ## How to contribute 
