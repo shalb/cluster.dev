@@ -10,6 +10,9 @@ Simple CICD integration. Easy extandable by pre-condigured applications and modu
 Supports different Cloud Providers and Kubernetes versions.
 
 ----
+## Principle diagram. What it does?
+
+![cluster.dev diagram](docs/images/cluster-dev-diagram.png)
 
 ## Quick Start
 
