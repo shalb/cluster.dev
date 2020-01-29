@@ -70,4 +70,4 @@ In background:
 
 ## Contributing 
 
-If you want to spread the project with own code, you could start contribute following next instructions: [contributing.md](contributing.md)
+If you want to spread the project with own code, you could start contribute following next instructions: [CONTRIBUTING.md](./contributing/)
