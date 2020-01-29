@@ -5,6 +5,7 @@ on:
       - '_config.yml'
       - '**.png'
       - 'README.md'
+      - '_layouts'
     branches:
       - master
 jobs:
