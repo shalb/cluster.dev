@@ -14,6 +14,19 @@ Supports different Cloud Providers and Kubernetes versions.
 
 ![cluster.dev diagram](images/cluster-dev-diagram.png)
 
+## How it works
+
+In background: 
+
+ - Terraform creates a remote state file in your cloud account where all infrastructure objects are stored.
+   Typically it is defined on Cloud Object Storage like AWS S3.
+ - Terraform modules creates Minikube/EKS/GKE/etc.. cluster within your Cloud Proivder using Account credentials
+ - ArgoCD Continous Deployment system deployed inside Kubernetes cluster enables you to deploy yor applications.
+
+You receive:  
+
+ - Automatically generated kubeconfig, ssh-access, Kubernetes Dashboard and ArgoCD UI url's. 
+
 ## Quick Start
 
 Just create file in your repository  `.cluster.dev/minikube-a.yaml` 
@@ -58,15 +71,6 @@ aws_secret_access_key = SuperAwsSecret
 
 Thats it! Just push update and Cluster.dev would create you a cluster in minutes.
 And produce a working kubeconfig that could be downloaded and links to differnet UI's: Kibana, Grafana, Dashboard, etc...
-
-## How it works
-
-In background: 
-
- - Terraform creates a remote state file where all infrastructure objects are stored.
-   Typically it is defined on Cloud Object Storage like AWS S3.
- - Terraform modules creates Minikube/EKS/GKE/etc.. cluster within your Cloud Proivder using      Account credentials
- - Produced kubeconfig should be generated and passed to value into target git repo credentials
 
 ## Contributing 
 
