@@ -1,9 +1,8 @@
-provider "helm" {
-  install_tiller = true
-  version = "~> 0.10.0"
-  service_account = kubernetes_service_account.tiller.metadata.0.name
-  namespace = kubernetes_service_account.tiller.metadata.0.namespace
-  tiller_image = "gcr.io/kubernetes-helm/tiller:v2.14.1"
+## Resource to trigger updates other resources
+resource "null_resource" "kubeconfig_update" {
+  triggers = {
+    policy_sha1 = "${sha1(file("~/.kube/config"))}"
+  }
 }
 
 resource "kubernetes_service_account" "tiller" {
@@ -11,8 +10,12 @@ resource "kubernetes_service_account" "tiller" {
     name = "terraform-tiller"
     namespace = "kube-system"
   }
-
   automount_service_account_token = true
+
+  depends_on = [
+    null_resource.kubeconfig_update,
+  ]
+
 }
 
 resource "kubernetes_cluster_role_binding" "tiller" {
@@ -34,6 +37,18 @@ resource "kubernetes_cluster_role_binding" "tiller" {
     namespace = "kube-system"
   }
 
+  depends_on = [
+    null_resource.kubeconfig_update,
+  ]
+
+}
+
+provider "helm" {
+  install_tiller = true
+  version = "~> 0.10.0"
+  service_account = kubernetes_service_account.tiller.metadata.0.name
+  namespace = kubernetes_service_account.tiller.metadata.0.namespace
+  tiller_image = "gcr.io/kubernetes-helm/tiller:v2.14.1"
 }
 
 data "helm_repository" "argo" {
@@ -50,5 +65,8 @@ resource "helm_release" "argo-cd" {
 
   values = [
     "${file("values.yaml")}"
+  ]
+  depends_on = [
+    kubernetes_service_account.tiller,
   ]
 }

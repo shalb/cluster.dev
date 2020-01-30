@@ -3,7 +3,7 @@ yum install -y wget unzip python3-pip.noarch
 pip3 install awscli
 export PATH=\$$PATH:/usr/local/bin
 
-# copy kubeconfig to s3
+# copy kubeconfig to s3 bucket
 aws s3 cp /home/centos/kubeconfig s3://${cluster_name}/kubeconfig_${cluster_name}
 
 # copy private ssh key to s3
