@@ -3,7 +3,7 @@
 Cluster.dev is an open-source system delivered as GitHub Action or Docker Image 
 for creating and managing Kubernetes clusters with simple manifests by GitOps approach.  
 Designed for developers that are bored to configure Kubernetes stuff
-and just need: kubeconfig, dashboard, logging and monitoring out of the box.  
+and just need: kubeconfig, dashboard, logging and monitoring out-of-the-box.  
 
 Based on DevOps and SRE best-practices. GitOps cluster management and application delivery.
 Simple CICD integration. Easily extandable by pre-configured applications and modules. 
@@ -20,7 +20,7 @@ In the background:
 
  - Terraform creates a remote state file in your cloud account where all infrastructure objects are stored.
    Typically it is defined on Cloud Object Storage like AWS S3.
- - Terraform modules create Minikube/EKS/GKE/etc.. cluster within your Cloud Proivder using Account credentials.
+ - Terraform modules create Minikube/EKS/GKE/etc.. cluster within your Cloud Provider using Account credentials.
  - ArgoCD Continuous Deployment system deployed inside Kubernetes cluster enables you to deploy your applications.
 
 You receive:  
