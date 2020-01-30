@@ -1,4 +1,4 @@
-# Cluster.dev - Kubernetes-based Dev Enviornment in Minutes
+# Cluster.dev - Kubernetes-based Dev Environment in Minutes
 
 Cluster.dev is open source system delivered as GitHub Action or Docker Image 
 for creating and managing Kubernetes clusters with simple manifests by GitOps approach.  
