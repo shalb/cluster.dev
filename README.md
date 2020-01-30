@@ -65,7 +65,7 @@ In the background:
 
  - Terraform creates a remote state file where all infrastructure objects are stored.
    Typically it is defined on Cloud Object Storage like AWS S3.
- - Terraform modules create Minikube/EKS/GKE/etc.. cluster within your Cloud Proivder using Account credentials.
+ - Terraform modules create Minikube/EKS/GKE/etc.. cluster within your Cloud Provider using Account credentials.
  - Produced kubeconfig should be generated and passed to value into target git repo credentials.
 
 ## Contributing 
