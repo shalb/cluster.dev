@@ -1,3 +1,9 @@
+resource "null_resource" "kubeconfig_update" {
+  triggers = {
+    policy_sha1 = "${sha1(file("~/.kube/config"))}"
+  }
+}
+
 provider "helm" {
   install_tiller = true
   version = "~> 0.10.0"
@@ -12,7 +18,7 @@ data "helm_repository" "argo" {
 }
 
 resource "helm_release" "argo-cd" {
-  name       = "argo-cd-${kubeconfig_hash}"
+  name       = "argo-cd"
   repository = data.helm_repository.argo.metadata[0].name
   chart      = "argo-cd"
   version    = "1.6.3"
@@ -31,16 +37,20 @@ provider "kubernetes" {
 
 resource "kubernetes_service_account" "tiller" {
   metadata {
-    name = "terraform-tiller-${kubeconfig_hash}"
+    name = "terraform-tiller"
     namespace = "kube-system"
   }
-
   automount_service_account_token = true
+
+  depends_on = [
+    null_resource.kubeconfig_update
+  ]
+
 }
 
 resource "kubernetes_cluster_role_binding" "tiller" {
   metadata {
-    name = "terraform-tiller-${kubeconfig_hash}"
+    name = "terraform-tiller"
   }
 
   role_ref {
@@ -51,11 +61,15 @@ resource "kubernetes_cluster_role_binding" "tiller" {
 
   subject {
     kind = "ServiceAccount"
-    name = "terraform-tiller-${kubeconfig_hash}"
+    name = "terraform-tiller"
 
     api_group = ""
     namespace = "kube-system"
   }
+
+  depends_on = [
+    null_resource.kubeconfig_update
+  ]
 
 }
 
