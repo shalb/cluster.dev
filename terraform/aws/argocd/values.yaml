@@ -343,8 +343,8 @@ server:
 
   ## Certificate configuration
   certificate:
-    enabled: false
-    domain: argocd.example.com
+    enabled: true
+    domain: argo-shalb-gh-5.shalb.net
     issuer: {}
     additionalHosts: []
 
@@ -404,7 +404,7 @@ server:
   ## reference https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
   config:
     # Argo CD's externally facing base URL (optional). Required when configuring SSO
-    url: https://argocd.example.com
+    url: https://argo-shalb-gh-5.shalb.net
     # Argo CD instance label key
     application.instanceLabelKey: argocd.argoproj.io/instance
     # repositories: |
