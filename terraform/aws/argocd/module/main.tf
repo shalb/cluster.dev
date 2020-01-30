@@ -32,9 +32,6 @@ resource "helm_release" "argo-cd" {
   ]
 }
 
-provider "kubernetes" {
-}
-
 resource "kubernetes_service_account" "tiller" {
   metadata {
     name = "terraform-tiller"
