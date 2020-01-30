@@ -124,7 +124,7 @@ pull_kubeconfig
 KUBECONFIG_HASH=$(md5sum ~/.kube/kubeconfig_${CLUSTER_FULLNAME} | cut -c 1-8)
 
 ## Deploy ArgoCD
-echo -e "${PURPLE}*** Installing ArgoCD...."
+echo -e "${PURPLE}*** Installing/Reconciling ArgoCD...."
 cd ../argocd/
 terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
                -backend-config="key=$cluster_name/terraform-argocd.state" \
