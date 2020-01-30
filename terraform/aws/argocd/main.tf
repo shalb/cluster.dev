@@ -1,4 +1,4 @@
 module "argocd" { 
-  source =  "../module"
+  source =  "./module"
   kubeconfig_hash = var.kubeconfig_hash
 }
