@@ -1,12 +1,12 @@
 # Cluster.dev - Kubernetes-based Dev Environment in Minutes
 
-Cluster.dev is open source system delivered as GitHub Action or Docker Image 
+Cluster.dev is an open-source system delivered as GitHub Action or Docker Image 
 for creating and managing Kubernetes clusters with simple manifests by GitOps approach.  
 Designed for developers that are bored to configure Kubernetes stuff
-and just need: kubeconfig, dashboard, logging and monitoring out of the box.  
+and just need: kubeconfig, dashboard, logging and monitoring out-of-the-box.  
 
 Based on DevOps and SRE best-practices. GitOps cluster management and application delivery.
-Simple CICD integration. Easy extandable by pre-condigured applications and modules. 
+Simple CICD integration. Easily extandable by pre-configured applications and modules. 
 Supports different Cloud Providers and Kubernetes versions.
 
 ----
@@ -56,18 +56,18 @@ aws_access_key_id =  ATIAAJSXDBUVOQ4JR
 aws_secret_access_key = SuperAwsSecret
 ```
 
-Thats it! Just push update and Cluster.dev would create you a cluster in minutes.
-And produce a working kubeconfig that could be downloaded and links to differnet UI's: Kibana, Grafana, Dashboard, etc...
+That's it! Just push update and Cluster.dev will create for you a cluster in minutes.
+And produce a working kubeconfig that could be downloaded and links to different UI's: Kibana, Grafana, Dashboard, etc...
 
 ## How it works
 
-In background: 
+In the background: 
 
  - Terraform creates a remote state file where all infrastructure objects are stored.
    Typically it is defined on Cloud Object Storage like AWS S3.
- - Terraform modules creates Minikube/EKS/GKE/etc.. cluster within your Cloud Proivder using      Account credentials
- - Produced kubeconfig should be generated and passed to value into target git repo credentials
+ - Terraform modules create Minikube/EKS/GKE/etc.. cluster within your Cloud Proivder using Account credentials.
+ - Produced kubeconfig should be generated and passed to value into target git repo credentials.
 
 ## Contributing 
 
-If you want to spread the project with own code, you could start contribute following next instructions: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+If you want to spread the project with your own code, you could start contributing with this quick guide: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
