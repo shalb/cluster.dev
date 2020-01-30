@@ -25,7 +25,7 @@ resource "helm_release" "argo-cd" {
   namespace  = "argocd"
 
   values = [
-    "${file("values.yaml)}"
+    "${file("values.yaml")}"
   ]
   depends_on = [
     kubernetes_service_account.tiller,
