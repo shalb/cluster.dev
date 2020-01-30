@@ -384,13 +384,13 @@ server:
     ## Secrets must be manually created in the namespace
     ##
     hosts:
-      - shalb-gh-5.shalb.net
+      - argo-shalb-gh-5.shalb.net
     paths:
-      - /argocd
+      - /
     tls:     
       - secretName: argocd-example-tls
         hosts:
-          - shalb-gh-5.shalb.net
+          - argo-shalb-gh-5.shalb.net
 
   # Create a OpenShift Route with SSL passthrough for UI and CLI
   # Consider setting 'hostname' e.g. https://argocd.apps-crc.testing/ using your Default Ingress Controller Domain
