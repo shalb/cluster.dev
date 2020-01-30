@@ -120,6 +120,8 @@ function pull_kubeconfig {
 }
 
 pull_kubeconfig
+# Create varialbe for changes in kubeconfig to trigger redeployment for dependent resources (ex ArgoCD)
+KUBECONFIG_HASH=$(md5sum ~/.kube/kubeconfig_${CLUSTER_FULLNAME} | cut -c 1-8)
 
 ## Deploy ArgoCD
 echo -e "${PURPLE}*** Installing ArgoCD...."
@@ -129,7 +131,7 @@ terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
                -backend-config="region=$cluster_cloud_region" \
 
 echo "*** Apply Terraform code execution..."
-terraform plan -input=false -out=tfplan-argocd 
+terraform plan -input=false -var="kubeconfig_hash=$KUBECONFIG_HASH" -out=tfplan-argocd 
 terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd
 
 
