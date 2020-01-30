@@ -1,3 +1,4 @@
+## Resource to trigger updates other resources
 resource "null_resource" "kubeconfig_update" {
   triggers = {
     policy_sha1 = "${sha1(file("~/.kube/config"))}"
