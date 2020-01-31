@@ -11,24 +11,24 @@ Simple CICD integration. Easily extandable by pre-configured applications and mo
 Supports different Cloud Providers and Kubernetes versions.
 
 ----
-## Principle diagram. What it does?
+## Principle diagram
 
 ![cluster.dev diagram](docs/images/cluster-dev-diagram.png)
+
 
 ## How it works
 
 In background:
 
- - Terraform creates a "state bucket" in your cloud   account where all infrastructure objects would stored. Typically it is defined on Cloud Object Storage like AWS S3.
- - Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
- - ArgoCD Continuous Deployment system deployed inside Kubernetes cluster enables you to deploy your applications.
+ - Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects would be stored. Typically it is defined on Cloud Object Storage like AWS S3.
+ - Terraform modules creates Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
+ - ArgoCD Continuous Deployment system deployed inside Kubernetes cluster. Enables you to deploy your applications from raw manifests, helm charts or kustomize yaml's.
  - GitHub CI runner deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
 
 You receive:
 
- - Automatically generated kubeconfig, ssh-access, and ArgoCD UI url’s.
- - Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana),  
-
+ - Automatically generated kubeconfig, ssh-access, and ArgoCD UI url’s
+ - Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)  
 ## Quick Start
 
  1. Dedicate a separate repository for infrastructure that would be managed by `cluster.dev`. This repo would host code for your clusters, deployments and other resources managed GitOps way.  
@@ -41,9 +41,9 @@ You receive:
  aws_secret_access_key = SuperAwsSecret
  ```
  3. Add credentials to you repo's Secrets under GitHub's: "Settings->Secrets", ex: 
- ![GitHub Secrets](/docs/images/gh-secrets.png)
+ ![GitHub Secrets](docs/images/gh-secrets.png)
 
- 4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml` :
+ 4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml`
  ```yaml
  cluster:
   name: minikube-a
@@ -55,8 +55,8 @@ You receive:
     instanceType: "m4.large"
  ```   
  
- 4. Create a Github Workflow file: `.github/workflows/main.yml`: 
-```yaml 
+ 4. Create a Github Workflow file `.github/workflows/main.yml`:  
+ ```yaml 
 on: [push]
 jobs:
   deploy_cluster_job:
@@ -77,6 +77,7 @@ jobs:
     - name: Get the execution status
       run: echo "The status $"
 ```
+
 5. Commit and Push changes and follow the Github Action execution and in its output you'll receive access instructions to your cluster and its services.
 
 ## Contributing 
