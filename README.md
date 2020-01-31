@@ -45,7 +45,7 @@ Next steps should be done in that repo.
  ![GitHub Secrets](docs/images/gh-secrets.png)
 
 4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml` :
- ```yaml
+```yaml
 cluster:
   name: minikube-a
   cloud: 
@@ -56,7 +56,7 @@ cluster:
   provisioner:
     type: minikube
     instanceType: m5.large
- ```   
+```   
  
 5. Create a Github Workflow file `.github/workflows/main.yml`:  
 

@@ -32,7 +32,20 @@ You receive:
 
 ## Quick Start
 
-You can find quick start in our [GitHub Repo/Quick Start](https://github.com/shalb/cluster.dev#quick-start)
+Sample manifest to create cluster:
+```yaml
+cluster:
+  name: minikube-a
+  cloud: 
+    provider: aws
+    region: eu-central-1
+    vpc: default
+    domain: shalb.net
+  provisioner:
+    type: minikube
+    instanceType: m5.large
+```   
+You can find complete sample in our [GitHub Repo/Quick Start](https://github.com/shalb/cluster.dev#quick-start)
 
 ## Roadmap 
 
