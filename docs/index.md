@@ -13,7 +13,7 @@ Supports different Cloud Providers and Kubernetes versions.
 ----
 ## Principle diagram
 
-![cluster.dev diagram](docs/images/cluster-dev-diagram.png)
+![cluster.dev diagram](images/cluster-dev-diagram.png)
 
 
 ## How it works
@@ -42,7 +42,7 @@ You receive:
  aws_secret_access_key = SuperAwsSecret
  ```
  3. Add credentials to you repo's Secrets under GitHub's: "Settings->Secrets", ex: 
- ![GitHub Secrets](/docs/images/gh-secrets.png)
+ ![GitHub Secrets](images/gh-secrets.png)
 
  4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml` :
  ```yaml
