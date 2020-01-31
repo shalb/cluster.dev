@@ -1,7 +1,8 @@
 # Cluster.dev - Kubernetes-based Dev Environment in Minutes
 
 Cluster.dev is an open-source system delivered as GitHub Action or Docker Image 
-for creating and managing Kubernetes clusters with simple manifests by GitOps approach.  
+for creating and managing Kubernetes clusters with simple manifests by GitOps approach.   
+
 Designed for developers that are bored to configure Kubernetes stuff
 and just need: kubeconfig, dashboard, logging and monitoring out-of-the-box.  
 
@@ -14,11 +15,37 @@ Supports different Cloud Providers and Kubernetes versions.
 
 ![cluster.dev diagram](docs/images/cluster-dev-diagram.png)
 
+## How it works
+
+In background:
+
+ - Terraform creates a "state bucket" in your cloud   account where all infrastructure objects would stored. Typically it is defined on Cloud Object Storage like AWS S3.
+ - Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
+ - ArgoCD Continuous Deployment system deployed inside Kubernetes cluster enables you to deploy your applications.
+ - GitHub CI runner deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
+
+You receive:
+
+ - Automatically generated kubeconfig, ssh-access, and ArgoCD UI url’s.
+ - Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana),  
+
 ## Quick Start
 
-Just create file in your repository  `.cluster.dev/minikube-a.yaml` 
-```yaml
-cluster:
+ 1. Dedicate a separate repository for infrastructure that would be managed by `cluster.dev`. This repo would host code for your clusters, deployments and other resources managed GitOps way.  
+ Next steps should be done in that repo.
+
+ 2. Obtain access credentials for your cloud account.
+ For example, in AWS it is called "Programmatic Access user",and looks like: 
+ ```yaml
+ aws_access_key_id =  ATIAAJSXDBUVOQ4JR
+ aws_secret_access_key = SuperAwsSecret
+ ```
+ 3. Add credentials to you repo's Secrets under GitHub's: "Settings->Secrets", ex: 
+ ![GitHub Secrets](/docs/images/gh-secrets.png)
+
+ 4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml` :
+ ```yaml
+ cluster:
   name: minikube-a
   cloud: 
     provider: aws
@@ -26,11 +53,10 @@ cluster:
   provisioner:
     type: minikube
     instanceType: "m4.large"
-```
-
-
-Add a GitHub Workflow: `.github/workflows/main.yml`:  
-```yaml
+ ```   
+ 
+ 4. Create a Github Workflow file: `.github/workflows/main.yml`: 
+```yaml 
 on: [push]
 jobs:
   deploy_cluster_job:
@@ -43,30 +69,15 @@ jobs:
       id: reconcile
       uses: shalb/cluster.dev@master
       with:
-        cluster-config: './.cluster.dev/minikube-one.yaml'
-        cloud-user: ${{ secrets.aws_access_key_id }}
-        cloud-pass: ${{ secrets.aws_secret_access_key }}
+     # Change setting below with path to config and creds
+        cluster-config: './.cluster.dev/minikube-one.yaml' 
+        cloud-user: $
+        cloud-pass: $
+     # end of chages
     - name: Get the execution status
-      run: echo "The status ${{ steps.validate.reconcile.status }}"
+      run: echo "The status $"
 ```
-
-Also you need to add cloud credentials to your repo secrets, ex: 
-```yaml
-aws_access_key_id =  ATIAAJSXDBUVOQ4JR
-aws_secret_access_key = SuperAwsSecret
-```
-
-That's it! Just push update and Cluster.dev will create for you a cluster in minutes.
-And produce a working kubeconfig that could be downloaded and links to different UI's: Kibana, Grafana, Dashboard, etc...
-
-## How it works
-
-In the background: 
-
- - Terraform creates a remote state file where all infrastructure objects are stored.
-   Typically it is defined on Cloud Object Storage like AWS S3.
- - Terraform modules create Minikube/EKS/GKE/etc.. cluster within your Cloud Provider using Account credentials.
- - Produced kubeconfig should be generated and passed to value into target git repo credentials.
+5. Commit and Push changes and follow the Github Action execution and in its output you'll receive access instructions to your cluster and its services.
 
 ## Contributing 
 
