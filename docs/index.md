@@ -45,18 +45,20 @@ You receive:
 
  4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml` :
  ```yaml
- cluster:
+cluster:
   name: minikube-a
   cloud: 
     provider: aws
     region: eu-central-1
+    vpc: default
+    domain: shalb.net # Your domain in Route53
   provisioner:
     type: minikube
-    instanceType: "m4.large"
+    instanceType: m5.large
  ```   
  
  4. Create a Github Workflow file `.github/workflows/main.yml`:  
-```yaml 
+```yaml
 on: [push]
 jobs:
   deploy_cluster_job:
@@ -64,21 +66,26 @@ jobs:
     name: Deploy and Update K8s Cluster
     steps:
     - name: Checkout Repo
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     - name: Reconcile Clusters
       id: reconcile
       uses: shalb/cluster.dev@master
       with:
      # Change setting below with path to config and creds
-        cluster-config: './.cluster.dev/minikube-one.yaml' 
-        cloud-user: $
-        cloud-pass: $
+        cluster-config: './.cluster.dev/minikube-a.yaml' 
+        cloud-user: ${{ secrets.aws_access_key_id }}
+        cloud-pass: ${{ secrets.aws_secret_access_key }}
      # end of chages
     - name: Get the execution status
-      run: echo "The status $"
+      run: echo "The status ${{ steps.reconcile.outputs.status }}"
 ```
 
 5. Commit and Push changes and follow the Github Action execution and in its output you'll receive access instructions to your cluster and its services.
+
+## Roadmap 
+
+The project is in Alpha Stage, the first release is planned on 14 February 2020.
+Roadmap details: [ROADMAP.md](./roadmap/)
 
 ## Contributing 
 
