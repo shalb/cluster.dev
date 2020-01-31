@@ -20,7 +20,7 @@ Supports different Cloud Providers and Kubernetes versions.
 
 In background:
 
- - Terraform creates a "state bucket" in your cloud   account where all infrastructure objects would stored. Typically it is defined on Cloud Object Storage like AWS S3.
+ - Terraform creates a "state bucket" in your cloud account where all infrastructure objects would be stored. Typically it is defined on Cloud Object Storage like AWS S3.
  - Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
  - ArgoCD Continuous Deployment system deployed inside Kubernetes cluster enables you to deploy your applications.
  - GitHub CI runner deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
