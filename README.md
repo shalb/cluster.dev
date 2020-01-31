@@ -56,7 +56,7 @@ You receive:
  ```   
  
  4. Create a Github Workflow file `.github/workflows/main.yml`:  
- ```yaml 
+```yaml 
 on: [push]
 jobs:
   deploy_cluster_job:
