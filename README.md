@@ -29,21 +29,22 @@ You receive:
 
  - Automatically generated kubeconfig, ssh-access, and ArgoCD UI url’s
  - Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)  
+
 ## Quick Start
 
- 1. Dedicate a separate repository for infrastructure that would be managed by `cluster.dev`. This repo would host code for your clusters, deployments and other resources managed GitOps way.  
- Next steps should be done in that repo.
+1. Dedicate a separate repository for infrastructure that would be managed by `cluster.dev`. This repo would host code for your clusters, deployments and other resources managed GitOps way.  
+Next steps should be done in that repo.
 
- 2. Obtain access credentials for your cloud account.
+2. Obtain access credentials for your cloud account.
  For example, in AWS it is called "Programmatic Access user",and looks like: 
  ```yaml
  aws_access_key_id =  ATIAAJSXDBUVOQ4JR
  aws_secret_access_key = SuperAwsSecret
  ```
- 3. Add credentials to you repo's Secrets under GitHub's: "Settings->Secrets", ex: 
+3. Add credentials to you repo's Secrets under GitHub's: "Settings->Secrets", ex: 
  ![GitHub Secrets](docs/images/gh-secrets.png)
 
- 4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml` :
+4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml` :
  ```yaml
 cluster:
   name: minikube-a
@@ -57,7 +58,8 @@ cluster:
     instanceType: m5.large
  ```   
  
- 4. Create a Github Workflow file `.github/workflows/main.yml`:  
+5. Create a Github Workflow file `.github/workflows/main.yml`:  
+
 ```yaml
 on: [push]
 jobs:
@@ -80,7 +82,7 @@ jobs:
       run: echo "The status ${{ steps.reconcile.outputs.status }}"
 ```
 
-5. Commit and Push changes and follow the Github Action execution and in its output you'll receive access instructions to your cluster and its services.
+6. Commit and Push changes and follow the Github Action execution and in its output you'll receive access instructions to your cluster and its services.
 
 ## Roadmap 
 
