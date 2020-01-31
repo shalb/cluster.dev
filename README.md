@@ -36,7 +36,7 @@ You receive:
 Next steps should be done in that repo.
 
 2. Obtain access credentials for your cloud account.
- For example, in AWS it is called "Programmatic Access user",and looks like: 
+ For example, in AWS it is called "Programmatic Access user", and looks like: 
  ```yaml
  aws_access_key_id =  ATIAAJSXDBUVOQ4JR
  aws_secret_access_key = SuperAwsSecret
