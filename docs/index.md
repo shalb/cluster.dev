@@ -20,10 +20,10 @@ Supports different Cloud Providers and Kubernetes versions.
 
 In background:
 
- - Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects would be stored. Typically it is defined on Cloud Object Storage like AWS S3.
- - Terraform modules creates Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
- - ArgoCD Continuous Deployment system deployed inside Kubernetes cluster. Enables you to deploy your applications from raw manifests, helm charts or kustomize yaml's.
- - GitHub CI runner deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
+ - Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects will be stored. Typically it is defined on Cloud Object Storage like AWS S3.
+ - Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
+ - ArgoCD Continuous Deployment system is deployed inside Kubernetes cluster. It enables you to deploy your applications from raw manifests, helm charts or kustomize yaml's.
+ - GitHub CI runner is deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
 
 You receive:
 
@@ -32,7 +32,7 @@ You receive:
 
 ## Quick Start
 
-Sample manifest to create cluster:
+Sample manifest to create a cluster:
 ```yaml
 cluster:
   name: minikube-a
@@ -45,7 +45,7 @@ cluster:
     type: minikube
     instanceType: m5.large
 ```   
-You can find complete sample in our [GitHub Repo/Quick Start](https://github.com/shalb/cluster.dev#quick-start)
+You can find the complete sample in our [GitHub Repo/Quick Start](https://github.com/shalb/cluster.dev#quick-start)
 
 ## Roadmap 
 
