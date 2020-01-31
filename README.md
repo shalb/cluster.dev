@@ -20,10 +20,10 @@ Supports different Cloud Providers and Kubernetes versions.
 
 In background:
 
- - Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects would be stored. Typically it is defined on Cloud Object Storage like AWS S3.
- - Terraform modules creates Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
- - ArgoCD Continuous Deployment system deployed inside Kubernetes cluster. Enables you to deploy your applications from raw manifests, helm charts or kustomize yaml's.
- - GitHub CI runner deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
+ - Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects will be stored. Typically it is defined on Cloud Object Storage like AWS S3.
+ - Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
+ - ArgoCD Continuous Deployment system is deployed inside Kubernetes cluster. It enables you to deploy your applications from raw manifests, helm charts or kustomize yaml's.
+ - GitHub CI runner is deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
 
 You receive:
 
@@ -32,7 +32,7 @@ You receive:
 
 ## Quick Start
 
-1. Dedicate a separate repository for infrastructure that would be managed by `cluster.dev`. This repo would host code for your clusters, deployments and other resources managed GitOps way.  
+1. Dedicate a separate repository for the infrastructure that will be managed by `cluster.dev`. This repo will host code for your clusters, deployments and other resources managed by GitOps.  
 Next steps should be done in that repo.
 
 2. Obtain access credentials for your cloud account.
