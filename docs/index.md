@@ -29,6 +29,7 @@ You receive:
 
  - Automatically generated kubeconfig, ssh-access, and ArgoCD UI url’s
  - Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)  
+
 ## Quick Start
 
  1. Dedicate a separate repository for infrastructure that would be managed by `cluster.dev`. This repo would host code for your clusters, deployments and other resources managed GitOps way.  
@@ -57,7 +58,8 @@ cluster:
     instanceType: m5.large
  ```   
  
- 4. Create a Github Workflow file `.github/workflows/main.yml`:  
+ 4. Create a Github Workflow file `.github/workflows/main.yml` :
+
 ```yaml
 on: [push]
 jobs:
