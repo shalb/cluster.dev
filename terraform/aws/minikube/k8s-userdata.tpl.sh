@@ -6,7 +6,7 @@ export PATH=\$$PATH:/usr/local/bin
 # Copy kubeconfig to s3 bucket
 aws s3 cp /home/centos/kubeconfig s3://${cluster_name}/kubeconfig_${cluster_name}
 
-# copy private ssh key to s3
+# Copy private ssh key to s3
 cat << EOF > /home/centos/.ssh/id_rsa 
 ${private_key}
 EOF
