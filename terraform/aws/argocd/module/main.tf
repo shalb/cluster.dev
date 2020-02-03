@@ -1,15 +1,7 @@
 resource "null_resource" "kubeconfig_update" {
   triggers = {
-    policy_sha1 = "${sha1(file("~/.kube/config"))}"
+    policy_sha1 = "${sha1(file(var.kubeconfig))}"
   }
-}
-
-provider "helm" {
-  install_tiller = true
-  version = "~> 0.10.0"
-  service_account = kubernetes_service_account.tiller.metadata.0.name
-  namespace = kubernetes_service_account.tiller.metadata.0.namespace
-  tiller_image = "gcr.io/kubernetes-helm/tiller:v2.14.1"
 }
 
 data "helm_repository" "argo" {
@@ -69,4 +61,3 @@ resource "kubernetes_cluster_role_binding" "tiller" {
   ]
 
 }
-

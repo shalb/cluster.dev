@@ -1,3 +1,3 @@
 variable "kubeconfig" {
-  description = ""
+  description = "Path to kubeconfig file on file system"
 }
