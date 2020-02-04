@@ -1,2 +1,0 @@
-## Terraform module to deploy ArgoCD to Kubernetes cluster
-For input is should receive Kubernetes kubeconfig path to check if it has updated SHA sum and if all dependent resources needs to be re-created in case cluster config was changed. 
