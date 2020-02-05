@@ -343,7 +343,7 @@ server:
 
   ## Certificate configuration
   certificate:
-    enabled: true
+    enabled: false
     domain: argo-shalb-gh-5.shalb.net
     issuer: {}
     additionalHosts: []
