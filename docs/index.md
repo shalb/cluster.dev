@@ -1,73 +1,57 @@
-# Cluster.dev - Kubernetes-based Dev Enviornment in Minutes
+# Cluster.dev - Kubernetes-based Dev Environment in Minutes
 
-Cluster.dev is open source system delivered as GitHub Action or Docker Image 
-for creating and managing Kubernetes clusters with simple manifests by GitOps approach.  
+Cluster.dev is an open-source system delivered as GitHub Action or Docker Image 
+for creating and managing Kubernetes clusters with simple manifests by GitOps approach.   
+
 Designed for developers that are bored to configure Kubernetes stuff
-and just need: kubeconfig, dashboard, logging and monitoring out of the box.  
+and just need: kubeconfig, dashboard, logging and monitoring out-of-the-box.  
 
 Based on DevOps and SRE best-practices. GitOps cluster management and application delivery.
-Simple CICD integration. Easy extandable by pre-condigured applications and modules. 
+Simple CICD integration. Easily extandable by pre-configured applications and modules. 
 Supports different Cloud Providers and Kubernetes versions.
 
 ----
-## Principle diagram. What it does?
+## Principle diagram
 
 ![cluster.dev diagram](images/cluster-dev-diagram.png)
 
+
+## How it works
+
+In background:
+
+ - Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects will be stored. Typically it is defined on Cloud Object Storage like AWS S3.
+ - Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
+ - ArgoCD Continuous Deployment system is deployed inside Kubernetes cluster. It enables you to deploy your applications from raw manifests, helm charts or kustomize yaml's.
+ - GitHub CI runner is deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
+
+You receive:
+
+ - Automatically generated kubeconfig, ssh-access, and ArgoCD UI url’s
+ - Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)  
+
 ## Quick Start
 
-Just create file in your repository  `.cluster.dev/minikube-a.yaml` 
+Sample manifest to create a cluster:
 ```yaml
 cluster:
   name: minikube-a
   cloud: 
     provider: aws
     region: eu-central-1
+    vpc: default
+    domain: shalb.net
   provisioner:
     type: minikube
-    instanceType: "m4.large"
-```
+    instanceType: m5.large
+```   
+You can find the complete sample in our [GitHub Repo/Quick Start](https://github.com/shalb/cluster.dev#quick-start)
 
+## Roadmap 
 
-Add a GitHub Workflow: `.github/workflows/main.yml`:  
-```yaml
-on: [push]
-jobs:
-  deploy_cluster_job:
-    runs-on: ubuntu-latest
-    name: Deploy and Update K8s Cluster
-    steps:
-    - name: Checkout Repo
-      uses: actions/checkout@v1
-    - name: Reconcile Clusters
-      id: reconcile
-      uses: shalb/cluster.dev@master
-      with:
-        cluster-config: './.cluster.dev/minikube-one.yaml'
-        cloud-user: ${{ secrets.aws_access_key_id }}
-        cloud-pass: ${{ secrets.aws_secret_access_key }}
-    - name: Get the execution status
-      run: echo "The status ${{ steps.validate.reconcile.status }}"
-```
-
-Also you need to add cloud credentials to your repo secrets, ex: 
-```yaml
-aws_access_key_id =  ATIAAJSXDBUVOQ4JR
-aws_secret_access_key = SuperAwsSecret
-```
-
-Thats it! Just push update and Cluster.dev would create you a cluster in minutes.
-And produce a working kubeconfig that could be downloaded and links to differnet UI's: Kibana, Grafana, Dashboard, etc...
-
-## How it works
-
-In background: 
-
- - Terraform creates a remote state file where all infrastructure objects are stored.
-   Typically it is defined on Cloud Object Storage like AWS S3.
- - Terraform modules creates Minikube/EKS/GKE/etc.. cluster within your Cloud Proivder using      Account credentials
- - Produced kubeconfig should be generated and passed to value into target git repo credentials
+The project is in Alpha Stage, the first release is planned on 14 February 2020.
+Roadmap details: [ROADMAP](./roadmap/)
 
 ## Contributing 
 
-If you want to spread the project with own code, you could start contribute following next instructions: [CONTRIBUTING.md](./contributing/)
+If you want to spread the project with your own code, you can start contributing with this quick guide: [CONTRIBUTING](./contributing/)
