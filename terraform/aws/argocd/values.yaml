@@ -5,7 +5,7 @@ nameOverride: argocd
 fullnameOverride: ""
 
 # Optional CRD installation for those without Helm hooks
-installCRDs: true
+installCRDs: false
 
 global:
   image:
@@ -349,7 +349,7 @@ server:
       name: letsencrypt-prod
       kind: ClusterIssuer
     additionalHosts: []
-    
+
   ## Server service configuration
   service:
     annotations: {}
