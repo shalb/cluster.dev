@@ -10,6 +10,12 @@ resource "null_resource" "kubeconfig_update" {
 }
 
 # Deploy ArgoCD 
+resource "kubernetes_namespace" "argocd" {
+  metadata {
+    name = "argocd"
+  }
+}
+
 data "helm_repository" "argo" {
   name = "argo"
   url  = "https://argoproj.github.io/argo-helm"

@@ -381,7 +381,7 @@ server:
       kubernetes.io/ingress.class: nginx
       kubernetes.io/tls-acme: "true"
       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-      cluster.dev/argo-domain: argo-shalb-gh-5.shalb.net
+      cluster.dev/domain: argo-shalb-gh-5.shalb.net
     labels: {}
 
     ## Argo Ingress.
