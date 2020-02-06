@@ -395,7 +395,7 @@ server:
     paths:
       - /
     tls:
-      - secretName: argocd-secret # do not change, this is provided by Argo CD
+      - secretName: argo-shalb-gh-5-secret
         hosts:
           - argo-shalb-gh-5.shalb.net
 

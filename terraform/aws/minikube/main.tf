@@ -39,9 +39,7 @@ module "minikube" {
     "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/metrics-server.yaml",
     "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/dashboard.yaml",
     "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/external-dns.yaml",
-    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml",
-    "https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager.yaml",
-    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/letsencrypt-prod.yaml"
+    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml"
   ]
   
 }
