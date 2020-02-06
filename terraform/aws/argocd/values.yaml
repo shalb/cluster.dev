@@ -347,7 +347,7 @@ server:
     domain: argo-shalb-gh-5.shalb.net
     issuer: 
       name: letsencrypt-prod
-      kind: certificate
+      kind: ClusterIssuer
     additionalHosts: []
 
   ## Server service configuration
