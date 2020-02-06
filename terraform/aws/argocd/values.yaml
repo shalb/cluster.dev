@@ -348,7 +348,9 @@ server:
     issuer: 
       name: letsencrypt-prod
       kind: ClusterIssuer
-    additionalHosts: []
+    additionalHosts: 
+      - argo-shalb-gh-5.shalb.net
+      - argo.shalb.net
 
   ## Server service configuration
   service:
