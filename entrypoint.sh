@@ -122,10 +122,6 @@ function pull_kubeconfig {
 
 pull_kubeconfig
 
-# Deploy Cert Manager
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager.yaml
-kubectl apply -f ../../kubernetes/apps/cert-manager/letsencrypt-prod.yaml
-
 ## Deploy ArgoCD
 echo -e "${PURPLE}*** Installing/Reconciling ArgoCD...."
 cd ../argocd/

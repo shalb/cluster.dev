@@ -19,7 +19,7 @@ data "template_file" "k8s_userdata" {
 }
 
 module "minikube" {
-  #source  = "scholzj/minikube/aws"
+  #source  = "shalb/minikube/aws"
   #version = "1.10.0"  
   source =  "git::https://github.com/shalb/terraform-aws-minikube.git"
   cluster_name = var.cluster_name
@@ -35,11 +35,13 @@ module "minikube" {
   }
 
   addons = [
-    "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/storage-class.yaml",
-    "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/metrics-server.yaml",
-    "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/dashboard.yaml",
-    "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/external-dns.yaml",
-    "https://raw.githubusercontent.com/scholzj/terraform-aws-minikube/master/addons/ingress.yaml",
+    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/storage-class.yaml",
+    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/metrics-server.yaml",
+    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/dashboard.yaml",
+    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/external-dns.yaml",
+    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml",
+    "https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager.yaml",
+    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/letsencrypt-prod.yaml"
   ]
   
 }
