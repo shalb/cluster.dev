@@ -345,7 +345,9 @@ server:
   certificate:
     enabled: true
     domain: argo-shalb-gh-5.shalb.net
-    issuer: {}
+    issuer: 
+      name: letsencrypt-prod
+      kind: certificate
     additionalHosts: []
 
   ## Server service configuration
