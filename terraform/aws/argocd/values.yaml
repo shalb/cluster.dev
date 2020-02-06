@@ -344,14 +344,12 @@ server:
   ## Certificate configuration
   certificate:
     enabled: true
-    domain: argo-shalb-gh-5.shalb.net
+    domain: "argo-shalb-gh-5.shalb.net"
     issuer: 
       name: letsencrypt-prod
       kind: ClusterIssuer
-    additionalHosts: 
-      - argo-shalb-gh-5.shalb.net
-      - argo.shalb.net
-
+    additionalHosts: []
+    
   ## Server service configuration
   service:
     annotations: {}
