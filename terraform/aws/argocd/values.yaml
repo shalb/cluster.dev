@@ -384,7 +384,6 @@ server:
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
       cluster.dev/domain: argo-shalb-gh-5.shalb.net
     labels: {}
-
     ## Argo Ingress.
     ## Hostnames must be provided if Ingress is enabled.
     ## Secrets must be manually created in the namespace
