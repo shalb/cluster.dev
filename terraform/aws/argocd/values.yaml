@@ -394,7 +394,7 @@ server:
     paths:
       - /
     tls:
-      - secretName: argo-secret
+      - secretName: argo-cert-secret
         hosts:
           - argo-shalb-gh-5.shalb.net
 
