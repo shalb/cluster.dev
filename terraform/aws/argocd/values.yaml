@@ -381,6 +381,7 @@ server:
     annotations: 
       cert-manager.io/cluster-issuer: letsencrypt-prod
       kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
       cluster.dev/domain: argo-shalb-gh-5.shalb.net
     labels: {}
