@@ -123,7 +123,7 @@ function pull_kubeconfig {
 pull_kubeconfig
 
 # Deploy CertManager
-kubectl apply -f  "https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml"
+kubectl apply -f  "https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager.yaml"
 kubectl apply -f  "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/letsencrypt-prod.yaml"
 
 ## Deploy ArgoCD
