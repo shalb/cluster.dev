@@ -74,12 +74,30 @@ fi
 
 # Create a VPC or use existing defined 
 # TODO: implement switch for VPC
-if [ -z $cluster_cloud_vpc ] ; then 
-echo "*** The VPC is unset. Using default one"
-else
-echo "*** The VPC is defined. Applying Terraform configuration for VPC"
-#cd ../vpc/
-fi
+case ${cluster_cloud_vpc} in
+    default|"")
+        echo "*** Using default VPC"
+        ;;
+    create)
+        echo "*** Creating new VPC"
+        cd ../vpc/
+        terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+                  -backend-config="key=$cluster_name/terraform.state" \
+                  -backend-config="region=$cluster_cloud_region"
+        terraform plan \
+                  -var="region=$cluster_cloud_region" \
+                  -var="cluster_name=$CLUSTER_FULLNAME" \
+                  -input=false
+        exit 0
+        ;;
+    *)
+        echo "*** Using VPC ID ${cluster_cloud_vpc}"
+        ;;
+esac
+
+# DEBUG EXIT
+exit 0
+
 
 # Provisioner selection
 case $cluster_provisioner_type in 

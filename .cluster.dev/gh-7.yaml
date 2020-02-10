@@ -4,7 +4,7 @@ cluster:
   cloud: 
     provider: aws
     region: eu-central-1
-    vpc: default
+    vpc: create
     domain: shalb.net
   provisioner:
     type: minikube
