@@ -99,6 +99,7 @@ case ${cluster_cloud_vpc} in
         ;;
 esac
 
+
 echo "**** DEBUG: VPC ID: ${cluster_cloud_vpc_id}"
 # DEBUG EXIT
 
