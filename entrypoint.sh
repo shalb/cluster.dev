@@ -82,19 +82,22 @@ case ${cluster_cloud_vpc} in
         echo "*** Creating new VPC"
         cd ../vpc/
         terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-                  -backend-config="key=$cluster_name/terraform.state" \
+                  -backend-config="key=$cluster_name/terraform-vpc.state" \
                   -backend-config="region=$cluster_cloud_region"
         terraform plan \
                   -var="region=$cluster_cloud_region" \
                   -var="cluster_name=$CLUSTER_FULLNAME" \
-                  -input=false
-        exit 0
+                  -input=false \
+                  -out=tfplan
+        terraform apply -auto-approve -compact-warnings -input=false tfplan
+        cluster_cloud_vpc = $(terraform output vpc_id)
         ;;
     *)
         echo "*** Using VPC ID ${cluster_cloud_vpc}"
         ;;
 esac
 
+echo "**** DEBUG: VPC ID: ${cluster_cloud_vpc}"
 # DEBUG EXIT
 exit 0
 

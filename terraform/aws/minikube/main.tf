@@ -10,6 +10,12 @@ resource "aws_default_subnet" "default" {
   }
 }
 
+
+data "aws_subnet_ids" "vpc_subnets" {
+  vpc_id=var.vpc_id
+  count=var.vpc_id != "" ? 1 : 0
+}
+
 data "template_file" "k8s_userdata" {
   template = "${file("k8s-userdata.tpl.sh")}"
   vars = {
@@ -25,7 +31,7 @@ module "minikube" {
   cluster_name = var.cluster_name
   aws_instance_type = var.aws_instance_type
   aws_region = var.region
-  aws_subnet_id = aws_default_subnet.default.id 
+  aws_subnet_id = var.vpc_id != "" ? data.aws_subnet_ids.vpc_subnets.ids[0] : aws_default_subnet.default.id
   hosted_zone = var.hosted_zone
   additional_userdata = data.template_file.k8s_userdata.rendered
   ssh_public_key = tls_private_key.bastion_key.public_key_openssh # generated in bastion.tf 
