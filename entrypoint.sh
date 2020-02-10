@@ -90,7 +90,7 @@ case ${cluster_cloud_vpc} in
                   -input=false \
                   -out=tfplan
         terraform apply -auto-approve -compact-warnings -input=false tfplan
-        cluster_cloud_vpc = $(terraform output vpc_id)
+        cluster_cloud_vpc = ${terraform output vpc_id}
         ;;
     *)
         echo "*** Using VPC ID ${cluster_cloud_vpc}"
