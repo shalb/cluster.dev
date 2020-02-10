@@ -101,8 +101,6 @@ esac
 
 echo "**** DEBUG: VPC ID: ${cluster_cloud_vpc_id}"
 # DEBUG EXIT
-exit 0
-
 
 # Provisioner selection
 case $cluster_provisioner_type in 
@@ -125,6 +123,7 @@ terraform plan \
                   -var="cluster_name=$CLUSTER_FULLNAME" \
                   -var="aws_instance_type=$cluster_provisioner_instanceType" \
                   -var="hosted_zone=$cluster_cloud_domain" \
+                  -var="vpc_id=$cluster_cloud_vpc_id" \
                   -input=false \
                   -out=tfplan 
 
