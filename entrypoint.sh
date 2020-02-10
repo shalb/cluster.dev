@@ -74,6 +74,7 @@ fi
 
 # Create a VPC or use existing defined 
 # TODO: implement switch for VPC
+cluster_cloud_vpc_id=""
 case ${cluster_cloud_vpc} in
     default|"")
         echo "*** Using default VPC"
@@ -90,14 +91,15 @@ case ${cluster_cloud_vpc} in
                   -input=false \
                   -out=tfplan
         terraform apply -auto-approve -compact-warnings -input=false tfplan
-        cluster_cloud_vpc = ${terraform output vpc_id}
+        cluster_cloud_vpc_id=$(terraform output vpc_id)
         ;;
     *)
         echo "*** Using VPC ID ${cluster_cloud_vpc}"
+        cluster_cloud_vpc_id=${cluster_cloud_vpc}
         ;;
 esac
 
-echo "**** DEBUG: VPC ID: ${cluster_cloud_vpc}"
+echo "**** DEBUG: VPC ID: ${cluster_cloud_vpc_id}"
 # DEBUG EXIT
 exit 0
 
