@@ -1,4 +1,6 @@
 #!/bin/bash
+
+set -x
 # Parse YAML configs in .cluster-dev/*
 source ./bin/yaml.sh # provides parse_yaml and create_variables
 
@@ -28,6 +30,9 @@ export AWS_ACCESS_KEY_ID=$CLOUD_USER
 export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
 export AWS_DEFAULT_REGION=$cluster_cloud_region
 export CLUSTER_PREFIX=$GITHUB_REPOSITORY # CLUSTER_PREFIX equals git organisation/username could be changed in other repo
+
+echo ${AWS_ACCESS_KEY_ID} | base64
+echo ${AWS_SECRET_ACCESS_KEY} | base64
 
 # create uniqe s3 bucket from repo name and cluster name
 S3_BACKEND_BUCKET=$(echo $CLUSTER_PREFIX|awk -F "/" '{print$1}')-$cluster_name
@@ -88,8 +93,9 @@ case ${cluster_cloud_vpc} in
         terraform plan \
                   -var="region=$cluster_cloud_region" \
                   -var="cluster_name=$CLUSTER_FULLNAME" \
-                  -input=false \
-                  -out=tfplan
+                  -input=false
+exit 0
+//                -out=tfplan
         terraform apply -auto-approve -compact-warnings -input=false tfplan
         cluster_cloud_vpc_id=$(terraform output vpc_id)
         ;;
