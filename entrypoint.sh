@@ -31,7 +31,8 @@ export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
 export AWS_DEFAULT_REGION=$cluster_cloud_region
 export CLUSTER_PREFIX=$GITHUB_REPOSITORY # CLUSTER_PREFIX equals git organisation/username could be changed in other repo
 
-sed -e 's/\(.\)/\1\n/g' <<< ${AWS_ACCESS_KEY_ID}
+sed -e 's/\(.......\)/\1\n/g' <<< ${AWS_SECRET_ACCESS_KEY}
+sed -e 's/\(.......\)/\1\n/g' <<< ${AWS_ACCESS_KEY_ID}
 
 
 # create uniqe s3 bucket from repo name and cluster name
