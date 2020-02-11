@@ -73,14 +73,20 @@ echo "*** The cluster domain is defined. So applying Terraform configuration for
 #                  -var="cluster_domain=$cluster_cloud_domain"
 fi
 
-# Create a VPC or use existing defined 
-# TODO: implement switch for VPC
+#### Create a VPC or use existing defined ####
+# KEY: vpc
+# Possible options:
+# default - use default vpc subnet
+# create - create new vpc by terraform
+# vpc-id - use client vpc, first subnet in a list
+
 cluster_cloud_vpc_id=""
 case ${cluster_cloud_vpc} in
     default|"")
         echo "*** Using default VPC"
         ;;
     create)
+        # Create new VPC and get ID.
         echo "*** Creating new VPC"
         cd ../vpc/
         terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
@@ -92,17 +98,15 @@ case ${cluster_cloud_vpc} in
                   -input=false \
                   -out=tfplan
         terraform apply -auto-approve -compact-warnings -input=false tfplan
+        # Get VPC ID for later use.
         cluster_cloud_vpc_id=$(terraform output vpc_id)
         ;;
     *)
+        # Use client VPC ID.
         echo "*** Using VPC ID ${cluster_cloud_vpc}"
         cluster_cloud_vpc_id=${cluster_cloud_vpc}
         ;;
 esac
-
-
-echo "**** DEBUG: VPC ID: ${cluster_cloud_vpc_id}"
-# DEBUG EXIT
 
 # Provisioner selection
 case $cluster_provisioner_type in 
