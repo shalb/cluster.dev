@@ -21,14 +21,14 @@ data "template_file" "k8s_userdata" {
 module "minikube" {
   #source  = "scholzj/minikube/aws"
   #version = "1.10.0"  
-  source =  "git::https://github.com/shalb/terraform-aws-minikube.git"
+  source =  "git::https://github.com/shalb/terraform-aws-minikube.git?ref=ubuntu-base"
   cluster_name = var.cluster_name
   aws_instance_type = var.aws_instance_type
   aws_region = var.region
   aws_subnet_id = aws_default_subnet.default.id 
   hosted_zone = var.hosted_zone
   additional_userdata = data.template_file.k8s_userdata.rendered
-  ssh_public_key = tls_private_key.bastion_key.public_key_openssh # generated in bastion.tf 
+  ssh_public_key = tls_private_key.bastion_key.public_key_openssh # generated in bastion.tf
   tags = {
     Application = "${var.cluster_name}"
     CreatedBy   = "cluster.dev"
