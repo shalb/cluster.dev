@@ -1,3 +1,8 @@
+resource "random_password" "argocd_pass" {
+  length = 16
+  special = false
+}
+
 provider "helm" {
   version = "~> 1.0.0"
 }
@@ -29,9 +34,45 @@ resource "helm_release" "argo-cd" {
   namespace  = "argocd"
 
   values = [
-    "${file("values.yaml")}"
+    file("values.yaml")
   ]
   depends_on = [
     null_resource.kubeconfig_update,
-      ]
+  ]
+  set {
+    name="server.certificate.domain"
+    value=var.argo_domain
+  }
+  set {
+    name="server.ingress.annotations.cluster.dev/domain"
+    value=var.argo_domain
+  }
+  set {
+    name="server.ingress.hosts[0]"
+    value=var.argo_domain
+  }
+  set {
+    name="server.ingress.tls[0].hosts[0]"
+    value=var.argo_domain
+  }
+  set {
+    name="server.config.url"
+    value="https://${var.argo_domain}"
+  }
+  set {
+    name="configs.secret.argocdServerAdminPassword"
+    value=bcrypt(random_password.argocd_pass.result)
+  }
+}
+
+output "argocd_url" {
+  value="https://${var.argo_domain}"
+}
+
+output "argocd_user" {
+  value="admin"
+}
+
+output "argocd_pass" {
+  value=random_password.argocd_pass.result
 }

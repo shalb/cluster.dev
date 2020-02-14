@@ -131,10 +131,13 @@ echo -e "${PURPLE}*** Installing/Reconciling ArgoCD...."
 cd ../argocd/
 terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
                -backend-config="key=$cluster_name/terraform-argocd.state" \
-               -backend-config="region=$cluster_cloud_region" \
+               -backend-config="region=$cluster_cloud_region"
 
 echo "*** Apply Terraform code execution....."
-terraform plan -input=false -out=tfplan-argocd 
+terraform plan \
+               -var="argo_domain=argo-$CLUSTER_FULLNAME.$cluster_cloud_domain" \
+               -input=false -out=tfplan-argocd
+
 terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd
 
 

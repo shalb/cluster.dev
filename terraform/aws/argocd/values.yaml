@@ -344,7 +344,7 @@ server:
   ## Certificate configuration
   certificate:
     enabled: true
-    domain: "argos-shalb-gh-5.shalb.net"
+    domain: "domain.shalb.net"
     issuer: 
       name: letsencrypt-prod
       kind: ClusterIssuer
@@ -383,20 +383,20 @@ server:
       kubernetes.io/ingress.class: nginx
       kubernetes.io/tls-acme: "true"
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-      cluster.dev/domain: argos-shalb-gh-5.shalb.net
+      cluster.dev/domain: domain.shalb.net
     labels: {}
     ## Argo Ingress.
     ## Hostnames must be provided if Ingress is enabled.
     ## Secrets must be manually created in the namespace
     ##
     hosts:
-      - argos-shalb-gh-5.shalb.net
+      - domain.shalb.net
     paths:
       - /
     tls:
       - secretName: argocd-cert
         hosts:
-          - argos-shalb-gh-5.shalb.net
+          - domain.shalb.net
 
   # Create a OpenShift Route with SSL passthrough for UI and CLI
   # Consider setting 'hostname' e.g. https://argocd.apps-crc.testing/ using your Default Ingress Controller Domain
@@ -410,7 +410,7 @@ server:
   ## reference https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
   config:
     # Argo CD's externally facing base URL (optional). Required when configuring SSO
-    url: https://argos-shalb-gh-5.shalb.net
+    url: https://domain.shalb.net
     # Argo CD instance label key
     application.instanceLabelKey: argocd.argoproj.io/instance
     # repositories: |
@@ -745,6 +745,5 @@ configs:
 
     # Argo expects the password in the secret to be bcrypt hashed. You can create this hash with
     # `htpasswd -nbBC 10 "" $ARGO_PWD | tr -d ':\n' | sed 's/$2y/$2a/'`
-    # argocdServerAdminPassword:
     # Password modification time defaults to current time if not set
     # argocdServerAdminPasswordMtime: "2006-01-02T15:04:05Z"
