@@ -13,10 +13,10 @@ module "vpc" {
 
   public_subnets = ["10.18.128.0/20"]
   tags = {
-    Terraform   = "true"
+    Terraform = "true"
   }
 }
 
 output "vpc_id" {
-  value=module.vpc.vpc_id
+  value = module.vpc.vpc_id
 }
