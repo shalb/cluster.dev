@@ -5,7 +5,7 @@ module "vpc" {
   version = "2.15.0"
 
   name               = "${var.cluster_name}-vpc"
-  cidr               = var.vpc_cidr)
+  cidr               = var.vpc_cidr
   azs                = ["${var.region}a"]
   enable_nat_gateway = true
   enable_vpn_gateway = true
