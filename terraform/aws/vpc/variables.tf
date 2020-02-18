@@ -8,3 +8,8 @@ variable "cluster_name" {
   description = "Name of the cluster"
 }
 
+variable "vpc_cidr" {
+  type        = string
+  description = "Vpc CIDR"
+  default     = "10.18.0.0/16"
+}

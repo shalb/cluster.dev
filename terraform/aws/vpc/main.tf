@@ -1,17 +1,19 @@
+locals {}
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "2.15.0"
 
   name               = "${var.cluster_name}-vpc"
-  cidr               = "10.18.0.0/16"
+  cidr               = var.vpc_cidr)
   azs                = ["${var.region}a"]
   enable_nat_gateway = true
   enable_vpn_gateway = true
 
   enable_dns_hostnames = true
   enable_dns_support   = true
-
-  public_subnets = ["10.18.128.0/20"]
+  public_subnets  = [cidrsubnet(var.vpc_cidr, 4, 0)]
+  private_subnets = [cidrsubnet(var.vpc_cidr, 4, 1)]
   tags = {
     Terraform = "true"
   }
