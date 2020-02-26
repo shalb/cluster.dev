@@ -4,7 +4,6 @@ resource "random_password" "argocd_pass" {
 }
 
 provider "helm" {
-  version = "~> 1.0.0"
 }
 
 # Check for kubeconfig and update resources when cluster gets re-created.

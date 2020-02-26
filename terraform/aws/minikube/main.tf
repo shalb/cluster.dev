@@ -1,6 +1,5 @@
 provider "aws" {
-  version = ">= 2.23.0"
-  region  = var.region
+  region = var.region
 }
 
 resource "aws_default_subnet" "default" {
