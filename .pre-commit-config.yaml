@@ -1,0 +1,39 @@
+# How to install:
+# pre-commit install --install-hooks && pre-commit install --install-hooks -t commit-msg
+
+repos:
+#######
+# ALL #
+#######
+- repo: git://github.com/pre-commit/pre-commit-hooks
+  rev: v2.2.3
+  hooks:
+    # Git style
+    - id: check-added-large-files
+    - id: check-merge-conflict
+    - id: check-vcs-permalinks
+    - id: forbid-new-submodules
+    - id: no-commit-to-branch
+
+    # Common errors
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+      args: [--markdown-linebreak-ext=md]
+
+    # Cross platform
+    - id: check-case-conflict
+
+    # Security
+    - id: detect-aws-credentials
+      args: ['--allow-missing-credentials']
+    - id: detect-private-key
+
+#############
+# TERRAFORM #
+#############
+- repo: git://github.com/antonbabenko/pre-commit-terraform
+  rev: v1.17.0
+  hooks:
+    - id: terraform_fmt
+    - id: terraform_docs
+    - id: terraform_validate

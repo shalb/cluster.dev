@@ -9,6 +9,6 @@ variable "cluster_fullname" {
 }
 
 variable "cluster_domain" {
-  type = string
+  type        = string
   description = "Default domain for cluster records"
 }
