@@ -63,6 +63,14 @@ resource "helm_release" "argo-cd" {
     name="configs.secret.argocdServerAdminPassword"
     value=bcrypt(random_password.argocd_pass.result)
   }
+  set {
+    name="installCRDs"
+    value="false"
+  }
+  set {
+    name=""
+    value=""
+  }
 }
 
 output "argocd_url" {
