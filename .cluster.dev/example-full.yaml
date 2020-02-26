@@ -1,7 +1,7 @@
 cluster:
   name: minikube-aws
   installed: true
-  cloud: 
+  cloud:
     provider: aws
     region: eu-central-1
     vpc: default
@@ -18,15 +18,15 @@ envs:
     - grafana
   - namespace: stage
     apps:
-     - nginx-ingress
-     - micro-services
+    - nginx-ingress
+    - micro-services
   - namespace: github-runner
     apps:
-     - github-runner
----   
+    - github-runner
+---
 apps:
   - name: elk-logging
-    helmfile: 
+    helmfile:
       path: git://github.shalb.com/cluster.dev/helmfile-logging.git?v=12
       version: 0.11.04
   - name: prometheus-operator

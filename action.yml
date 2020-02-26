@@ -6,10 +6,10 @@ inputs:
     description: 'Path for cluster config/s file or directory'
     required: true
     default: '.cluster.dev'
-  cloud-user:  
+  cloud-user:
     description: 'Cloud username or ID'
     required: true
-  cloud-pass:  
+  cloud-pass:
     description: 'Cloud password or secret key'
     required: true
 outputs:
@@ -23,5 +23,5 @@ runs:
     - ${{ inputs.cloud-user }}
     - ${{ inputs.cloud-pass }}
 branding:
-    icon: 'server'  
+    icon: 'server'
     color: 'green'

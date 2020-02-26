@@ -1,7 +1,7 @@
 cluster:
   name: minikube-one
   installed: true
-  cloud: 
+  cloud:
     provider: aws
     region: eu-central-1
     vpc: default

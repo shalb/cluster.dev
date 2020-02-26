@@ -1,5 +1,5 @@
 resource "random_password" "argocd_pass" {
-  length = 16
+  length  = 16
   special = false
 }
 
@@ -14,7 +14,7 @@ resource "null_resource" "kubeconfig_update" {
   }
 }
 
-# Deploy ArgoCD 
+# Deploy ArgoCD
 resource "kubernetes_namespace" "argocd" {
   metadata {
     name = "argocd"
@@ -40,47 +40,47 @@ resource "helm_release" "argo-cd" {
     null_resource.kubeconfig_update,
   ]
   set {
-    name="server.certificate.domain"
-    value=var.argo_domain
+    name  = "server.certificate.domain"
+    value = var.argo_domain
   }
   set {
-    name="server.ingress.annotations.cluster.dev/domain"
-    value=var.argo_domain
+    name  = "server.ingress.annotations.cluster.dev/domain"
+    value = var.argo_domain
   }
   set {
-    name="server.ingress.hosts[0]"
-    value=var.argo_domain
+    name  = "server.ingress.hosts[0]"
+    value = var.argo_domain
   }
   set {
-    name="server.ingress.tls[0].hosts[0]"
-    value=var.argo_domain
+    name  = "server.ingress.tls[0].hosts[0]"
+    value = var.argo_domain
   }
   set {
-    name="server.config.url"
-    value="https://${var.argo_domain}"
+    name  = "server.config.url"
+    value = "https://${var.argo_domain}"
   }
   set {
-    name="configs.secret.argocdServerAdminPassword"
-    value=bcrypt(random_password.argocd_pass.result)
+    name  = "configs.secret.argocdServerAdminPassword"
+    value = bcrypt(random_password.argocd_pass.result)
   }
   set {
-    name="installCRDs"
-    value="false"
+    name  = "installCRDs"
+    value = "false"
   }
   set {
-    name=""
-    value=""
+    name  = ""
+    value = ""
   }
 }
 
 output "argocd_url" {
-  value="https://${var.argo_domain}"
+  value = "https://${var.argo_domain}"
 }
 
 output "argocd_user" {
-  value="admin"
+  value = "admin"
 }
 
 output "argocd_pass" {
-  value=random_password.argocd_pass.result
+  value = random_password.argocd_pass.result
 }

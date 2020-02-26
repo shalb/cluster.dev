@@ -12,13 +12,13 @@ releases:
     chart: elastic/filebeat
     version: 7.5.1
     values:
-     - filebeat/values.yaml        
-   
+    - filebeat/values.yaml
+
   - name: kibana
     installed: true
     namespace: logging
     chart: elastic/kibana
-    version: 7.5.1 
+    version: 7.5.1
 
   - name: elasticsearch-logging
     installed: true
@@ -26,4 +26,4 @@ releases:
     chart: elastic/elasticsearch
     version: 7.5.1
     values:
-     - elasticsearch/values-logging.yaml
+    - elasticsearch/values-logging.yaml

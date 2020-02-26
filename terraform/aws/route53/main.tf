@@ -1,6 +1,6 @@
 provider "aws" {
-  version    = ">= 2.23.0"
-  region = var.region
+  version = ">= 2.23.0"
+  region  = var.region
 }
 
 resource "aws_route53_zone" "main" {
