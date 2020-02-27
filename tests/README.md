@@ -14,7 +14,7 @@ cp config.example.sh config.sh
 ./tests.sh
 ```
 
-It create cluster infrastructure tht specified in your github workflow file (set in `config.sh`)
+It create cluster infrastructure that specified in your github workflow file (set in step 1)
 
 ## Destroy infrastructure, created by terraform
 
