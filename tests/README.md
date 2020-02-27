@@ -1,8 +1,22 @@
-To run all action local for tests:
-1) Edit tests.sh, set variables USER and PASS (aws_access_key_id and aws_secret_access_key)
-2) cd tests/ && ./tests.sh
+# Testing locally
 
-Destroy infrastructure, created by terraform:
+## Run actions local for tests
 
+1. Create `config.sh` and setup required variables
+
+```bash
+cp config.example.sh config.sh
+```
+
+2. Run tests
+
+```bash
+./tests.sh
+```
+
+## Destroy infrastructure, created by terraform
+
+```bash
 cd ../terraform/aws/(module) && terraform destroy
-(then press enter for leave variables empty, set only region)
+# (then press enter for leave variables empty, set only region)
+```

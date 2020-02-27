@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Import variables
+. config.sh
 
 readonly SRC_PATH=$(realpath $(dirname $(readlink -f $0))/../)
 cd ${SRC_PATH}
@@ -8,8 +11,9 @@ readonly DOCKER_IMAGE_NAME="cluster.dev:${GIT_SHOT_COMMIT}-local-tests"
 
 docker build -t ${DOCKER_IMAGE_NAME} .
 
-readonly USER="AWS_SECRET_KEY"
-readonly PASS="AWS_SECRET_TOKEN"
+# Get from vonfig.sh
+readonly USER="${AWS_SECRET_KEY}"
+readonly PASS="${AWS_SECRET_TOKEN}"
 
 docker run --name NAME --workdir /github/workspace --rm -v "${SRC_PATH}":"/github/workspace" \
            -e GITHUB_REPOSITORY="shalb" \
