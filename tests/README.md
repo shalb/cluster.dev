@@ -14,9 +14,17 @@ cp config.example.sh config.sh
 ./tests.sh
 ```
 
+It create cluster infrastructure tht specified in your github workflow file (set in `config.sh`)
+
 ## Destroy infrastructure, created by terraform
 
+When you end, destroy all resources created during test
+
 ```bash
-cd ../terraform/aws/(module) && terraform destroy
+terraform destroy ../terraform/aws/argocd
+# (then press enter for leave variables empty, set only region)
+terraform destroy ../terraform/aws/minikube
+# (then press enter for leave variables empty, set only region)
+terraform destroy ../terraform/aws/backend
 # (then press enter for leave variables empty, set only region)
 ```
