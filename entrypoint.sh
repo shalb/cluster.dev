@@ -110,12 +110,14 @@ function aws::init_vpc {
 function aws::minikube::pull_kubeconfig {
     local WAIT_TIMEOUT=5
 
-    until kubectl version --request-timeout=5s >/dev/null; do
-        sleep $WAIT_TIMEOUT
-        aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME}
-        export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
-        cp ~/.kube/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/config >/dev/null
+    export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+
+    until kubectl version --request-timeout=5s 2>/dev/null; do
         echo "*** Waiting $WAIT_TIMEOUT seconds for Kubernetes Cluster gets ready"
+        sleep $WAIT_TIMEOUT
+
+        aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 2>/dev/null
+        cp ~/.kube/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/config 2>/dev/null
     done
 }
 
