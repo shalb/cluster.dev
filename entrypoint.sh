@@ -3,23 +3,24 @@
 source ./bin/yaml.sh # provides parse_yaml and create_variables
 
 # Variables passed by Github Workflow to Action
-CLUSTER_CONFIG_PATH=$1
-CLOUD_USER=$2
-CLOUD_PASS=$3
+readonly CLUSTER_CONFIG_PATH=$1
+readonly CLOUD_USER=$2
+readonly CLOUD_PASS=$3
 # For local testing run: ./entrypoint.sh .cluster.dev/minikube-one.yaml AWSUSER AWSPASS
 #
 
 #######################################
 # Create or use exiting S3 bucket for Terraform states
 # Globals:
-#   cluster_cloud_region
 #   S3_BACKEND_BUCKET
 # Arguments:
-#   None
+#   cluster_cloud_region
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::init_s3_bucket {
+    local cluster_cloud_region=$1
+
     cd terraform/aws/backend/
 
     # Create and init backend.
@@ -40,17 +41,20 @@ function aws::init_s3_bucket {
 # Create a DNS domains/records if required
 # TODO: implement switch for domain. https://github.com/shalb/cluster.dev/issues/2
 # Globals:
-#   cluster_cloud_region
 #   S3_BACKEND_BUCKET
-#   cluster_name
 #   CLUSTER_FULLNAME
-#   cluster_cloud_domain
 # Arguments:
-#   None
+#   cluster_cloud_region
+#   cluster_name
+#   cluster_cloud_domain
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::init_route53 {
+    local cluster_cloud_region=$1
+    local cluster_name=$2
+    local cluster_cloud_domain=$3
+
     cd terraform/aws/route53/
 
     if [ -z $cluster_cloud_domain ]; then
@@ -74,13 +78,15 @@ function aws::init_route53 {
 # Create a VPC or use existing defined
 # TODO: implement switch for VPC
 # Globals:
-#   cluster_cloud_vpc
-# Arguments:
 #   None
+# Arguments:
+#   cluster_cloud_vpc
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::init_vpc {
+    local cluster_cloud_vpc=$1
+
     cd terraform/aws/vpc/
 
     if [ -z $cluster_cloud_vpc ]; then
@@ -102,7 +108,8 @@ function aws::init_vpc {
 #   Writes progress status
 #######################################
 function aws::minikube::pull_kubeconfig {
-    WAIT_TIMEOUT=5
+    local WAIT_TIMEOUT=5
+
     until kubectl version --request-timeout=5s >/dev/null; do
         sleep $WAIT_TIMEOUT
         aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME}
@@ -116,17 +123,21 @@ function aws::minikube::pull_kubeconfig {
 # Deploy Minikube cluster via Terraform
 # Globals:
 #   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
 #   cluster_name
 #   cluster_cloud_region
-#   CLUSTER_FULLNAME
 #   cluster_provisioner_instanceType
 #   cluster_cloud_domain
-# Arguments:
-#   None
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::minikube::deploy_cluster {
+    local cluster_name=$1
+    local cluster_cloud_region=$2
+    local cluster_provisioner_instanceType=$3
+    local cluster_cloud_domain=$4
+
     cd terraform/aws/minikube/
 
     # Deploy main Terraform code
@@ -170,16 +181,19 @@ function deploy_cert_manager {
 # Deploy ArgoCD via Terraform
 # Globals:
 #   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
 #   cluster_name
 #   cluster_cloud_region
-#   CLUSTER_FULLNAME
 #   cluster_cloud_domain
-# Arguments:
-#   None
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::init_argocd {
+    local cluster_name=$1
+    local cluster_cloud_region=$2
+    local cluster_cloud_domain=$3
+
     cd terraform/aws/argocd/
 
     echo -e "${PURPLE}*** Installing/Reconciling ArgoCD...."
@@ -202,13 +216,14 @@ function aws::init_argocd {
 # Writes commands for user for get access to cluster
 # Globals:
 #   CLUSTER_FULLNAME
-#   cluster_cloud_domain
 # Arguments:
-#   None
+#   cluster_cloud_domain
 # Outputs:
 #   Writes commands to get cluster's kubeconfig and ssh key
 #######################################
 function aws::output_access_keys {
+    local cluster_cloud_domain=$1
+
     # TODO: Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
     PURPLE='\033[0;35m'
     echo -e "${PURPLE}*** Download and apply your kubeconfig using commands:
@@ -276,19 +291,19 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
         # make sure it is not larger than 63 symbols
         S3_BACKEND_BUCKET=$(echo $S3_BACKEND_BUCKET | cut -c 1-63)
         # The same name would be used for domains
-        CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
+        readonly CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
 
         # Create and init backend.
         # Check if bucket already exist by trying to import it
-        aws::init_s3_bucket
+        aws::init_s3_bucket   $cluster_cloud_region
 
         # Create a DNS domains/records if required
         # TODO: implement switch for domain. https://github.com/shalb/cluster.dev/issues/2
-        aws::init_route53
+        aws::init_route53   $cluster_cloud_region $cluster_name $cluster_cloud_domain
 
         # Create a VPC or use existing defined
         # TODO: implement switch for VPC
-        aws::init_vpc
+        aws::init_vpc   $cluster_cloud_vpc
 
         # Provisioner selection
         case $cluster_provisioner_type in
@@ -297,7 +312,7 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
 
             # Deploy Minikube cluster via Terraform
             # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace
-            aws::minikube::deploy_cluster
+            aws::minikube::deploy_cluster   $cluster_name $cluster_cloud_region $cluster_provisioner_instanceType $cluster_cloud_domain
 
             # Pull a kubeconfig to instance via kubectl
             aws::minikube::pull_kubeconfig
@@ -306,11 +321,11 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
             deploy_cert_manager
 
             # Deploy ArgoCD via Terraform
-            aws::init_argocd
+            aws::init_argocd   $cluster_name $cluster_cloud_region $cluster_cloud_domain
 
             # Writes commands for user for get access to cluster
             # TODO: Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
-            aws::output_access_keys
+            aws::output_access_keys   $cluster_cloud_domain
 
             # Writes information about used software
             aws::output_software_info
