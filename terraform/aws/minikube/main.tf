@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_default_subnet" "default" {
-  availability_zone = "${var.region}a" # TODO check if always default zone has A zone
+  availability_zone = "${var.region}a"
   tags = {
     Name = "Default subnet for cluster.dev"
   }
