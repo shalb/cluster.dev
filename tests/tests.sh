@@ -14,8 +14,8 @@ readonly DOCKER_IMAGE_NAME="cluster.dev:${GIT_SHORT_COMMIT}-local-tests"
 docker build -t ${DOCKER_IMAGE_NAME} .
 
 # Get from config.sh
-readonly USER="${AWS_SECRET_KEY}"
-readonly PASS="${AWS_SECRET_TOKEN}"
+readonly USER="${AWS_ACCESS_KEY_ID}"
+readonly PASS="${AWS_SECRET_ACCESS_KEY}"
 readonly WORKFLOW_PATH="${GH_ACTION_WORKFLOW_PATH}"
 
 # Run docker in localhost
