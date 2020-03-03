@@ -33,8 +33,7 @@ module "minikube" {
   aws_subnet_id       = var.vpc_id != "" ? tolist(data.aws_subnet_ids.vpc_subnets[0].ids)[0] : aws_default_subnet.default.id
   hosted_zone         = var.hosted_zone
   additional_userdata = data.template_file.k8s_userdata.rendered
-  // ssh_public_key      = tls_private_key.bastion_key.public_key_openssh # generated in bastion.tf
-  ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDOv8rqtDzvbWhr81Rf+1wrarS1Y3t1bvhEJRTu2tcOBU4KEVXCFeBMfURfhJ9XnvguxuYBIgCyBaREnv74+DgoTU+NDK1Wk/u1Rau+TXC57qd66Xwhm/7Ke/YTCq1q0Da2No95Rp2o32ONB3zxS8dHfsE0iJyiMPlGVDAVduPuJeQ0TaErCJeRibwy9Oi5prTHNzzKgmKdvYerBAUaebM4wQ4U2fJ4cQKMmzO4/TnXaonizXwbsJvZVOlnCM3nZs8amfAOTqIdzDJfpu+hZjbeluxLm6+1RI7t6SJ+jgv8oMidaxFt/3HFVWxC1g0HQZ9SZle+9iMJdDVyj31sXE8L arti@arti-virtual-machine"
+  ssh_public_key      = tls_private_key.bastion_key.public_key_openssh # generated in bastion.tf
   tags = {
     Application = var.cluster_name
     CreatedBy   = "cluster.dev"
