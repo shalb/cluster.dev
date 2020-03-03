@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Parse YAML configs in .cluster-dev/*
 source ./bin/yaml.sh # provides parse_yaml and create_variables
 
@@ -76,24 +77,49 @@ function aws::init_route53 {
 
 #######################################
 # Create a VPC or use existing defined
-# TODO: implement switch for VPC
 # Globals:
 #   None
 # Arguments:
 #   cluster_cloud_vpc
 # Outputs:
 #   Writes progress status
+# KEY: vpc.
+# Possible options:
+#   default - use default vpc subnet
+#   create - create new vpc by terraform
+#   vpc-id - use client vpc, first subnet in a list
 #######################################
 function aws::init_vpc {
     local cluster_cloud_vpc=$1
+    local cluster_cloud_vpc_id=""
 
     cd terraform/aws/vpc/
 
-    if [ -z $cluster_cloud_vpc ]; then
-        echo "*** The VPC is unset. Using default one"
-    else
-        echo "*** The VPC is defined. Applying Terraform configuration for VPC"
-    fi
+    case ${cluster_cloud_vpc} in
+        default|"")
+            echo "*** Using default VPC"
+            ;;
+        create)
+            # Create new VPC and get ID.
+            echo "*** Creating new VPC"
+            terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+                      -backend-config="key=$cluster_name/terraform-vpc.state" \
+                      -backend-config="region=$cluster_cloud_region"
+            terraform plan \
+                      -var="region=$cluster_cloud_region" \
+                      -var="cluster_name=$CLUSTER_FULLNAME" \
+                      -input=false \
+                      -out=tfplan
+            terraform apply -auto-approve -compact-warnings -input=false tfplan
+            # Get VPC ID for later use.
+            cluster_cloud_vpc_id=$(terraform output vpc_id)
+            ;;
+        *)
+            # Use client VPC ID.
+            echo "*** Using VPC ID ${cluster_cloud_vpc}"
+            cluster_cloud_vpc_id=${cluster_cloud_vpc}
+            ;;
+    esac
 
     cd -
 }
@@ -148,7 +174,7 @@ function aws::minikube::deploy_cluster {
         -backend-config="key=$cluster_name/terraform.state" \
         -backend-config="region=$cluster_cloud_region"
 
-    # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace:
+    # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace: https://github.com/shalb/cluster.dev/issues/9
     # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
     echo "*** Apply Terraform code execution"
@@ -304,7 +330,6 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
         aws::init_route53   $cluster_cloud_region $cluster_name $cluster_cloud_domain
 
         # Create a VPC or use existing defined
-        # TODO: implement switch for VPC
         aws::init_vpc   $cluster_cloud_vpc
 
         # Provisioner selection
@@ -313,7 +338,7 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
             echo "*** Provisioner: Minikube"
 
             # Deploy Minikube cluster via Terraform
-            # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace
+            # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace https://github.com/shalb/cluster.dev/issues/9
             aws::minikube::deploy_cluster   $cluster_name $cluster_cloud_region $cluster_provisioner_instanceType $cluster_cloud_domain
 
             # Pull a kubeconfig to instance via kubectl

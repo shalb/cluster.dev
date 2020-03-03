@@ -17,3 +17,9 @@ variable "hosted_zone" {
   type        = string
   description = "DNS zone to use in cluster"
 }
+
+variable "vpc_id" {
+  type        = string
+  description = "VPC ID (In case it differs from default)"
+  default     = ""
+}
