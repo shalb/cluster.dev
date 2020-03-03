@@ -1,39 +1,23 @@
+resource "random_password" "argocd_pass" {
+  length  = 16
+  special = false
+}
+
 provider "helm" {
-  install_tiller = true
-  version = "~> 0.10.0"
-  service_account = kubernetes_service_account.tiller.metadata.0.name
-  namespace = kubernetes_service_account.tiller.metadata.0.namespace
-  tiller_image = "gcr.io/kubernetes-helm/tiller:v2.14.1"
 }
 
-resource "kubernetes_service_account" "tiller" {
-  metadata {
-    name = "terraform-tiller"
-    namespace = "kube-system"
+# Check for kubeconfig and update resources when cluster gets re-created.
+resource "null_resource" "kubeconfig_update" {
+  triggers = {
+    policy_sha1 = "${sha1(file("~/.kube/config"))}"
   }
-
-  automount_service_account_token = true
 }
 
-resource "kubernetes_cluster_role_binding" "tiller" {
+# Deploy ArgoCD
+resource "kubernetes_namespace" "argocd" {
   metadata {
-    name = "terraform-tiller"
+    name = "argocd"
   }
-
-  role_ref {
-    kind = "ClusterRole"
-    name = "cluster-admin"
-    api_group = "rbac.authorization.k8s.io"
-  }
-
-  subject {
-    kind = "ServiceAccount"
-    name = "terraform-tiller"
-
-    api_group = ""
-    namespace = "kube-system"
-  }
-
 }
 
 data "helm_repository" "argo" {
@@ -45,10 +29,57 @@ resource "helm_release" "argo-cd" {
   name       = "argo-cd"
   repository = data.helm_repository.argo.metadata[0].name
   chart      = "argo-cd"
-  version    = "1.6.3"
+  version    = "1.7.1"
   namespace  = "argocd"
 
   values = [
-    "${file("values.yaml")}"
+    file("values.yaml")
   ]
+  depends_on = [
+    null_resource.kubeconfig_update,
+  ]
+  set {
+    name  = "server.certificate.domain"
+    value = var.argo_domain
+  }
+  set {
+    name  = "server.ingress.annotations.cluster.dev/domain"
+    value = var.argo_domain
+  }
+  set {
+    name  = "server.ingress.hosts[0]"
+    value = var.argo_domain
+  }
+  set {
+    name  = "server.ingress.tls[0].hosts[0]"
+    value = var.argo_domain
+  }
+  set {
+    name  = "server.config.url"
+    value = "https://${var.argo_domain}"
+  }
+  set {
+    name  = "configs.secret.argocdServerAdminPassword"
+    value = bcrypt(random_password.argocd_pass.result)
+  }
+  set {
+    name  = "installCRDs"
+    value = "false"
+  }
+  set {
+    name  = ""
+    value = ""
+  }
+}
+
+output "argocd_url" {
+  value = "https://${var.argo_domain}"
+}
+
+output "argocd_user" {
+  value = "admin"
+}
+
+output "argocd_pass" {
+  value = random_password.argocd_pass.result
 }

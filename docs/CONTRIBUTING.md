@@ -3,22 +3,24 @@ layout: default
 title: "Contributing code to Cluster.dev"
 permalink: /contributing/
 ---
+
 # Development
 
-## How to contribute 
+## How to contribute
 
 1. Create an issue that you are going to address in [GH Issues](https://github.com/shalb/cluster.dev/issues), for example issue `#3`.
 
 
-2. Spawn new branch from master named with the GH Issue you are going to address: `feature/GH-3`. For preferrable branch naming format [see here](https://github.com/pdffiller/styleguide-hooks/#branch-naming-format). 
+2. Spawn new branch from master named with the GH Issue you are going to address: `feature/GH-3`. For preferable branch naming format [see here](https://github.com/pdffiller/styleguide-hooks/#branch-naming-format).
 
 
 3. To start a new cluster corresponding to your issue, create a manifest file in `.cluster.dev/gh-3.yaml`, setting the name with the target issue:
+
 ```yaml
 cluster:
   name: gh-3 #CHANGE ME
   installed: true
-  cloud: 
+  cloud:
     provider: aws
     region: eu-central-1
     vpc: default
@@ -29,7 +31,7 @@ cluster:
 ```
 
 4. Create a new workflow in `.github/workflows` and name it corresponding to your issue: `gh-3.yaml`.  
-Set the required branch and file name in placeholders (marked with `#CHANGE ME`), for example:  
+Set the required branch and file name in placeholders (marked with `#CHANGE ME`), for example:
 
 ```yaml
 on:
