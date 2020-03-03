@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Parse YAML configs in .cluster-dev/*
 source ./bin/yaml.sh # provides parse_yaml and create_variables
 
@@ -72,14 +73,40 @@ echo "*** The cluster domain is defined. So applying Terraform configuration for
 #                  -var="cluster_domain=$cluster_cloud_domain"
 fi
 
-# Create a VPC or use existing defined
-# TODO: implement switch for VPC
-if [ -z $cluster_cloud_vpc ] ; then
-echo "*** The VPC is unset. Using default one"
-else
-echo "*** The VPC is defined. Applying Terraform configuration for VPC"
-#cd ../vpc/
-fi
+#### Create a VPC or use existing defined ####
+# KEY: vpc
+# Possible options:
+# default - use default vpc subnet
+# create - create new vpc by terraform
+# vpc-id - use client vpc, first subnet in a list
+
+cluster_cloud_vpc_id=""
+case ${cluster_cloud_vpc} in
+    default|"")
+        echo "*** Using default VPC"
+        ;;
+    create)
+        # Create new VPC and get ID.
+        echo "*** Creating new VPC"
+        cd ../vpc/
+        terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+                  -backend-config="key=$cluster_name/terraform-vpc.state" \
+                  -backend-config="region=$cluster_cloud_region"
+        terraform plan \
+                  -var="region=$cluster_cloud_region" \
+                  -var="cluster_name=$CLUSTER_FULLNAME" \
+                  -input=false \
+                  -out=tfplan
+        terraform apply -auto-approve -compact-warnings -input=false tfplan
+        # Get VPC ID for later use.
+        cluster_cloud_vpc_id=$(terraform output vpc_id)
+        ;;
+    *)
+        # Use client VPC ID.
+        echo "*** Using VPC ID ${cluster_cloud_vpc}"
+        cluster_cloud_vpc_id=${cluster_cloud_vpc}
+        ;;
+esac
 
 # Provisioner selection
 case $cluster_provisioner_type in
@@ -102,6 +129,7 @@ terraform plan \
                   -var="cluster_name=$CLUSTER_FULLNAME" \
                   -var="aws_instance_type=$cluster_provisioner_instanceType" \
                   -var="hosted_zone=$cluster_cloud_domain" \
+                  -var="vpc_id=$cluster_cloud_vpc_id" \
                   -input=false \
                   -out=tfplan
 

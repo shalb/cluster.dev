@@ -1,5 +1,6 @@
 provider "aws" {
-  region = var.region
+  version = ">= 2.23.0"
+  region  = var.region
 }
 
 resource "aws_default_subnet" "default" {
@@ -9,27 +10,32 @@ resource "aws_default_subnet" "default" {
   }
 }
 
+
+data "aws_subnet_ids" "vpc_subnets" {
+  count = var.vpc_id != "" ? 1 : 0
+
+  vpc_id = var.vpc_id
+}
+
 data "template_file" "k8s_userdata" {
-  template = "${file("k8s-userdata.tpl.sh")}"
+  template = file("k8s-userdata.tpl.sh")
   vars = {
-    cluster_name = "${var.cluster_name}"
+    cluster_name = var.cluster_name
     private_key  = tls_private_key.bastion_key.private_key_pem
   }
 }
 
 module "minikube" {
-  #source  = "shalb/minikube/aws"
-  #version = "1.10.0"
   source              = "git::https://github.com/shalb/terraform-aws-minikube.git"
   cluster_name        = var.cluster_name
   aws_instance_type   = var.aws_instance_type
   aws_region          = var.region
-  aws_subnet_id       = aws_default_subnet.default.id
+  aws_subnet_id       = var.vpc_id != "" ? tolist(data.aws_subnet_ids.vpc_subnets[0].ids)[0] : aws_default_subnet.default.id
   hosted_zone         = var.hosted_zone
   additional_userdata = data.template_file.k8s_userdata.rendered
   ssh_public_key      = tls_private_key.bastion_key.public_key_openssh # generated in bastion.tf
   tags = {
-    Application = "${var.cluster_name}"
+    Application = var.cluster_name
     CreatedBy   = "cluster.dev"
   }
 
