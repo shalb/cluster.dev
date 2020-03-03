@@ -1,8 +1,7 @@
 locals {}
 
 provider "aws" {
-  version = ">= 2.23.0"
-  region  = var.region
+  region = var.region
 }
 
 module "vpc" {
@@ -17,7 +16,7 @@ module "vpc" {
 
   enable_dns_hostnames = true
   enable_dns_support   = true
-  public_subnets  = [cidrsubnet(var.vpc_cidr, 4, 0)]
+  public_subnets       = [cidrsubnet(var.vpc_cidr, 4, 0)]
   tags = {
     Terraform = "true"
   }
