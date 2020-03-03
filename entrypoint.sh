@@ -78,12 +78,15 @@ function aws::init_route53 {
 #######################################
 # Create a VPC or use existing defined
 # Globals:
-#   None
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_cloud_vpc
+#   cluster_name
+#   cluster_cloud_region
 # Outputs:
 #   Writes progress status
-# KEY: vpc.
+# KEY: vpc (cluster_cloud_vpc)
 # Possible options:
 #   default - use default vpc subnet
 #   create - create new vpc by terraform
@@ -330,7 +333,7 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
         aws::init_route53   $cluster_cloud_region $cluster_name $cluster_cloud_domain
 
         # Create a VPC or use existing defined
-        aws::init_vpc   $cluster_cloud_vpc
+        aws::init_vpc   $cluster_cloud_vpc $cluster_name $cluster_cloud_region
 
         # Provisioner selection
         case $cluster_provisioner_type in
