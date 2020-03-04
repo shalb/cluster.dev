@@ -310,14 +310,14 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
     case $cluster_cloud_provider in
     aws)
 
-        echo "*** Cloud Provider AWS. Initing access variables"
+        echo "*** Cloud Provider AWS. Initializing access variables"
         # Define AWS credentials
         export AWS_ACCESS_KEY_ID=$CLOUD_USER
         export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
         export AWS_DEFAULT_REGION=$cluster_cloud_region
-        export CLUSTER_PREFIX=$GITHUB_REPOSITORY # CLUSTER_PREFIX equals git organisation/username could be changed in other repo
+        export CLUSTER_PREFIX=$GITHUB_REPOSITORY # CLUSTER_PREFIX equals git organization/username could be changed in other repo
 
-        # create uniqe s3 bucket from repo name and cluster name
+        # create unique s3 bucket from repo name and cluster name
         S3_BACKEND_BUCKET=$(echo $CLUSTER_PREFIX | awk -F "/" '{print$1}')-$cluster_name
         # make sure it is not larger than 63 symbols
         S3_BACKEND_BUCKET=$(echo $S3_BACKEND_BUCKET | cut -c 1-63)
