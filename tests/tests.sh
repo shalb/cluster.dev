@@ -19,6 +19,6 @@ readonly PASS="${AWS_SECRET_ACCESS_KEY}"
 readonly WORKFLOW_PATH="${GH_ACTION_WORKFLOW_PATH}"
 
 # Run docker in localhost
-docker run --name clusterdev-test-GIT_SHORT_COMMIT --workdir /github/workspace --rm -v "${SRC_PATH}":"/github/workspace" \
+docker run --name clusterdev-test-${GIT_SHORT_COMMIT} --workdir /github/workspace --rm -v "${SRC_PATH}":"/github/workspace" \
            -e GITHUB_REPOSITORY="shalb" \
            ${DOCKER_IMAGE_NAME} "${WORKFLOW_PATH}" "${USER}" "${PASS}"
