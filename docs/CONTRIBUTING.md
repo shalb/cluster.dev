@@ -69,4 +69,4 @@ jobs:
 
 9. After successful review, squash and merge your PR to master with the included comment `Resolve GH-3`.
 
-10. After merging be sure to delete all the resources associated with the issue (ec2 instances, elastic ip's, etc.) that have been used for testing.
+10. After merging be sure to delete all the resources associated with the issue (EC2 instances, Elastic IP's etc.) that have been used for testing.

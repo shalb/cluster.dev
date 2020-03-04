@@ -29,4 +29,4 @@ terraform destroy ../terraform/aws/backend
 # (then press enter for leave variables empty, set only region)
 ```
 
-**Atention**: This is example script, please, recheck that you remove all resources.
+**Attention**: This is example script, please, recheck that you remove all resources.
