@@ -9,17 +9,17 @@
 #--------------------------------------------------------------------------------------------------
 # Configurables
 
-export LOGFILE=~/bash-logger.log
-export LOG_FORMAT='%DATE %PID [%LEVEL] %MESSAGE'
-export LOG_DATE_FORMAT='+%F %T %Z'                  # Eg: 2014-09-07 21:51:57 EST
-export LOG_COLOR_DEBUG="\033[0;37m"                 # Gray
-export LOG_COLOR_INFO="\033[0m"                     # White
-export LOG_COLOR_NOTICE="\033[1;32m"                # Green
-export LOG_COLOR_WARNING="\033[1;33m"               # Yellow
-export LOG_COLOR_ERROR="\033[1;31m"                 # Red
-export LOG_COLOR_CRITICAL="\033[44m"                # Blue Background
-export LOG_COLOR_ALERT="\033[43m"                   # Yellow Background
-export LOG_COLOR_EMERGENCY="\033[41m"               # Red Background
+export LOGFILE=/dev/null                    # Writes logs only to stdout
+export LOG_FORMAT="%DATE PID:%PID %LEVEL - %MESSAGE" # Eg: 2020-03-04 16:53:22 UTC+02 DEBUG: Example Debug log
+export LOG_DATE_FORMAT='+%F %T UTC%:::z'    # Eg: 2020-03-04 16:30:01 UTC+02
+export LOG_COLOR_DEBUG="\e[38;5;247m"       # Grey
+export LOG_COLOR_INFO="\e[94m"              # Blue
+export LOG_COLOR_NOTICE="\033[1;32m"        # Default: Bold Green
+export LOG_COLOR_WARNING="\033[1;33m"       # Bold Yellow
+export LOG_COLOR_ERROR="\033[1;31m"         # Bold Red
+export LOG_COLOR_CRITICAL="\e[1;48;5;88m"   # Bold White Text, Dark Red Background
+export LOG_COLOR_ALERT="\e[1;41m"           # Bold White Text, Red Background
+export LOG_COLOR_EMERGENCY="\e[1;38;5;52m\e[48;5;196m" # Bold Dark Red Text, Light Red Background
 export RESET_COLOR="\033[0m"
 
 #--------------------------------------------------------------------------------------------------
@@ -30,10 +30,11 @@ DEBUG()     { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; }
 INFO()      { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; }
 NOTICE()    { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; }
 WARNING()   { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; }
-ERROR()     { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; exit 1; }
-CRITICAL()  { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; exit 1; }
-ALERT()     { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; exit 1; }
-EMERGENCY() { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; exit 1; }
+# Print empty lines before and on the end of Error+ logs
+ERROR()     { echo; LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; echo; exit 1;}
+CRITICAL()  { echo; LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; echo; exit 1;}
+ALERT()     { echo; LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; echo; exit 1;}
+EMERGENCY() { echo; LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; echo; exit 1;}
 
 #--------------------------------------------------------------------------------------------------
 # Helper Functions
@@ -78,6 +79,9 @@ LOG_HANDLER_DEFAULT() {
     LOG_HANDLER_COLORTERM "$1" "$formatted_log"
     LOG_HANDLER_LOGFILE "$1" "$formatted_log"
 }
+
+
+
 
 # Outputs a log to the stdout, colorized using the LOG_COLOR configurables
 # Usage: LOG_HANDLER_COLORTERM <log level> <log message>
