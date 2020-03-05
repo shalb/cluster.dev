@@ -24,7 +24,7 @@ function aws::init_s3_bucket {
     DEBUG "Create or use exiting S3 bucket for Terraform states"
     local cluster_cloud_region=$1
 
-    cd terraform/aws/backend/
+    cd terraform/aws/backend/ || ERROR "Path not found"
 
     # Create and init backend.
     terraform init
@@ -37,7 +37,7 @@ function aws::init_s3_bucket {
         terraform apply -auto-approve -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
     fi
 
-    cd -
+    cd - || ERROR "Path not found"
 }
 
 #######################################
@@ -59,7 +59,7 @@ function aws::init_route53 {
     local cluster_name=$2
     local cluster_cloud_domain=$3
 
-    cd terraform/aws/route53/
+    cd terraform/aws/route53/ || ERROR "Path not found"
 
     if [ -z $cluster_cloud_domain ]; then
         INFO "The cluster domain is unset. It is going to be created default"
@@ -75,7 +75,7 @@ function aws::init_route53 {
     #     -var="cluster_fullname=$CLUSTER_FULLNAME" \
     #     -var="cluster_domain=$cluster_cloud_domain"
 
-    cd -
+    cd - || ERROR "Path not found"
 }
 
 #######################################
@@ -100,7 +100,7 @@ function aws::init_vpc {
     local cluster_cloud_vpc=$1
     local cluster_cloud_vpc_id=""
 
-    cd terraform/aws/vpc/
+    cd terraform/aws/vpc/ || ERROR "Path not found"
 
     case ${cluster_cloud_vpc} in
         default|"")
@@ -132,7 +132,7 @@ function aws::init_vpc {
             ;;
     esac
 
-    cd -
+    cd - || ERROR "Path not found"
 }
 
 #######################################
@@ -181,7 +181,7 @@ function aws::minikube::deploy_cluster {
     local cluster_provisioner_instanceType=$3
     local cluster_cloud_domain=$4
 
-    cd terraform/aws/minikube/
+    cd terraform/aws/minikube/ || ERROR "Path not found"
 
     # Deploy main Terraform code
     INFO "Minikube cluster: Initializing Terraform configuration"
@@ -203,7 +203,7 @@ function aws::minikube::deploy_cluster {
     INFO "Minikube cluster: Creating infrastructure"
     terraform apply -auto-approve -compact-warnings -input=false tfplan
 
-    cd -
+    cd - || ERROR "Path not found"
 }
 
 #######################################
@@ -241,7 +241,7 @@ function aws::init_argocd {
     local cluster_cloud_region=$2
     local cluster_cloud_domain=$3
 
-    cd terraform/aws/argocd/
+    cd terraform/aws/argocd/ || ERROR "Path not found"
 
     INFO "ArgoCD: Init Terraform configuration"
     terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
@@ -255,7 +255,7 @@ function aws::init_argocd {
     INFO "ArgoCD: Installing/Reconciling"
     terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd
 
-    cd -
+    cd - || ERROR "Path not found"
 }
 
 #######################################
