@@ -26,15 +26,15 @@ export RESET_COLOR="\033[0m"
 # Individual Log Functions
 # These can be overwritten to provide custom behavior for different log levels
 
-DEBUG()     { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; }
-INFO()      { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; }
-NOTICE()    { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; }
-WARNING()   { LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; }
+DEBUG()     { LOG_HANDLER_DEFAULT "${FUNCNAME[@]}" "$@"; }
+INFO()      { LOG_HANDLER_DEFAULT "${FUNCNAME[@]}" "$@"; }
+NOTICE()    { LOG_HANDLER_DEFAULT "${FUNCNAME[@]}" "$@"; }
+WARNING()   { LOG_HANDLER_DEFAULT "${FUNCNAME[@]}" "$@"; }
 # Print empty lines before and on the end of Error+ logs
-ERROR()     { echo; LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; echo; exit 1;}
-CRITICAL()  { echo; LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; echo; exit 1;}
-ALERT()     { echo; LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; echo; exit 1;}
-EMERGENCY() { echo; LOG_HANDLER_DEFAULT "$FUNCNAME" "$@"; echo; exit 1;}
+ERROR()     { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[@]}" "$@"; echo; exit 1;}
+CRITICAL()  { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[@]}" "$@"; echo; exit 1;}
+ALERT()     { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[@]}" "$@"; echo; exit 1;}
+EMERGENCY() { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[@]}" "$@"; echo; exit 1;}
 
 #--------------------------------------------------------------------------------------------------
 # Helper Functions
