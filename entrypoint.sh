@@ -30,7 +30,7 @@ function aws::init_s3_bucket {
     terraform init
 
     # Check if bucket already exist by trying to import it
-    if (terraform import -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET" aws_s3_bucket.terraform_state $S3_BACKEND_BUCKET); then
+    if (terraform import -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET" aws_s3_bucket.terraform_state "$S3_BACKEND_BUCKET"); then
         INFO "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET already exist"
     else
         NOTICE "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET not exist. It is going to be created"
@@ -61,7 +61,7 @@ function aws::init_route53 {
 
     cd terraform/aws/route53/ || ERROR "Path not found"
 
-    if [ -z $cluster_cloud_domain ]; then
+    if [ -z "$cluster_cloud_domain" ]; then
         INFO "The cluster domain is unset. It is going to be created default"
     else
         INFO "The cluster domain is defined. So applying Terraform configuration for it"
@@ -156,8 +156,8 @@ function aws::minikube::pull_kubeconfig {
         DEBUG "Waiting ${WAIT_TIMEOUT}s"
         sleep $WAIT_TIMEOUT
 
-        aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} 2>/dev/null
-        cp ~/.kube/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/config 2>/dev/null
+        aws s3 cp "s3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME" "$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME" 2>/dev/null
+        cp "$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME" ~/.kube/config 2>/dev/null
     done
 }
 
@@ -322,10 +322,10 @@ DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
       CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
 
 # Iterate trough provided manifests and reconcile clusters
-for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
+for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
 
-    parse_yaml $CLUSTER_MANIFEST_FILE
-    create_variables $CLUSTER_MANIFEST_FILE
+    parse_yaml "$CLUSTER_MANIFEST_FILE"
+    create_variables "$CLUSTER_MANIFEST_FILE"
 
     # Cloud selection
     case $cluster_cloud_provider in
@@ -339,21 +339,21 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
         export CLUSTER_PREFIX=$GITHUB_REPOSITORY # CLUSTER_PREFIX equals git organization/username could be changed in other repo
 
         # create unique s3 bucket from repo name and cluster name
-        S3_BACKEND_BUCKET=$(echo $CLUSTER_PREFIX | awk -F "/" '{print$1}')-$cluster_name
+        S3_BACKEND_BUCKET=$(echo "$CLUSTER_PREFIX" | awk -F "/" '{print$1}')-$cluster_name
         # make sure it is not larger than 63 symbols
-        S3_BACKEND_BUCKET=$(echo $S3_BACKEND_BUCKET | cut -c 1-63)
+        S3_BACKEND_BUCKET=$(echo "$S3_BACKEND_BUCKET" | cut -c 1-63)
         # The same name would be used for domains
         readonly CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
 
         # Create and init backend.
         # Check if bucket already exist by trying to import it
-        aws::init_s3_bucket   $cluster_cloud_region
+        aws::init_s3_bucket   "$cluster_cloud_region"
 
         # Create a DNS domains/records if required
-        aws::init_route53   $cluster_cloud_region $cluster_name $cluster_cloud_domain
+        aws::init_route53   "$cluster_cloud_region" "$cluster_name" "$cluster_cloud_domain"
 
         # Create a VPC or use existing defined
-        aws::init_vpc   $cluster_cloud_vpc $cluster_name $cluster_cloud_region
+        aws::init_vpc   "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
 
         # Provisioner selection
         case $cluster_provisioner_type in
@@ -361,7 +361,7 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
             DEBUG "Provisioner: Minikube"
 
             # Deploy Minikube cluster via Terraform
-            aws::minikube::deploy_cluster   $cluster_name $cluster_cloud_region $cluster_provisioner_instanceType $cluster_cloud_domain
+            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
 
             # Pull a kubeconfig to instance via kubectl
             aws::minikube::pull_kubeconfig
@@ -370,10 +370,10 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
             deploy_cert_manager
 
             # Deploy ArgoCD via Terraform
-            aws::init_argocd   $cluster_name $cluster_cloud_region $cluster_cloud_domain
+            aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
 
             # Writes commands for user for get access to cluster
-            aws::output_access_keys   $cluster_cloud_domain
+            aws::output_access_keys   "$cluster_cloud_domain"
 
             # Writes information about used software
             aws::output_software_info
