@@ -1,0 +1,43 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=827846 to learn about workspace recommendations.
+  // Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
+
+  // List of extensions which should be recommended for users of this workspace.
+  "recommendations": [
+    // Global
+    "aaron-bond.better-comments",
+    "coenraads.bracket-pair-colorizer",
+    "gruntfuggly.todo-tree",
+    "shardulm94.trailing-spaces",
+    "glenbuktenica.unicode-substitutions",
+    "editorconfig.editorconfig",
+
+    // Grammar
+    "streetsidesoftware.code-spell-checker",
+
+    // Bash
+    "mads-hartmann.bash-ide-vscode",
+    "timonwong.shellcheck", // Need to install https://github.com/koalaman/shellcheck
+
+    // Terraform
+    "wholroyd.hcl",
+    "mauve.terraform",
+    "erd0s.terraform-autocomplete",
+
+
+    // YAML
+    "redhat.vscode-yaml",
+    "oderwat.indent-rainbow",
+
+    // Documentation
+    "bierner.markdown-preview-github-styles",
+  ],
+  // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
+  "unwantedRecommendations": [
+    "ms-azuretools.vscode-azureterraform",
+    "donjayamanne.githistory",
+    "felipecaputo.git-project-manager",
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "azuredevspaces.azds",
+  ]
+}

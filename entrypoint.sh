@@ -350,7 +350,6 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
         aws::init_s3_bucket   $cluster_cloud_region
 
         # Create a DNS domains/records if required
-        # TODO: implement switch for domain. https://github.com/shalb/cluster.dev/issues/2
         aws::init_route53   $cluster_cloud_region $cluster_name $cluster_cloud_domain
 
         # Create a VPC or use existing defined
@@ -362,7 +361,6 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
             DEBUG "Provisioner: Minikube"
 
             # Deploy Minikube cluster via Terraform
-            # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace https://github.com/shalb/cluster.dev/issues/9
             aws::minikube::deploy_cluster   $cluster_name $cluster_cloud_region $cluster_provisioner_instanceType $cluster_cloud_domain
 
             # Pull a kubeconfig to instance via kubectl
@@ -375,7 +373,6 @@ for CLUSTER_MANIFEST_FILE in $(find $CLUSTER_CONFIG_PATH -type f); do
             aws::init_argocd   $cluster_name $cluster_cloud_region $cluster_cloud_domain
 
             # Writes commands for user for get access to cluster
-            # TODO: Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
             aws::output_access_keys   $cluster_cloud_domain
 
             # Writes information about used software
