@@ -54,6 +54,7 @@ FORMAT_LOG() {
     formatted_log="${formatted_log/'%LEVEL'/$level}"
     formatted_log="${formatted_log/'%PID'/$pid}"
     formatted_log="${formatted_log/'%DATE'/$date}"
+    # shellcheck disable=SC2028
     echo "$formatted_log\n"
 }
 
