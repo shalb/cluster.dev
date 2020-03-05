@@ -46,7 +46,9 @@ FORMAT_LOG() {
     local level="$1"
     local log="$2"
     local pid=$$
-    local date="$(date "$LOG_DATE_FORMAT")"
+    local date
+    date="$(date "$LOG_DATE_FORMAT")"
+
     local formatted_log="$LOG_FORMAT"
     formatted_log="${formatted_log/'%MESSAGE'/$log}"
     formatted_log="${formatted_log/'%LEVEL'/$level}"
@@ -75,7 +77,9 @@ LOG() {
 LOG_HANDLER_DEFAULT() {
     # $1 - level
     # $2 - message
-    local formatted_log="$(FORMAT_LOG "$@")"
+    local formatted_log
+
+    formatted_log="$(FORMAT_LOG "$@")"
     LOG_HANDLER_COLORTERM "$1" "$formatted_log"
     LOG_HANDLER_LOGFILE "$1" "$formatted_log"
 }
@@ -101,7 +105,9 @@ LOG_HANDLER_COLORTERM() {
 LOG_HANDLER_LOGFILE() {
     local level="$1"
     local log="$2"
-    local log_path="$(dirname "$LOGFILE")"
+    local log_path
+
+    log_path="$(dirname "$LOGFILE")"
     [ -d "$log_path" ] || mkdir -p "$log_path"
     echo "$log" >> "$LOGFILE"
 }
