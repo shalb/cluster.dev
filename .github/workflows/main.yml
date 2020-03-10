@@ -1,11 +1,12 @@
 on:
   push:
-    paths-ignore:
-      - 'docs/**'
-      - '_config.yml'
-      - '**.png'
-      - 'README.md'
-      - '_layouts'
+    paths:
+      - 'entrypoint.sh'
+      - 'terraform/**'
+      - 'Dockerfile'
+      - '.github/workflows/**'
+      - '.cluster.dev/**'
+      - 'action.yaml'
     branches:
       - master
 jobs:
