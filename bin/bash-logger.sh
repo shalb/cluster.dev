@@ -62,8 +62,7 @@ FORMAT_LOG() {
     formatted_log="${formatted_log/'%PID'/$pid}"
     formatted_log="${formatted_log/'%DATE'/$date}"
     formatted_log="${formatted_log/'%FUNC_NAME'/$func_name}"
-    # shellcheck disable=SC2028
-    echo "$formatted_log\n"
+    echo "$formatted_log"
 }
 
 # Calls one of the individual log functions
@@ -108,7 +107,7 @@ LOG_HANDLER_COLORTERM() {
     local color_variable="LOG_COLOR_$level"
     local color="${!color_variable}"
     log="$color$log$RESET_COLOR"
-    echo -en "$log"
+    echo -e "$log"
 }
 
 # Appends a log to the configured logfile
