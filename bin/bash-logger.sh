@@ -10,8 +10,13 @@
 # Configurables
 
 export LOGFILE=/dev/null                    # Writes logs only to stdout
-export LOG_FORMAT="%DATE PID:%PID %LEVEL - %MESSAGE" # Eg: 2020-03-04 16:53:22 UTC+02 DEBUG: Example Debug log
-export LOG_DATE_FORMAT='+%F %T UTC%:::z'    # Eg: 2020-03-04 16:30:01 UTC+02
+
+export LOG_FORMAT="%DATE PID:%PID func:'%FUNC_NAME' %LEVEL - %MESSAGE" # Eg: 2020-03-10 16:18:31 UTC+02 PID:29871 Run func:'main' DEBUG - Example Debug log
+export LOG_DATE_FORMAT='+%F %T UTC%:::z'                               # Eg: 2020-03-10 16:18:31 UTC+02
+
+export LOG_FORMAT_SIMPLE="%DATE - %MESSAGE" # Eg: 16:29:34 - Example Info log
+export LOG_DATE_FORMAT_SIMPLE='+%T'         # Eg: 16:29:34
+
 export LOG_COLOR_DEBUG="\e[38;5;247m"       # Grey
 export LOG_COLOR_INFO="\e[94m"              # Blue
 export LOG_COLOR_NOTICE="\033[1;32m"        # Default: Bold Green
@@ -26,15 +31,15 @@ export RESET_COLOR="\033[0m"
 # Individual Log Functions
 # These can be overwritten to provide custom behavior for different log levels
 
-DEBUG()     { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@"; }
-INFO()      { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@"; }
-NOTICE()    { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@"; }
-WARNING()   { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@"; }
+DEBUG()     { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; }
+INFO()      { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
+NOTICE()    { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
+WARNING()   { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
 # Print empty lines before and on the end of Error+ logs
-ERROR()     { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@"; echo; exit 1;}
-CRITICAL()  { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@"; echo; exit 1;}
-ALERT()     { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@"; echo; exit 1;}
-EMERGENCY() { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@"; echo; exit 1;}
+ERROR()     { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; echo; exit 1;}
+CRITICAL()  { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; echo; exit 1;}
+ALERT()     { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; echo; exit 1;}
+EMERGENCY() { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; echo; exit 1;}
 
 #--------------------------------------------------------------------------------------------------
 # Helper Functions
@@ -45,15 +50,18 @@ EMERGENCY() { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@"; echo; exit 1;}
 FORMAT_LOG() {
     local level="$1"
     local log="$2"
+    local func_name="$3"
+    local formatted_log="${4-"$LOG_FORMAT"}"
+    local date_format="${5-"$LOG_DATE_FORMAT"}"
     local pid=$$
     local date
-    date="$(date "$LOG_DATE_FORMAT")"
+    date="$(date "$date_format")"
 
-    local formatted_log="$LOG_FORMAT"
     formatted_log="${formatted_log/'%MESSAGE'/$log}"
     formatted_log="${formatted_log/'%LEVEL'/$level}"
     formatted_log="${formatted_log/'%PID'/$pid}"
     formatted_log="${formatted_log/'%DATE'/$date}"
+    formatted_log="${formatted_log/'%FUNC_NAME'/$func_name}"
     # shellcheck disable=SC2028
     echo "$formatted_log\n"
 }
@@ -78,6 +86,9 @@ LOG() {
 LOG_HANDLER_DEFAULT() {
     # $1 - level
     # $2 - message
+    # $3 - function name which run message
+    # $4 - custom LOG_FORMAT
+    # $5 - custom LOG_DATE_FORMAT
     local formatted_log
 
     formatted_log="$(FORMAT_LOG "$@")"
