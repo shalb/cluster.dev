@@ -6,7 +6,7 @@ permalink: /contributing/
 
 # Development
 
-If you prepare make big changes, please, first read about our [style guide requirements](../style-guide/)
+If you prepare make big changes, please, first read about our [style guide requirements](https://github.com/shalb/cluster.dev/blob/master/docs/style-guide.md)
 
 ## How to contribute
 
