@@ -293,7 +293,7 @@ ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_c
 # Outputs:
 #   Writes software versions
 #######################################
-function aws::output_software_info {
+function main::output_software_info {
     DEBUG "Writes information about used software"
     INFO "Software installed information:"
     INFO "Helm"
@@ -320,6 +320,9 @@ function aws::output_software_info {
 
 DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
       CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
+
+# Writes information about used software
+main::output_software_info
 
 # Iterate trough provided manifests and reconcile clusters
 for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
@@ -374,9 +377,6 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
 
             # Writes commands for user for get access to cluster
             aws::output_access_keys   "$cluster_cloud_domain"
-
-            # Writes information about used software
-            aws::output_software_info
         ;;
         # end of minikube
         eks)
