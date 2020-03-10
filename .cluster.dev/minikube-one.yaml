@@ -1,5 +1,5 @@
 cluster:
-  name: minikube-test
+  name: minikube-two
   cloud:
     provider: aws
     region: eu-central-1
