@@ -29,7 +29,7 @@ resource "helm_release" "argo-cd" {
   name       = "argo-cd"
   repository = data.helm_repository.argo.metadata[0].name
   chart      = "argo-cd"
-  version    = "1.7.1"
+  version    = "1.8.7"
   namespace  = "argocd"
 
   values = [
