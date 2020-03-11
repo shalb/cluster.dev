@@ -10,7 +10,7 @@
 # Configurables
 
 # Minimum log level to show. Default to DEBUG
-readonly user_defined_log_lvl=$(env | grep LOG_LVL | cut -s -d'=' -f2)
+readonly user_defined_log_lvl=$(env | grep VERBOSE_LVL | cut -s -d'=' -f2)
 export LOG_LVL=${user_defined_log_lvl-"DEBUG"}
 
 export LOGFILE=/dev/null                    # Writes logs only to stdout
