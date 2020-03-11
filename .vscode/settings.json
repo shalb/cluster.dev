@@ -25,6 +25,7 @@
       "geoip",
       "grafana",
       "keystore",
+      "kibana",
       "kubernetes",
       "kustomize",
       "letsencrypt",

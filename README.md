@@ -86,8 +86,7 @@ jobs:
 
 ## Roadmap
 
-The project is in Alpha Stage, the first release is planned on 14 February 2020.
-Roadmap details: [docs/ROADMAP.md](docs/ROADMAP.md)
+The project is in Alpha Stage. Roadmap details: [docs/ROADMAP.md](docs/ROADMAP.md)
 
 ## Contributing
 

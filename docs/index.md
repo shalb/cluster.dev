@@ -51,8 +51,7 @@ You can find the complete sample in our [GitHub Repo/Quick Start](https://github
 
 ## Roadmap
 
-The project is in Alpha Stage, the first release is planned on 14 February 2020.
-Roadmap details: [ROADMAP](./roadmap/)
+The project is in Alpha Stage. Roadmap details: [ROADMAP](./roadmap/)
 
 ## Contributing
 

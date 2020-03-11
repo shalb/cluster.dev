@@ -20,7 +20,7 @@ permalink: /roadmap/
 
 ### Iteration #2
 
-- Deliver with cluster creation a default DNS record:  
+- Deliver with cluster creation a default DNS record:
   `*.username-clustername.cluster.dev`
 - Create a cluster.dev backend to register newly created clusters.
 
