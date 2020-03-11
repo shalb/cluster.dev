@@ -34,15 +34,15 @@ readonly RESET_COLOR="\033[0m"
 # Individual Log Functions
 # These can be overwritten to provide custom behavior for different log levels
 
-DEBUG()     { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; }
-INFO()      { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
-NOTICE()    { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
-WARNING()   { LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
+DEBUG()     { LOG_HANDLER_DEFAULT "$@"; }
+INFO()      { LOG_HANDLER_DEFAULT "$@" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
+NOTICE()    { LOG_HANDLER_DEFAULT "$@" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
+WARNING()   { LOG_HANDLER_DEFAULT "$@" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
 # Print empty lines before and on the end of Error+ logs
-ERROR()     { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; echo; exit 1;}
-CRITICAL()  { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; echo; exit 1;}
-ALERT()     { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; echo; exit 1;}
-EMERGENCY() { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; echo; exit 1;}
+ERROR()     { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
+CRITICAL()  { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
+ALERT()     { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
+EMERGENCY() { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
 
 #--------------------------------------------------------------------------------------------------
 # Helper Functions
@@ -53,9 +53,9 @@ EMERGENCY() { echo; LOG_HANDLER_DEFAULT "${FUNCNAME[0]}" "$@" "${FUNCNAME[1]}"; 
 FORMAT_LOG() {
     local level="$1"
     local log="$2"
-    local func_name="$3"
-    local formatted_log="${4-"$LOG_FORMAT"}"
-    local date_format="${5-"$LOG_DATE_FORMAT"}"
+    local formatted_log="${3:-"$LOG_FORMAT"}"
+    local date_format="${4:-"$LOG_DATE_FORMAT"}"
+    local func_name="$5"
     local pid=$$
     local date
     date="$(date "$date_format")"
@@ -86,67 +86,68 @@ LOG() {
 # Usage: LOG_HANDLER_DEFAULT <log level> <log message>
 # Eg: LOG_HANDLER_DEFAULT DEBUG "My debug log"
 LOG_HANDLER_DEFAULT() {
-    # $1 - level
-    # $2 - message
-    # $3 - function name which run message
-    # $4 - custom LOG_FORMAT
-    # $5 - custom LOG_DATE_FORMAT
+    # $1 - message
+    local log_format=${2:-"$LOG_FORMAT"}
+    local log_date_format=${3:-"$LOG_DATE_FORMAT"}
+
+    local func_name=${FUNCNAME[2]}
+    local lvl=${FUNCNAME[1]} # Log level get from function name
 
     # Disable logging by LOG_LVL
     case $LOG_LVL in
         DEBUG)
             ;;
         INFO)
-            if  [ "$1" == DEBUG    ]; then return; fi
+            if  [ "$lvl" == DEBUG    ]; then return; fi
             ;;
         NOTICE)
-            if  [ "$1" == DEBUG    ] || \
-                [ "$1" == INFO     ]; then return; fi
+            if  [ "$lvl" == DEBUG    ] || \
+                [ "$lvl" == INFO     ]; then return; fi
             ;;
         WARNING)
-            if  [ "$1" == DEBUG    ] || \
-                [ "$1" == INFO     ] || \
-                [ "$1" == NOTICE   ]; then return; fi
+            if  [ "$lvl" == DEBUG    ] || \
+                [ "$lvl" == INFO     ] || \
+                [ "$lvl" == NOTICE   ]; then return; fi
             ;;
         ERROR)
-            if  [ "$1" == DEBUG    ] || \
-                [ "$1" == INFO     ] || \
-                [ "$1" == NOTICE   ] || \
-                [ "$1" == WARNING  ]; then return; fi
+            if  [ "$lvl" == DEBUG    ] || \
+                [ "$lvl" == INFO     ] || \
+                [ "$lvl" == NOTICE   ] || \
+                [ "$lvl" == WARNING  ]; then return; fi
             ;;
         CRITICAL)
-            if  [ "$1" == DEBUG    ] || \
-                [ "$1" == INFO     ] || \
-                [ "$1" == NOTICE   ] || \
-                [ "$1" == WARNING  ] || \
-                [ "$1" == ERROR    ]; then return; fi
+            if  [ "$lvl" == DEBUG    ] || \
+                [ "$lvl" == INFO     ] || \
+                [ "$lvl" == NOTICE   ] || \
+                [ "$lvl" == WARNING  ] || \
+                [ "$lvl" == ERROR    ]; then return; fi
             ;;
         ALERT)
-            if  [ "$1" == DEBUG    ] || \
-                [ "$1" == INFO     ] || \
-                [ "$1" == NOTICE   ] || \
-                [ "$1" == WARNING  ] || \
-                [ "$1" == ERROR    ] || \
-                [ "$1" == CRITICAL ]; then return; fi
+            if  [ "$lvl" == DEBUG    ] || \
+                [ "$lvl" == INFO     ] || \
+                [ "$lvl" == NOTICE   ] || \
+                [ "$lvl" == WARNING  ] || \
+                [ "$lvl" == ERROR    ] || \
+                [ "$lvl" == CRITICAL ]; then return; fi
             ;;
         EMERGENCY)
-            if  [ "$1" == DEBUG    ] || \
-                [ "$1" == INFO     ] || \
-                [ "$1" == NOTICE   ] || \
-                [ "$1" == WARNING  ] || \
-                [ "$1" == ERROR    ] || \
-                [ "$1" == CRITICAL ] || \
-                [ "$1" == ALERT    ]; then return; fi
+            if  [ "$lvl" == DEBUG    ] || \
+                [ "$lvl" == INFO     ] || \
+                [ "$lvl" == NOTICE   ] || \
+                [ "$lvl" == WARNING  ] || \
+                [ "$lvl" == ERROR    ] || \
+                [ "$lvl" == CRITICAL ] || \
+                [ "$lvl" == ALERT    ]; then return; fi
             ;;
         *)
             ;;
     esac
 
     local formatted_log
-    formatted_log="$(FORMAT_LOG "$@")"
+    formatted_log="$(FORMAT_LOG "$lvl" "$@" "$log_format" "$log_date_format" "$func_name")"
 
-    LOG_HANDLER_COLORTERM "$1" "$formatted_log"
-    LOG_HANDLER_LOGFILE "$1" "$formatted_log"
+    LOG_HANDLER_COLORTERM "$lvl" "$formatted_log"
+    LOG_HANDLER_LOGFILE "$lvl" "$formatted_log"
 }
 
 
