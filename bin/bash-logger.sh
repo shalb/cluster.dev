@@ -10,8 +10,7 @@
 # Configurables
 
 # Minimum log level to show. Default to DEBUG
-readonly user_defined_log_lvl=$(env | grep VERBOSE_LVL | cut -s -d'=' -f2)
-readonly LOG_LVL=${user_defined_log_lvl-"DEBUG"}
+readonly LOG_LVL=${VERBOSE_LVL-"DEBUG"}
 
 readonly LOGFILE=/dev/null                    # Writes logs only to stdout
 
