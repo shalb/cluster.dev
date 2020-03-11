@@ -68,16 +68,6 @@ FORMAT_LOG() {
     echo "$formatted_log"
 }
 
-# Calls one of the individual log functions
-# Usage: LOG <log level> <log message>
-# Eg: LOG INFO "My info log"
-LOG() {
-    local level="$1"
-    local log="$2"
-    local log_function_name="${!level}"
-    $log_function_name "$log"
-}
-
 #--------------------------------------------------------------------------------------------------
 # Log Handlers
 
