@@ -53,6 +53,8 @@ Bash Logger supports the logging levels described by [RFC 5424](http://tools.iet
 
 - **EMERGENCY** Emergency: system is unusable.
 
+You can set minimum log level by `LOG_LVL` environment variable
+
 ## Handlers
 
 By default:

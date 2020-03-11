@@ -9,6 +9,10 @@
 #--------------------------------------------------------------------------------------------------
 # Configurables
 
+# Minimum log level to show. Default to DEBUG
+readonly user_defined_log_lvl=$(env | grep LOG_LVL | cut -s -d'=' -f2)
+export LOG_LVL=${user_defined_log_lvl-"DEBUG"}
+
 export LOGFILE=/dev/null                    # Writes logs only to stdout
 
 export LOG_FORMAT="%DATE PID:%PID func:'%FUNC_NAME' %LEVEL - %MESSAGE" # Eg: 2020-03-10 16:18:31 UTC+02 PID:29871 Run func:'main' DEBUG - Example Debug log
@@ -88,9 +92,60 @@ LOG_HANDLER_DEFAULT() {
     # $3 - function name which run message
     # $4 - custom LOG_FORMAT
     # $5 - custom LOG_DATE_FORMAT
-    local formatted_log
 
+    # Disable logging by LOG_LVL
+    case $LOG_LVL in
+        DEBUG)
+            ;;
+        INFO)
+            if  [ "$1" == DEBUG    ]; then return; fi
+            ;;
+        NOTICE)
+            if  [ "$1" == DEBUG    ] || \
+                [ "$1" == INFO     ]; then return; fi
+            ;;
+        WARNING)
+            if  [ "$1" == DEBUG    ] || \
+                [ "$1" == INFO     ] || \
+                [ "$1" == NOTICE   ]; then return; fi
+            ;;
+        ERROR)
+            if  [ "$1" == DEBUG    ] || \
+                [ "$1" == INFO     ] || \
+                [ "$1" == NOTICE   ] || \
+                [ "$1" == WARNING  ]; then return; fi
+            ;;
+        CRITICAL)
+            if  [ "$1" == DEBUG    ] || \
+                [ "$1" == INFO     ] || \
+                [ "$1" == NOTICE   ] || \
+                [ "$1" == WARNING  ] || \
+                [ "$1" == ERROR    ]; then return; fi
+            ;;
+        ALERT)
+            if  [ "$1" == DEBUG    ] || \
+                [ "$1" == INFO     ] || \
+                [ "$1" == NOTICE   ] || \
+                [ "$1" == WARNING  ] || \
+                [ "$1" == ERROR    ] || \
+                [ "$1" == CRITICAL ]; then return; fi
+            ;;
+        EMERGENCY)
+            if  [ "$1" == DEBUG    ] || \
+                [ "$1" == INFO     ] || \
+                [ "$1" == NOTICE   ] || \
+                [ "$1" == WARNING  ] || \
+                [ "$1" == ERROR    ] || \
+                [ "$1" == CRITICAL ] || \
+                [ "$1" == ALERT    ]; then return; fi
+            ;;
+        *)
+            ;;
+    esac
+
+    local formatted_log
     formatted_log="$(FORMAT_LOG "$@")"
+
     LOG_HANDLER_COLORTERM "$1" "$formatted_log"
     LOG_HANDLER_LOGFILE "$1" "$formatted_log"
 }
