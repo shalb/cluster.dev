@@ -11,25 +11,25 @@
 
 # Minimum log level to show. Default to DEBUG
 readonly user_defined_log_lvl=$(env | grep VERBOSE_LVL | cut -s -d'=' -f2)
-export LOG_LVL=${user_defined_log_lvl-"DEBUG"}
+readonly LOG_LVL=${user_defined_log_lvl-"DEBUG"}
 
-export LOGFILE=/dev/null                    # Writes logs only to stdout
+readonly LOGFILE=/dev/null                    # Writes logs only to stdout
 
-export LOG_FORMAT="%DATE PID:%PID func:'%FUNC_NAME' %LEVEL - %MESSAGE" # Eg: 2020-03-10 16:18:31 UTC+02 PID:29871 Run func:'main' DEBUG - Example Debug log
-export LOG_DATE_FORMAT='+%F %T UTC%:::z'                               # Eg: 2020-03-10 16:18:31 UTC+02
+readonly LOG_FORMAT="%DATE PID:%PID func:'%FUNC_NAME' %LEVEL - %MESSAGE" # Eg: 2020-03-10 16:18:31 UTC+02 PID:29871 Run func:'main' DEBUG - Example Debug log
+readonly LOG_DATE_FORMAT='+%F %T UTC%:::z'                               # Eg: 2020-03-10 16:18:31 UTC+02
 
-export LOG_FORMAT_SIMPLE="%DATE - %MESSAGE" # Eg: 16:29:34 - Example Info log
-export LOG_DATE_FORMAT_SIMPLE='+%T'         # Eg: 16:29:34
+readonly LOG_FORMAT_SIMPLE="%DATE - %MESSAGE" # Eg: 16:29:34 - Example Info log
+readonly LOG_DATE_FORMAT_SIMPLE='+%T'         # Eg: 16:29:34
 
-export LOG_COLOR_DEBUG="\e[38;5;247m"       # Grey
-export LOG_COLOR_INFO="\e[94m"              # Blue
-export LOG_COLOR_NOTICE="\033[1;32m"        # Default: Bold Green
-export LOG_COLOR_WARNING="\033[1;33m"       # Bold Yellow
-export LOG_COLOR_ERROR="\033[1;31m"         # Bold Red
-export LOG_COLOR_CRITICAL="\e[1;48;5;88m"   # Bold White Text, Dark Red Background
-export LOG_COLOR_ALERT="\e[1;41m"           # Bold White Text, Red Background
-export LOG_COLOR_EMERGENCY="\e[1;38;5;52m\e[48;5;196m" # Bold Dark Red Text, Light Red Background
-export RESET_COLOR="\033[0m"
+readonly LOG_COLOR_DEBUG="\e[38;5;247m"       # Grey
+readonly LOG_COLOR_INFO="\e[94m"              # Blue
+readonly LOG_COLOR_NOTICE="\033[1;32m"        # Default: Bold Green
+readonly LOG_COLOR_WARNING="\033[1;33m"       # Bold Yellow
+readonly LOG_COLOR_ERROR="\033[1;31m"         # Bold Red
+readonly LOG_COLOR_CRITICAL="\e[1;48;5;88m"   # Bold White Text, Dark Red Background
+readonly LOG_COLOR_ALERT="\e[1;41m"           # Bold White Text, Red Background
+readonly LOG_COLOR_EMERGENCY="\e[1;38;5;52m\e[48;5;196m" # Bold Dark Red Text, Light Red Background
+readonly RESET_COLOR="\033[0m"
 
 #--------------------------------------------------------------------------------------------------
 # Individual Log Functions
