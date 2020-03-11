@@ -12,6 +12,40 @@ readonly CLOUD_PASS=$3
 #
 
 #######################################
+# Run command into wrapper, that print command output only when:
+# - error happened
+# - VERBOSE_LVL=DEBUG
+# Globals:
+#   None
+# Arguments:
+#   command - command that should be executed inside wrapper
+#   bash_opts - additional shell options
+# Outputs:
+#   Writes progress status
+#######################################
+function run_cmd {
+    local command="$1"
+    local bash_opts="${2-""}"
+
+    local bash="/usr/bin/env bash ${bash_opts}"
+
+    # STDERR prints by default
+    local stdout
+    stdout=$(${bash} -x -c "$command")
+    local exit_code=$?
+
+    # Log and exit
+    if [[ ${exit_code} != 0 ]]; then
+        ERROR "Execution of '$command' failed" "" "" 1
+    fi
+
+    # Log and continue
+    if [ "$LOG_LVL" == "DEBUG" ]; then
+        DEBUG "$stdout" "" "" 1
+    fi
+}
+
+#######################################
 # Create or use exiting S3 bucket for Terraform states
 # Globals:
 #   S3_BACKEND_BUCKET
@@ -27,14 +61,16 @@ function aws::init_s3_bucket {
     cd terraform/aws/backend/ || ERROR "Path not found"
 
     # Create and init backend.
-    terraform init
+    run_cmd "terraform init"
 
     # Check if bucket already exist by trying to import it
     if (terraform import -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET" aws_s3_bucket.terraform_state "$S3_BACKEND_BUCKET"); then
         INFO "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET already exist"
     else
         NOTICE "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET not exist. It is going to be created"
-        terraform apply -auto-approve -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
+        run_cmd "terraform apply -auto-approve \
+                    -var='region=$cluster_cloud_region' \
+                    -var='s3_backend_bucket=$S3_BACKEND_BUCKET'"
     fi
 
     cd - || ERROR "Path not found"
@@ -110,18 +146,19 @@ function aws::init_vpc {
             # Create new VPC and get ID.
             NOTICE "Creating new VPC"
             INFO "VPC: Initializing Terraform configuration"
-            terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-                      -backend-config="key=$cluster_name/terraform-vpc.state" \
-                      -backend-config="region=$cluster_cloud_region"
+            run_cmd "terraform init \
+                        -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                        -backend-config='key=$cluster_name/terraform-vpc.state' \
+                        -backend-config='region=$cluster_cloud_region'"
 
-            terraform plan \
-                      -var="region=$cluster_cloud_region" \
-                      -var="cluster_name=$CLUSTER_FULLNAME" \
-                      -input=false \
-                      -out=tfplan
+            run_cmd "terraform plan \
+                        -var='region=$cluster_cloud_region' \
+                        -var='cluster_name=$CLUSTER_FULLNAME' \
+                        -input=false \
+                        -out=tfplan"
 
             INFO "VPC: Creating infrastructure"
-            terraform apply -auto-approve -compact-warnings -input=false tfplan
+            run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
             # Get VPC ID for later use.
             cluster_cloud_vpc_id=$(terraform output vpc_id)
             ;;
@@ -185,23 +222,24 @@ function aws::minikube::deploy_cluster {
 
     # Deploy main Terraform code
     INFO "Minikube cluster: Initializing Terraform configuration"
-    terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-        -backend-config="key=$cluster_name/terraform.state" \
-        -backend-config="region=$cluster_cloud_region"
+    run_cmd "terraform init \
+                -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                -backend-config='key=$cluster_name/terraform.state' \
+                -backend-config='region=$cluster_cloud_region'"
 
     # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace: https://github.com/shalb/cluster.dev/issues/9
     # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
-    terraform plan \
-        -var="region=$cluster_cloud_region" \
-        -var="cluster_name=$CLUSTER_FULLNAME" \
-        -var="aws_instance_type=$cluster_provisioner_instanceType" \
-        -var="hosted_zone=$cluster_cloud_domain" \
-        -input=false \
-        -out=tfplan
+    run_cmd "terraform plan \
+                -var='region=$cluster_cloud_region' \
+                -var='cluster_name=$CLUSTER_FULLNAME' \
+                -var='aws_instance_type=$cluster_provisioner_instanceType' \
+                -var='hosted_zone=$cluster_cloud_domain' \
+                -input=false \
+                -out=tfplan"
 
     INFO "Minikube cluster: Creating infrastructure"
-    terraform apply -auto-approve -compact-warnings -input=false tfplan
+    run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
 
     cd - || ERROR "Path not found"
 }
@@ -244,16 +282,18 @@ function aws::init_argocd {
     cd terraform/aws/argocd/ || ERROR "Path not found"
 
     INFO "ArgoCD: Init Terraform configuration"
-    terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-        -backend-config="key=$cluster_name/terraform-argocd.state" \
-        -backend-config="region=$cluster_cloud_region"
+    run_cmd "terraform init \
+                -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                -backend-config='key=$cluster_name/terraform-argocd.state' \
+                -backend-config='region=$cluster_cloud_region'"
 
-    terraform plan \
-        -var="argo_domain=argo-$CLUSTER_FULLNAME.$cluster_cloud_domain" \
-        -input=false -out=tfplan-argocd
+    run_cmd "terraform plan \
+                -var='argo_domain=argo-$CLUSTER_FULLNAME.$cluster_cloud_domain' \
+                -input=false \
+                -out=tfplan-argocd"
 
     INFO "ArgoCD: Installing/Reconciling"
-    terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd
+    run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd"
 
     cd - || ERROR "Path not found"
 }
