@@ -342,6 +342,7 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
 
     yaml::parse "$CLUSTER_MANIFEST_FILE"
     yaml::create_variables "$CLUSTER_MANIFEST_FILE"
+    yaml::check_that_required_variables_exist "$CLUSTER_CONFIG_PATH/$CLUSTER_MANIFEST_FILE"
 
     # Cloud selection. Declared via yaml::create_variables()
     # shellcheck disable=SC2154
