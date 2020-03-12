@@ -20,29 +20,55 @@ readonly CLOUD_PASS=$3
 # Arguments:
 #   command - command that should be executed inside wrapper
 #   bash_opts - additional shell options
+#   enable_log_timeout - Print all logs for command after timeout.
+#                        Useful for non-DEBUG log levels.
+#                        By default - 300 seconds (5 min)
 # Outputs:
 #   Writes progress status
 #######################################
 function run_cmd {
     local command="$1"
     local bash_opts="${2-""}"
+    local enable_log_timeout="${3-300}" # By default - 300 seconds (5 min)
 
     local bash="/usr/bin/env bash ${bash_opts}"
 
     # STDERR prints by default
-    local stdout
-    stdout=$(${bash} -x -c "$command")
-    local exit_code=$?
-
-    # Log and exit
-    if [[ ${exit_code} != 0 ]]; then
-        ERROR "Execution of '$command' failed" "" "" 1
-    fi
-
-    # Log and continue
+    # Log STDOUT and continue
     if [ "$LOG_LVL" == "DEBUG" ]; then
-        DEBUG "$stdout" "" "" 1
+        DEBUG "Output from '$command'" "" "" 1
+        ${bash} -x -c "$command"
+        exit_code=$?
+
+        [ ${exit_code} != 0 ] && ERROR "Execution of '$command' failed" "" "" 1
+        return
     fi
+
+    # shellcheck disable=SC2091
+    $(${bash} -x -c "$command" >/tmp/log) &
+    proc_pid=$!
+
+    # Print logs in non-debug
+    seconds=0
+    until [ ! -d /proc/$proc_pid ]; do
+        if [[ $seconds -gt $enable_log_timeout ]]; then
+            WARNING "Command '$command' executing more than ${seconds}s. \
+Start print out exist and future output for this command." "%DATE - %MESSAGE" "+%T" 1
+            tail -f -n +0 /tmp/log &
+            tail_pid=$!
+            break
+        fi
+        sleep 1
+        ((seconds++))
+    done
+
+    wait $proc_pid
+    exit_code=$?
+    # `> /dev/null 2>&1 &` and `wait` need to suppress "Terminated' message
+    kill $tail_pid > /dev/null 2>&1 &
+    wait
+
+    [ ${exit_code} != 0 ] && ERROR "Execution of '$command' failed" "" "" 1
 }
 
 #######################################
