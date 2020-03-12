@@ -2,7 +2,7 @@
 
 # Parse YAML configs in .cluster-dev/*
 source ./bin/yaml.sh # provides parse_yaml and create_variables
-source ./bin/bash-logger.sh # PSR-3 compliant logging
+source ./bin/logging.sh # PSR-3 compliant logging
 
 # Variables passed by Github Workflow to Action
 readonly CLUSTER_CONFIG_PATH=$1

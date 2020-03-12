@@ -10,11 +10,11 @@ Fork of Bash Logger designed to incorporate [PSR-3](http://www.php-fig.org/psr/p
 
 ## Using Bash Logger
 
-**source** the *bash-logger.sh* script at the beginning of any Bash program.
+**source** the *logging.sh* script at the beginning of any Bash program.
 
 ```bash
 #!/bin/bash
-source ./bin/bash-logger.sh
+source ./bin/logging.sh
 
 INFO "This is a test info log"
 ```

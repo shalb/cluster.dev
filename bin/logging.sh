@@ -1,12 +1,6 @@
 #!/bin/bash
-#--------------------------------------------------------------------------------------------------
-# Bash Logger
-# Copyright (c) Dean Rather
-# Licensed under the MIT license
-# http://github.com/deanrather/bash-logger
-#--------------------------------------------------------------------------------------------------
+# Fork of http://github.com/deanrather/bash-logger
 
-#--------------------------------------------------------------------------------------------------
 # Configurables
 
 # Minimum log level to show. Default to DEBUG
@@ -30,53 +24,38 @@ readonly LOG_COLOR_ALERT="\e[1;41m"           # Bold White Text, Red Background
 readonly LOG_COLOR_EMERGENCY="\e[1;38;5;52m\e[48;5;196m" # Bold Dark Red Text, Light Red Background
 readonly RESET_COLOR="\033[0m"
 
-#--------------------------------------------------------------------------------------------------
+#######################################
 # Individual Log Functions
 # These can be overwritten to provide custom behavior for different log levels
-
-DEBUG()     { LOG_HANDLER_DEFAULT "$@"; }
-INFO()      { LOG_HANDLER_DEFAULT "$@" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
-NOTICE()    { LOG_HANDLER_DEFAULT "$@" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
-WARNING()   { LOG_HANDLER_DEFAULT "$@" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
+# Have no required arguments
+# Globals:
+#   None
+# Arguments:
+#   See LOG_HANDLER_DEFAULT()
+#######################################
+function DEBUG     { LOG_HANDLER_DEFAULT "$@"; }
+function INFO      { LOG_HANDLER_DEFAULT "$@" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
+function NOTICE    { LOG_HANDLER_DEFAULT "$@" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
+function WARNING   { LOG_HANDLER_DEFAULT "$@" "$LOG_FORMAT_SIMPLE" "$LOG_DATE_FORMAT_SIMPLE"; }
 # Print empty lines before and on the end of Error+ logs
-ERROR()     { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
-CRITICAL()  { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
-ALERT()     { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
-EMERGENCY() { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
+function ERROR     { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
+function CRITICAL  { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
+function ALERT     { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
+function EMERGENCY { echo; LOG_HANDLER_DEFAULT "$@"; echo; exit 1;}
 
-#--------------------------------------------------------------------------------------------------
-# Helper Functions"$log_format" "$log_date_format"
-
-# Outputs a log formatted using the LOG_FORMAT and DATE_FORMAT configurables
-# Usage: FORMAT_LOG <log level> <log message>
-# Eg: FORMAT_LOG CRITICAL "My critical log"
-FORMAT_LOG() {
-    local level="${1:-"DEBUG"}"
-    local func_trace="${2:-""}"
-    local formatted_log="${3:-"$LOG_FORMAT"}"
-    local date_format="${4:-"$LOG_DATE_FORMAT"}"
-    local log="$5"
-
-    local pid=$$
-    local date
-    date="$(date "$date_format")"
-
-    formatted_log="${formatted_log/'%MESSAGE'/$log}"
-    formatted_log="${formatted_log/'%LEVEL'/$level}"
-    formatted_log="${formatted_log/'%PID'/$pid}"
-    formatted_log="${formatted_log/'%DATE'/$date}"
-    formatted_log="${formatted_log/'%FUNC_TRACE'/$func_trace}"
-    echo "$formatted_log"
-}
-
-#--------------------------------------------------------------------------------------------------
-# Log Handlers
-
-# All log levels call this handler (by default...), so this is a great place to put any standard
-# logging behavior
-# Usage: LOG_HANDLER_DEFAULT <log message> <log format> <log date format> <
-# Eg: LOG_HANDLER_DEFAULT "My debug log"
-LOG_HANDLER_DEFAULT() {
+#######################################
+# All log levels call this handler (by default),
+# so this is a great place to put any standard logging behavior
+# Globals:
+#   LOG_FORMAT
+#   LOG_DATE_FORMAT
+# Arguments:
+#   $@ - Message for log. Default ""
+#   log_format - Log string format. Default "$LOG_FORMAT"
+#   log_date_format - Date and time string format. Default "$LOG_DATE_FORMAT"
+#   additional_logging_func_trace_lvl - Remove from function trace last function name. Default - 0
+#######################################
+function LOG_HANDLER_DEFAULT {
     # $1 - message
     local log_format=${2:-"$LOG_FORMAT"}
     local log_date_format=${3:-"$LOG_DATE_FORMAT"}
@@ -146,13 +125,54 @@ LOG_HANDLER_DEFAULT() {
     LOG_HANDLER_LOGFILE "$lvl" "$formatted_log"
 }
 
+#######################################
+# Outputs a log formatted by provided log and date formats.
+# Globals:
+#   LOG_FORMAT
+#   LOG_DATE_FORMAT
+# Arguments:
+#   level - Log level. Default "DEBUG"
+#   func_trace - Function trace. Default ""
+#   formatted_log - Log string format. Default "$LOG_FORMAT"
+#   date_format - Date and time string format. Default "$LOG_DATE_FORMAT"
+#   log - Message for log. Default ""
+#######################################
+function FORMAT_LOG {
+    local level="${1:-"DEBUG"}"
+    local func_trace="${2:-""}"
+    local formatted_log="${3:-"$LOG_FORMAT"}"
+    local date_format="${4:-"$LOG_DATE_FORMAT"}"
+    local log="$5"
 
+    local pid=$$
+    local date
+    date="$(date "$date_format")"
 
+    formatted_log="${formatted_log/'%MESSAGE'/$log}"
+    formatted_log="${formatted_log/'%LEVEL'/$level}"
+    formatted_log="${formatted_log/'%PID'/$pid}"
+    formatted_log="${formatted_log/'%DATE'/$date}"
+    formatted_log="${formatted_log/'%FUNC_TRACE'/$func_trace}"
+    echo "$formatted_log"
+}
 
+#######################################
 # Outputs a log to the stdout, colorized using the LOG_COLOR configurables
-# Usage: LOG_HANDLER_COLORTERM <log level> <log message>
-# Eg: LOG_HANDLER_COLORTERM CRITICAL "My critical log"
-LOG_HANDLER_COLORTERM() {
+# Globals:
+#   LOG_COLOR_DEBUG
+#   LOG_COLOR_INFO
+#   LOG_COLOR_NOTICE
+#   LOG_COLOR_WARNING
+#   LOG_COLOR_ERROR
+#   LOG_COLOR_CRITICAL
+#   LOG_COLOR_ALERT
+#   LOG_COLOR_EMERGENCY
+#   RESET_COLOR
+# Arguments:
+#   level - Log level.
+#   log - Message for log.
+#######################################
+function LOG_HANDLER_COLORTERM {
     local level="$1"
     local log="$2"
     local color_variable="LOG_COLOR_$level"
@@ -161,10 +181,15 @@ LOG_HANDLER_COLORTERM() {
     echo -e "$log"
 }
 
+#######################################
 # Appends a log to the configured logfile
-# Usage: LOG_HANDLER_LOGFILE <log level> <log message>
-# Eg: LOG_HANDLER_LOGFILE NOTICE "My critical log"
-LOG_HANDLER_LOGFILE() {
+# Globals:
+#   None
+# Arguments:
+#   level - Log level.
+#   log - Message for log.
+#######################################
+function LOG_HANDLER_LOGFILE {
     local level="$1"
     local log="$2"
     local log_path
