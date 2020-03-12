@@ -12,6 +12,69 @@ readonly CLOUD_PASS=$3
 #
 
 #######################################
+# Run command into wrapper, that print command output only when:
+# - error happened
+# - VERBOSE_LVL=DEBUG
+# Globals:
+#   None
+# Arguments:
+#   command - command that should be executed inside wrapper
+#   bash_opts - additional shell options
+#   fail_on_err - interpret not 0 exit code as error or not.
+#                 Boolean. By default - true.
+#   enable_log_timeout - Print all logs for command after timeout.
+#                        Useful for non-DEBUG log levels.
+#                        By default - 300 seconds (5 min)
+# Outputs:
+#   Writes progress status
+#######################################
+function run_cmd {
+    local command="$1"
+    local bash_opts="${2-""}"
+    local fail_on_err="${3-true}"
+    local enable_log_timeout="${3-300}" # By default - 300 seconds (5 min)
+
+    local bash="/usr/bin/env bash ${bash_opts}"
+
+    # STDERR prints by default
+    # Log STDOUT and continue
+    if [ "$LOG_LVL" == "DEBUG" ]; then
+        DEBUG "Output from '$command'" "" "" 1
+        ${bash} -x -c "$command"
+        exit_code=$?
+
+        [ ${exit_code} != 0 ] && [[ $fail_on_err ]] && ERROR "Execution of '$command' failed" "" "" 1
+        return
+    fi
+
+    # shellcheck disable=SC2091
+    $(${bash} -x -c "$command" >/tmp/log) &
+    proc_pid=$!
+
+    # Print logs in non-debug
+    seconds=0
+    until [ ! -d /proc/$proc_pid ]; do
+        if [[ $seconds -gt $enable_log_timeout ]]; then
+            WARNING "Command '$command' executing more than ${seconds}s. \
+Start print out exist and future output for this command." "%DATE - %MESSAGE" "+%T" 1
+            tail -f -n +0 /tmp/log &
+            tail_pid=$!
+            break
+        fi
+        sleep 1
+        ((seconds++))
+    done
+
+    wait $proc_pid
+    exit_code=$?
+    # `> /dev/null 2>&1 &` and `wait` need to suppress "Terminated' message
+    kill $tail_pid > /dev/null 2>&1 &
+    wait
+
+    [ ${exit_code} != 0 ] && [[ $fail_on_err ]] && ERROR "Execution of '$command' failed" "" "" 1
+}
+
+#######################################
 # Create or use exiting S3 bucket for Terraform states
 # Globals:
 #   S3_BACKEND_BUCKET
@@ -27,17 +90,19 @@ function aws::init_s3_bucket {
     cd terraform/aws/backend/ || ERROR "Path not found"
 
     # Create and init backend.
-    terraform init
+    run_cmd "terraform init"
 
     # Check if bucket already exist by trying to import it
-    if (terraform import -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET" aws_s3_bucket.terraform_state "$S3_BACKEND_BUCKET"); then
+    if (terraform import -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET" aws_s3_bucket.terraform_state "$S3_BACKEND_BUCKET" >/dev/null 2>&1); then
         INFO "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET already exist"
     else
         NOTICE "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET not exist. It is going to be created"
-        terraform apply -auto-approve -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET"
+        run_cmd "terraform apply -auto-approve \
+                    -var='region=$cluster_cloud_region' \
+                    -var='s3_backend_bucket=$S3_BACKEND_BUCKET'"
     fi
 
-    cd - || ERROR "Path not found"
+    cd - >/dev/null || ERROR "Path not found"
 }
 
 #######################################
@@ -75,7 +140,7 @@ function aws::init_route53 {
     #     -var="cluster_fullname=$CLUSTER_FULLNAME" \
     #     -var="cluster_domain=$cluster_cloud_domain"
 
-    cd - || ERROR "Path not found"
+    cd - >/dev/null || ERROR "Path not found"
 }
 
 #######################################
@@ -110,18 +175,19 @@ function aws::init_vpc {
             # Create new VPC and get ID.
             NOTICE "Creating new VPC"
             INFO "VPC: Initializing Terraform configuration"
-            terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-                      -backend-config="key=$cluster_name/terraform-vpc.state" \
-                      -backend-config="region=$cluster_cloud_region"
+            run_cmd "terraform init \
+                        -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                        -backend-config='key=$cluster_name/terraform-vpc.state' \
+                        -backend-config='region=$cluster_cloud_region'"
 
-            terraform plan \
-                      -var="region=$cluster_cloud_region" \
-                      -var="cluster_name=$CLUSTER_FULLNAME" \
-                      -input=false \
-                      -out=tfplan
+            run_cmd "terraform plan \
+                        -var='region=$cluster_cloud_region' \
+                        -var='cluster_name=$CLUSTER_FULLNAME' \
+                        -input=false \
+                        -out=tfplan"
 
             INFO "VPC: Creating infrastructure"
-            terraform apply -auto-approve -compact-warnings -input=false tfplan
+            run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
             # Get VPC ID for later use.
             cluster_cloud_vpc_id=$(terraform output vpc_id)
             ;;
@@ -132,7 +198,7 @@ function aws::init_vpc {
             ;;
     esac
 
-    cd - || ERROR "Path not found"
+    cd - >/dev/null || ERROR "Path not found"
 }
 
 #######################################
@@ -152,12 +218,12 @@ function aws::minikube::pull_kubeconfig {
     export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
 
     INFO "Waiting for the Kubernetes Cluster to get ready. It can take some time"
-    until kubectl version --request-timeout=5s 2>/dev/null; do
+    until kubectl version --request-timeout=5s >/dev/null 2>&1; do
         DEBUG "Waiting ${WAIT_TIMEOUT}s"
         sleep $WAIT_TIMEOUT
 
-        aws s3 cp "s3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME" "$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME" 2>/dev/null
-        cp "$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME" ~/.kube/config 2>/dev/null
+        run_cmd "aws s3 cp 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' 2>/dev/null"
+        run_cmd "cp '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null"
     done
 }
 
@@ -185,25 +251,26 @@ function aws::minikube::deploy_cluster {
 
     # Deploy main Terraform code
     INFO "Minikube cluster: Initializing Terraform configuration"
-    terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-        -backend-config="key=$cluster_name/terraform.state" \
-        -backend-config="region=$cluster_cloud_region"
+    run_cmd "terraform init \
+                -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                -backend-config='key=$cluster_name/terraform.state' \
+                -backend-config='region=$cluster_cloud_region'"
 
     # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace: https://github.com/shalb/cluster.dev/issues/9
     # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
-    terraform plan \
-        -var="region=$cluster_cloud_region" \
-        -var="cluster_name=$CLUSTER_FULLNAME" \
-        -var="aws_instance_type=$cluster_provisioner_instanceType" \
-        -var="hosted_zone=$cluster_cloud_domain" \
-        -input=false \
-        -out=tfplan
+    run_cmd "terraform plan \
+                -var='region=$cluster_cloud_region' \
+                -var='cluster_name=$CLUSTER_FULLNAME' \
+                -var='aws_instance_type=$cluster_provisioner_instanceType' \
+                -var='hosted_zone=$cluster_cloud_domain' \
+                -input=false \
+                -out=tfplan"
 
     INFO "Minikube cluster: Creating infrastructure"
-    terraform apply -auto-approve -compact-warnings -input=false tfplan
+    run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
 
-    cd - || ERROR "Path not found"
+    cd - >/dev/null || ERROR "Path not found"
 }
 
 #######################################
@@ -219,8 +286,8 @@ function deploy_cert_manager {
     DEBUG "Deploy CertManager via kubectl"
 
     INFO "Setup TLS certificates"
-    kubectl apply -f "https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml"
-    kubectl apply -f "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/8a147f7c0044c318ec37990b50f0cabb205e9b44/addons/letsencrypt-prod.yaml"
+    run_cmd "kubectl apply -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml'"
+    run_cmd "kubectl apply -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/8a147f7c0044c318ec37990b50f0cabb205e9b44/addons/letsencrypt-prod.yaml'"
 }
 
 #######################################
@@ -244,18 +311,20 @@ function aws::init_argocd {
     cd terraform/aws/argocd/ || ERROR "Path not found"
 
     INFO "ArgoCD: Init Terraform configuration"
-    terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-        -backend-config="key=$cluster_name/terraform-argocd.state" \
-        -backend-config="region=$cluster_cloud_region"
+    run_cmd "terraform init \
+                -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                -backend-config='key=$cluster_name/terraform-argocd.state' \
+                -backend-config='region=$cluster_cloud_region'"
 
-    terraform plan \
-        -var="argo_domain=argo-$CLUSTER_FULLNAME.$cluster_cloud_domain" \
-        -input=false -out=tfplan-argocd
+    run_cmd "terraform plan \
+                -var='argo_domain=argo-$CLUSTER_FULLNAME.$cluster_cloud_domain' \
+                -input=false \
+                -out=tfplan-argocd"
 
     INFO "ArgoCD: Installing/Reconciling"
-    terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd
+    run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd"
 
-    cd - || ERROR "Path not found"
+    cd - >/dev/null || ERROR "Path not found"
 }
 
 #######################################
