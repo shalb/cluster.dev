@@ -4,25 +4,33 @@
 # Configurables
 
 # Minimum log level to show. Default to DEBUG
-readonly LOG_LVL=${VERBOSE_LVL:-"DEBUG"}
+LOG_LVL=${VERBOSE_LVL:-"DEBUG"}
 
-readonly LOGFILE=/dev/null                    # Writes logs only to stdout
+LOGFILE=/dev/null                    # Writes logs only to stdout
 
-readonly LOG_FORMAT="%DATE PID:%PID func trace: '%FUNC_TRACE' %LEVEL - %MESSAGE" # Eg: 2020-03-10 16:18:31 UTC+02 PID:29871 Run func:'main' DEBUG - Example Debug log
-readonly LOG_DATE_FORMAT='+%F %T UTC%:::z'                               # Eg: 2020-03-10 16:18:31 UTC+02
+LOG_FORMAT="%DATE PID:%PID func trace: '%FUNC_TRACE' %LEVEL - %MESSAGE" # Eg: 2020-03-10 16:18:31 UTC+02 PID:29871 Run func:'main' DEBUG - Example Debug log
+LOG_DATE_FORMAT='+%F %T UTC%:::z'                               # Eg: 2020-03-10 16:18:31 UTC+02
 
-readonly LOG_FORMAT_SIMPLE="%DATE - %MESSAGE" # Eg: 16:29:34 - Example Info log
-readonly LOG_DATE_FORMAT_SIMPLE='+%T'         # Eg: 16:29:34
+LOG_FORMAT_SIMPLE="%DATE - %MESSAGE" # Eg: 16:29:34 - Example Info log
+LOG_DATE_FORMAT_SIMPLE='+%T'         # Eg: 16:29:34
 
-readonly LOG_COLOR_DEBUG="\e[38;5;247m"       # Grey
-readonly LOG_COLOR_INFO="\e[94m"              # Blue
-readonly LOG_COLOR_NOTICE="\033[1;32m"        # Default: Bold Green
-readonly LOG_COLOR_WARNING="\033[1;33m"       # Bold Yellow
-readonly LOG_COLOR_ERROR="\033[1;31m"         # Bold Red
-readonly LOG_COLOR_CRITICAL="\e[1;48;5;88m"   # Bold White Text, Dark Red Background
-readonly LOG_COLOR_ALERT="\e[1;41m"           # Bold White Text, Red Background
-readonly LOG_COLOR_EMERGENCY="\e[1;38;5;52m\e[48;5;196m" # Bold Dark Red Text, Light Red Background
-readonly RESET_COLOR="\033[0m"
+# shellcheck disable=SC2034
+LOG_COLOR_DEBUG="\e[38;5;247m"       # Grey
+# shellcheck disable=SC2034
+LOG_COLOR_INFO="\e[94m"              # Blue
+# shellcheck disable=SC2034
+LOG_COLOR_NOTICE="\033[1;32m"        # Default: Bold Green
+# shellcheck disable=SC2034
+LOG_COLOR_WARNING="\033[1;33m"       # Bold Yellow
+# shellcheck disable=SC2034
+LOG_COLOR_ERROR="\033[1;31m"         # Bold Red
+# shellcheck disable=SC2034
+LOG_COLOR_CRITICAL="\e[1;48;5;88m"   # Bold White Text, Dark Red Background
+# shellcheck disable=SC2034
+LOG_COLOR_ALERT="\e[1;41m"           # Bold White Text, Red Background
+# shellcheck disable=SC2034
+LOG_COLOR_EMERGENCY="\e[1;38;5;52m\e[48;5;196m" # Bold Dark Red Text, Light Red Background
+RESET_COLOR="\033[0m"
 
 #######################################
 # Individual Log Functions
