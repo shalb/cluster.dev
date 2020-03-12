@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC1003
+
+source ./logging.sh # PSR-3 compliant logging
 
 # Based on https://gist.github.com/pkuczynski/8665367
 
-parse_yaml() {
+#######################################
+# Read YAML file from Bash script and print out each KV in format:
+# main_sublevel_sublevel2=value
+# Globals:
+#   None
+# Arguments:
+#   yaml_file - File name
+#   prefix - Variable prefix. Default ""
+#######################################
+# shellcheck disable=SC1003
+function yaml::parse {
     local yaml_file=$1
     local prefix=$2
     local s
@@ -46,8 +57,16 @@ parse_yaml() {
     ) < "$yaml_file"
 }
 
-create_variables() {
+#######################################
+# Create variables from yaml file
+# Globals:
+#   None
+# Arguments:
+#   yaml_file - Cluster manifest file name
+#   prefix - Variable prefix. Default ""
+#######################################
+function yaml::create_variables {
     local yaml_file="$1"
     local prefix="$2"
-    eval "$(parse_yaml "$yaml_file" "$prefix")"
+    eval "$(yaml::parse "$yaml_file" "$prefix")"
 }

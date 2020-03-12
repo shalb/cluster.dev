@@ -340,10 +340,11 @@ main::output_software_info
 # Iterate trough provided manifests and reconcile clusters
 for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
 
-    parse_yaml "$CLUSTER_MANIFEST_FILE"
-    create_variables "$CLUSTER_MANIFEST_FILE"
+    yaml::parse "$CLUSTER_MANIFEST_FILE"
+    yaml::create_variables "$CLUSTER_MANIFEST_FILE"
 
-    # Cloud selection
+    # Cloud selection. Declared via yaml::create_variables()
+    # shellcheck disable=SC2154
     case $cluster_cloud_provider in
     aws)
 
@@ -372,6 +373,7 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
         aws::init_vpc   "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
 
         # Provisioner selection
+        #
         case $cluster_provisioner_type in
         minikube)
             DEBUG "Provisioner: Minikube"
