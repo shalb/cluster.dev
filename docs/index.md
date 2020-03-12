@@ -7,7 +7,7 @@ Designed for developers that are bored to configure Kubernetes stuff
 and just need: kubeconfig, dashboard, logging and monitoring out-of-the-box.  
 
 Based on DevOps and SRE best-practices. GitOps cluster management and application delivery.
-Simple CICD integration. Easily extandable by pre-configured applications and modules.
+Simple CI/CD integration. Easily extendable by pre-configured applications and modules.
 Supports different Cloud Providers and Kubernetes versions.
 
 ----
@@ -27,7 +27,7 @@ In background:
 
 You receive:
 
-- Automatically generated kubeconfig, ssh-access, and ArgoCD UI url’s
+- Automatically generated kubeconfig, ssh-access, and ArgoCD UI urls
 - Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)  
 
 ## Quick Start
@@ -51,8 +51,7 @@ You can find the complete sample in our [GitHub Repo/Quick Start](https://github
 
 ## Roadmap
 
-The project is in Alpha Stage, the first release is planned on 14 February 2020.
-Roadmap details: [ROADMAP](./roadmap/)
+The project is in Alpha Stage. Roadmap details: [ROADMAP](./roadmap/)
 
 ## Contributing
 

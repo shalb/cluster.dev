@@ -6,6 +6,8 @@ permalink: /contributing/
 
 # Development
 
+If you prepare make big changes, please, first read about our [style guide requirements](https://github.com/shalb/cluster.dev/blob/master/docs/style-guide.md)
+
 ## How to contribute
 
 1. Create an issue that you are going to address in [GH Issues](https://github.com/shalb/cluster.dev/issues), for example issue `#3`.
@@ -69,4 +71,4 @@ jobs:
 
 9. After successful review, squash and merge your PR to master with the included comment `Resolve GH-3`.
 
-10. After merging be sure to delete all the resources associated with the issue (ec2 instances, elastic ip's, etc.) that have been used for testing.
+10. After merging be sure to delete all the resources associated with the issue (EC2 instances, Elastic IP's etc.) that have been used for testing.

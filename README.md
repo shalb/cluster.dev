@@ -4,7 +4,7 @@ Cluster.dev is an open-source system delivered as GitHub Action or Docker Image 
 
 Designed for developers that are bored to configure Kubernetes stuff and just need: kubeconfig, dashboard, logging and monitoring out-of-the-box.
 
-Based on DevOps and SRE best-practices. GitOps cluster management and application delivery. Simple CICD integration. Easily extandable by pre-configured applications and modules. Supports different Cloud Providers and Kubernetes versions.
+Based on DevOps and SRE best-practices. GitOps cluster management and application delivery. Simple CI/CD integration. Easily extendable by pre-configured applications and modules. Supports different Cloud Providers and Kubernetes versions.
 
 ----
 
@@ -24,7 +24,7 @@ In background:
 
 You receive:
 
-- Automatically generated kubeconfig, ssh-access, and ArgoCD UI url’s
+- Automatically generated kubeconfig, ssh-access, and ArgoCD UI URLs
 - Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)
 
 ## Quick Start
@@ -36,11 +36,11 @@ Next steps should be done in that repo.
 For example, in AWS it is called "Programmatic Access user", and looks like:
 
 ```yaml
-aws_access_key_id =  ATIAAJSXDBUVOQ4JR
+aws_access_key_id = ATIAAJSXDBUVOQ4JR
 aws_secret_access_key = SuperAwsSecret
 ```
 
-3. Add credentials to you repo's Secrets under GitHub's: "Settings->Secrets", ex:
+3. Add credentials to you repo Secrets under GitHub's: "Settings->Secrets", ex:
  ![GitHub Secrets](docs/images/gh-secrets.png)
 
 4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml`:
@@ -73,11 +73,11 @@ jobs:
       id: reconcile
       uses: shalb/cluster.dev@master
       with:
-        # Change setting below with path to config and creds
+        # Change setting below with path to config and credentials
         cluster-config: './.cluster.dev/minikube-a.yaml'
         cloud-user: ${{ secrets.aws_access_key_id }}
         cloud-pass: ${{ secrets.aws_secret_access_key }}
-        # end of chages
+        # end of changes
     - name: Get the execution status
       run: echo "The status ${{ steps.reconcile.outputs.status }}"
 ```
@@ -86,8 +86,7 @@ jobs:
 
 ## Roadmap
 
-The project is in Alpha Stage, the first release is planned on 14 February 2020.
-Roadmap details: [docs/ROADMAP.md](docs/ROADMAP.md)
+The project is in Alpha Stage. Roadmap details: [docs/ROADMAP.md](docs/ROADMAP.md)
 
 ## Contributing
 
