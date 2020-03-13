@@ -347,12 +347,11 @@ aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeco
 export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
 kubectl get ns
 "
-    NOTICE $KUBECONFIG_DOWNLOAD_MESSAGE
-
     SSH_ACCESS_MESSAGE="Download your bastion ssh key using commands:
 aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
 ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain
 "
+    NOTICE $KUBECONFIG_DOWNLOAD_MESSAGE
     NOTICE $SSH_ACCESS_MESSAGE
 
 # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig|ssh)"
