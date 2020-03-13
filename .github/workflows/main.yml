@@ -26,5 +26,5 @@ jobs:
         cloud-user: ${{ secrets.aws_access_key_id }}
         cloud-pass: ${{ secrets.aws_secret_access_key }}
     # Use the output from the `reconcile` step
-    - name: Get the execution status
-      run: echo "The status ${{ steps.reconcile.outputs.status }}"
+    - name: Get the Cluster Credentials
+      run: echo "${{ steps.reconcile.outputs.status }}"
