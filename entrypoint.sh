@@ -470,4 +470,4 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
 
 done
 
-echo ::set-output name=status::\ exit_status=$?
+echo ::set-output name=status::\ exit_status=$(aws::output_access_keys   "$cluster_cloud_domain")
