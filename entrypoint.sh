@@ -341,16 +341,21 @@ function aws::output_access_keys {
     local cluster_cloud_domain=$1
 
     # TODO: Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
-    NOTICE "Download and apply your kubeconfig using commands:
-aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME}
-export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
-kubectl get ns
+
+    KUBECONFIG_DOWNLOAD_MESSAGE="Download and apply your kubeconfig using commands: \n
+aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n
+export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n
+kubectl get ns \n
 "
+    NOTICE $KUBECONFIG_DOWNLOAD_MESSAGE
 
     NOTICE "Download your bastion ssh key using commands:
 aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
 ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain
 "
+
+echo ::set-output name=status::\ $KUBECONFIG_DOWNLOAD_MESSAGE
+
 }
 
 #######################################
@@ -469,5 +474,3 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
     esac
 
 done
-
-echo ::set-output name=status::\ $(aws::output_access_keys   "$cluster_cloud_domain")
