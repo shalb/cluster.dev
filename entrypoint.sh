@@ -342,19 +342,21 @@ function aws::output_access_keys {
 
     # TODO: Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
 
-    KUBECONFIG_DOWNLOAD_MESSAGE="Download and apply your kubeconfig using commands: \n
-aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n
-export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n
-kubectl get ns \n
+    KUBECONFIG_DOWNLOAD_MESSAGE="Download and apply your kubeconfig using commands:
+aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+kubectl get ns
 "
     NOTICE $KUBECONFIG_DOWNLOAD_MESSAGE
 
-    NOTICE "Download your bastion ssh key using commands:
+    MINIKUBE_SSH_ACCESS_MESSAGE="Download your bastion ssh key using commands:
 aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem
 ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_cloud_domain
 "
+    NOTICE $MINIKUBE_SSH_ACCESS_MESSAGE
 
-echo ::set-output name=status::\ $KUBECONFIG_DOWNLOAD_MESSAGE
+# Add output to GitHub Action Step "steps.reconcile.outputs.status"
+echo ::set-output name=status::\ $KUBECONFIG_DOWNLOAD_MESSAGE \n $MINIKUBE_SSH_ACCESS_MESSAGE
 
 }
 
