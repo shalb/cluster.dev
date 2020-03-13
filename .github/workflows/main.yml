@@ -27,4 +27,4 @@ jobs:
         cloud-pass: ${{ secrets.aws_secret_access_key }}
     # Use the output from the `reconcile` step
     - name: Get the Cluster Credentials
-      run: echo "${{ steps.reconcile.outputs.status }}"
+      run: echo -e "${{ steps.reconcile.outputs.kubeconfig \n steps.reconcile.outputs.ssh }}"
