@@ -1,5 +1,5 @@
 cluster:
-  name: minikube-four
+  name: minikube-five
   cloud:
     provider: aws
     region: eu-central-1
