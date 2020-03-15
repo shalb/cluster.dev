@@ -14,8 +14,10 @@
       "Maksym",
       "Maxym",
       "Vlasov",
+      "alpha",
       "antonbabenko",
       "argocd",
+      "argoproj",
       "awscli",
       "clusterdev",
       "clustername",
@@ -26,6 +28,7 @@
       "geoip",
       "grafana",
       "gsub",
+      "io",
       "keystore",
       "kibana",
       "kubernetes",
@@ -53,7 +56,9 @@
       "url",
       "urls",
       "vname",
+      "v",
       "voatsap",
+      "wordpress",
       "workdir",
       "yaml's"
     ]
