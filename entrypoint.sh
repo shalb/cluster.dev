@@ -106,6 +106,22 @@ function aws::init_s3_bucket {
 }
 
 #######################################
+# Destroy S3 bucket for Terraform states
+# Globals:
+#   S3_BACKEND_BUCKET
+# Arguments:
+#   cluster_cloud_region
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::destroy_s3_bucket {
+    DEBUG "Create or use exiting S3 bucket for Terraform states"
+    local cluster_cloud_region=$1
+
+    #TODO: remove bucket procedure
+}
+
+#######################################
 # Create a DNS domains/records if required
 # TODO: implement switch for domain. https://github.com/shalb/cluster.dev/issues/2
 # Globals:
@@ -141,6 +157,28 @@ function aws::init_route53 {
     #     -var="cluster_domain=$cluster_cloud_domain"
 
     cd - >/dev/null || ERROR "Path not found"
+}
+
+#######################################
+# Destroy a DNS domains/records if required
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_cloud_region
+#   cluster_name
+#   cluster_cloud_domain
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::destroy_route53 {
+    DEBUG "Create a DNS domains/records if required"
+    local cluster_cloud_region=$1
+    local cluster_name=$2
+    local cluster_cloud_domain=$3
+
+
+    # TODO: destroy procedure.
 }
 
 #######################################
@@ -202,6 +240,51 @@ function aws::init_vpc {
 }
 
 #######################################
+# Destroy a VPC or use existing defined
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_cloud_vpc
+#   cluster_name
+#   cluster_cloud_region
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::destroy_vpc {
+    local cluster_cloud_vpc=$1
+
+    cd terraform/aws/vpc/ || ERROR "Path not found"
+
+    case ${cluster_cloud_vpc} in
+        default|"")
+            INFO "Default VPC, no need to destroy."
+            return
+            ;;
+        create)
+            # Create new VPC and get ID.
+            INFO "VPC: Initializing Terraform configuration"
+            run_cmd "terraform init \
+                        -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                        -backend-config='key=$cluster_name/terraform-vpc.state' \
+                        -backend-config='region=$cluster_cloud_region'"
+
+            INFO "VPC: Destroying"
+            run_cmd "terraform destroy -auto-approve -compact-warnings \
+                        -var='region=$cluster_cloud_region' \
+                        -var='cluster_name=$CLUSTER_FULLNAME'"
+            ;;
+        *)
+            # Use client VPC ID.
+            INFO "Custom VPC, no need to destroy."
+            return
+            ;;
+    esac
+
+    cd - >/dev/null || ERROR "Path not found"
+}
+
+#######################################
 # Pull a kubeconfig to instance via kubectl
 # Globals:
 #   CLUSTER_FULLNAME
@@ -225,6 +308,27 @@ function aws::minikube::pull_kubeconfig {
         run_cmd "aws s3 cp 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' 2>/dev/null"
         run_cmd "cp '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null"
     done
+}
+
+#######################################
+# Try get kubeconfig to instance via kubectl
+# Globals:
+#   CLUSTER_FULLNAME
+# Arguments:
+#   None
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::minikube::pull_kubeconfig_try {
+    DEBUG "Pull a kubeconfig to instance via kubectl"
+    local WAIT_TIMEOUT=5
+
+    INFO "Copy kubeconfig to instance with Minikube"
+    export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+    run_cmd "aws s3 cp 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' 2>/dev/null"
+    run_cmd "cp '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null"
+    kubectl version --request-timeout=5s >/dev/null 2>&1
+    return $?
 }
 
 #######################################
@@ -274,6 +378,48 @@ function aws::minikube::deploy_cluster {
 }
 
 #######################################
+# Destroy Minikube cluster via Terraform
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_name
+#   cluster_cloud_region
+#   cluster_provisioner_instanceType
+#   cluster_cloud_domain
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::minikube::destroy_cluster {
+    DEBUG "Destroy Minikube cluster via Terraform"
+    local cluster_name=$1
+    local cluster_cloud_region=$2
+    local cluster_provisioner_instanceType=$3
+    local cluster_cloud_domain=$4
+
+    cd terraform/aws/minikube/ || ERROR "Path not found"
+
+    # Deploy main Terraform code
+    INFO "Minikube cluster: Initializing Terraform configuration"
+    run_cmd "terraform init \
+                -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                -backend-config='key=$cluster_name/terraform.state' \
+                -backend-config='region=$cluster_cloud_region'"
+
+    # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace: https://github.com/shalb/cluster.dev/issues/9
+    # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
+
+    INFO "Minikube cluster: Destroying "
+    run_cmd "terraform destroy -auto-approve -compact-warnings \
+                -var='region=$cluster_cloud_region' \
+                -var='cluster_name=$CLUSTER_FULLNAME' \
+                -var='aws_instance_type=$cluster_provisioner_instanceType' \
+                -var='hosted_zone=$cluster_cloud_domain'"
+
+    cd - >/dev/null || ERROR "Path not found"
+}
+
+#######################################
 # Deploy CertManager via kubectl
 # Globals:
 #   None
@@ -282,12 +428,31 @@ function aws::minikube::deploy_cluster {
 # Outputs:
 #   Writes progress status
 #######################################
-function deploy_cert_manager {
+function kube::deploy_cert_manager {
     DEBUG "Deploy CertManager via kubectl"
 
     INFO "Setup TLS certificates"
+    run_cmd "kubectl apply -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml'"
     run_cmd "kubectl apply -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml'"
     run_cmd "kubectl apply -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/8a147f7c0044c318ec37990b50f0cabb205e9b44/addons/letsencrypt-prod.yaml'"
+}
+
+#######################################
+# Remove CertManager via kubectl
+# Globals:
+#   None
+# Arguments:
+#   None
+# Outputs:
+#   Writes progress status
+#######################################
+function kube::destroy_cert_manager {
+    DEBUG "Deploy CertManager via kubectl"
+
+    INFO "Setup TLS certificates"
+    run_cmd "kubectl delete -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/8a147f7c0044c318ec37990b50f0cabb205e9b44/addons/letsencrypt-prod.yaml' || true"
+    run_cmd "kubectl delete -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml' || true"
+    run_cmd "kubectl delete -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml' || true"
 }
 
 #######################################
@@ -323,6 +488,39 @@ function aws::init_argocd {
 
     INFO "ArgoCD: Installing/Reconciling"
     run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd"
+
+    cd - >/dev/null || ERROR "Path not found"
+}
+
+#######################################
+# Destroy ArgoCD via Terraform
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_name
+#   cluster_cloud_region
+#   cluster_cloud_domain
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::destroy_argocd {
+    DEBUG "Deploy ArgoCD via Terraform"
+    local cluster_name=$1
+    local cluster_cloud_region=$2
+    local cluster_cloud_domain=$3
+
+    cd terraform/aws/argocd/ || ERROR "Path not found"
+
+    INFO "ArgoCD: Init Terraform configuration"
+    run_cmd "terraform init \
+                -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                -backend-config='key=$cluster_name/terraform-argocd.state' \
+                -backend-config='region=$cluster_cloud_region'"
+
+    INFO "ArgoCD: Destroying"
+    run_cmd "terraform destroy -auto-approve -compact-warnings \
+                -var='argo_domain=argo-$CLUSTER_FULLNAME.$cluster_cloud_domain'"
 
     cd - >/dev/null || ERROR "Path not found"
 }
@@ -382,16 +580,32 @@ function main::output_software_info {
     aws --version
 }
 
+# Destroy all cluster.
+function aws::destroy {
 
-
+        case $cluster_provisioner_type in
+        minikube)
+            DEBUG "Destroy: Provisioner: Minikube"
+            if aws::minikube::pull_kubeconfig_try; then
+                aws::destroy_argocd "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
+                kube::destroy_cert_manager
+            fi
+            aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
+            aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
+            aws::destroy_route53 "$cluster_cloud_region" "$cluster_name" "$cluster_cloud_domain"
+            aws::destroy_s3_bucket "$cluster_cloud_region"
+        ;;
+        # end of minikube
+        eks)
+            DEBUG "Cloud Provider: AWS. Provisioner: EKS"
+            ;;
+        esac
+}
 
 
 # =========================================================================== #
 #                                    MAIN                                     #
 # =========================================================================== #
-
-
-
 
 
 DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
@@ -424,6 +638,13 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
         # The same name would be used for domains
         readonly CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
 
+        # Destroy if installed: false
+        if [ "$cluster_installed" = "false" ]; then
+            aws::destroy
+            exit 0
+
+        fi
+
         # Create and init backend.
         # Check if bucket already exist by trying to import it
         aws::init_s3_bucket   "$cluster_cloud_region"
@@ -446,7 +667,7 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
             aws::minikube::pull_kubeconfig
 
             # Deploy CertManager via kubectl
-            deploy_cert_manager
+            kube::deploy_cert_manager
 
             # Deploy ArgoCD via Terraform
             aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"

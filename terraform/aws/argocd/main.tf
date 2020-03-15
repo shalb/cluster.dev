@@ -3,6 +3,15 @@ resource "random_password" "argocd_pass" {
   special = false
 }
 
+resource "null_resource" "bcrypted_password" {
+  triggers = {
+    result = bcrypt(random_password.argocd_pass.result)
+  }
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
 provider "helm" {
 }
 
@@ -60,7 +69,7 @@ resource "helm_release" "argo-cd" {
   }
   set {
     name  = "configs.secret.argocdServerAdminPassword"
-    value = bcrypt(random_password.argocd_pass.result)
+    value = null_resource.bcrypted_password.triggers.result
   }
   set {
     name  = "installCRDs"

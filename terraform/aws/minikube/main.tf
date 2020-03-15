@@ -43,7 +43,6 @@ module "minikube" {
     "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/metrics-server.yaml",
     "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/dashboard.yaml",
     "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/external-dns.yaml",
-    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml"
   ]
 
 }
