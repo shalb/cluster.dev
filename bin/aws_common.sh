@@ -34,6 +34,22 @@ function aws::init_s3_bucket {
 }
 
 #######################################
+# Destroy S3 bucket for Terraform states
+# Globals:
+#   S3_BACKEND_BUCKET
+# Arguments:
+#   cluster_cloud_region
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::destroy_s3_bucket {
+    DEBUG "Destroy exiting S3 bucket for Terraform states"
+    local cluster_cloud_region=$1
+
+    #TODO: remove bucket procedure
+}
+
+#######################################
 # Create a DNS domains/records if required
 # TODO: implement switch for domain. https://github.com/shalb/cluster.dev/issues/2
 # Globals:
@@ -72,10 +88,33 @@ function aws::init_route53 {
 }
 
 #######################################
+# Destroy a DNS domains/records if required
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_cloud_region
+#   cluster_name
+#   cluster_cloud_domain
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::destroy_route53 {
+    DEBUG "Destroy a DNS domains/records if required"
+    local cluster_cloud_region=$1
+    local cluster_name=$2
+    local cluster_cloud_domain=$3
+
+
+    # TODO: destroy procedure.
+}
+
+#######################################
 # Create a VPC or use existing defined
 # Globals:
 #   S3_BACKEND_BUCKET
 #   CLUSTER_FULLNAME
+#   FUNC_RESULT
 # Arguments:
 #   cluster_cloud_vpc
 #   cluster_name
@@ -125,10 +164,56 @@ function aws::init_vpc {
             cluster_cloud_vpc_id=${cluster_cloud_vpc}
             ;;
     esac
+    # shellcheck disable=SC2034
+    FUNC_RESULT="${cluster_cloud_vpc_id}"
 
     cd - >/dev/null || ERROR "Path not found"
 }
 
+#######################################
+# Destroy a VPC or use existing defined
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_cloud_vpc
+#   cluster_name
+#   cluster_cloud_region
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::destroy_vpc {
+    local cluster_cloud_vpc=$1
+    DEBUG "Destroy created VPC keep default unchanged"
+    cd terraform/aws/vpc/ || ERROR "Path not found"
+
+    case ${cluster_cloud_vpc} in
+        default|"")
+            INFO "Default VPC, no need to destroy."
+            return
+            ;;
+        create)
+            # Create new VPC and get ID.
+            INFO "VPC: Initializing Terraform configuration"
+            run_cmd "terraform init \
+                        -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                        -backend-config='key=$cluster_name/terraform-vpc.state' \
+                        -backend-config='region=$cluster_cloud_region'"
+
+            INFO "VPC: Destroying"
+            run_cmd "terraform destroy -auto-approve -compact-warnings \
+                        -var='region=$cluster_cloud_region' \
+                        -var='cluster_name=$CLUSTER_FULLNAME'"
+            ;;
+        *)
+            # Use client VPC ID.
+            INFO "Custom VPC, no need to destroy."
+            return
+            ;;
+    esac
+
+    cd - >/dev/null || ERROR "Path not found"
+}
 
 #######################################
 # Deploy ArgoCD via Terraform
@@ -198,4 +283,26 @@ ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem centos@$CLUSTER_FULLNAME.$cluster_c
     echo ::set-output name=kubeconfig::\ "$KUBECONFIG_DOWNLOAD_MESSAGE"
     echo ::set-output name=ssh::\ "$SSH_ACCESS_MESSAGE"
 
+}
+
+
+# Destroy all cluster.
+function aws::destroy {
+        case $cluster_provisioner_type in
+        minikube)
+            DEBUG "Destroy: Provisioner: Minikube"
+            if aws::minikube::pull_kubeconfig_once; then
+                # aws::destroy_argocd "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
+                kube::destroy_apps
+            fi
+            aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
+            aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
+            aws::destroy_route53 "$cluster_cloud_region" "$cluster_name" "$cluster_cloud_domain"
+            aws::destroy_s3_bucket "$cluster_cloud_region"
+        ;;
+        # end of minikube
+        eks)
+            DEBUG "Destroy: Provisioner: EKS"
+            ;;
+        esac
 }

@@ -3,16 +3,20 @@
 # Used for the testing cluster creation and performs basic tests
 
 # Import variables
-. config.sh
-
 readonly SRC_PATH=$(realpath $(dirname $(readlink -f $0))/../)
+
+. config.sh
 cd "${SRC_PATH}"
 source "${SRC_PATH}/bin/bash-logger.sh"
 
 readonly GIT_SHORT_COMMIT="$(git rev-parse --short HEAD)"
 readonly DOCKER_IMAGE_NAME="cluster.dev:${GIT_SHORT_COMMIT}-local-tests"
 
-docker build -t "${DOCKER_IMAGE_NAME}" .
+# Delete .terraform dirs.
+docker run --rm --workdir /github/workspace --rm -v "${SRC_PATH}:/github/workspace" alpine find ./ -name .terraform -type d -exec rm -rf {} +
+
+# Build with image --no-cache (always build new).
+docker build --no-cache -t "${DOCKER_IMAGE_NAME}" .
 
 # Get from config.sh
 readonly USER="${AWS_ACCESS_KEY_ID}"

@@ -23,7 +23,7 @@ readonly CLOUD_PASS=$3
 
 
 DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
-      CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
+    CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
 
 # Writes information about used software
 output_software_info
@@ -54,6 +54,12 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
         # The same name would be used for domains
         readonly CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
 
+        # Destroy if installed: false
+        if [ "$cluster_installed" = "false" ]; then
+            aws::destroy
+            exit 0
+
+        fi
         # Create and init backend.
         # Check if bucket already exist by trying to import it
         aws::init_s3_bucket   "$cluster_cloud_region"
@@ -62,8 +68,9 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
         aws::init_route53   "$cluster_cloud_region" "$cluster_name" "$cluster_cloud_domain"
 
         # Create a VPC or use existing defined
+        FUNC_RESULT=""
         aws::init_vpc   "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
-
+        readonly CLUSTER_VPC_ID=${FUNC_RESULT}
         # Provisioner selection
         #
         case $cluster_provisioner_type in
@@ -71,16 +78,16 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
             DEBUG "Provisioner: Minikube"
 
             # Deploy Minikube cluster via Terraform
-            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
+            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain" "$CLUSTER_VPC_ID"
 
             # Pull a kubeconfig to instance via kubectl
             aws::minikube::pull_kubeconfig
 
-            # Deploy CertManager via kubectl
-            deploy_cert_manager
+            # Deploy k8s applications via kubectl
+            #kube::deploy_apps
 
             # Deploy ArgoCD via Terraform
-            aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
+            #aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
 
             # Deploy ArgoCD apps via kubectl
             argocd::deploy_apps
