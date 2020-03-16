@@ -21,7 +21,7 @@ docker build --no-cache -t "${DOCKER_IMAGE_NAME}" .
 # Get from config.sh
 readonly USER="${AWS_ACCESS_KEY_ID}"
 readonly PASS="${AWS_SECRET_ACCESS_KEY}"
-readonly WORKFLOW_PATH="${GH_ACTION_WORKFLOW_PATH}"
+readonly CONFIG_PATH="${CLUSTER_CONFIG_PATH}"
 readonly TIMEOUT="${ACTION_TIMEOUT}"
 
 # Trap ctrl+c to remove docker container and kill timeout script.
@@ -38,7 +38,7 @@ timer_pid=$!
 # Run docker in localhost
 docker run -d --name "clusterdev-test-${GIT_SHORT_COMMIT}" --workdir /github/workspace --rm -v "${SRC_PATH}:/github/workspace" \
            -e GITHUB_REPOSITORY="shalb" \
-           "${DOCKER_IMAGE_NAME}" "${WORKFLOW_PATH}" "${USER}" "${PASS}"
+           "${DOCKER_IMAGE_NAME}" "${CONFIG_PATH}" "${USER}" "${PASS}"
 
 sleep 1
 
