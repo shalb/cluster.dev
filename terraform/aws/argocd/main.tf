@@ -51,8 +51,8 @@ resource "helm_release" "argo-cd" {
     name  = "server.certificate.domain"
     value = var.argo_domain
   }
-  set {
-    name  = "server.ingress.annotations.cluster.dev/domain"
+   set {
+    name  = "server.ingress.annotations.\"cluster\\.dev/domain\""
     value = var.argo_domain
   }
   set {
@@ -74,10 +74,6 @@ resource "helm_release" "argo-cd" {
   set {
     name  = "installCRDs"
     value = "false"
-  }
-  set {
-    name  = ""
-    value = ""
   }
 }
 
