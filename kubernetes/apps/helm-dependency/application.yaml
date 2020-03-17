@@ -1,3 +1,8 @@
+# Example on how to install public helm chart using values file from own repository.
+# You point the source to own repo with minimal Chart.yaml and values.yaml declaration.
+# Public chart version and repo are set through requirements.yaml
+# Sample implementation in /kubernetes/chart/wordpress/ folder
+# See details on concept in https://github.com/argoproj/argocd-example-apps/tree/master/helm-dependency
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -9,7 +14,6 @@ spec:
     repoURL: https://github.com/shalb/cluster.dev.git
     targetRevision: argocd-app-deploy-example
     path: kubernetes/charts/wordpress
-    # helm specific config
     helm:
       parameters:
       - name: "nginx-ingress.controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"

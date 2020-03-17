@@ -1,0 +1,21 @@
+# Example to deploy Kubernetes raw manifests (like Deployment.yaml or Service.yaml)
+# Could be used for very basic deployment examples and for operator resources
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/argoproj/argocd-example-apps.git
+    targetRevision: HEAD
+    path: guestbook
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    validate: true
