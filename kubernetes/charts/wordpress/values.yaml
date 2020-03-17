@@ -13,4 +13,7 @@ wordpress:
       kubernetes.io/ingress.class: nginx
       cert-manager.io/cluster-issuer: letsencrypt-prod
     }
-
+    extraTls:
+    - hosts:
+      - wordpress-chart.cluster.dev
+      secretName: wordpress-chart.cluster.dev
