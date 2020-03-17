@@ -5,3 +5,7 @@ wordpress:
       password: bar
     rootUser:
       password: baz
+  ingress:
+    enabled: true
+    certManager: true
+    hostname: wordpress-chart.cluster.dev
