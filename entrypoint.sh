@@ -78,6 +78,9 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
             # Deploy ArgoCD via Terraform
             aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
 
+            # Deploy ArgoCD apps via kubectl
+            argocd::deploy_apps
+
             # Writes commands for user for get access to cluster
             aws::output_access_keys   "$cluster_cloud_domain"
         ;;
