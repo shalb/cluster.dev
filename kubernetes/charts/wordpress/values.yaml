@@ -10,7 +10,7 @@ wordpress:
     certManager: true
     hostname: wordpress-chart.cluster.dev
     annotations: {
-      kubernetes.io/ingress.class: nginx
+      kubernetes.io/ingress.class: nginx,
       cert-manager.io/cluster-issuer: letsencrypt-prod
     }
     extraTls:
