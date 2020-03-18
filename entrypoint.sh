@@ -16,6 +16,7 @@ readonly CLOUD_PASS=$3
 # For local testing run: ./entrypoint.sh .cluster.dev/minikube-one.yaml AWSUSER AWSPASS
 #
 
+FUNC_RESULT="" # used for return data from functions
 
 # =========================================================================== #
 #                                    MAIN                                     #
@@ -63,6 +64,7 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
 
         # Create a VPC or use existing defined
         aws::init_vpc   "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
+        readonly cluster_cloud_vpc_id=$FUNC_RESULT
 
         # Provisioner selection
         #
@@ -71,7 +73,7 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
             DEBUG "Provisioner: Minikube"
 
             # Deploy Minikube cluster via Terraform
-            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
+            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain" "$cluster_cloud_vpc_id"
 
             # Pull a kubeconfig to instance via kubectl
             aws::minikube::pull_kubeconfig

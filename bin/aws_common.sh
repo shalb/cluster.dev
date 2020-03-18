@@ -76,6 +76,7 @@ function aws::init_route53 {
 # Globals:
 #   S3_BACKEND_BUCKET
 #   CLUSTER_FULLNAME
+#   FUNC_RESULT
 # Arguments:
 #   cluster_cloud_vpc
 #   cluster_name
@@ -125,6 +126,9 @@ function aws::init_vpc {
             cluster_cloud_vpc_id=${cluster_cloud_vpc}
             ;;
     esac
+
+    # shellcheck disable=SC2034
+    FUNC_RESULT=${cluster_cloud_vpc_id}
 
     cd - >/dev/null || ERROR "Path not found"
 }

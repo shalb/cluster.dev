@@ -38,6 +38,7 @@ function aws::minikube::pull_kubeconfig {
 #   cluster_cloud_region
 #   cluster_provisioner_instanceType
 #   cluster_cloud_domain
+#   cluster_cloud_vpc_id
 # Outputs:
 #   Writes progress status
 #######################################
@@ -47,6 +48,7 @@ function aws::minikube::deploy_cluster {
     local cluster_cloud_region=$2
     local cluster_provisioner_instanceType=$3
     local cluster_cloud_domain=$4
+    local cluster_cloud_vpc_id=$5
 
     cd terraform/aws/minikube/ || ERROR "Path not found"
 
@@ -65,6 +67,7 @@ function aws::minikube::deploy_cluster {
                 -var='cluster_name=$CLUSTER_FULLNAME' \
                 -var='aws_instance_type=$cluster_provisioner_instanceType' \
                 -var='hosted_zone=$cluster_cloud_domain' \
+                -var='vpc_id=$cluster_cloud_vpc_id' \
                 -input=false \
                 -out=tfplan"
 
