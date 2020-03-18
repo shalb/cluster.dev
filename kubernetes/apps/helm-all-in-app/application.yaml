@@ -5,21 +5,22 @@ kind: Application
 metadata:
   name: filebeat
   namespace: argocd
-project: default
-source:
-  repoURL: 'https://kubernetes-charts.storage.googleapis.com'
-  targetRevision: 4.0.0
-  helm:
-    chart: filebeat
-    valueFiles:
-      - values.yaml
-    parameters:
-      - name: config.filebeat.config.modules.reload.enabled
-        value: 'true'
-destination:
-  server: 'https://kubernetes.default.svc'
-  namespace: default
-syncPolicy:
-  automated:
-    prune: true
-    selfHeal: true
+spec:
+  project: default
+  source:
+    repoURL: 'https://kubernetes-charts.storage.googleapis.com'
+    targetRevision: 4.0.0
+    helm:
+      chart: filebeat
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: config.filebeat.config.modules.reload.enabled
+          value: 'true'
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
