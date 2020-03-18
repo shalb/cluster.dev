@@ -28,7 +28,7 @@ function deploy_cert_manager {
 # Outputs:
 #   Writes software versions
 #######################################
-function main::output_software_info {
+function output_software_info {
     DEBUG "Writes information about used software"
     INFO "Software installed information:"
     INFO "Helm"
