@@ -4,6 +4,10 @@
 source ./bin/yaml.sh # provides parse_yaml and create_variables
 source ./bin/logging.sh # PSR-3 compliant logging
 source ./bin/common.sh
+source ./bin/aws_common.sh
+source ./bin/aws_minikube.sh
+source ./bin/argocd.sh
+
 
 # Variables passed by Github Workflow to Action
 readonly CLUSTER_CONFIG_PATH=$1
