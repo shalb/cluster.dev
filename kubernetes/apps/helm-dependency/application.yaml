@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/shalb/cluster.dev.git
-    targetRevision: argocd-app-deploy-example
+    targetRevision: HEAD
     path: kubernetes/charts/wordpress
     helm:
       parameters:
