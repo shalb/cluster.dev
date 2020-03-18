@@ -1,9 +1,0 @@
-cluster:
-  name: eks-two
-  cloud:
-    provider: aws
-    region: eu-central-1
-  provisioner:
-    type: eks
-    instanceType: "m5.large"
-    instancePricing: spot

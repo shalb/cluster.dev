@@ -1,4 +1,5 @@
 cluster:
+  installed: false
   name: minikube-five
   cloud:
     provider: aws

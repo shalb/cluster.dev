@@ -3,6 +3,7 @@ on:
     paths:
       - 'entrypoint.sh'
       - 'terraform/**'
+      - 'kubernetes/apps/**'
       - 'Dockerfile'
       - '.github/workflows/**'
       - '.cluster.dev/**'
