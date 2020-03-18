@@ -26,7 +26,7 @@ DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
       CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
 
 # Writes information about used software
-main::output_software_info
+output_software_info
 
 # Iterate trough provided manifests and reconcile clusters
 for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
