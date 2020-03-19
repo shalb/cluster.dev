@@ -78,8 +78,8 @@ jobs:
         cloud-user: ${{ secrets.aws_access_key_id }}
         cloud-pass: ${{ secrets.aws_secret_access_key }}
         # end of changes
-    - name: Get the execution status
-      run: echo "The status ${{ steps.reconcile.outputs.status }}"
+    - name: Get the Cluster Credentials
+      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
 ```
 
 6. Commit and Push changes and follow the Github Action execution and in its output you'll receive access instructions to your cluster and its services.
