@@ -3,21 +3,25 @@
 # Used for the testing cluster creation and performs basic tests
 
 # Import variables
-. config.sh
-
 readonly SRC_PATH=$(realpath $(dirname $(readlink -f $0))/../)
+
+. config.sh
 cd "${SRC_PATH}"
 source "${SRC_PATH}/bin/bash-logger.sh"
 
 readonly GIT_SHORT_COMMIT="$(git rev-parse --short HEAD)"
 readonly DOCKER_IMAGE_NAME="cluster.dev:${GIT_SHORT_COMMIT}-local-tests"
 
-docker build -t "${DOCKER_IMAGE_NAME}" .
+# Delete .terraform dirs.
+docker run --rm --workdir /github/workspace --rm -v "${SRC_PATH}:/github/workspace" alpine find ./ -name .terraform -type d -exec rm -rf {} +
+
+# Build with image --no-cache (always build new).
+docker build --no-cache -t "${DOCKER_IMAGE_NAME}" .
 
 # Get from config.sh
 readonly USER="${AWS_ACCESS_KEY_ID}"
 readonly PASS="${AWS_SECRET_ACCESS_KEY}"
-readonly WORKFLOW_PATH="${GH_ACTION_WORKFLOW_PATH}"
+readonly CONFIG_PATH="${CLUSTER_CONFIG_PATH}"
 readonly TIMEOUT="${ACTION_TIMEOUT}"
 
 # Trap ctrl+c to remove docker container and kill timeout script.
@@ -34,7 +38,7 @@ timer_pid=$!
 # Run docker in localhost
 docker run -d --name "clusterdev-test-${GIT_SHORT_COMMIT}" --workdir /github/workspace --rm -v "${SRC_PATH}:/github/workspace" \
            -e GITHUB_REPOSITORY="shalb" \
-           "${DOCKER_IMAGE_NAME}" "${WORKFLOW_PATH}" "${USER}" "${PASS}"
+           "${DOCKER_IMAGE_NAME}" "${CONFIG_PATH}" "${USER}" "${PASS}"
 
 sleep 1
 
