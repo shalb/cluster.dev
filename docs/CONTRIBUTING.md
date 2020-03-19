@@ -59,6 +59,8 @@ jobs:
     # Use the output from the `reconcile` step
     - name: Get the Cluster Credentials
       run: echo -e "${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}"
+env:
+  VERBOSE_LVL: INFO
 ```
 
 5. Commit and push both files with the comment, for example: `GH-3 Initial Commit`. GitHub automatically [creates reference](https://help.github.com/en/github/writing-on-github/autolinked-references-and-urls#issues-and-pull-requests) to the related issue to let other contributors know that related work has been addressed somewhere else.

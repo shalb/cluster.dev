@@ -4,7 +4,7 @@
 # Configurables
 
 # Minimum log level to show. Default to DEBUG
-LOG_LVL=${VERBOSE_LVL:-"DEBUG"}
+LOG_LVL=${VERBOSE_LVL:-"INFO"}
 
 LOGFILE=/dev/null                    # Writes logs only to stdout
 
