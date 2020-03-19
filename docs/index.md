@@ -55,4 +55,4 @@ The project is in Alpha Stage. Roadmap details: [ROADMAP](./roadmap/)
 
 ## Contributing
 
-If you want to spread the project with your own code, you can start contributing with this quick guide: [CONTRIBUTING](./contributing/)
+If you want to spread the project with your own code, you can start contributing with this quick guide: [CONTRIBUTING](https://github.com/shalb/cluster.dev/blob/master/docs/CONTRIBUTING.md)
