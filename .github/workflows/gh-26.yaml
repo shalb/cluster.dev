@@ -1,0 +1,22 @@
+on:
+  push:
+      branches:
+        - feature/GH-26 #CHANGE ME
+jobs:
+  deploy_cluster_job:
+    runs-on: ubuntu-latest
+    name: Deploy and Update K8s Clusters
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+      with:
+        ref: 'feature/GH-26' #CHANGE ME
+    - name: Reconcile Clusters
+      id: reconcile
+      uses: shalb/cluster.dev@feature/GH-26 #CHANGE ME
+      with:
+        cluster-config: './.cluster.dev/gh-26.yaml' #CHANGE ME
+        cloud-user: ${{ secrets.aws_access_key_id }}
+        cloud-pass: ${{ secrets.aws_secret_access_key }}
+    - name: Get the execution status
+      run: echo "The status $"
