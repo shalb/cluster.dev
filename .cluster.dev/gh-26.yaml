@@ -1,6 +1,6 @@
 cluster:
   name: gh-26 #CHANGE ME
-  installed: false
+  installed: true
   cloud:
     provider: aws
     region: eu-central-1
