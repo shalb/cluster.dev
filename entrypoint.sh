@@ -85,10 +85,10 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
             aws::minikube::pull_kubeconfig
 
             # Deploy k8s applications via kubectl
-            #kube::deploy_apps
+            kube::deploy_apps
 
             # Deploy ArgoCD via Terraform
-            #aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
+            aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
 
             # Deploy ArgoCD apps via kubectl
             argocd::deploy_apps
