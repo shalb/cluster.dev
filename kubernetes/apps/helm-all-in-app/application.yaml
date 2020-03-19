@@ -10,8 +10,8 @@ spec:
   source:
     repoURL: 'https://kubernetes-charts.storage.googleapis.com'
     targetRevision: 4.0.0
+    chart: filebeat
     helm:
-      chart: filebeat
       valueFiles:
         - values.yaml
       parameters:
