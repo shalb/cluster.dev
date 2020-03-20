@@ -10,3 +10,7 @@ COPY --from=terraform /bin/terraform /bin/terraform
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
+
+COPY /bin/*.sh /bin/
+COPY /kubernetes /
+COPY /terraform /
