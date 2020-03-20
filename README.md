@@ -43,46 +43,61 @@ aws_secret_access_key = SuperAwsSecret
 3. Add credentials to you repo Secrets under GitHub's: "Settings->Secrets", ex:
  ![GitHub Secrets](docs/images/gh-secrets.png)
 
-4. Create a new cluster.dev config yaml with your cluster definition: `.cluster.dev/minikube-a.yaml`:
+4. Create a new cluster.dev yaml manifest with your cluster definition, example: `.cluster.dev/minikube-one.yaml`:
 
 ```yaml
 cluster:
-  name: minikube-a
+  installed: true
+  name: minikube-five
   cloud:
     provider: aws
     region: eu-central-1
     vpc: default
-    domain: shalb.net # Your domain in Route53
+    domain: shalb.net  # You need a domain in Route53
   provisioner:
     type: minikube
     instanceType: m5.large
+  # 'apps' are actually directories in '/kubernetes/apps'
+  # that contains ArgoCD project and application declarations
+  apps:
+    - helm-all-in-app
+    - helm-dependency
+    - raw-manifest
 ```
 
 5. Create a Github Workflow file `.github/workflows/main.yml`:
 
 ```yaml
-on: [push]
+on:
+  push:
+    paths:
+      - '.github/workflows/**' # path to workflow
+      - '.cluster.dev/**' # Path to cluster declaration manifests
+      - '/kubernetes/apps/**' # Create your ArgoCD app folders here
+    branches:
+      - master
 jobs:
   deploy_cluster_job:
     runs-on: ubuntu-latest
-    name: Deploy and Update K8s Cluster
+    name: Create and Update Kubernetes Clusters
     steps:
+    # To use this repository's private action, you must check out the repository
     - name: Checkout Repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v1
+    # - uses: ./ # Uses an action in the root directory
     - name: Reconcile Clusters
       id: reconcile
       uses: shalb/cluster.dev@master
       with:
-        # Change setting below with path to config and credentials
-        cluster-config: './.cluster.dev/minikube-a.yaml'
+        cluster-config: './.cluster.dev/minikube-one.yaml'
         cloud-user: ${{ secrets.aws_access_key_id }}
         cloud-pass: ${{ secrets.aws_secret_access_key }}
-        # end of changes
+    # Use the output from the `reconcile` step
     - name: Get the Cluster Credentials
       run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
 ```
 
-6. Commit and Push changes and follow the Github Action execution and in its output you'll receive access instructions to your cluster and its services.
+6. Commit and Push files to your repo and follow the Github Action execution status. In GitHub action output you'll receive access instructions to your cluster and services.
 
 ## Technical diagram
 
