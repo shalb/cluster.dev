@@ -12,5 +12,5 @@ COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 COPY /bin/*.sh /bin/
-COPY /kubernetes /
-COPY /terraform /
+COPY /kubernetes /kubernetes
+COPY /terraform /terraform
