@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./logging.sh
+source ./bin/logging.sh
 
 #######################################
 # Deploy CertManager via kubectl

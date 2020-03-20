@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./logging.sh # PSR-3 compliant logging
+source ./bin/logging.sh # PSR-3 compliant logging
 
 # Based on https://gist.github.com/pkuczynski/8665367
 
