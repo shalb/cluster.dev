@@ -84,6 +84,11 @@ jobs:
 
 6. Commit and Push changes and follow the Github Action execution and in its output you'll receive access instructions to your cluster and its services.
 
+## Technical diagram
+
+![cluster.dev technical diagram](docs/images/cluster-dev-technical-diagram.png)
+
+
 ## Roadmap
 
 The project is in Alpha Stage. Roadmap details: [docs/ROADMAP.md](docs/ROADMAP.md)
