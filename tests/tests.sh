@@ -7,7 +7,7 @@ readonly SRC_PATH=$(realpath $(dirname $(readlink -f $0))/../)
 
 . config.sh
 cd "${SRC_PATH}"
-source "${SRC_PATH}/bin/bash-logger.sh"
+source "${SRC_PATH}/bin/logging.sh"
 
 readonly GIT_SHORT_COMMIT="$(git rev-parse --short HEAD)"
 readonly DOCKER_IMAGE_NAME="cluster.dev:${GIT_SHORT_COMMIT}-local-tests"

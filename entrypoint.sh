@@ -29,7 +29,7 @@ DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
 output_software_info
 
 # Iterate trough provided manifests and reconcile clusters
-for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f); do
+for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f  || ERROR "Manifest file/folder can't be found" && exit 1 ); do
 
     yaml::parse "$CLUSTER_MANIFEST_FILE"
     yaml::create_variables "$CLUSTER_MANIFEST_FILE"
