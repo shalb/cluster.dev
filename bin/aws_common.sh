@@ -15,7 +15,7 @@ function aws::init_s3_bucket {
     DEBUG "Create or use exiting S3 bucket for Terraform states"
     local cluster_cloud_region=$1
 
-    cd terraform/aws/backend/ || ERROR "Path not found"
+    cd /terraform/aws/backend/ || ERROR "Path not found"
 
     # Create and init backend.
     run_cmd "terraform init"
@@ -68,7 +68,7 @@ function aws::init_route53 {
     local cluster_name=$2
     local cluster_cloud_domain=$3
 
-    cd terraform/aws/route53/ || ERROR "Path not found"
+    cd /terraform/aws/route53/ || ERROR "Path not found"
 
     if [ -z "$cluster_cloud_domain" ]; then
         INFO "The cluster domain is unset. It is going to be created default"
@@ -132,7 +132,7 @@ function aws::init_vpc {
     local cluster_cloud_vpc=$1
     local cluster_cloud_vpc_id=""
 
-    cd terraform/aws/vpc/ || ERROR "Path not found"
+    cd /terraform/aws/vpc/ || ERROR "Path not found"
 
     case ${cluster_cloud_vpc} in
         default|"")
@@ -185,7 +185,7 @@ function aws::init_vpc {
 function aws::destroy_vpc {
     local cluster_cloud_vpc=$1
     DEBUG "Destroy created VPC keep default unchanged"
-    cd terraform/aws/vpc/ || ERROR "Path not found"
+    cd /terraform/aws/vpc/ || ERROR "Path not found"
 
     case ${cluster_cloud_vpc} in
         default|"")
@@ -233,7 +233,7 @@ function aws::init_argocd {
     local cluster_cloud_region=$2
     local cluster_cloud_domain=$3
 
-    cd terraform/aws/argocd/ || ERROR "Path not found"
+    cd /terraform/aws/argocd/ || ERROR "Path not found"
 
     INFO "ArgoCD: Init Terraform configuration"
     run_cmd "terraform init \
@@ -279,7 +279,7 @@ function aws::destroy_argocd {
     local cluster_cloud_region=$2
     local cluster_cloud_domain=$3
 
-    cd terraform/aws/argocd/ || ERROR "Path not found"
+    cd /terraform/aws/argocd/ || ERROR "Path not found"
 
     INFO "ArgoCD: Init Terraform configuration"
     run_cmd "terraform init \

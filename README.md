@@ -57,7 +57,7 @@ cluster:
   provisioner:
     type: minikube
     instanceType: m5.large
-  # 'apps' are actually directories in '/kubernetes/apps'
+  # 'apps' are actually directories in '//kubernetes/apps'
   # that contains ArgoCD project and application declarations
   apps:
     - helm-all-in-app
@@ -73,7 +73,7 @@ on:
     paths:
       - '.github/workflows/**' # path to workflow
       - '.cluster.dev/**' # Path to cluster declaration manifests
-      - '/kubernetes/apps/**' # Create your ArgoCD app folders here
+      - '//kubernetes/apps/**' # Create your ArgoCD app folders here
     branches:
       - master
 jobs:
