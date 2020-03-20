@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./bin/logging.sh
+source ./logging.sh
 
 
 #######################################
@@ -21,5 +21,7 @@ function argocd::deploy_apps {
     for i in "${cluster_apps[@]}"; do
     run_cmd "kubectl apply -f kubernetes/apps/$i --recursive";
     done
+
+#TODO enable deletion from ArgoCD application that are installed but not mentioned in target folders manifests
 
 }
