@@ -1,6 +1,6 @@
 # action.yml
-name: 'Create/Update K8s Cluster'
-description: 'Create or Update Kubernetes Cluster'
+name: 'Kubernetes GitOps infrastructure created with Terraform and ArgoCD'
+description: 'Terraform creates Kubernetes cluster from simple manifest and manage apps in GitOps way with ArgoCD'
 inputs:
   cluster-config:  # id of input
     description: 'Path for cluster config/s file or directory'
