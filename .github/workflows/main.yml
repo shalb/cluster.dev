@@ -2,6 +2,7 @@ on:
   push:
     paths:
       - 'entrypoint.sh'
+      - 'bin/**'
       - 'terraform/**'
       - 'kubernetes/apps/**'
       - 'Dockerfile'
