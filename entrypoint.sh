@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 # Parse YAML configs in .cluster-dev/*
-source ./bin/yaml.sh # provides parse_yaml and create_variables
-source ./bin/logging.sh # PSR-3 compliant logging
-source ./bin/common.sh
-source ./bin/aws_common.sh
-source ./bin/aws_minikube.sh
-source ./bin/argocd.sh
+source /bin/yaml.sh # provides parse_yaml and create_variables
+source /bin/logging.sh # PSR-3 compliant logging
+source /bin/common.sh
+source /bin/aws_common.sh
+source /bin/aws_minikube.sh
+source /bin/argocd.sh
 
 
 # Variables passed by Github Workflow to Action
@@ -21,7 +21,6 @@ readonly CLOUD_PASS=$3
 #                                    MAIN                                     #
 # =========================================================================== #
 
-find /
 
 DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
     CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./bin//logging.sh
+source /bin/logging.sh
 
 #######################################
 # Create or use exiting S3 bucket for Terraform states

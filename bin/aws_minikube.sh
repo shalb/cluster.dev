@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./bin/logging.sh
+source /bin/logging.sh
 
 #######################################
 # Pull a kubeconfig to instance via kubectl
