@@ -21,6 +21,7 @@ readonly CLOUD_PASS=$3
 #                                    MAIN                                     #
 # =========================================================================== #
 
+find /
 
 DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
     CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
