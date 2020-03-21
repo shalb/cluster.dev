@@ -49,8 +49,8 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f  || ERROR "Ma
 
         # create unique s3 bucket from repo name and cluster name
         S3_BACKEND_BUCKET=$(echo "$CLUSTER_PREFIX" | awk -F "/" '{print$1}')-$cluster_name
-        # make sure it is not larger than 63 symbols
-        S3_BACKEND_BUCKET=$(echo "$S3_BACKEND_BUCKET" | cut -c 1-63)
+        # make sure it is not larger than 63 symbols and lowercase
+        S3_BACKEND_BUCKET=$(echo "$S3_BACKEND_BUCKET" | cut -c 1-63 | awk '{print tolower($0)}')
         # The same name would be used for domains
         readonly CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
 
