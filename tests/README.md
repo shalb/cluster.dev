@@ -21,11 +21,11 @@ It create cluster infrastructure that specified in your github workflow file (se
 When you end, destroy all resources created during test.
 
 ```bash
-terraform destroy ..//terraform/aws/argocd
+terraform destroy ../terraform/aws/argocd
 # (then press enter for leave variables empty, set only region)
-terraform destroy ..//terraform/aws/minikube
+terraform destroy ../terraform/aws/minikube
 # (then press enter for leave variables empty, set only region)
-terraform destroy ..//terraform/aws/backend
+terraform destroy ../terraform/aws/backend
 # (then press enter for leave variables empty, set only region)
 ```
 

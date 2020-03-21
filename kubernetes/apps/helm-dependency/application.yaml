@@ -13,7 +13,7 @@ spec:
   source:
     repoURL: https://github.com/shalb/cluster.dev.git
     targetRevision: HEAD
-    path: /kubernetes/charts/wordpress
+    path: kubernetes/charts/wordpress
     helm:
       parameters:
       - name: "nginx-ingress.controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
