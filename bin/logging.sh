@@ -1,5 +1,10 @@
 #!/bin/bash
+#
+# PSR-3 compliant logging
+# See docs at docs/bash-logging.md
+#
 # Fork of http://github.com/deanrather/bash-logger
+#
 
 # Configurables
 

@@ -8,8 +8,9 @@ FROM chatwork/helmfile:latest
 
 COPY --from=terraform /bin/terraform /bin/terraform
 
-WORKDIR /app
+ENV PRJ_ROOT /app
+WORKDIR $PRJ_ROOT
 # Look on .dockerignore file to check what included
 COPY . .
 
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]

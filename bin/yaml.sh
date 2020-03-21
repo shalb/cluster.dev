@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-source ./bin/logging.sh # PSR-3 compliant logging
+# shellcheck source=logging.sh
+source "$PRJ_ROOT"/bin/logging.sh
 
 # Based on https://gist.github.com/pkuczynski/8665367
 

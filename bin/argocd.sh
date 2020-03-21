@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-source ./logging.sh
-
+# shellcheck source=logging.sh
+source "$PRJ_ROOT"/bin/logging.sh
 
 #######################################
 # Deploy ArgoCD applications via kubectl

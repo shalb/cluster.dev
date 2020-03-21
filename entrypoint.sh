@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 # Parse YAML configs in .cluster-dev/*
-source ./bin/yaml.sh # provides parse_yaml and create_variables
-source ./bin/logging.sh # PSR-3 compliant logging
-source ./bin/common.sh
-source ./bin/aws_common.sh
-source ./bin/aws_minikube.sh
-source ./bin/argocd.sh
+# shellcheck source=bin/yaml.sh
+source "$PRJ_ROOT"/bin/yaml.sh # provides parse_yaml and create_variables
+source "$PRJ_ROOT"/bin/logging.sh # PSR-3 compliant logging
+source "$PRJ_ROOT"/bin/common.sh
+source "$PRJ_ROOT"/bin/aws_common.sh
+source "$PRJ_ROOT"/bin/aws_minikube.sh
+source "$PRJ_ROOT"/bin/argocd.sh
 
 
 # Variables passed by Github Workflow to Action

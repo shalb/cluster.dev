@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-source ./bin//logging.sh
+# shellcheck source=logging.sh
+source "$PRJ_ROOT"/bin/logging.sh
 
 #######################################
 # Create or use exiting S3 bucket for Terraform states
