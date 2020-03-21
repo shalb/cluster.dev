@@ -19,7 +19,7 @@ function argocd::deploy_apps {
     INFO "Deploy Apps from /kubernetes/apps/<folder> into ArgoCD"
 
     for i in "${cluster_apps[@]}"; do
-        run_cmd "kubectl apply -f kubernetes/apps/$i --recursive";
+        run_cmd "kubectl apply -f $PRJ_ROOT/kubernetes/apps/$i --recursive";
     done
 
     #TODO: enable deletion from ArgoCD application that are installed but not mentioned in target folders manifests

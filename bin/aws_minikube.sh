@@ -72,7 +72,7 @@ function aws::minikube::deploy_cluster {
     local cluster_cloud_domain=$4
     local cluster_cloud_vpc_id=$5
 
-    cd terraform/aws/minikube/ || ERROR "Path not found"
+    cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
 
     # Deploy main Terraform code
     INFO "Minikube cluster: Initializing Terraform configuration"
@@ -119,7 +119,7 @@ function aws::minikube::destroy_cluster {
     local cluster_provisioner_instanceType=$3
     local cluster_cloud_domain=$4
 
-    cd terraform/aws/minikube/ || ERROR "Path not found"
+    cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
 
     # Deploy main Terraform code
     INFO "Minikube cluster: Initializing Terraform configuration"
