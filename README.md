@@ -48,7 +48,7 @@ aws_secret_access_key = SuperAwsSecret
 ```yaml
 cluster:
   installed: true
-  name: minikube-five
+  name: minikube-one
   cloud:
     provider: aws
     region: eu-central-1
