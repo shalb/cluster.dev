@@ -30,6 +30,7 @@ function aws::init_s3_bucket {
                     -var='region=$cluster_cloud_region' \
                     -var='s3_backend_bucket=$S3_BACKEND_BUCKET'"
     fi
+    run_cmd "rm -rf *.tfstate"
 
     cd - >/dev/null || ERROR "Path not found"
 }

@@ -57,6 +57,7 @@
       "submodules",
       "sysctl",
       "tfplan",
+      "tfstate",
       "tolerations",
       "tolower",
       "url",
