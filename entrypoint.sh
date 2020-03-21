@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 # Parse YAML configs in .cluster-dev/*
-source ./bin/yaml.sh # provides parse_yaml and create_variables
-source ./bin/logging.sh # PSR-3 compliant logging
-source ./bin/common.sh
-source ./bin/aws_common.sh
-source ./bin/aws_minikube.sh
-source ./bin/argocd.sh
+# shellcheck source=bin/yaml.sh
+source "$PRJ_ROOT"/bin/yaml.sh # provides parse_yaml and create_variables
+source "$PRJ_ROOT"/bin/logging.sh # PSR-3 compliant logging
+source "$PRJ_ROOT"/bin/common.sh
+source "$PRJ_ROOT"/bin/aws_common.sh
+source "$PRJ_ROOT"/bin/aws_minikube.sh
+source "$PRJ_ROOT"/bin/argocd.sh
 
 
 # Variables passed by Github Workflow to Action
@@ -29,11 +30,16 @@ DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
 output_software_info
 
 # Iterate trough provided manifests and reconcile clusters
-for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f  || ERROR "Manifest file/folder can't be found"); do
+MANIFESTS=$(find "$CLUSTER_CONFIG_PATH" -type f) || ERROR "Manifest file/folder can't be found"
+DEBUG "Manifests: $MANIFESTS"
+
+for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
+    NOTICE "Now run: $CLUSTER_MANIFEST_FILE"
+    DEBUG "Path where start new cycle: $PWD"
 
     yaml::parse "$CLUSTER_MANIFEST_FILE"
     yaml::create_variables "$CLUSTER_MANIFEST_FILE"
-    yaml::check_that_required_variables_exist "$CLUSTER_CONFIG_PATH/$CLUSTER_MANIFEST_FILE"
+    yaml::check_that_required_variables_exist "$CLUSTER_MANIFEST_FILE"
 
     # Cloud selection. Declared via yaml::create_variables()
     # shellcheck disable=SC2154
@@ -49,17 +55,18 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f  || ERROR "Ma
 
         # create unique s3 bucket from repo name and cluster name
         S3_BACKEND_BUCKET=$(echo "$CLUSTER_PREFIX" | awk -F "/" '{print$1}')-$cluster_name
-        # make sure it is not larger than 63 symbols
-        S3_BACKEND_BUCKET=$(echo "$S3_BACKEND_BUCKET" | cut -c 1-63)
+        # make sure it is not larger than 63 symbols and lowercase
+        S3_BACKEND_BUCKET=$(echo "$S3_BACKEND_BUCKET" | cut -c 1-63 | awk '{print tolower($0)}')
         # The same name would be used for domains
-        readonly CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
+        # shellcheck disable=SC2034
+        CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
 
         # Destroy if installed: false
         if [ "$cluster_installed" = "false" ]; then
             aws::destroy
-            exit 0
-
+            continue
         fi
+
         # Create and init backend.
         # Check if bucket already exist by trying to import it
         aws::init_s3_bucket   "$cluster_cloud_region"
@@ -91,7 +98,7 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f  || ERROR "Ma
             aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
 
             # Deploy ArgoCD apps via kubectl
-            argocd::deploy_apps
+            argocd::deploy_apps   "$cluster_apps"
 
             # Writes commands for user for get access to cluster
             aws::output_access_keys   "$cluster_cloud_domain"

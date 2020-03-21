@@ -1,5 +1,10 @@
 #!/bin/bash
+#
+# PSR-3 compliant logging
+# See docs at docs/bash-logging.md
+#
 # Fork of http://github.com/deanrather/bash-logger
+#
 
 # Configurables
 
@@ -228,7 +233,7 @@ function run_cmd {
     local command="$1"
     local bash_opts="${2-""}"
     local fail_on_err="${3-true}"
-    local enable_log_timeout="${3-300}" # By default - 300 seconds (5 min)
+    local enable_log_timeout="${4-300}" # By default - 300 seconds (5 min)
 
     local bash="/usr/bin/env bash ${bash_opts}"
 
@@ -239,7 +244,7 @@ function run_cmd {
         ${bash} -x -c "$command"
         exit_code=$?
 
-        [ ${exit_code} != 0 ] && [[ $fail_on_err ]] && ERROR "Execution of '$command' failed" "" "" 1
+        [ ${exit_code} != 0 ] && [ "$fail_on_err" = true ] && ERROR "Execution of '$command' failed" "" "" 1
         return
     fi
 
@@ -267,5 +272,5 @@ Start print out exist and future output for this command." "%DATE - %MESSAGE" "+
     kill $tail_pid > /dev/null 2>&1 &
     wait
 
-    [ ${exit_code} != 0 ] && [[ $fail_on_err ]] && ERROR "Execution of '$command' failed" "" "" 1
+    [ ${exit_code} != 0 ] && [ "$fail_on_err" = true ] && ERROR "Execution of '$command' failed" "" "" 1
 }

@@ -48,12 +48,12 @@ aws_secret_access_key = SuperAwsSecret
 ```yaml
 cluster:
   installed: true
-  name: minikube-five
+  name: minikube-one
   cloud:
     provider: aws
     region: eu-central-1
     vpc: default
-    domain: shalb.net  # You need a domain in Route53
+    domain: shalb.net # You need a domain in Route53
   provisioner:
     type: minikube
     instanceType: m5.large
@@ -87,9 +87,9 @@ jobs:
     # - uses: ./ # Uses an action in the root directory
     - name: Reconcile Clusters
       id: reconcile
-      uses: shalb/cluster.dev@master
+      uses: shalb/cluster.dev@v0.1.1
       with:
-        cluster-config: './.cluster.dev/minikube-one.yaml'
+        cluster-config: './.cluster.dev/'
         cloud-user: ${{ secrets.aws_access_key_id }}
         cloud-pass: ${{ secrets.aws_secret_access_key }}
     # Use the output from the `reconcile` step

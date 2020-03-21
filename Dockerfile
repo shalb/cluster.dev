@@ -8,9 +8,9 @@ FROM chatwork/helmfile:latest
 
 COPY --from=terraform /bin/terraform /bin/terraform
 
-COPY entrypoint.sh /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+ENV PRJ_ROOT /app
+WORKDIR $PRJ_ROOT
+# Look on .dockerignore file to check what included
+COPY . .
 
-COPY /bin/*.sh /bin/
-COPY /kubernetes /kubernetes
-COPY /terraform /terraform
+ENTRYPOINT ["/app/entrypoint.sh"]

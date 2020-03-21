@@ -1,0 +1,5 @@
+*
+!entrypoint.sh
+!bin/
+!kubernetes/
+!terraform/

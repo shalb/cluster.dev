@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-source ./bin/logging.sh
+# shellcheck source=logging.sh
+source "$PRJ_ROOT"/bin/logging.sh
 
 #######################################
 # Pull a kubeconfig to instance via kubectl
@@ -23,8 +24,8 @@ function aws::minikube::pull_kubeconfig {
         DEBUG "Waiting ${WAIT_TIMEOUT}s"
         sleep $WAIT_TIMEOUT
 
-        run_cmd "aws s3 cp 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' 2>/dev/null"
-        run_cmd "cp '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null"
+        run_cmd "aws s3 cp 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' 2>/dev/null" "" false
+        run_cmd "cp '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null" "" false
     done
 }
 
@@ -71,7 +72,7 @@ function aws::minikube::deploy_cluster {
     local cluster_cloud_domain=$4
     local cluster_cloud_vpc_id=$5
 
-    cd terraform/aws/minikube/ || ERROR "Path not found"
+    cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
 
     # Deploy main Terraform code
     INFO "Minikube cluster: Initializing Terraform configuration"
@@ -118,7 +119,7 @@ function aws::minikube::destroy_cluster {
     local cluster_provisioner_instanceType=$3
     local cluster_cloud_domain=$4
 
-    cd terraform/aws/minikube/ || ERROR "Path not found"
+    cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
 
     # Deploy main Terraform code
     INFO "Minikube cluster: Initializing Terraform configuration"
