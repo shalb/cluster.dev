@@ -58,7 +58,8 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         # make sure it is not larger than 63 symbols and lowercase
         S3_BACKEND_BUCKET=$(echo "$S3_BACKEND_BUCKET" | cut -c 1-63 | awk '{print tolower($0)}')
         # The same name would be used for domains
-        readonly CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
+        # shellcheck disable=SC2034
+        CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
 
         # Destroy if installed: false
         if [ "$cluster_installed" = "false" ]; then
