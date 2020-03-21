@@ -53,7 +53,7 @@ cluster:
     provider: aws
     region: eu-central-1
     vpc: default
-    domain: shalb.net  # You need a domain in Route53
+    domain: shalb.net # You need a domain in Route53
   provisioner:
     type: minikube
     instanceType: m5.large
