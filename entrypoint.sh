@@ -31,6 +31,8 @@ output_software_info
 
 # Iterate trough provided manifests and reconcile clusters
 for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f  || ERROR "Manifest file/folder can't be found"); do
+    DEBUG "Manifests: $(find "$CLUSTER_CONFIG_PATH" -type f)"
+    DEBUG "Now run: $CLUSTER_MANIFEST_FILE"
 
     yaml::parse "$CLUSTER_MANIFEST_FILE"
     yaml::create_variables "$CLUSTER_MANIFEST_FILE"
