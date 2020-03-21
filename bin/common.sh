@@ -32,9 +32,9 @@ function kube::deploy_apps {
 function kube::destroy_apps {
     INFO "Remove addons."
     DEBUG "Delete Addons via kubectl"
-    run_cmd "kubectl delete -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/8a147f7c0044c318ec37990b50f0cabb205e9b44/addons/letsencrypt-prod.yaml' || true"
-    run_cmd "kubectl delete -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml' || true"
-    run_cmd "kubectl delete -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml' || true"
+    run_cmd "kubectl delete -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/8a147f7c0044c318ec37990b50f0cabb205e9b44/addons/letsencrypt-prod.yaml' 2>/dev/null" "" false
+    run_cmd "kubectl delete -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml' 2>/dev/null" "" false
+    run_cmd "kubectl delete -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml' 2>/dev/null" "" false
 }
 
 #######################################
