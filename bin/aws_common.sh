@@ -340,6 +340,7 @@ function aws::destroy {
                 kube::destroy_apps
             fi
             aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
+            # TODO: Remove kubeconfig after successful cluster destroy
             aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
             aws::destroy_route53 "$cluster_cloud_region" "$cluster_name" "$cluster_cloud_domain"
             aws::destroy_s3_bucket "$cluster_cloud_region"
