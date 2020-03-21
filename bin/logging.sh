@@ -244,7 +244,7 @@ function run_cmd {
         ${bash} -x -c "$command"
         exit_code=$?
 
-        [ ${exit_code} != 0 ] && [[ $fail_on_err ]] && ERROR "Execution of '$command' failed" "" "" 1
+        [ ${exit_code} != 0 ] && [ "$fail_on_err" = true ] && ERROR "Execution of '$command' failed" "" "" 1
         return
     fi
 
@@ -272,5 +272,5 @@ Start print out exist and future output for this command." "%DATE - %MESSAGE" "+
     kill $tail_pid > /dev/null 2>&1 &
     wait
 
-    [ ${exit_code} != 0 ] && [[ $fail_on_err ]] && ERROR "Execution of '$command' failed" "" "" 1
+    [ ${exit_code} != 0 ] && [ "$fail_on_err" = true ] && ERROR "Execution of '$command' failed" "" "" 1
 }
