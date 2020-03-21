@@ -191,7 +191,6 @@ function aws::destroy_vpc {
     case ${cluster_cloud_vpc} in
         default|"")
             INFO "Default VPC, no need to destroy."
-            return
             ;;
         create)
             # Create new VPC and get ID.
@@ -209,7 +208,6 @@ function aws::destroy_vpc {
         *)
             # Use client VPC ID.
             INFO "Custom VPC, no need to destroy."
-            return
             ;;
     esac
 

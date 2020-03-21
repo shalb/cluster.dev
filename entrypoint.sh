@@ -34,7 +34,8 @@ MANIFESTS=$(find "$CLUSTER_CONFIG_PATH" -type f) || ERROR "Manifest file/folder 
 DEBUG "Manifests: $MANIFESTS"
 
 for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
-    DEBUG "Now run: $CLUSTER_MANIFEST_FILE"
+    NOTICE "Now run: $CLUSTER_MANIFEST_FILE"
+    DEBUG "Path where start new cycle: $PWD"
 
     yaml::parse "$CLUSTER_MANIFEST_FILE"
     yaml::create_variables "$CLUSTER_MANIFEST_FILE"
