@@ -8,11 +8,13 @@ source "$PRJ_ROOT"/bin/logging.sh
 # Globals:
 #   None
 # Arguments:
-#   None
+#   cluster_apps
 # Outputs:
 #   Writes progress status
 #######################################
 function argocd::deploy_apps {
+    local cluster_apps=$1
+
     DEBUG "Deploy ArgoCD apps via kubectl from kubernetes/apps folder"
     DEBUG "Current folder $(pwd)"
 
