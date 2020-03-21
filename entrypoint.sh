@@ -58,9 +58,9 @@ for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f  || ERROR "Ma
         # Destroy if installed: false
         if [ "$cluster_installed" = "false" ]; then
             aws::destroy
-            exit 0
-
+            continue
         fi
+
         # Create and init backend.
         # Check if bucket already exist by trying to import it
         aws::init_s3_bucket   "$cluster_cloud_region"
