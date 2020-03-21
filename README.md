@@ -87,7 +87,7 @@ jobs:
     # - uses: ./ # Uses an action in the root directory
     - name: Reconcile Clusters
       id: reconcile
-      uses: shalb/cluster.dev@master
+      uses: shalb/cluster.dev@v0.1.0
       with:
         cluster-config: './.cluster.dev/minikube-one.yaml'
         cloud-user: ${{ secrets.aws_access_key_id }}
