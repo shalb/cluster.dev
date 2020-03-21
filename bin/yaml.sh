@@ -55,7 +55,7 @@ function yaml::parse {
                 gsub("-|\\.", "_", $1)
             }
             { print }'
-    ) < "$yaml_file"
+    ) < "$yaml_file" || ERROR "File '$yaml_file' not found"
 }
 
 #######################################

@@ -30,13 +30,15 @@ DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
 output_software_info
 
 # Iterate trough provided manifests and reconcile clusters
-for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f  || ERROR "Manifest file/folder can't be found"); do
-    DEBUG "Manifests: $(find "$CLUSTER_CONFIG_PATH" -type f)"
+MANIFESTS=$(find "$CLUSTER_CONFIG_PATH" -type f) || ERROR "Manifest file/folder can't be found"
+DEBUG "Manifests: $MANIFESTS"
+
+for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
     DEBUG "Now run: $CLUSTER_MANIFEST_FILE"
 
     yaml::parse "$CLUSTER_MANIFEST_FILE"
     yaml::create_variables "$CLUSTER_MANIFEST_FILE"
-    yaml::check_that_required_variables_exist "$CLUSTER_CONFIG_PATH/$CLUSTER_MANIFEST_FILE"
+    yaml::check_that_required_variables_exist "$CLUSTER_MANIFEST_FILE"
 
     # Cloud selection. Declared via yaml::create_variables()
     # shellcheck disable=SC2154
