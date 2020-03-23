@@ -13,15 +13,15 @@ source "$PRJ_ROOT"/bin/logging.sh
 #   Writes progress status
 #######################################
 function argocd::deploy_apps {
-    local cluster_apps=$1
+    local cluster_apps_array=( "${cluster_apps[@]}" )
 
     DEBUG "Deploy ArgoCD apps via kubectl from kubernetes/apps folder"
     DEBUG "Current folder $(pwd)"
 
     INFO "Deploy Apps from /kubernetes/apps/<folder> into ArgoCD"
 
-    for i in "${cluster_apps[@]}"; do
-        run_cmd "kubectl apply -f $PRJ_ROOT/kubernetes/apps/$i --recursive";
+    for ARGO_APP_DIR in "${cluster_apps_array[@]}"; do
+        run_cmd "kubectl apply -f $PRJ_ROOT/kubernetes/apps/$ARGO_APP_DIR --recursive";
     done
 
     #TODO: enable deletion from ArgoCD application that are installed but not mentioned in target folders manifests
