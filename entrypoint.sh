@@ -37,6 +37,9 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
     NOTICE "Now run: $CLUSTER_MANIFEST_FILE"
     DEBUG "Path where start new cycle: $PWD"
 
+    # Clean variables from previus cluster yaml parsing
+    unset cluster_apps
+
     yaml::parse "$CLUSTER_MANIFEST_FILE"
     yaml::create_variables "$CLUSTER_MANIFEST_FILE"
     yaml::check_that_required_variables_exist "$CLUSTER_MANIFEST_FILE"
