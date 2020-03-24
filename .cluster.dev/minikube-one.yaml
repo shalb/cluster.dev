@@ -5,12 +5,12 @@ cluster:
     provider: aws
     region: eu-central-1
     vpc: default
-    domain: shalb.net 
+    domain: shalb.net
   provisioner:
     type: minikube
     instanceType: m5.large
 # 'apps' are actually directories in '/kubernetes/apps' that contains ArgoCD project and application declarations
   apps:
-    - helm-all-in-app 
+    - helm-all-in-app
     - helm-dependency
     - raw-manifest
