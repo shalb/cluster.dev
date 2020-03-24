@@ -11,10 +11,8 @@ server:
   ingress:
     enabled: true
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
-      kubernetes.io/ingress.class: nginx
-      kubernetes.io/tls-acme: "true"
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
       cluster.dev/domain: domain.shalb.net # passed with terraform
     labels: {}
     hosts:
@@ -22,7 +20,7 @@ server:
     paths:
       - /
     tls:
-      - secretName: argocd-cert
+      - secretName: argocd-secret
         hosts:
           - domain.cluster.dev # passed with terraform
   config:

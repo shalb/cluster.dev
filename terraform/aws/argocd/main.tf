@@ -38,7 +38,7 @@ resource "helm_release" "argo-cd" {
   name       = "argo-cd"
   repository = data.helm_repository.argo.metadata[0].name
   chart      = "argo-cd"
-  version    = "1.8.7"
+  version    = "2.0.0"
   namespace  = "argocd"
 
   values = [
@@ -51,7 +51,7 @@ resource "helm_release" "argo-cd" {
     name  = "server.certificate.domain"
     value = var.argo_domain
   }
-   set {
+  set {
     name  = "server.ingress.annotations.\"cluster\\.dev/domain\""
     value = var.argo_domain
   }
