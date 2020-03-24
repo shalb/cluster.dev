@@ -2,7 +2,7 @@ installCRDs: false
 
 server:
   certificate:
-    enabled: true
+    enabled: false
     domain: "domain.cluster.dev" # passed with terraform
     issuer:
       name: letsencrypt-prod
