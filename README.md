@@ -32,7 +32,7 @@ You receive:
 1. Dedicate a separate repository for the infrastructure that will be managed by `cluster.dev`. This repo will host code for your clusters, deployments and other resources managed by GitOps.  
 Next steps should be done in that repo.
 
-2. Obtain access credentials for your cloud account.  
+2. Obtain access credentials for your cloud account.
 For example, in AWS it is called "Programmatic Access user", and looks like:
 
 ```yaml
@@ -53,7 +53,8 @@ cluster:
     provider: aws
     region: eu-central-1
     vpc: default
-    domain: shalb.net # You need a domain in Route53
+    # You need a domain in Route53 account
+    domain: shalb.net
   provisioner:
     type: minikube
     instanceType: m5.large
@@ -87,7 +88,7 @@ jobs:
     # - uses: ./ # Uses an action in the root directory
     - name: Reconcile Clusters
       id: reconcile
-      uses: shalb/cluster.dev@v0.1.1
+      uses: shalb/cluster.dev@v0.1.2
       with:
         cluster-config: './.cluster.dev/'
         cloud-user: ${{ secrets.aws_access_key_id }}
