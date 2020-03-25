@@ -11,7 +11,7 @@ Based on DevOps and SRE best-practices. GitOps cluster management and applicatio
 ## MENU
 
 * [Quick Start](#quick-start-)
-  * [Quick Start on AWS](#quick-start-om-aws-)
+  * [Quick Start on AWS](#quick-start-on-aws-)
   * [Cleanup](#cleanup-)
 * [Principle diagram](#principle-diagram-)
 * [How it works](#how-it-works-)
@@ -25,10 +25,11 @@ Based on DevOps and SRE best-practices. GitOps cluster management and applicatio
 
 ## Quick Start on AWS [`↑`](#menu)
 
-1. Dedicate a separate repository for the infrastructure that will be managed by `cluster.dev`. This repo will host code for your clusters, deployments and other resources managed by GitOps.  
+1. Dedicate a separate repository for the infrastructure that will be managed by `cluster.dev`.  
+This repo will host code for your clusters, deployments and other resources managed by GitOps.  
 Next steps should be done in that repo.
 
-2. Obtain access credentials for your non-root cloud account.
+2. Obtain access credentials for your non-root cloud account.  
 In AWS it is called "Programmatic Access user", and looks like:
 
 ```yaml
@@ -39,73 +40,28 @@ aws_secret_access_key = SuperAwsSecret
 3. Add credentials to you repo Secrets under GitHub's: "Settings->Secrets":
  ![GitHub Secrets](docs/images/gh-secrets.png)
 
-4. Create a new cluster.dev yaml manifest with your cluster definition, example: `.cluster.dev/minikube-one.yaml`:
+4. Create a Github Workflow file and cluster.dev manifest with your cluster definition.
 
-```yaml
-cluster:
-  installed: true
-  name: minikube-one
-  cloud:
-    provider: aws
-    region: eu-central-1
-    vpc: default
-    # You need a domain in Route53 account
-    domain: shalb.net
-  provisioner:
-    type: minikube
-    instanceType: m5.large
-  # 'apps' are actually directories in '/kubernetes/apps'
-  # that contains ArgoCD project and application declarations
-  apps:
-    - helm-all-in-app
-    - helm-dependency
-    - raw-manifest
+**Minikube**:
+
+```bash
+export RELEASE=v0.1.3
+mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml
+mkdir -p .cluster.dev/ && wget -O .cluster.dev/minikube-one.yaml https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml
 ```
 
-5. Create a Github Workflow file `.github/workflows/main.yml`:
-
-```yaml
-on:
-  push:
-    paths:
-      - '.github/workflows/**' # path to workflow
-      - '.cluster.dev/**' # Path to cluster declaration manifests
-      - '/kubernetes/apps/**' # Create your ArgoCD app folders here
-    branches:
-      - master
-jobs:
-  deploy_cluster_job:
-    runs-on: ubuntu-latest
-    name: Create and Update Kubernetes Clusters
-    steps:
-    # To use this repository's private action, you must check out the repository
-    - name: Checkout Repo
-      uses: actions/checkout@v1
-    # - uses: ./ # Uses an action in the root directory
-    - name: Reconcile Clusters
-      id: reconcile
-      uses: shalb/cluster.dev@v0.1.2
-      with:
-        cluster-config: './.cluster.dev/'
-        cloud-user: ${{ secrets.aws_access_key_id }}
-        cloud-pass: ${{ secrets.aws_secret_access_key }}
-    # Use the output from the `reconcile` step
-    - name: Get the Cluster Credentials
-      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
-```
-
-6. Commit and Push files to your repo and follow the Github Action execution status. In GitHub action output you'll receive access instructions to your cluster and services.
+5. Commit and Push files to your repo and follow the Github Action execution status. In GitHub action output you'll receive access instructions to your cluster and services.
 
 ### Cleanup [`↑`](#menu)
 
 For shutdown cluster and remove all associated resources:
 
 1. Open `.cluster.dev/` directory in your repo.
-2. On each file set `cluster.installed` to `false`
+2. In each manifest set `cluster.installed` to `false`
 3. Commit and push changes
 4. Open Github Action output for see removal status
 
-After successful removal, you can safely delete cluster definition file from `.cluster.dev/` directory.
+After successful removal, you can safely delete cluster manifest file from `.cluster.dev/` directory.
 
 ## Principle diagram [`↑`](#menu)
 
@@ -116,15 +72,15 @@ After successful removal, you can safely delete cluster definition file from `.c
 
 In background:
 
-- Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects will be stored. Typically it is defined on Cloud Object Storage like AWS S3.
-- Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
-- ArgoCD Continuous Deployment system is deployed inside Kubernetes cluster. It enables you to deploy your applications from raw manifests, helm charts or kustomize yaml's.
-- GitHub CI runner is deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
+* Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects will be stored. Typically it is defined on Cloud Object Storage like AWS S3.
+* Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
+* ArgoCD Continuous Deployment system is deployed inside Kubernetes cluster. It enables you to deploy your applications from raw manifests, helm charts or kustomize yaml's.
+* GitHub CI runner is deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
 
 You receive:
 
-- Automatically generated kubeconfig, ssh-access, and ArgoCD UI URLs
-- Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)
+* Automatically generated kubeconfig, ssh-access, and ArgoCD UI URLs
+* Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)
 
 ## Technical diagram [`↑`](#menu)
 
