@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sleep 1
+sleep 10
 ACTION_TIMEOUT=$1
 CONTAINER_NAME=$2
 

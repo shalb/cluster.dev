@@ -22,7 +22,6 @@ readonly CLOUD_PASS=$3
 #                                    MAIN                                     #
 # =========================================================================== #
 
-
 DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
     CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
 
@@ -66,7 +65,11 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
         # Destroy if installed: false
         if [ "$cluster_installed" = "false" ]; then
-            aws::destroy
+            if (aws::is_s3_bucket_exists "$cluster_cloud_region"); then
+                aws::destroy
+            else
+                DEBUG "S3 bucket ${S3_BACKEND_BUCKET} not exists. Nothing to destroy."
+            fi
             continue
         fi
 

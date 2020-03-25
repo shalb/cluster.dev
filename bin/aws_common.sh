@@ -18,11 +18,8 @@ function aws::init_s3_bucket {
 
     cd "$PRJ_ROOT"/terraform/aws/backend/ || ERROR "Path not found"
 
-    # Create and init backend.
-    run_cmd "terraform init"
-
     # Check if bucket already exist by trying to import it
-    if (terraform import -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET" aws_s3_bucket.terraform_state "$S3_BACKEND_BUCKET" >/dev/null 2>&1); then
+    if (aws::is_s3_bucket_exists $cluster_cloud_region); then
         INFO "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET already exist"
     else
         NOTICE "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET not exist. It is going to be created"
@@ -36,6 +33,29 @@ function aws::init_s3_bucket {
 }
 
 #######################################
+# Check if the s3 bucket exists.
+#
+# Globals:
+#   S3_BACKEND_BUCKET
+# Arguments:
+#   cluster_cloud_region
+# Outputs:
+#   null
+# Return:
+#   exitcode
+#######################################
+function aws::is_s3_bucket_exists {
+    local cluster_cloud_region=$1
+    cd "$PRJ_ROOT"/terraform/aws/backend/ || ERROR "Path not found"
+
+    # Create and init backend.
+    run_cmd "terraform init"
+
+    terraform import -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET" aws_s3_bucket.terraform_state "$S3_BACKEND_BUCKET" >/dev/null 2>&1
+    return $?
+}
+
+#######################################
 # Destroy S3 bucket for Terraform states
 # Globals:
 #   S3_BACKEND_BUCKET
@@ -45,10 +65,16 @@ function aws::init_s3_bucket {
 #   Writes progress status
 #######################################
 function aws::destroy_s3_bucket {
-    DEBUG "Destroy exiting S3 bucket for Terraform states"
+    DEBUG "Destroy existing S3 bucket for Terraform states. Bucket name: '${S3_BACKEND_BUCKET}'"
     local cluster_cloud_region=$1
-
-    #TODO: remove bucket procedure
+    # Delete s3 versions.
+    aws s3api delete-objects --bucket "${S3_BACKEND_BUCKET}" --delete "$(aws s3api list-object-versions --bucket ${S3_BACKEND_BUCKET} --output=json --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}')" > /dev/null 2>&1
+    # Delete s3 versions deleted markers.
+    aws s3api delete-objects --bucket "${S3_BACKEND_BUCKET}" --delete "$(aws s3api list-object-versions --bucket ${S3_BACKEND_BUCKET} --output=json --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}')" > /dev/null 2>&1
+    # Delete bucket.
+    run_cmd "aws s3 rb \"s3://${S3_BACKEND_BUCKET}\" --force"
+    # Delete dynamodb table.
+    aws --region "${cluster_cloud_region}" dynamodb delete-table --table-name "${S3_BACKEND_BUCKET}-state" > /dev/null 2>&1
 }
 
 #######################################
