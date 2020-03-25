@@ -19,7 +19,7 @@ function aws::init_s3_bucket {
     cd "$PRJ_ROOT"/terraform/aws/backend/ || ERROR "Path not found"
 
     # Check if bucket already exist by trying to import it
-    if (aws::is_s3_bucket_exists $cluster_cloud_region); then
+    if (aws::is_s3_bucket_exists "$cluster_cloud_region"); then
         INFO "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET already exist"
     else
         NOTICE "Terraform S3_BACKEND_BUCKET: $S3_BACKEND_BUCKET not exist. It is going to be created"
