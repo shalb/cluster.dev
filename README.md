@@ -12,6 +12,7 @@ Based on DevOps and SRE best-practices. GitOps cluster management and applicatio
 
 * [Quick Start](#quick-start-)
   * [Quick Start on AWS](#quick-start-om-aws-)
+  * [Cleanup](#cleanup-)
 * [Principle diagram](#principle-diagram-)
 * [How it works](#how-it-works-)
 * [Technical diagram](#technical-diagram-)
@@ -94,6 +95,17 @@ jobs:
 ```
 
 6. Commit and Push files to your repo and follow the Github Action execution status. In GitHub action output you'll receive access instructions to your cluster and services.
+
+### Cleanup [`↑`](#menu)
+
+For shutdown cluster and remove all associated resources:
+
+1. Open `.cluster.dev/` directory in your repo.
+2. On each file set `cluster.installed` to `false`
+3. Commit and push changes
+4. Open Github Action output for see removal status
+
+After successful removal, you can safely delete cluster definition file from `.cluster.dev/` directory.
 
 ## Principle diagram [`↑`](#menu)
 
