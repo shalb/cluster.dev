@@ -66,6 +66,7 @@ function aws::is_s3_bucket_exists {
 #######################################
 function aws::destroy_s3_bucket {
     DEBUG "Destroy existing S3 bucket for Terraform states. Bucket name: '${S3_BACKEND_BUCKET}'"
+    INFO "Destroying S3 bucket for Terraform states."
     local cluster_cloud_region=$1
     # Delete s3 versions.
     aws s3api delete-objects --bucket "${S3_BACKEND_BUCKET}" --delete "$(aws s3api list-object-versions --bucket ${S3_BACKEND_BUCKET} --output=json --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}')" > /dev/null 2>&1
