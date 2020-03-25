@@ -42,7 +42,7 @@ resource "helm_release" "argo-cd" {
   namespace  = "argocd"
 
   values = [
-    file("values.yaml")
+    file("./values.yaml")
   ]
   depends_on = [
     null_resource.kubeconfig_update,
@@ -51,7 +51,7 @@ resource "helm_release" "argo-cd" {
     name  = "server.certificate.domain"
     value = var.argo_domain
   }
-   set {
+  set {
     name  = "server.ingress.annotations.\"cluster\\.dev/domain\""
     value = var.argo_domain
   }
