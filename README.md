@@ -46,11 +46,15 @@ aws_secret_access_key = SuperAwsSecret
 
 ```bash
 export RELEASE=v0.1.3
-mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml
-mkdir -p .cluster.dev/ && wget -O .cluster.dev/minikube-one.yaml https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml
+mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml"
+mkdir -p .cluster.dev/ && wget -O .cluster.dev/minikube-one.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
 ```
 
-5. Commit and Push files to your repo and follow the Github Action execution status. In GitHub action output you'll receive access instructions to your cluster and services.
+5. In cluster definition you should set your own Route53 zone (create it manually, if needed). After implementation of [#2](https://github.com/shalb/cluster.dev/issues/2) this step will not be required.  
+And you can change all other parameters or leave default values.  
+Leave github workflow file as is.
+
+6. Commit and Push files to your repo and follow the Github Action execution status. In GitHub action output you'll receive access instructions to your cluster and services.
 
 ### Cleanup [`↑`](#menu)
 
