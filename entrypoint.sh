@@ -14,8 +14,8 @@ source "$PRJ_ROOT"/bin/argocd.sh
 readonly CLUSTER_CONFIG_PATH=$1
 readonly CLOUD_USER=$2
 readonly CLOUD_PASS=$3
-# For local testing run: ./entrypoint.sh .cluster.dev/minikube-one.yaml AWSUSER AWSPASS
-#
+readonly GIT_REPO_ROOT=$GITHUB_WORKSPACE
+# TODO: Create function to select git repo root from ENV for GitLab and BitBucket
 
 
 # =========================================================================== #
