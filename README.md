@@ -87,7 +87,7 @@ aws_access_key_id = ATIAAJSXDBUVOQ4JR
 aws_secret_access_key = SuperAwsSecret
 ```
 
-3. Add credentials to you repo Secrets under GitHub's repo setting: `Settings->Secrets`:
+3. Add credentials to you repo Secrets under GitHub's repo setting: `Settings → Secrets`:
  ![GitHub Secrets](docs/images/gh-secrets.png)
 
 4. In your repo, create a Github Workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and  
