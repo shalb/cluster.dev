@@ -9,8 +9,11 @@ cluster:
   provisioner:
     type: minikube
     instanceType: m5.large
-# 'apps' are actually directories in '/kubernetes/apps' that contains ArgoCD project and application declarations
+  modules:
+    nginx-ingress: true
+    cert-manager: true
+# 'apps' are actually directories in that contains ArgoCD project and application declarations
   apps:
-    - helm-all-in-app
-    - helm-dependency
-    - raw-manifest
+    - /kubernetes/apps/samples
+
+
