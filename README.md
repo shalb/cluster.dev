@@ -78,7 +78,7 @@ $ cd YOUR-REPOSITORY
 **Next steps** should be done in that repo.
 
 2. Create credentials for your non-root cloud user account.  
-In AWS you need to use existing or create new ["Programmatic Access user"](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console).   
+In AWS you need to use the existing or create the new ones ["Programmatic Access user"](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console).   
 Required Managed policies: _AmazonEC2FullAccess, AmazonS3FullAccess, AmazonRoute53FullAccess, AmazonDynamoDBFullAccess, IAMFullAccess, AmazonEC2ContainerRegistryReadOnly, ElasticLoadBalancingFullAccess_, or you can add permissions using this [iam-json](https://gist.github.com/dgozalo/bc4b932d51f22ca5d8dad07d9a1fe0f2).
 
 Resulting access pair should look like:
@@ -87,7 +87,7 @@ aws_access_key_id = ATIAAJSXDBUVOQ4JR
 aws_secret_access_key = SuperAwsSecret
 ```
 
-3. Add credentials to you repo Secrets under GitHub's repo setting: _"Settings->Secrets"_:
+3. Add credentials to you repo Secrets under GitHub's repo setting: `Settings->Secrets`:
  ![GitHub Secrets](docs/images/gh-secrets.png)
 
 4. In your repo, create a Github Workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and  
