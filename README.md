@@ -79,7 +79,7 @@ $ cd YOUR-REPOSITORY
 
 2. Create credentials for your non-root cloud user account.  
 In AWS you need to use existing or create new ["Programmatic Access user"](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console).   
-Required Managed policies: _AmazonEC2FullAccess, AmazonS3FullAccess, AmazonRoute53FullAccess, AmazonDynamoDBFullAccess_, or you can add permissions using this [iam-json](https://gist.github.com/dgozalo/bc4b932d51f22ca5d8dad07d9a1fe0f2).
+Required Managed policies: _AmazonEC2FullAccess, AmazonS3FullAccess, AmazonRoute53FullAccess, AmazonDynamoDBFullAccess, IAMFullAccess, AmazonEC2ContainerRegistryReadOnly, ElasticLoadBalancingFullAccess_, or you can add permissions using this [iam-json](https://gist.github.com/dgozalo/bc4b932d51f22ca5d8dad07d9a1fe0f2).
 
 Resulting access pair should look like:
 ```yaml
