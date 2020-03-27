@@ -17,7 +17,7 @@ jobs:
     # - uses: ./ # Uses an action in the root directory
     - name: Reconcile Clusters
       id: reconcile
-      uses: shalb/cluster.dev@v0.1.3 # Cluster.dev release tag
+      uses: shalb/cluster.dev@v0.1.4 # Cluster.dev release tag
       with:
         cluster-config: './.cluster.dev/'
         cloud-user: ${{ secrets.aws_access_key_id }}
