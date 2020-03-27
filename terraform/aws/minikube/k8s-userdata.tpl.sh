@@ -1,3 +1,6 @@
+# Add additional DNS since AWS could delay on VPC DNS resolving and cause Cert-Manager delays on cert creation
+echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+
 # Install AWS utils
 yum install -y wget unzip python3-pip.noarch
 pip3 install awscli
