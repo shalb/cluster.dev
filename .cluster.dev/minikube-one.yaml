@@ -5,12 +5,16 @@ cluster:
     provider: aws
     region: eu-central-1
     vpc: default
-    domain: shalb.net
+# 'domain' you need to create/have it in your AWS Route53 account
+    domain: cluster.dev
   provisioner:
     type: minikube
     instanceType: m5.large
-# 'apps' are actually directories in '/kubernetes/apps' that contains ArgoCD project and application declarations
+  modules:
+    nginx-ingress: true
+    cert-manager: true
+# 'apps' are list of directories in you repo that contains ArgoCD applications and project manifests
   apps:
-    - helm-all-in-app
-    - helm-dependency
-    - raw-manifest
+    - /kubernetes/apps/samples
+
+
