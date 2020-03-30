@@ -1,0 +1,24 @@
+## Full list of available setting could be found in chart repo:
+## https://github.com/bitnami/charts/edit/master/bitnami/external-dns/values.yaml
+##
+
+image:
+  registry: docker.io
+  repository: bitnami/external-dns
+  tag: 0.7.0-debian-10-r21
+
+sources:
+  # - crd
+  - service
+  - ingress
+
+provider: aws
+aws:
+  region: ""
+  zoneType: ""
+  assumeRoleArn: ""
+  zoneTags: []
+
+triggerLoopOnEvent: true
+interval: "1m"
+policy: upsert-only
