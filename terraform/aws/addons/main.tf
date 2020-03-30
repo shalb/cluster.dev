@@ -25,7 +25,7 @@ resource "helm_release" "external-dns" {
   repository = data.helm_repository.bitnami.metadata[0].name
   chart      = "external-dns"
   version    = "2.20.10"
-  namespace  = "external-dns"
+  namespace  = "kube-system"
 
   values = [
     file("external-dns-values.yaml")
