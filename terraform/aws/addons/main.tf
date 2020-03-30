@@ -35,6 +35,6 @@ resource "helm_release" "external-dns" {
   ]
   set {
     name  = "aws.region"
-    value = var.aws-region
+    value = var.aws_region
   }
 }
