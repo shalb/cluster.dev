@@ -41,8 +41,7 @@ module "minikube" {
   addons = [
     "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/storage-class.yaml",
     "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/metrics-server.yaml",
-    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/dashboard.yaml",
-    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/external-dns.yaml"
+    "https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/dashboard.yaml"
   ]
 
 }

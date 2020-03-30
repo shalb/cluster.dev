@@ -10,7 +10,7 @@ cluster:
   provisioner:
     type: minikube
     instanceType: m5.large
-  modules:
+  addons:
     nginx-ingress: true
     cert-manager: true
 # 'apps' are list of directories in you repo that contains ArgoCD applications and project manifests
