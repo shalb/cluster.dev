@@ -412,9 +412,10 @@ function aws::init_addons {
                 -input=false \
                 -out=tfplan-addons"
 
-    INFO "Addons: Installing/Reconciling"
+    INFO "Kubernetes Addons: Installing/Reconciling"
     run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan-addons"
 
+    cd - >/dev/null || ERROR "Path not found"
 }
 
 #######################################
@@ -447,4 +448,5 @@ function aws::destroy_addons {
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='aws_region=$cluster_cloud_region'"
 
+    cd - >/dev/null || ERROR "Path not found"
 }
