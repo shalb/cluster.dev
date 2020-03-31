@@ -446,7 +446,7 @@ function aws::destroy_addons {
 
     INFO "Kubernetes Addons: Destroying"
     run_cmd "terraform destroy -auto-approve -compact-warnings \
-                -var='aws_region=$cluster_cloud_region'"
+                -var='aws_region=$cluster_cloud_region'" "" "false"
 
     cd - >/dev/null || ERROR "Path not found"
 }
