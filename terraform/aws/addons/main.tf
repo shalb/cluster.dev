@@ -38,7 +38,7 @@ resource "helm_release" "external-dns" {
     value = var.aws_region
   }
 }
-
+/*
 # Create Namespace for Cert Manager
 resource "kubernetes_namespace" "cert-manager" {
   metadata {
@@ -65,3 +65,4 @@ resource "helm_release" "cert-manager" {
     null_resource.kubeconfig_update,
   ]
 }
+*/
