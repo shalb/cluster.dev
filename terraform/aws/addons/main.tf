@@ -25,7 +25,7 @@ resource "helm_release" "external-dns" {
   repository = data.helm_repository.bitnami.metadata[0].name
   chart      = "external-dns"
   version    = "2.20.10"
-  namespace  = "kube-system"
+  namespace  = "external-dns"
 
   values = [
     file("external-dns-values.yaml")
@@ -37,4 +37,31 @@ resource "helm_release" "external-dns" {
     name  = "aws.region"
     value = var.aws_region
   }
+}
+
+# Create Namespace for Cert Manager
+resource "kubernetes_namespace" "cert-manager" {
+  metadata {
+    name = "cert-manager"
+  }
+}
+
+data "helm_repository" "jetstack" {
+  name = "jetstack"
+  url  = "https://charts.jetstack.io"
+}
+
+resource "helm_release" "cert-manager" {
+  name       = "cert-manager"
+  repository = data.helm_repository.jetstack.metadata[0].name
+  chart      = "cert-manager"
+  version    = "v0.1.0"
+  namespace  = "cert-manager"
+
+  values = [
+    file("cert-manager-values.yaml")
+  ]
+  depends_on = [
+    null_resource.kubeconfig_update,
+  ]
 }
