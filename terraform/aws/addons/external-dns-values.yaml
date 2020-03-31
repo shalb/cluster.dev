@@ -8,7 +8,7 @@ image:
   tag: 0.7.0-debian-10-r21
 
 sources:
-  - crd
+#  - crd
   - service
   - ingress
 
