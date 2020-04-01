@@ -68,5 +68,8 @@
       "wordpress",
       "workdir",
       "yaml's"
+    ],
+    "cSpell.ignoreWords": [
+      "file"
     ]
 }
