@@ -38,8 +38,38 @@ resource "helm_release" "external-dns" {
     value = var.aws_region
   }
 }
+
+# Deploy Cert Manager
+
+data "template_file" "cert-manager-dns-issuer" {
+  template = file("cert-manager-dns-issuer.yaml")
+  vars = {
+    dns_zones = var.cluster_cloud_domain
+    aws_region = var.aws_region
+  }
+}
+
+variable "config_path" {
+  description = "path to a kubernetes config file"
+  default = "~/.kube/config"
+}
+
+resource "null_resource" "install_cert_manager" {
+  triggers = {
+    config_contents = filemd5(var.config_path)
+    k8s_yaml_contents = filemd5(data.template_file.cert-manager-dns-issuer.rendered)
+  }
+
+  provisioner "local-exec" {
+    command = "kubectl apply --kubeconfig ${var.config_path} -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml' -f ${data.template_file.cert-manager-dns-issuer.rendered}"
+  }
+}
+
 /*
 # Create Namespace for Cert Manager
+
+  run_cmd "kubectl apply -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml'"
+
 resource "kubernetes_namespace" "cert-manager" {
   metadata {
     name = "cert-manager"

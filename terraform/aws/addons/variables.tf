@@ -3,8 +3,9 @@ variable "aws_region" {
   description = "AWS Region to apply for Addons configuration"
 }
 
-#variable "domain" {
-#  type        = string
-#  description = "Domain to be used in Addons configuration"
-#  default = ""
-#}
+variable "cluster_cloud_zone" {
+  type = string
+  description = "Route 53 zone used as a domain restrictions for cert-manager and external-dns"
+  default = ""
+}
+

@@ -409,6 +409,7 @@ function aws::init_addons {
 
     run_cmd "terraform plan \
                 -var='aws_region=$cluster_cloud_region' \
+                -var='cluster_cloud_domain=$cluster_cloud_domain' \
                 -input=false \
                 -out=tfplan-addons"
 
@@ -446,6 +447,7 @@ function aws::destroy_addons {
 
     INFO "Kubernetes Addons: Destroying"
     run_cmd "terraform destroy -auto-approve -compact-warnings \
+                -var='cluster_cloud_domain=$cluster_cloud_domain' \
                 -var='aws_region=$cluster_cloud_region'" "" "false"
 
     cd - >/dev/null || ERROR "Path not found"
