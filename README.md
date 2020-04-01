@@ -98,7 +98,7 @@ _Or download example files to your local repo clone using the next commands:_
 
 ```bash
 # Sample with Minikube cluster
-export RELEASE=v0.1.4
+export RELEASE=v0.1.5
 mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml"
 mkdir -p .cluster.dev/ && wget -O .cluster.dev/minikube-one.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
 ```
@@ -112,7 +112,7 @@ Leave github workflow file as is.
 
 _Or download application samples directly to local repo clone with commands:_
 ```bash
-export RELEASE=v0.1.4
+export RELEASE=v0.1.5
 # Create directory and place ArgoCD applications inside 
 mkdir -p kubernetes/apps/samples && wget -O kubernetes/apps/samples/helm-all-in-app.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-all-in-app.yaml"
 wget -O kubernetes/apps/samples/helm-dependency.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-dependency.yaml"
