@@ -44,6 +44,7 @@ function aws::minikube::pull_kubeconfig_once {
 
     INFO "Copy kubeconfig to instance with Minikube"
     export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+
     run_cmd "aws s3 cp 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' 2>/dev/null" "" false
     run_cmd "cp '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null" "" false
     kubectl version --request-timeout=5s >/dev/null 2>&1
