@@ -42,7 +42,7 @@ resource "helm_release" "argo-cd" {
   namespace  = "argocd"
 
   values = [
-    file("./values.yaml")
+    file("values.yaml")
   ]
   depends_on = [
     null_resource.kubeconfig_update,

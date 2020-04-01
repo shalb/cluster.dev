@@ -44,5 +44,3 @@ sleep 1
 
 # Show pipeline containet output.
 docker logs -f "clusterdev-test-${GIT_SHORT_COMMIT}"
-
-

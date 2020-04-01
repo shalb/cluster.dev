@@ -1,0 +1,27 @@
+on:
+  push:
+    paths:
+      - '.github/workflows/**' # path to workflow
+      - '.cluster.dev/**' # Path to cluster declaration manifests
+      - '/kubernetes/apps/**' # Create your ArgoCD app folders here
+    branches:
+      - master
+jobs:
+  deploy_cluster_job:
+    runs-on: ubuntu-latest
+    name: Create and Update Kubernetes Clusters
+    steps:
+    # To use this repository's private action, you must check out the repository
+    - name: Checkout Repo
+      uses: actions/checkout@v1
+    # - uses: ./ # Uses an action in the root directory
+    - name: Reconcile Clusters
+      id: reconcile
+      uses: shalb/cluster.dev@v0.1.4 # Cluster.dev release tag
+      with:
+        cluster-config: './.cluster.dev/'
+        cloud-user: ${{ secrets.aws_access_key_id }}
+        cloud-pass: ${{ secrets.aws_secret_access_key }}
+    # Use the output from the `reconcile` step
+    - name: Get the Cluster Credentials
+      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"

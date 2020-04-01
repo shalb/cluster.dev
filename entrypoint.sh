@@ -14,14 +14,13 @@ source "$PRJ_ROOT"/bin/argocd.sh
 readonly CLUSTER_CONFIG_PATH=$1
 readonly CLOUD_USER=$2
 readonly CLOUD_PASS=$3
-# For local testing run: ./entrypoint.sh .cluster.dev/minikube-one.yaml AWSUSER AWSPASS
-#
+readonly GIT_REPO_ROOT=$GITHUB_WORKSPACE
+# TODO: Create function to select git repo root from ENV for GitLab and BitBucket
 
 
 # =========================================================================== #
 #                                    MAIN                                     #
 # =========================================================================== #
-
 
 DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
     CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
@@ -66,7 +65,11 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
         # Destroy if installed: false
         if [ "$cluster_installed" = "false" ]; then
-            aws::destroy
+            if (aws::is_s3_bucket_exists "$cluster_cloud_region"); then
+                aws::destroy
+            else
+                DEBUG "S3 bucket ${S3_BACKEND_BUCKET} not exists. Nothing to destroy."
+            fi
             continue
         fi
 
