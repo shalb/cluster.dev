@@ -44,8 +44,8 @@ function aws::minikube::pull_kubeconfig_once {
 
     INFO "Copy kubeconfig to instance with Minikube"
     export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
-    run_cmd "aws s3 cp 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' 2>/dev/null"
-    run_cmd "cp '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null"
+    run_cmd "aws s3 cp 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' 2>/dev/null" "" false
+    run_cmd "cp '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null" "" false
     kubectl version --request-timeout=5s >/dev/null 2>&1
     return $?
 }
@@ -81,8 +81,6 @@ function aws::minikube::deploy_cluster {
                 -backend-config='key=$cluster_name/terraform.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
-    # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace: https://github.com/shalb/cluster.dev/issues/9
-    # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
     run_cmd "terraform plan \
                 -var='region=$cluster_cloud_region' \
@@ -128,8 +126,6 @@ function aws::minikube::destroy_cluster {
                 -backend-config='key=$cluster_name/terraform.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
-    # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace: https://github.com/shalb/cluster.dev/issues/9
-    # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
     INFO "Minikube cluster: Destroying "
     run_cmd "terraform destroy -auto-approve -compact-warnings \
