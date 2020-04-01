@@ -4,7 +4,7 @@ FROM hashicorp/terraform:light as terraform
 # Image pulled from https://hub.docker.com/r/chatwork/helmfile/dockerfile
 # TODO create own image with terraform and helmfile versioning
 
-FROM chatwork/helmfile:latest
+FROM chatwork/helmfile:0.106.3
 
 COPY --from=terraform /bin/terraform /bin/terraform
 
