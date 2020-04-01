@@ -366,7 +366,6 @@ function aws::destroy {
             if aws::minikube::pull_kubeconfig_once; then
                 # aws::destroy_argocd "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
                 aws::destroy_addons "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
-                kube::destroy_apps
             fi
             aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
             # TODO: Remove kubeconfig after successful cluster destroy
