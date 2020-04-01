@@ -339,7 +339,7 @@ function aws::output_access_keys {
     KUBECONFIG_DOWNLOAD_MESSAGE="\
 Download and apply your kubeconfig using commands: \n\
 aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n\
-export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n\
+export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n\
 kubectl get ns \n
 "
     SSH_ACCESS_MESSAGE="\

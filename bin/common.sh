@@ -4,36 +4,6 @@
 source "$PRJ_ROOT"/bin/logging.sh
 
 #######################################
-# Deploy CertManager via kubectl
-# Globals:
-#   None
-# Arguments:
-#   None
-# Outputs:
-#   Writes progress status
-#######################################
-function kube::deploy_apps {
-    INFO "Setup addons."
-    DEBUG "Deploy Addons via kubectl"
-    run_cmd "kubectl apply -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml'"
-}
-
-#######################################
-# Remove CertManager via kubectl
-# Globals:
-#   None
-# Arguments:
-#   None
-# Outputs:
-#   Writes progress status
-#######################################
-function kube::destroy_apps {
-    INFO "Remove addons."
-    DEBUG "Delete Addons via kubectl"
-    run_cmd "kubectl delete -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml' 2>/dev/null" "" false
-}
-
-#######################################
 # Writes information about used software
 # Globals:
 #   None

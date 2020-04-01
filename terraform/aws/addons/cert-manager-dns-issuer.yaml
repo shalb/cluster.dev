@@ -1,12 +1,12 @@
 apiVersion: cert-manager.io/v1alpha2
 kind: ClusterIssuer
 metadata:
-  name: letsencrypt-dns
+  name: letsencrypt-prod
 spec:
   acme:
     email: no-reply@cluster.dev # TODO: Change email to customers one
     privateKeySecretRef:
-      name: letsencrypt-dns
+      name: letsencrypt-prod
     server: https://acme-v02.api.letsencrypt.org/directory
     solvers:
     - selector:

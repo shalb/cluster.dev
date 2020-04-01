@@ -1,10 +1,12 @@
 provider "helm" {
 }
 
+# Deploy external-dns
+
 # Check for kubeconfig and update resources when cluster gets re-created.
 resource "null_resource" "kubeconfig_update" {
   triggers = {
-    policy_sha1 = "${sha1(file("~/.kube/config"))}"
+    policy_sha1 = "${sha1(file(var.config_path))}"
   }
 }
 
@@ -40,7 +42,6 @@ resource "helm_release" "external-dns" {
 }
 
 # Deploy Cert Manager
-
 data "template_file" "cert-manager-dns-issuer" {
   template = file("cert-manager-dns-issuer.yaml")
   vars = {
@@ -49,50 +50,22 @@ data "template_file" "cert-manager-dns-issuer" {
   }
 }
 
-variable "config_path" {
-  description = "path to a kubernetes config file"
-  default = "~/.kube/config"
-}
-
-resource "null_resource" "install_cert_manager" {
+resource "null_resource" "cert_manager_install" {
   triggers = {
     config_contents = filemd5(var.config_path)
-    k8s_yaml_contents = filemd5(data.template_file.cert-manager-dns-issuer.rendered)
+    k8s_yaml_contents = md5(data.template_file.cert-manager-dns-issuer.rendered)
   }
-
   provisioner "local-exec" {
-    command = "kubectl apply --kubeconfig ${var.config_path} -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml' -f ${data.template_file.cert-manager-dns-issuer.rendered}"
+    command = "kubectl apply --kubeconfig ${var.config_path} -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml' && echo \"${data.template_file.cert-manager-dns-issuer.rendered}\" | kubectl apply -f - "
   }
 }
 
-/*
-# Create Namespace for Cert Manager
-
-  run_cmd "kubectl apply -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml'"
-
-resource "kubernetes_namespace" "cert-manager" {
-  metadata {
-    name = "cert-manager"
+# Deploy nginx-ingress
+resource "null_resource" "nginx_ingress_install" {
+  triggers = {
+    config_contents = filemd5(var.config_path)
+  }
+  provisioner "local-exec" {
+    command = "kubectl apply --kubeconfig ${var.config_path} -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml'"
   }
 }
-
-data "helm_repository" "jetstack" {
-  name = "jetstack"
-  url  = "https://charts.jetstack.io"
-}
-
-resource "helm_release" "cert-manager" {
-  name       = "cert-manager"
-  repository = data.helm_repository.jetstack.metadata[0].name
-  chart      = "cert-manager"
-  version    = "v0.1.0"
-  namespace  = "cert-manager"
-
-  values = [
-    file("cert-manager-values.yaml")
-  ]
-  depends_on = [
-    null_resource.kubeconfig_update,
-  ]
-}
-*/

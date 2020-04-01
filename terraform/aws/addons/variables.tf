@@ -9,3 +9,7 @@ variable "cluster_cloud_domain" {
   default = ""
 }
 
+variable "config_path" {
+  description = "path to a kubernetes config file"
+  default = "~/.kube/config"
+}
