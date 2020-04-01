@@ -25,7 +25,7 @@ data "template_file" "k8s_userdata" {
 }
 
 module "minikube" {
-  source              = "git::https://github.com/shalb/terraform-aws-minikube.git"
+  source              = "git::https://github.com/shalb/terraform-aws-minikube.git?ref=ubuntu-base"
   cluster_name        = var.cluster_name
   aws_instance_type   = var.aws_instance_type
   aws_region          = var.region
