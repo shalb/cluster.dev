@@ -81,7 +81,6 @@ function aws::minikube::deploy_cluster {
                 -backend-config='key=$cluster_name/terraform.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
-    # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace: https://github.com/shalb/cluster.dev/issues/9
     # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
     run_cmd "terraform plan \
@@ -128,7 +127,6 @@ function aws::minikube::destroy_cluster {
                 -backend-config='key=$cluster_name/terraform.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
-    # TODO: Minikube module is using Centos7 image which requires to be accepted and subscribed in MarketPlace: https://github.com/shalb/cluster.dev/issues/9
     # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
     INFO "Minikube cluster: Destroying "
