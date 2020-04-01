@@ -81,7 +81,6 @@ function aws::minikube::deploy_cluster {
                 -backend-config='key=$cluster_name/terraform.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
-    # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
     run_cmd "terraform plan \
                 -var='region=$cluster_cloud_region' \
@@ -127,7 +126,6 @@ function aws::minikube::destroy_cluster {
                 -backend-config='key=$cluster_name/terraform.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
-    # To do so please visit https://aws.amazon.com/marketplace/pp?sku=aw0evgkw8e5c1q413zgy5pjce
 
     INFO "Minikube cluster: Destroying "
     run_cmd "terraform destroy -auto-approve -compact-warnings \
