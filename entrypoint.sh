@@ -104,10 +104,10 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
             # aws::init_addons   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
 
             # Deploy ArgoCD via Terraform
-            aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
+            #aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
 
             # Deploy ArgoCD apps via kubectl
-            argocd::deploy_apps   "$cluster_apps"
+            #argocd::deploy_apps   "$cluster_apps"
 
             # Writes commands for user for get access to cluster
             aws::output_access_keys   "$cluster_cloud_domain"
