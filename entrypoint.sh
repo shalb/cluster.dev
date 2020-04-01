@@ -101,7 +101,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
             kube::deploy_apps
 
             # Deploy Kubernetes Addons via Terraform
-            # aws::init_addons   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
+            aws::init_addons   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
 
             # Deploy ArgoCD via Terraform
             #aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
