@@ -34,6 +34,7 @@ resource "helm_release" "external-dns" {
   ]
   depends_on = [
     null_resource.kubeconfig_update,
+    kubernetes_namespace.external-dns,
   ]
   set {
     name  = "aws.region"
@@ -67,5 +68,10 @@ resource "null_resource" "nginx_ingress_install" {
   }
   provisioner "local-exec" {
     command = "kubectl apply --kubeconfig ${var.config_path} -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml'"
+  }
+  provisioner "local-exec" {
+    when    = "destroy"
+    # destroy ingress object to remove created Load Balancer
+    command = "kubectl delete --kubeconfig ${var.config_path} -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml'"
   }
 }
