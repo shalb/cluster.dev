@@ -46,14 +46,14 @@ resource "helm_release" "external-dns" {
 data "template_file" "cert-manager-dns-issuer" {
   template = file("cert-manager-dns-issuer.yaml")
   vars = {
-    dns_zones = var.cluster_cloud_domain
+    dns_zones  = var.cluster_cloud_domain
     aws_region = var.aws_region
   }
 }
 
 resource "null_resource" "cert_manager_install" {
   triggers = {
-    config_contents = filemd5(var.config_path)
+    config_contents   = filemd5(var.config_path)
     k8s_yaml_contents = md5(data.template_file.cert-manager-dns-issuer.rendered)
   }
   provisioner "local-exec" {
@@ -70,7 +70,7 @@ resource "null_resource" "nginx_ingress_install" {
     command = "kubectl apply --kubeconfig ${var.config_path} -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml'"
   }
   provisioner "local-exec" {
-    when    = "destroy"
+    when = "destroy"
     # destroy ingress object to remove created Load Balancer
     command = "kubectl delete --kubeconfig ${var.config_path} -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml'"
   }
