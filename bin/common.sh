@@ -4,40 +4,6 @@
 source "$PRJ_ROOT"/bin/logging.sh
 
 #######################################
-# Deploy CertManager via kubectl
-# Globals:
-#   None
-# Arguments:
-#   None
-# Outputs:
-#   Writes progress status
-#######################################
-function kube::deploy_apps {
-    INFO "Setup addons."
-    DEBUG "Deploy Addons via kubectl"
-    run_cmd "kubectl apply -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml'"
-    run_cmd "kubectl apply -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/8a147f7c0044c318ec37990b50f0cabb205e9b44/addons/letsencrypt-prod.yaml'"
-    run_cmd "kubectl apply -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml'"
-}
-
-#######################################
-# Remove CertManager via kubectl
-# Globals:
-#   None
-# Arguments:
-#   None
-# Outputs:
-#   Writes progress status
-#######################################
-function kube::destroy_apps {
-    INFO "Remove addons."
-    DEBUG "Delete Addons via kubectl"
-    run_cmd "kubectl delete -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/8a147f7c0044c318ec37990b50f0cabb205e9b44/addons/letsencrypt-prod.yaml' 2>/dev/null" "" false
-    run_cmd "kubectl delete -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml' 2>/dev/null" "" false
-    run_cmd "kubectl delete -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml' 2>/dev/null" "" false
-}
-
-#######################################
 # Writes information about used software
 # Globals:
 #   None

@@ -301,7 +301,7 @@ ${output//$'\n'/'\n'}" # newline characters shielding
 #   Writes progress status
 #######################################
 function aws::destroy_argocd {
-    DEBUG "Deploy ArgoCD via Terraform"
+    DEBUG "Destroy ArgoCD via Terraform"
     local cluster_name=$1
     local cluster_cloud_region=$2
     local cluster_cloud_domain=$3
@@ -339,7 +339,7 @@ function aws::output_access_keys {
     KUBECONFIG_DOWNLOAD_MESSAGE="\
 Download and apply your kubeconfig using commands: \n\
 aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n\
-export KUBECONFIG=\$KUBECONFIG:~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n\
+export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n\
 kubectl get ns \n
 "
     SSH_ACCESS_MESSAGE="\
@@ -365,7 +365,7 @@ function aws::destroy {
             DEBUG "Destroy: Provisioner: Minikube"
             if aws::minikube::pull_kubeconfig_once; then
                 # aws::destroy_argocd "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
-                kube::destroy_apps
+                aws::destroy_addons "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
             fi
             aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
             # TODO: Remove kubeconfig after successful cluster destroy
@@ -378,4 +378,76 @@ function aws::destroy {
             DEBUG "Destroy: Provisioner: EKS"
             ;;
         esac
+}
+
+#######################################
+# Deploy K8s Addons via Terraform
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_name
+#   cluster_cloud_region
+#   cluster_cloud_domain
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::init_addons {
+    DEBUG "Deploy Kubernetes Addons via Terraform"
+    local cluster_name=$1
+    local cluster_cloud_region=$2
+    local cluster_cloud_domain=$3
+
+    cd "$PRJ_ROOT"/terraform/aws/addons/ || ERROR "Path not found"
+
+    INFO "Kubernetes Addons: Init Terraform configuration"
+    run_cmd "terraform init \
+                -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                -backend-config='key=$cluster_name/terraform-addons.state' \
+                -backend-config='region=$cluster_cloud_region'"
+
+    run_cmd "terraform plan \
+                -var='aws_region=$cluster_cloud_region' \
+                -var='cluster_cloud_domain=$cluster_cloud_domain' \
+                -input=false \
+                -out=tfplan-addons"
+
+    INFO "Kubernetes Addons: Installing/Reconciling"
+    run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan-addons"
+
+    cd - >/dev/null || ERROR "Path not found"
+}
+
+#######################################
+# Destroy Kubernetes Addons via Terraform
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_name
+#   cluster_cloud_region
+#   cluster_cloud_domain
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::destroy_addons {
+    DEBUG "Delete Kubernetes Addons via Terraform"
+    local cluster_name=$1
+    local cluster_cloud_region=$2
+    local cluster_cloud_domain=$3
+
+    cd "$PRJ_ROOT"/terraform/aws/addons/ || ERROR "Path not found"
+
+    INFO "Kubernetes Addons: Init Terraform configuration"
+    run_cmd "terraform init \
+                -backend-config='bucket=$S3_BACKEND_BUCKET' \
+                -backend-config='key=$cluster_name/terraform-addons.state' \
+                -backend-config='region=$cluster_cloud_region'"
+
+    INFO "Kubernetes Addons: Destroying"
+    run_cmd "terraform destroy -auto-approve -compact-warnings \
+                -var='cluster_cloud_domain=$cluster_cloud_domain' \
+                -var='aws_region=$cluster_cloud_region'" "" "false"
+
+    cd - >/dev/null || ERROR "Path not found"
 }

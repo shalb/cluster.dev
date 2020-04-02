@@ -55,13 +55,12 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         export AWS_DEFAULT_REGION=$cluster_cloud_region
         export CLUSTER_PREFIX=$GITHUB_REPOSITORY # CLUSTER_PREFIX equals git organization/username could be changed in other repo
 
-        # create unique s3 bucket from repo name and cluster name
-        S3_BACKEND_BUCKET=$(echo "$CLUSTER_PREFIX" | awk -F "/" '{print$1}')-$cluster_name
+        # Define cluster full name
+        CLUSTER_FULLNAME=$cluster_name-$(echo "$CLUSTER_PREFIX" | awk -F "/" '{print$1}')
         # make sure it is not larger than 63 symbols and lowercase
-        S3_BACKEND_BUCKET=$(echo "$S3_BACKEND_BUCKET" | cut -c 1-63 | awk '{print tolower($0)}')
-        # The same name would be used for domains
-        # shellcheck disable=SC2034
-        CLUSTER_FULLNAME=$S3_BACKEND_BUCKET
+        CLUSTER_FULLNAME=$(echo "$CLUSTER_FULLNAME" | cut -c 1-63 | awk '{print tolower($0)}')
+        # Define name for S3 bucket that would be user for terraform state
+        S3_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
         # Destroy if installed: false
         if [ "$cluster_installed" = "false" ]; then
@@ -97,8 +96,8 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
             # Pull a kubeconfig to instance via kubectl
             aws::minikube::pull_kubeconfig
 
-            # Deploy k8s applications via kubectl
-            kube::deploy_apps
+            # Deploy Kubernetes Addons via Terraform
+            aws::init_addons   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
 
             # Deploy ArgoCD via Terraform
             aws::init_argocd   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
