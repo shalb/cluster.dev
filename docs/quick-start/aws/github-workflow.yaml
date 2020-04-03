@@ -25,3 +25,7 @@ jobs:
     # Use the output from the `reconcile` step
     - name: Get the Cluster Credentials
       run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
+env:
+  # For available log levels see:
+  # https://github.com/shalb/cluster.dev/blob/master/docs/bash-logging.md#logging-levels
+  VERBOSE_LVL: INFO

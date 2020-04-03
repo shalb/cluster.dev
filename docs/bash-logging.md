@@ -35,7 +35,12 @@ Bash Logger supports the logging levels described by [RFC 5424](http://tools.iet
 * **ALERT** Action must be taken immediately. Example: Entire website down, database unavailable, etc. This should trigger the SMS alerts and wake you up.
 * **EMERGENCY** Emergency: system is unusable.
 
-You can set minimum log level by `VERBOSE_LVL` environment variable. Default to `INFO`
+You can set minimum log level by `VERBOSE_LVL` environment variable in workflow definition (`.github/workflows/*.yaml`). Default to `INFO`
+
+```yaml
+env:
+  VERBOSE_LVL: INFO
+```
 
 ## Handlers
 

@@ -60,6 +60,8 @@ jobs:
     - name: Get the Cluster Credentials
       run: echo -e "${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}"
 env:
+  # For available log levels see:
+  # https://github.com/shalb/cluster.dev/blob/master/docs/bash-logging.md#logging-levels
   VERBOSE_LVL: INFO
 ```
 

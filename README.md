@@ -9,6 +9,7 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 ----
 
 ## MENU
+
 * [Principle diagram](#principle-diagram-)
 * [How it works](#how-it-works-)
 * [Installation](#installation-)
@@ -17,6 +18,7 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 * [Technical diagram](#technical-diagram-)
 * [Roadmap](#roadmap-)
 * [Contributing](#contributing-)
+* [FAQ](#faq-)
 
 ----
 
@@ -67,25 +69,30 @@ You receive:
 
 ## Quick Start on AWS [`↑`](#menu)
 
-_normally it takes 15 minutes_  
+_normally it takes 15 minutes_
+
 1. Dedicate a separate repository for the infrastructure code that will be managed by `cluster.dev`.  
 This repo will host code for your clusters, deployments, applications and other resources.  
 Clone the repo locally:
-```
+
+```bash
 $ git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
 $ cd YOUR-REPOSITORY
 ```
+
 **Next steps** should be done in that repo.
 
 2. Create credentials for your non-root cloud user account.  
-In AWS you need to use the existing or create the new ones ["Programmatic Access user"](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console).   
+In AWS you need to use the existing or create the new ones ["Programmatic Access user"](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console).  
 Required Managed policies: _AmazonEC2FullAccess, AmazonS3FullAccess, AmazonRoute53FullAccess, AmazonDynamoDBFullAccess, IAMFullAccess, AmazonEC2ContainerRegistryReadOnly, ElasticLoadBalancingFullAccess_, or you can add permissions using this [iam-json](https://gist.github.com/dgozalo/bc4b932d51f22ca5d8dad07d9a1fe0f2).
 
 Resulting access pair should look like:
+
 ```yaml
 aws_access_key_id = ATIAAJSXDBUVOQ4JR
 aws_secret_access_key = SuperAwsSecret
 ```
+
 
 3. Add credentials to you repo Secrets under GitHub's repo setting: `Settings → Secrets`:
  ![GitHub Secrets](docs/images/gh-secrets.png)
@@ -103,17 +110,18 @@ mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.g
 mkdir -p .cluster.dev/ && wget -O .cluster.dev/minikube-one.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
 ```
 
-5. In cluster definition yaml you should set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).  
+5. In cluster definition yaml you should set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).
 
-6. You can change all other parameters or leave default values in cluster.yaml .  
-Leave github workflow file as is.  
+6. You can change all other parameters or leave default values in cluster.yaml.  
+Leave github workflow file as is.
 
 7. Copy sample ArgoCD applications from [/kubernetes/apps/samples](https://github.com/shalb/cluster.dev/tree/master/kubernetes/apps/samples) and Helm chart samples from [/kubernetes/charts/wordpress](https://github.com/shalb/cluster.dev/tree/master/kubernetes/charts/wordpress) to the same paths into your repo.
 
 _Or download application samples directly to local repo clone with commands:_
+
 ```bash
 export RELEASE=v0.1.5
-# Create directory and place ArgoCD applications inside 
+# Create directory and place ArgoCD applications inside
 mkdir -p kubernetes/apps/samples && wget -O kubernetes/apps/samples/helm-all-in-app.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-all-in-app.yaml"
 wget -O kubernetes/apps/samples/helm-dependency.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-dependency.yaml"
 wget -O kubernetes/apps/samples/raw-manifest.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/raw-manifest.yaml"
@@ -123,11 +131,12 @@ wget -O kubernetes/charts/wordpress/requirements.yaml "https://raw.githubusercon
 wget -O kubernetes/charts/wordpress/values.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/charts/wordpress/values.yaml"
 ```
 
-Define path to ArgoCD apps in cluster manifest:  
-```
+Define path to ArgoCD apps in cluster manifest:
+
+```yaml
   apps:
     - /kubernetes/apps/samples
-```  
+```
 
 8. Commit and Push files to your repo and follow the Github Action execution status.  
 In GitHub action output you'll receive access instructions to your cluster and services:  
@@ -151,7 +160,6 @@ After successful removal, you can safely delete cluster manifest file from `.clu
 
 ![cluster.dev technical diagram](docs/images/cluster-dev-technical-diagram.png)
 
-
 ## Roadmap [`↑`](#menu)
 
 The project is in Alpha Stage. Roadmap details: [docs/ROADMAP.md](docs/ROADMAP.md)
@@ -159,3 +167,7 @@ The project is in Alpha Stage. Roadmap details: [docs/ROADMAP.md](docs/ROADMAP.m
 ## Contributing [`↑`](#menu)
 
 If you want to spread the project with your own code, you could start contributing with this quick guide: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+
+## FAQ [`↑`](#menu)
+
+* [Available log levels and how it change](https://github.com/shalb/cluster.dev/blob/master/docs/bash-logging.md#logging-levels)
