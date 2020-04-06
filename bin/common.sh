@@ -81,5 +81,3 @@ INFO "GIT_PROVIDER is set for: $GIT_PROVIDER"
 INFO "GIT_REPO_NAME is set for: $GIT_REPO_NAME"
 INFO "GIT_REPO_ROOT is set for: $GIT_REPO_ROOT"
 }
-
-detect_git_provider

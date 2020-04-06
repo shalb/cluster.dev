@@ -16,7 +16,7 @@ readonly CLOUD_USER=$2
 readonly CLOUD_PASS=$3
 
 # Detect Git hosting and set GIT_REPO_NAME, GIT_REPO_ROOT variables
-detect_git_providers
+detect_git_provider
 
 # =========================================================================== #
 #                                    MAIN                                     #
