@@ -94,6 +94,90 @@ function is_current_dir_is_git_repo {
     FUNC_RESULT=false
 }
 
+#######################################
+# Set variables from CLI params
+# Globals:
+#   None
+# Arguments:
+#   $@ - key=value format
+# Outputs:
+#   Declare variables
+#######################################
+function params {
+    # Exit if no subcommand provided
+    [ "$1" ] || { echo "No arguments provided. Run './cluster-dev -h' for help"; exit 0; }
+    # Skip subcommand
+    [ "$1" = 'install' ] && shift
+    # Return if no CLI options provided
+    [ "$1" ] || return
+    local params=("$@")
+    local name
+    local value
+
+    echo "Provided params:"
+    for i in "${params[@]}"; do
+        echo "    $i"
+        name=$(echo "$i" | awk -F'=' '{print $1}')
+        value=$(echo "$i" | awk -F'=' '{print $2}')
+
+        declare -n __var__="$name"
+        # shellcheck disable=SC2034
+        __var__="$value"
+    done
+    echo
+}
+
+#######################################
+# Show help message is '-h' provided and exit
+# Globals:
+#   None
+# Arguments:
+#   $@ - -h
+# Outputs:
+#   Help message
+#######################################
+function show_help {
+    while getopts ":h" opt; do
+        case ${opt} in
+            h )
+            echo "Usage:"
+            echo "    cluster-dev -h                      Display this help message."
+            echo "    cluster-dev install <params>        Install <with params>."
+            exit 0
+            ;;
+        \? )
+            echo "Invalid Option: -$OPTARG" 1>&2
+            exit 1
+            ;;
+        esac
+    done
+    shift $((OPTIND -1))
+
+    subcommand=$1; shift  # Remove 'pip' from the argument list
+    case "$subcommand" in
+        # Parse options to the install sub command
+        install)
+            while getopts ":h" opt; do
+                case ${opt} in
+                    h )
+                    echo "Usage:"
+                    echo "    cluster-dev install -h              Display this help message."
+                    echo "    cluster-dev install <params>        Install <with params>."
+                    echo "      Available params:"
+                    echo "      git_provider={Github,Bitbucket,Gitlab}"
+                    exit 0
+                    ;;
+                \? )
+                    echo "Invalid Option: -$OPTARG" 1>&2
+                    exit 1
+                    ;;
+                esac
+            done
+            shift $((OPTIND -1))
+        ;;
+    esac
+}
+
 
 
 #######################################################################
@@ -101,14 +185,37 @@ function is_current_dir_is_git_repo {
 #######################################################################
 
 
+# show help if '-h' provided
+show_help "$@"
+
+# Set CLI params
+git_provider=''
+# Get variables value from CLI
+params "$@"
+
+
+declare -a git_providers=(
+    "Github"
+    "Bitbucket"
+    "Gitlab"
+)
+
+# Check params
+if [[ ! ${git_providers[*]} =~ ${git_provider} ]]; then
+    # whatever you want to do when arr doesn't contain value
+    echo -e "Parameter 'git_provider=$git_provider' has invalid value.\nAccepted values is: ${git_providers[*]}"
+    exit 1
+fi
+
 
 FUNC_RESULT='' # variable used as return from functions
 
 
+echo -e "Hi, we gonna create an infrastructure for you.\n"
 
 is_current_dir_is_git_repo
 if [ "$FUNC_RESULT" = false ]; then
-    echo "This is not git repo"
+    echo "As this is a GitOps approach we need to start with the git repo"
 
     create_repo="We could create a repo for you"
     user_turn="You can create or clone by your own, and then run tool there"
@@ -124,8 +231,18 @@ if [ "$FUNC_RESULT" = false ]; then
     fi
 
     if [ "$FUNC_RESULT" = "$create_repo" ]; then
-        # TODO: Create repo
+        # Select github provider
+        echo "Please, select your Git hosting:"
+        if [ -z "$git_provider" ]; then
+            interactive_select "${git_providers[@]}"
+        else
+            echo "$git_provider"
+            FUNC_RESULT="$git_provider"
+        fi
+
+        # TODO: check credentials
         exit 0
+
     fi
 
 fi
@@ -142,9 +259,3 @@ echo "Inside git repo, use it."
 
 # read -r -e -p "Please enter the name of your infrastructure repository: " -i "infrastructure" NAME
 # echo "$NAME"
-
-
-# declare -a git_providers=("Github" "Bitbucket" "Gitlab")
-
-# echo "Please select your git hosting"
-# interactive_select "${git_providers[@]}"
