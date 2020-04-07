@@ -76,7 +76,7 @@ Copy logs from region 'us-east-1', because global API calls logged in this regio
 mkdir ./aws_logs/
 aws s3 sync s3://my-cloud-logs/AWSLogs/MY-ACCOUNT-ID/CloudTrail/MY-REGION/MY-YEAR/MY-MONTH/MY-DAY/ ./aws_logs/
 aws s3 sync s3://my-cloud-logs/AWSLogs/MY-ACCOUNT-ID/CloudTrail/us-east-1/MY-YEAR/MY-MONTH/MY-DAY/ ./aws_logs/
-gzip -d ./aws_logs/
+gzip -d ./aws_logs/*.gz
 ~~~~
 
 # Parse logs
