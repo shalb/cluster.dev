@@ -83,7 +83,7 @@ $ cd YOUR-REPOSITORY
 **Next steps** should be done in that repo.
 
 2. Create new user with limited access.  
-Watch [video example](docs/aws_policy.webm) to create user and apply [policy](install/aws_policy.json).  
+Watch [video example](https://www.youtube.com/watch?v=ALF1Ku2lYys) to create user and apply [policy](install/aws_policy.json).  
 If you need more information about AWS users - please check [aws documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console) for details.  
 
 Resulting access pair should look like:
