@@ -79,7 +79,7 @@
                 "ecr:GetDownloadUrlForLayer",
                 "ecr:GetLifecyclePolicy",
                 "ecr:GetLifecyclePolicyPreview",
-                "ecr:GetRepositoryPolicy"
+                "ecr:GetRepositoryPolicy",
                 "ecr:ListImages",
                 "ecr:ListTagsForResource",
                 "elasticloadbalancing:ConfigureHealthCheck",
@@ -164,7 +164,7 @@
                 "s3:PutObjectVersionAcl",
                 "s3:PutObjectVersionTagging",
                 "sts:AssumeRole",
-                "sts:GetCallerIdentity",
+                "sts:GetCallerIdentity"
             ],
             "Resource": "*"
         }
