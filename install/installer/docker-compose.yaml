@@ -1,0 +1,14 @@
+#
+# USAGE: docker-compose run app
+# (need interactive interaction with script)
+
+version: "3"
+
+services:
+  app:
+    build: .
+    image: cli-installer:latest
+    volumes:
+      - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
+      - ./mount_folder:/app/current_dir:rw # Folder where run docker-container
+    command: install

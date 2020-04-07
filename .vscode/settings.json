@@ -52,6 +52,8 @@
       "minikube",
       "mkdir",
       "modules",
+      "musl",
+      "nargs",
       "nestedkey",
       "noarch",
       "only",

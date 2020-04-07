@@ -1,0 +1,2 @@
+gitpython==3.1.0
+PyInquirer==1.0.3
