@@ -53,7 +53,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         export AWS_ACCESS_KEY_ID=$CLOUD_USER
         export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
         export AWS_DEFAULT_REGION=$cluster_cloud_region
-        export CLUSTER_PREFIX=$GIT_REPO_NAME # CLUSTER_PREFIX equals git organization/username could be changed in other repo
+        export CLUSTER_PREFIX=$GIT_REPO_NAME # CLUSTER_PREFIX equals git username/repo could be changed in other repo
 
         # Define cluster full name
         CLUSTER_FULLNAME=$cluster_name-$(echo "$CLUSTER_PREFIX" | awk -F "/" '{print$1}')
