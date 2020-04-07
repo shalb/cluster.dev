@@ -18,7 +18,7 @@ function output_software_info {
     INFO "Helm"
     helmfile -v
     INFO "kubectl"
-    kubectl version
+    kubectl version --client
     INFO "git"
     git --version
     INFO "AWS CLI"
