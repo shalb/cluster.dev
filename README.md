@@ -67,7 +67,7 @@ You receive:
 
 ## Installation [`↑`](#menu)
 
-## Quick Start on AWS [`↑`](#menu)
+### Quick Start on AWS [`↑`](#menu)
 
 _normally it takes 15 minutes_
 
@@ -82,9 +82,9 @@ $ cd YOUR-REPOSITORY
 
 **Next steps** should be done in that repo.
 
-2. Create credentials for your non-root cloud user account.  
-In AWS you need to use the existing or create the new ones ["Programmatic Access user"](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console).  
-Required Managed policies: _AmazonEC2FullAccess, AmazonS3FullAccess, AmazonRoute53FullAccess, AmazonDynamoDBFullAccess, IAMFullAccess, AmazonEC2ContainerRegistryReadOnly, ElasticLoadBalancingFullAccess_, or you can add permissions using this [iam-json](https://gist.github.com/dgozalo/bc4b932d51f22ca5d8dad07d9a1fe0f2).
+2. Create new user with limited access.  
+Watch [video example](docs/aws_policy.webm) to create user and apply [policy](install/aws_policy.json).  
+If you need more information about AWS users - please check [aws documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console) for details.  
 
 Resulting access pair should look like:
 
