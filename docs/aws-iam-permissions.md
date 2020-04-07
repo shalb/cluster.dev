@@ -1,3 +1,19 @@
+   * [Info](#info)
+   * [Requirements](#requirements)
+      * [Create admin account in aws with access key](#create-admin-account-in-aws-with-access-key)
+      * [Install aws cli](#install-aws-cli)
+      * [Configure aws cli](#configure-aws-cli)
+      * [Create S3 bucket](#create-s3-bucket)
+      * [Configure Cloud Trail](#configure-cloud-trail)
+   * [Collect logs](#collect-logs)
+      * [Run installation and destroy](#run-installation-and-destroy)
+      * [Copy logs](#copy-logs)
+   * [Parse logs](#parse-logs)
+      * [Copy logs parsing script](#copy-logs-parsing-script)
+      * [Get API calls with service](#get-api-calls-with-service)
+      * [Get API calls with service and request](#get-api-calls-with-service-and-request)
+   * [Create policy](#create-policy)
+
 # Info
 
 This document explains how to create or update [aws_policy.json](../install/aws_policy.json)
