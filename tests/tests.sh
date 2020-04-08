@@ -36,9 +36,14 @@ ${SRC_PATH}/tests/timeout.sh "${TIMEOUT}" "clusterdev-test-${GIT_SHORT_COMMIT}" 
 timer_pid=$!
 
 # Run docker in localhost
-docker run -d --name "clusterdev-test-${GIT_SHORT_COMMIT}" --workdir /github/workspace --rm -v "${SRC_PATH}:/github/workspace" \
-           -e GITHUB_REPOSITORY="shalb" \
-           "${DOCKER_IMAGE_NAME}" "${CONFIG_PATH}" "${USER}" "${PASS}"
+docker run  -d --rm \
+            --name "clusterdev-test-${GIT_SHORT_COMMIT}" \
+            --workdir /tests/workspace \
+            -v "${SRC_PATH}:/tests/workspace" \
+            -e GIT_PROVIDER="test-run" \
+            -e GIT_REPO_NAME="test-run" \
+            -e GIT_REPO_ROOT="/tests/workspace" \
+            "${DOCKER_IMAGE_NAME}" "${CONFIG_PATH}" "${USER}" "${PASS}"
 
 sleep 1
 
