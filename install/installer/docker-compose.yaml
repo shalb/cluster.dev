@@ -10,5 +10,8 @@ services:
     image: cli-installer:latest
     volumes:
       - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
+
       - ./mount_folder:/app/current_dir:rw # Folder where run docker-container
+      - $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro # For get git username
+      - $HOME/.ssh:/home/cluster.dev/.ssh:ro # For get ssh key as git password
     command: install
