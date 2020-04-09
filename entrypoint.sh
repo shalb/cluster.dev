@@ -15,7 +15,7 @@ readonly CLUSTER_CONFIG_PATH=$1
 readonly CLOUD_USER=$2
 readonly CLOUD_PASS=$3
 
-# Detect Git hosting and set GIT_REPO_NAME, GIT_REPO_ROOT variables
+# Detect Git hosting and set GIT_PROVIDER, GIT_REPO_NAME, GIT_REPO_ROOT constants
 detect_git_provider
 
 # =========================================================================== #
