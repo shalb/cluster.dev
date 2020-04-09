@@ -10,19 +10,19 @@ source "$PRJ_ROOT"/bin/aws_minikube.sh
 source "$PRJ_ROOT"/bin/argocd.sh
 
 
-# Variables passed by Github Workflow to Action
+# Mandatory variables passed to container by config
 readonly CLUSTER_CONFIG_PATH=$1
 readonly CLOUD_USER=$2
 readonly CLOUD_PASS=$3
-readonly GIT_REPO_ROOT=$GITHUB_WORKSPACE
-# TODO: Create function to select git repo root from ENV for GitLab and BitBucket
 
+# Detect Git hosting and set GIT_PROVIDER, GIT_REPO_NAME, GIT_REPO_ROOT constants
+detect_git_provider
 
 # =========================================================================== #
 #                                    MAIN                                     #
 # =========================================================================== #
 
-DEBUG "Starting job in repo: $GITHUB_REPOSITORY with arguments  \
+DEBUG "Starting job in repo: $GIT_REPO_NAME with arguments  \
     CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
 
 # Writes information about used software
@@ -53,7 +53,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         export AWS_ACCESS_KEY_ID=$CLOUD_USER
         export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
         export AWS_DEFAULT_REGION=$cluster_cloud_region
-        export CLUSTER_PREFIX=$GITHUB_REPOSITORY # CLUSTER_PREFIX equals git organization/username could be changed in other repo
+        export CLUSTER_PREFIX=$GIT_REPO_NAME # CLUSTER_PREFIX equals git username/repo could be changed in other repo
 
         # Define cluster full name
         CLUSTER_FULLNAME=$cluster_name-$(echo "$CLUSTER_PREFIX" | awk -F "/" '{print$1}')

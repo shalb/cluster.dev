@@ -1,0 +1,34 @@
+image: docker:19.03.0
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  CLUSTER_DEV_BRANCH: "master"
+  CLUSTER_CONFIG_PATH: "./.cluster.dev/"
+  CLOUD_USER: "${aws_access_key_id}" # Should be set as Masked Variable
+  CLOUD_PASS: "${aws_secret_access_key}" # Settings under "CI/CD Settings" -> Variables
+
+services:
+  - docker:19.03.0-dind
+
+before_script:
+  - apk update && apk upgrade
+  - apk add --no-cache bash git
+
+stages:
+  - cluster-dev
+
+cluster-dev:
+  only:
+    refs:
+      - master
+    changes:
+      - '.gitlab-ci.yml'
+      - '.cluster.dev/**' # Path to cluster declaration manifests
+      - '/kubernetes/apps/**' # ArgoCD application directories
+  script:
+    - git clone -b "$CLUSTER_DEV_BRANCH" https://github.com/shalb/cluster.dev.git
+    - cd cluster.dev
+    - docker build --no-cache -t "cluster.dev:${CLUSTER_DEV_BRANCH}" .
+    - docker run --name cluster.dev-${CLUSTER_DEV_BRANCH} --workdir /gitlab/workspace --rm -e CI_PROJECT_PATH -e CI_PROJECT_DIR -e VERBOSE_LVL=DEBUG -v "${CI_PROJECT_DIR}:/gitlab/workspace" cluster.dev:${CLUSTER_DEV_BRANCH} "${CLUSTER_CONFIG_PATH}" "${CLOUD_USER}" "${CLOUD_PASS}"
+  stage: cluster-dev
