@@ -52,7 +52,8 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         # Define AWS credentials
         export AWS_ACCESS_KEY_ID=$CLOUD_USER
         export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
-
+        # Define full cluster name
+        set_cluster_fullname
         # Define name for S3 bucket that would be user for terraform state
         S3_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
@@ -115,6 +116,8 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         # Define DO credentials
         export DO_TOKEN_NAME=$CLOUD_USER
         export DIGITALOCEAN_TOKEN=$CLOUD_PASS
+        # Define full cluster name
+        set_cluster_fullname
 
         ;;
 

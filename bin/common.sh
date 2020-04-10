@@ -36,7 +36,6 @@ function output_software_info {
 #   GIT_PROVIDER - platform for git hosting
 #   GIT_REPO_NAME - repo in "user/repository" format
 #   GIT_REPO_ROOT - full path to cloned repo files inside runner
-#   CLUSTER_FULLNAME - naming for state buckets and other unique names
 #######################################
 
 function detect_git_provider
@@ -77,14 +76,31 @@ if [ ! -z ${BITBUCKET_GIT_HTTP_ORIGIN+b} ];
         DEBUG "BITBUCKET_GIT_HTTP_ORIGIN variable is NOT set assuming we are NOT running Bitbucket Pipeline";
 fi
 
+# Output final results with required variables set
+INFO "GIT_PROVIDER is set for: $GIT_PROVIDER"
+INFO "GIT_REPO_NAME is set for: $GIT_REPO_NAME"
+INFO "GIT_REPO_ROOT is set for: $GIT_REPO_ROOT"
+}
+
+
+#######################################
+# Generate a unique name for particular cluster domains, state bucketes, etc..
+# Globals:
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_name - from yaml file
+#   GIT_REPO_NAME - from provider detection
+# Outputs:
+#   CLUSTER_FULLNAME - naming for state buckets and other unique names
+#######################################
+
+function set_cluster_fullname {
+
 # Define CLUSTER_FULLNAME which will be used in state files
 CLUSTER_FULLNAME=$cluster_name-$(echo "$GIT_REPO_NAME" | awk -F "/" '{print$1}')
 # make sure it is not larger than 63 symbols and lowercase
 readonly CLUSTER_FULLNAME=$(echo "$CLUSTER_FULLNAME" | cut -c 1-63 | awk '{print tolower($0)}')
 
-# Output final results with required variables set
-INFO "GIT_PROVIDER is set for: $GIT_PROVIDER"
-INFO "GIT_REPO_NAME is set for: $GIT_REPO_NAME"
 INFO "CLUSTER_FULLNAME is set for: $CLUSTER_FULLNAME"
-INFO "GIT_REPO_ROOT is set for: $GIT_REPO_ROOT"
+
 }
