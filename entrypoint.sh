@@ -15,7 +15,7 @@ readonly CLUSTER_CONFIG_PATH=$1
 readonly CLOUD_USER=$2
 readonly CLOUD_PASS=$3
 
-# Detect Git hosting and set GIT_PROVIDER, GIT_REPO_NAME, GIT_REPO_ROOT constants
+# Detect Git hosting and set: GIT_PROVIDER, GIT_REPO_NAME, GIT_REPO_ROOT, CLUSTER_FULLNAME constants
 detect_git_provider
 
 # =========================================================================== #
@@ -52,13 +52,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         # Define AWS credentials
         export AWS_ACCESS_KEY_ID=$CLOUD_USER
         export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
-        export AWS_DEFAULT_REGION=$cluster_cloud_region
-        export CLUSTER_PREFIX=$GIT_REPO_NAME # CLUSTER_PREFIX equals git username/repo could be changed in other repo
 
-        # Define cluster full name
-        CLUSTER_FULLNAME=$cluster_name-$(echo "$CLUSTER_PREFIX" | awk -F "/" '{print$1}')
-        # make sure it is not larger than 63 symbols and lowercase
-        CLUSTER_FULLNAME=$(echo "$CLUSTER_FULLNAME" | cut -c 1-63 | awk '{print tolower($0)}')
         # Define name for S3 bucket that would be user for terraform state
         S3_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
@@ -115,15 +109,20 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         esac
         ;;
 
+    digitalocean)
+
+        DEBUG "Cloud Provider: DigitalOcean. Initializing access variables"
+        # Define DO credentials
+        export DO_TOKEN_NAME=$CLOUD_USER
+        export DIGITALOCEAN_TOKEN=$CLOUD_PASS
+
+        ;;
+
     gcp)
         DEBUG "Cloud Provider: Google"
         ;;
 
     azure)
-        DEBUG "Cloud Provider: Azure"
-        ;;
-
-    digitalocean)
         DEBUG "Cloud Provider: Azure"
         ;;
 
