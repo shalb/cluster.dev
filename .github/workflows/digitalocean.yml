@@ -1,14 +1,7 @@
 on:
   push:
     paths:
-      - 'entrypoint.sh'
-      - 'bin/**'
-      - 'terraform/**'
-      - 'kubernetes/apps/**'
-      - 'Dockerfile'
-      - '.github/workflows/**'
-      - '.cluster.dev/**'
-      - 'action.yaml'
+      - './.cluster.dev/digitalocean-k8s.yaml'
     branches:
       - master
 jobs:
@@ -18,15 +11,17 @@ jobs:
     steps:
     # To use this repository's private action, you must check out the repository
     - name: Checkout Repo
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     # - uses: ./ # Uses an action in the root directory
     - name: Reconcile Clusters
       id: reconcile
       uses: shalb/cluster.dev@master
       with:
-        cluster-config: './.cluster.dev/minikube-one.yaml'
-        cloud-user: ${{ secrets.aws_access_key_id }}
-        cloud-pass: ${{ secrets.aws_secret_access_key }}
+        cluster-config: './.cluster.dev/digitalocean-k8s.yaml'
+    # For user and password please use your token name and token hash
+    # https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/
+        cloud-user: ${{ secrets.TOKEN_NAME }}
+        cloud-pass: ${{ secrets.DO_PAT }}
     # Use the output from the `reconcile` step
     - name: Get the Cluster Credentials
       run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
