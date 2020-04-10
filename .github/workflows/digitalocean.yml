@@ -20,8 +20,8 @@ jobs:
         cluster-config: './.cluster.dev/digitalocean-k8s.yaml'
     # For user and password please use your token name and token hash
     # https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/
-        cloud-user: ${{ secrets.TOKEN_NAME }}
-        cloud-pass: ${{ secrets.DO_PAT }}
+        cloud-user: ${{ secrets.DO_TOKEN_NAME }}
+        cloud-pass: ${{ secrets.DIGITALOCEAN_TOKEN }}
     # Use the output from the `reconcile` step
     - name: Get the Cluster Credentials
       run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"

@@ -30,6 +30,7 @@
       "eval",
       "filebeat",
       "geoip",
+      "gitlab",
       "grafana",
       "gsub",
       "id",
