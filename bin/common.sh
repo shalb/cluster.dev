@@ -99,7 +99,7 @@ function set_cluster_fullname {
 # Define CLUSTER_FULLNAME which will be used in state files
 CLUSTER_FULLNAME=$cluster_name-$(echo "$GIT_REPO_NAME" | awk -F "/" '{print$1}')
 # make sure it is not larger than 63 symbols and lowercase
-readonly CLUSTER_FULLNAME=$(echo "$CLUSTER_FULLNAME" | cut -c 1-63 | awk '{print tolower($0)}')
+CLUSTER_FULLNAME=$(echo "$CLUSTER_FULLNAME" | cut -c 1-63 | awk '{print tolower($0)}')
 
 INFO "CLUSTER_FULLNAME is set for: $CLUSTER_FULLNAME"
 
