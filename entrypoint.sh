@@ -113,11 +113,27 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
     digitalocean)
 
         DEBUG "Cloud Provider: DigitalOcean. Initializing access variables"
+
         # Define DO credentials
         export DO_TOKEN_NAME=$CLOUD_USER
         export DIGITALOCEAN_TOKEN=$CLOUD_PASS
+
         # Define full cluster name
         set_cluster_fullname
+        # Define name for S3 bucket that would be user for terraform state
+        DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
+
+        # Create and init backend.
+        # Check if bucket already exist by trying to import it
+        do::init_spaces_bucket   "$cluster_cloud_region"
+
+        case $cluster_provisioner_type in
+        digitalocean-kubernetes)
+            DEBUG "Provisioner: digitalocean-kubernetes"
+
+        ;;
+        esac
+
 
         ;;
 
