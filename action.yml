@@ -7,10 +7,10 @@ inputs:
     required: true
     default: '.cluster.dev'
   cloud-user:
-    description: 'Cloud username or ID'
+    description: 'Cloud username or Access Token Name'
     required: true
   cloud-pass:
-    description: 'Cloud password or secret key'
+    description: 'Cloud password or Access Token'
     required: true
 outputs:
   status: # id of output
