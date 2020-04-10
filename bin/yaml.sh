@@ -86,7 +86,6 @@ function yaml::check_that_required_variables_exist {
         cluster_cloud_domain
         cluster_cloud_provider
         cluster_cloud_region
-        cluster_cloud_vpc
         cluster_name
         cluster_provisioner_instanceType
         cluster_provisioner_type
