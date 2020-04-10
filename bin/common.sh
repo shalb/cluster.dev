@@ -13,16 +13,11 @@ source "$PRJ_ROOT"/bin/logging.sh
 #   Writes software versions
 #######################################
 function output_software_info {
-    DEBUG "Writes information about used software"
-    INFO "Software installed information:"
-    INFO "Helm"
-    helmfile -v
-    INFO "kubectl"
-    kubectl version --client
-    INFO "git"
-    git --version
-    INFO "AWS CLI"
-    aws --version
+    DEBUG "Software installed information:"
+    DEBUG "helm: $(helmfile -v)"
+    DEBUG "kubectl: $(kubectl version --client)"
+    DEBUG "git: $(git --version)"
+    DEBUG "AWS CLI: $(aws --version) "
 }
 
 #######################################
