@@ -14,7 +14,7 @@ on:
 jobs:
   deploy_cluster_job:
     runs-on: ubuntu-latest
-    name: CLUSTER.DEV
+    name: cluster.dev
     steps:
     # To use this repository's private action, you must check out the repository
     - name: Checkout Repo
