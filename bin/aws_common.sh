@@ -415,6 +415,15 @@ function aws::init_addons {
     INFO "Kubernetes Addons: Installing/Reconciling"
     run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan-addons"
 
+    local output
+    output=$(terraform output)
+    ARGOCD_ACCESS="ArgoCD Credentials:\n\
+${output//$'\n'/'\n'}" # newline characters shielding
+
+    NOTICE "$ARGOCD_ACCESS"
+
+    echo "::set-output name=argocd::${ARGOCD_ACCESS}"
+
     cd - >/dev/null || ERROR "Path not found"
 }
 

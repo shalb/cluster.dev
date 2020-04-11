@@ -1,5 +1,12 @@
 # Kubernetes Addons
 
+Module which installs and destroys in AWS-based Kubernetes clusters:
+
+ExternalDNS - using Helm chart
+CertManager - using kubectl
+Nginx-Ingress - using kubectl
+ArgoCD - using Helm chart
+
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
 
@@ -13,5 +20,8 @@
 
 | Name | Description |
 |------|-------------|
+| argocd\_pass |  |
+| argocd\_url |  |
+| argocd\_user |  |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

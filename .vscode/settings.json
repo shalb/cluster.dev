@@ -39,6 +39,7 @@
       "keystore",
       "kibana",
       "kubeconfig",
+      "kubectl",
       "kubernetes",
       "kustomize",
       "letsencrypt",
