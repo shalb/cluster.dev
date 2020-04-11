@@ -87,7 +87,7 @@ resource "null_resource" "nginx_ingress_install" {
 # Deploy ArgoCD
 ######################
 locals {
-  argocd_domain = "argocd.${var.cluster_cloud_domain}"
+  argocd_domain = "argocd.${var.cluster_fullname}.${var.cluster_cloud_domain}"
 }
 
 

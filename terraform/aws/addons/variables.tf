@@ -9,6 +9,12 @@ variable "cluster_cloud_domain" {
   default     = ""
 }
 
+variable "cluster_fullname" {
+  type        = string
+  description = "Full cluster name including user/organization"
+  default     = ""
+}
+
 variable "config_path" {
   type        = string
   description = "path to a kubernetes config file"
