@@ -409,7 +409,7 @@ function aws::init_addons {
     run_cmd "terraform plan \
                 -var='aws_region=$cluster_cloud_region' \
                 -var='cluster_cloud_domain=$cluster_cloud_domain' \
-                -var='cluster_fullname=$CLUSTER_FULLNAME'
+                -var='cluster_fullname=$CLUSTER_FULLNAME' \
                 -input=false \
                 -out=tfplan-addons"
 
