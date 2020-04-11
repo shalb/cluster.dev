@@ -135,23 +135,23 @@ resource "helm_release" "argo-cd" {
   ]
   set {
     name  = "server.certificate.domain"
-    value = var.argocd_domain
+    value = local.argocd_domain
   }
   set {
     name  = "server.ingress.annotations.\"cluster\\.dev/domain\""
-    value = var.argocd_domain
+    value = local.argocd_domain
   }
   set {
     name  = "server.ingress.hosts[0]"
-    value = var.argocd_domain
+    value = local.argocd_domain
   }
   set {
     name  = "server.ingress.tls[0].hosts[0]"
-    value = var.argocd_domain
+    value = local.argocd_domain
   }
   set {
     name  = "server.config.url"
-    value = "https://${var.argocd_domain}"
+    value = "https://${local.argocd_domain}"
   }
   set {
     name  = "configs.secret.argocdServerAdminPassword"
