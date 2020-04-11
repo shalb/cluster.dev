@@ -14,7 +14,7 @@ on:
 jobs:
   deploy_cluster_job:
     runs-on: ubuntu-latest
-    name: Deploy and Update K8s Clusters
+    name: CLUSTER.DEV
     steps:
     # To use this repository's private action, you must check out the repository
     - name: Checkout Repo
