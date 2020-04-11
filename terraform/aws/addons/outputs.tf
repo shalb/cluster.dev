@@ -1,7 +1,3 @@
-locals {
-  argocd_domain = "argocd.${var.cluster_cloud_domain}"
-}
-
 output "argocd_url" {
   value = "https://${local.argocd_domain}"
 }
