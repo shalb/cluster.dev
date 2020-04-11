@@ -1,5 +1,9 @@
+locals {
+  argocd_domain = "argocd.${var.cluster_cloud_domain}"
+}
+
 output "argocd_url" {
-  value = "https://${var.argocd_domain}"
+  value = "https://${local.argocd_domain}"
 }
 
 output "argocd_user" {

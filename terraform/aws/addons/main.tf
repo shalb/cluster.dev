@@ -87,7 +87,6 @@ resource "null_resource" "nginx_ingress_install" {
 # Deploy ArgoCD
 ######################
 locals {
-  # Ids for multiple sets of EC2 instances, merged together
   argocd_domain = "argocd.${var.cluster_cloud_domain}"
 }
 
