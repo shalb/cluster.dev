@@ -13,22 +13,18 @@ on:
       - master
 jobs:
   deploy_cluster_job:
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
+      CLUSTER_CONFIG_PATH: "./.cluster.dev/"
+      VERBOSE_LVL: DEBUG
     runs-on: ubuntu-latest
     name: Cluster.dev
     steps:
-    # To use this repository's private action, you must check out the repository
     - name: Checkout Repo
       uses: actions/checkout@v2
-    # - uses: ./ # Uses an action in the root directory
     - name: Reconcile Clusters
       id: reconcile
       uses: shalb/cluster.dev@master
-      with:
-        cluster-config: './.cluster.dev/minikube-one.yaml'
-    # Use the output from the `reconcile` step
     - name: Get the Cluster Credentials
       run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
-env:
-  VERBOSE_LVL: DEBUG
-  AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
