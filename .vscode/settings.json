@@ -63,6 +63,7 @@
       "rsa",
       "shalb",
       "shellcheck",
+      "source",
       "submodules",
       "sysctl",
       "tfplan",
