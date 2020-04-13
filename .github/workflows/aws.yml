@@ -25,8 +25,10 @@ jobs:
       uses: shalb/cluster.dev@master
       with:
         cluster-config: './.cluster.dev/minikube-one.yaml'
-        cloud-user: ${{ secrets.aws_access_key_id }}
-        cloud-pass: ${{ secrets.aws_secret_access_key }}
     # Use the output from the `reconcile` step
     - name: Get the Cluster Credentials
       run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
+env:
+  VERBOSE_LVL: DEBUG
+  AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}

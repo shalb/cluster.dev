@@ -12,8 +12,6 @@ source "$PRJ_ROOT"/bin/argocd.sh
 
 # Mandatory variables passed to container by config
 readonly CLUSTER_CONFIG_PATH=$1
-readonly CLOUD_USER=$2
-readonly CLOUD_PASS=$3
 
 # Detect Git hosting and set: GIT_PROVIDER, GIT_REPO_NAME, GIT_REPO_ROOT, CLUSTER_FULLNAME constants
 detect_git_provider
@@ -22,8 +20,7 @@ detect_git_provider
 #                                    MAIN                                     #
 # =========================================================================== #
 
-DEBUG "Starting job in repo: $GIT_REPO_NAME with arguments  \
-    CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, CLOUD_USER: $CLOUD_USER"
+DEBUG "Starting job in repo: $GIT_REPO_NAME with arguments CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH"
 
 # Writes information about used software
 output_software_info
@@ -49,9 +46,10 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
     aws)
 
         DEBUG "Cloud Provider: AWS. Initializing access variables"
-        # Define AWS credentials
-        export AWS_ACCESS_KEY_ID=$CLOUD_USER
-        export AWS_SECRET_ACCESS_KEY=$CLOUD_PASS
+        # Define AWS credentials from ENV VARIABLES passed to container
+        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
         # Define full cluster name
         set_cluster_fullname
         # Define name for S3 bucket that would be user for terraform state
@@ -111,9 +109,10 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
         DEBUG "Cloud Provider: DigitalOcean. Initializing access variables"
 
-        # Define DO credentials
-        export DO_TOKEN_NAME=$CLOUD_USER
-        export DIGITALOCEAN_TOKEN=$CLOUD_PASS
+        # Define DO credentials from ENV VARIABLES passed to container
+        export DIGITALOCEAN_TOKEN
+        export SPACES_ACCESS_KEY_ID
+        export SPACES_SECRET_ACCESS_KEY
 
         # Define full cluster name
         set_cluster_fullname
