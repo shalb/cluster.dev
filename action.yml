@@ -20,8 +20,6 @@ runs:
   image: 'Dockerfile'
   args:
     - ${{ inputs.cluster-config }}
-    - ${{ inputs.cloud-user }}
-    - ${{ inputs.cloud-pass }}
 branding:
     icon: 'server'
     color: 'green'
