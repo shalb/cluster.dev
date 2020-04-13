@@ -20,8 +20,7 @@ detect_git_provider
 #                                    MAIN                                     #
 # =========================================================================== #
 
-DEBUG "Starting job in repo: $GIT_REPO_NAME with arguments \
-        CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH, and USER: ${AWS_ACCESS_KEY_ID}"
+DEBUG "Starting job in repo: $GIT_REPO_NAME, CLUSTER_CONFIG_PATH: $CLUSTER_CONFIG_PATH"
 
 # Writes information about used software
 output_software_info
