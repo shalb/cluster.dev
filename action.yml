@@ -1,12 +1,15 @@
 # action.yml
-name: 'Cluster.dev Kubernetes GitOps infrastructure with ArgoCD'
-description: 'Kubernetes cluster created by Terraform from simple manifest and managed apps in GitOps way with ArgoCD'
+name: 'Cluster.dev - Deploy Kubernetes'
+description: 'Create Kubernetes Cluster in public cloud with simple manifest backed with Terraform. Manage apps in GitOps way with ArgoCD'
 outputs:
-  status: # id of output
+  status:
     description: 'An status for the job'
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  env:
+    AWS_ACCESS_KEY_ID: ""
+    AWS_SECRET_ACCESS_KEY: ""
 branding:
     icon: 'upload-cloud'
     color: 'purple'
