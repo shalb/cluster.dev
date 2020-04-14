@@ -54,3 +54,30 @@ function digitalocean::is_do_spaces_bucket_exists {
     terraform import -var="region=$cluster_cloud_region" -var="do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET" digitalocean_spaces_bucket.terraform_state "$DO_SPACES_BACKEND_BUCKET","$cluster_cloud_region" >/dev/null 2>&1
     return $?
 }
+
+#######################################
+# Destroy DO Spaces bucket for Terraform states
+# Globals:
+#   DO_SPACES_BACKEND_BUCKET
+# Arguments:
+#   cluster_cloud_region
+# Outputs:
+#   Writes progress status
+#######################################
+function digitalocean::destroy_do_spaces_bucket {
+    DEBUG "Destroy existing DO Spaces bucket for Terraform states. Bucket name: '${DO_SPACES_BACKEND_BUCKET}'"
+    INFO "Destroying DO Spaces bucket for Terraform states."
+    local cluster_cloud_region=$1
+    run_cmd "s3cmd rb \"s3://${DO_SPACES_BACKEND_BUCKET}\" --force"
+}
+
+# Destroy all cluster.
+function digitalocean::destroy {
+        case $cluster_provisioner_type in
+        digitalocean-kubernetes)
+            DEBUG "Destroy: Provisioner: DigitalOcean Kubernetes"
+            digitalocean::destroy_do_spaces_bucket "$cluster_cloud_region"
+        ;;
+        # end of digitalocean kubernetes
+        esac
+}

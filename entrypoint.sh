@@ -110,6 +110,9 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         export DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
         export SPACES_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
         export SPACES_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
+        # s3cmd DO remove bucket ENV VARIABLES
+        export AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
+        export AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
 
         # Define full cluster name
         set_cluster_fullname
