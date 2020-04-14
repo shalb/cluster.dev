@@ -1,14 +1,7 @@
 on:
   push:
     paths:
-      - 'entrypoint.sh'
-      - 'bin/**'
-      - 'terraform/**'
-      - 'kubernetes/apps/**'
-      - 'Dockerfile'
-      - '.github/workflows/**'
-      - '.cluster.dev/**'
-      - 'action.yaml'
+      - '.cluster.dev/aws-minikube.yaml'
     branches:
       - master
 jobs:
