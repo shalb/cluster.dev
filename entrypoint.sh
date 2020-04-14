@@ -108,16 +108,15 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
     digitalocean)
 
         DEBUG "Cloud Provider: DigitalOcean. Initializing access variables"
-
         # Define DO credentials from ENV VARIABLES passed to container
-        export DIGITALOCEAN_TOKEN
-        export SPACES_ACCESS_KEY_ID
-        export SPACES_SECRET_ACCESS_KEY
+        export DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
+        export SPACES_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
+        export SPACES_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
 
         # Define full cluster name
         set_cluster_fullname
         # Define name for S3 bucket that would be user for terraform state
-        DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
+        export DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
         # Create and init backend.
         # Check if bucket already exist by trying to import it
