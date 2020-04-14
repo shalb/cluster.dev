@@ -1,6 +1,6 @@
 cluster:
   installed: false
-  name: minikube-five
+  name: minikube-dev
   cloud:
     provider: aws
     region: eu-central-1

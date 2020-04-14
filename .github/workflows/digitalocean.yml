@@ -6,11 +6,6 @@ on:
       - master
 jobs:
   deploy_cluster_job:
-    env:
-      DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
-      SPACES_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY_ID }}
-      SPACES_SECRET_ACCESS_KEY:  ${{ secrets.SPACES_SECRET_ACCESS_KEY }}
-      CLUSTER_CONFIG_PATH: "./.cluster.dev/digitalocean-k8s.yaml"
     runs-on: ubuntu-latest
     name: Deploy and Update K8s Clusters
     steps:
@@ -19,6 +14,11 @@ jobs:
     - name: Reconcile Clusters
       id: reconcile
       uses: shalb/cluster.dev@master
+      env:
+        DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+        SPACES_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY_ID }}
+        SPACES_SECRET_ACCESS_KEY:  ${{ secrets.SPACES_SECRET_ACCESS_KEY }}
+        CLUSTER_CONFIG_PATH: "./.cluster.dev/digitalocean-k8s.yaml"
     - name: Get the Cluster Credentials
       run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
 
