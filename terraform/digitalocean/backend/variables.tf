@@ -7,8 +7,3 @@ variable "region" {
   type = string
   description = "(Required) Region for Spaces DO terraform backend"
 }
-
-variable "do_token" {
-  type        = string
-  description = "Digital Ocean personal access token."
-}
