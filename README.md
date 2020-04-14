@@ -89,8 +89,8 @@ Required Managed policies: _AmazonEC2FullAccess, AmazonS3FullAccess, AmazonRoute
 Resulting access pair should look like:
 
 ```yaml
-aws_access_key_id = ATIAAJSXDBUVOQ4JR
-aws_secret_access_key = SuperAwsSecret
+AWS_ACCESS_KEY_ID = ATIAAJSXDBUVOQ4JR
+AWS_SECRET_ACCESS_KEY = SuperAwsSecret
 ```
 
 
