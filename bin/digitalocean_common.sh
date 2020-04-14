@@ -4,7 +4,7 @@
 source "$PRJ_ROOT"/bin/logging.sh
 
 #######################################
-# Create or use exiting S3 bucket for Terraform states
+# Create or use exiting DO Spaces bucket for Terraform states
 # Globals:
 #   DO_SPACES_BACKEND_BUCKET
 # Arguments:
