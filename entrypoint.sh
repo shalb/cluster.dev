@@ -6,6 +6,7 @@ source "$PRJ_ROOT"/bin/yaml.sh # provides parse_yaml and create_variables
 source "$PRJ_ROOT"/bin/logging.sh # PSR-3 compliant logging
 source "$PRJ_ROOT"/bin/common.sh
 source "$PRJ_ROOT"/bin/aws_common.sh
+source "$PRJ_ROOT"/bin/digitalocean_common.sh
 source "$PRJ_ROOT"/bin/aws_minikube.sh
 source "$PRJ_ROOT"/bin/argocd.sh
 
@@ -117,7 +118,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
         # Create and init backend.
         # Check if bucket already exist by trying to import it
-        do::init_spaces_bucket   "$cluster_cloud_region"
+        digitalocean::init_do_spaces_bucket  "$cluster_cloud_region"
 
         case $cluster_provisioner_type in
         digitalocean-kubernetes)

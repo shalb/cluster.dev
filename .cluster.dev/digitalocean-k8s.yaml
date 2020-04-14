@@ -3,12 +3,12 @@ cluster:
   name: do-test
   cloud:
     provider: do
-    region: fra-1
+    region: fra1
     project: default
     domain: do.cluster.dev
   provisioner:
     type: digitalocean-kubernetes
-    version: v1.16-do.1
+    version: 1.16
     nodeCount: 3
     nodeSize: s-1vcpu-2gb
     enable_autoscaling: true
