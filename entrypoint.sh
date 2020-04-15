@@ -124,7 +124,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         digitalocean::init_do_spaces_bucket  "$cluster_cloud_region"
 
         case $cluster_provisioner_type in
-        digitalocean-kubernetes)
+        managed-kubernetes)
             DEBUG "Provisioner: digitalocean-kubernetes"
 
         ;;

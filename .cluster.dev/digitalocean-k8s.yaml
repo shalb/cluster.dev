@@ -6,14 +6,14 @@ cluster:
     region: fra1
     project: default
     domain: do.cluster.dev
-  provisioner:
-    type: digitalocean-kubernetes
-    version: 1.16
-    nodeCount: 3
-    nodeSize: s-1vcpu-2gb
-    enable_autoscaling: true
-    min_node_count: 1
-    max_node_count: 1
+    provisioner:
+      type: managed-kubernetes
+      version: 1.16
+      nodeCount: 3
+      nodeSize: s-1vcpu-2gb
+      enable_autoscaling: true
+      min_node_count: 1
+      max_node_count: 5
   addons:
     nginx-ingress: true
     cert-manager: true
