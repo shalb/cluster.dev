@@ -1,3 +1,7 @@
+data "digitalocean_kubernetes_versions" "k8s" {
+  version_prefix = "${var.version}."
+}
+
 resource "digitalocean_kubernetes_cluster" "k8s" {
   count   = var.enable_autoscaling ? 0 : 1
   name    = var.name
