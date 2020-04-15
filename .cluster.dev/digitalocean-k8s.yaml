@@ -12,8 +12,8 @@ cluster:
     nodeCount: 3
     nodeSize: s-1vcpu-2gb
     enable_autoscaling: true
-    min_node_count: 3
-    max_node_count: 5
+    min_node_count: 1
+    max_node_count: 1
   addons:
     nginx-ingress: true
     cert-manager: true
