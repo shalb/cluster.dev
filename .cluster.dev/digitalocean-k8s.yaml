@@ -2,7 +2,7 @@ cluster:
   installed: false
   name: do-test
   cloud:
-    provider: do
+    provider: digitalocean
     region: fra1
     project: default
     domain: do.cluster.dev
