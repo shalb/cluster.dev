@@ -6,7 +6,7 @@ terraform {
     skip_get_ec2_platforms      = true
     skip_metadata_api_check     = true
   }
-  
+
   required_providers {
     digitalocean = "~> 1.16.0"
   }

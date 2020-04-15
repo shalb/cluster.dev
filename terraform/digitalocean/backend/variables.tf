@@ -4,6 +4,6 @@ variable "do_spaces_backend_bucket" {
 }
 
 variable "region" {
-  type = string
+  type        = string
   description = "(Required) Region for Spaces DO terraform backend"
 }

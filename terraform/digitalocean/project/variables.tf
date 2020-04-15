@@ -1,7 +1,7 @@
 variable "description" {
   type        = string
   description = "A description for this project"
-  default = ""
+  default     = ""
 }
 
 variable "resources" {
@@ -28,5 +28,5 @@ variable "name" {
 variable "purpose" {
   type        = string
   description = "The purpose for your project. (for example: k8s or any), default - Web Application"
-  default = "Web Application"
+  default     = "Web Application"
 }

@@ -10,14 +10,14 @@ variable "name" {
 }
 
 variable "region" {
-  type = string
+  type        = string
   description = "(Required) Provide DigitalOcean region"
 }
 
 variable "version" {
-  type = string
+  type        = string
   description = "Provide DigitalOcean Kubernetes minor version (e.g. '1.16' or '1.15')"
-  default = "1.16"
+  default     = "1.16"
 }
 
 variable "node_type" {
