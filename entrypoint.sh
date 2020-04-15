@@ -111,13 +111,13 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         export SPACES_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
         export SPACES_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
         # s3cmd DO remove bucket ENV VARIABLES
-        export AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
-        export AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
+        AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
+        AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
 
         # Define full cluster name
         set_cluster_fullname
         # Define name for S3 bucket that would be user for terraform state
-        export DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
+        DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
         # Create and init backend.
         # Check if bucket already exist by trying to import it
