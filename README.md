@@ -12,6 +12,7 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 
 * [Principle diagram](#principle-diagram-)
 * [How it works](#how-it-works-)
+* [Configuration options](/docs/OPTIONS.md)
 * [Installation](#installation-)
   * [Quick Start on AWS](#quick-start-on-aws-)
   * [Cleanup](#cleanup-)
@@ -75,41 +76,41 @@ _normally it takes 15 minutes_
 This repo will host code for your clusters, deployments, applications and other resources.  
 Clone the repo locally:
 
-```bash
-$ git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
-$ cd YOUR-REPOSITORY
-```
+    ```bash
+    $ git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
+    $ cd YOUR-REPOSITORY
+    ```
 
-**Next steps** should be done in that repo.
+**Next steps** should be done inside that repo.
 
 2. Create new user with limited access.  
 Watch [video example](https://www.youtube.com/watch?v=ALF1Ku2lYys) to create user and apply [policy](install/aws_policy.json).  
 If you need more information about AWS users - please check [aws documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console) for details.  
 
-Resulting access pair should look like:
+    Resulting access pair should look like:
 
-```yaml
-AWS_ACCESS_KEY_ID = ATIAAJSXDBUVOQ4JR
-AWS_SECRET_ACCESS_KEY = SuperAwsSecret
-```
+    ```yaml
+    AWS_ACCESS_KEY_ID = ATIAAJSXDBUVOQ4JR
+    AWS_SECRET_ACCESS_KEY = SuperAwsSecret
+    ```
 
 
 3. Add credentials to you repo Secrets under GitHub's repo setting: `Settings → Secrets`:  
 
- ![GitHub Secrets](docs/images/gh-secrets.png)
+    ![GitHub Secrets](docs/images/gh-secrets.png)
 
 4. In your repo, create a Github Workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and  
  cluster.dev example manifest: [.cluster.dev/aws-minikube.yaml](.cluster.dev/aws-minikube.yaml) with cluster definition.
 
-_Or download example files to your local repo clone using the next commands:_
+    _Or download example files to your local repo clone using the next commands:_
 
 
-```bash
-# Sample with Minikube cluster
-export RELEASE=v0.1.5
-mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml"
-mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
-```
+    ```bash
+    # Sample with Minikube cluster
+    export RELEASE=v0.1.5
+    mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml"
+    mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
+    ```
 
 5. In cluster definition yaml you should set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).
 
@@ -118,26 +119,26 @@ Leave github workflow file as is.
 
 7. Copy sample ArgoCD applications from [/kubernetes/apps/samples](https://github.com/shalb/cluster.dev/tree/master/kubernetes/apps/samples) and Helm chart samples from [/kubernetes/charts/wordpress](https://github.com/shalb/cluster.dev/tree/master/kubernetes/charts/wordpress) to the same paths into your repo.
 
-_Or download application samples directly to local repo clone with commands:_
+    _Or download application samples directly to local repo clone with commands:_
 
-```bash
-export RELEASE=v0.1.5
-# Create directory and place ArgoCD applications inside
-mkdir -p kubernetes/apps/samples && wget -O kubernetes/apps/samples/helm-all-in-app.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-all-in-app.yaml"
-wget -O kubernetes/apps/samples/helm-dependency.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-dependency.yaml"
-wget -O kubernetes/apps/samples/raw-manifest.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/raw-manifest.yaml"
-# Download sample chart which with own values.yaml
-mkdir -p kubernetes/charts/wordpress && wget -O kubernetes/charts/wordpress/Chart.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/charts/wordpress/Chart.yaml"
-wget -O kubernetes/charts/wordpress/requirements.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/charts/wordpress/requirements.yaml"
-wget -O kubernetes/charts/wordpress/values.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/charts/wordpress/values.yaml"
-```
+    ```bash
+    export RELEASE=v0.1.5
+    # Create directory and place ArgoCD applications inside
+    mkdir -p kubernetes/apps/samples && wget -O kubernetes/apps/samples/helm-all-in-app.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-all-in-app.yaml"
+    wget -O kubernetes/apps/samples/helm-dependency.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-dependency.yaml"
+    wget -O kubernetes/apps/samples/raw-manifest.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/raw-manifest.yaml"
+    # Download sample chart which with own values.yaml
+    mkdir -p kubernetes/charts/wordpress && wget -O kubernetes/charts/wordpress/Chart.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/charts/wordpress/Chart.yaml"
+    wget -O kubernetes/charts/wordpress/requirements.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/charts/wordpress/requirements.yaml"
+    wget -O kubernetes/charts/wordpress/values.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/charts/wordpress/values.yaml"
+    ```
 
-Define path to ArgoCD apps in cluster manifest:
+    Define path to ArgoCD apps in cluster manifest:
 
-```yaml
-  apps:
-    - /kubernetes/apps/samples
-```
+    ```yaml
+      apps:
+        - /kubernetes/apps/samples
+    ```
 
 8. Commit and Push files to your repo and follow the Github Action execution status.  
 In GitHub action output you'll receive access instructions to your cluster and services:  
