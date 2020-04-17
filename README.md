@@ -36,7 +36,8 @@ cluster:
     region: eu-central-1
     vpc: default
     domain: cluster.dev
-    provisioner:      type: minikube
+    provisioner:
+      type: minikube
       instanceType: m5.large
   modules:
     nginx-ingress: true
