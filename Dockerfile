@@ -8,6 +8,9 @@ FROM chatwork/helmfile:0.106.3
 
 COPY --from=terraform /bin/terraform /bin/terraform
 
+### Install s3cmd
+RUN pip3 install --no-cache-dir --upgrade s3cmd
+
 ENV PRJ_ROOT /app
 WORKDIR $PRJ_ROOT
 # Look on .dockerignore file to check what included

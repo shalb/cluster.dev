@@ -36,9 +36,9 @@ cluster:
     region: eu-central-1
     vpc: default
     domain: cluster.dev
-  provisioner:
-    type: minikube
-    instanceType: m5.large
+    provisioner:
+      type: minikube
+      instanceType: m5.large
   modules:
     nginx-ingress: true
     cert-manager: true
@@ -89,16 +89,17 @@ Required Managed policies: _AmazonEC2FullAccess, AmazonS3FullAccess, AmazonRoute
 Resulting access pair should look like:
 
 ```yaml
-aws_access_key_id = ATIAAJSXDBUVOQ4JR
-aws_secret_access_key = SuperAwsSecret
+AWS_ACCESS_KEY_ID = ATIAAJSXDBUVOQ4JR
+AWS_SECRET_ACCESS_KEY = SuperAwsSecret
 ```
 
 
-3. Add credentials to you repo Secrets under GitHub's repo setting: `Settings → Secrets`:
+3. Add credentials to you repo Secrets under GitHub's repo setting: `Settings → Secrets`:  
+
  ![GitHub Secrets](docs/images/gh-secrets.png)
 
 4. In your repo, create a Github Workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and  
- cluster.dev example manifest: [.cluster.dev/minikube-one.yaml](.cluster.dev/minikube-one.yaml) with cluster definition.
+ cluster.dev example manifest: [.cluster.dev/aws-minikube.yaml](.cluster.dev/aws-minikube.yaml) with cluster definition.
 
 _Or download example files to your local repo clone using the next commands:_
 
@@ -107,7 +108,7 @@ _Or download example files to your local repo clone using the next commands:_
 # Sample with Minikube cluster
 export RELEASE=v0.1.5
 mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml"
-mkdir -p .cluster.dev/ && wget -O .cluster.dev/minikube-one.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
+mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
 ```
 
 5. In cluster definition yaml you should set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).

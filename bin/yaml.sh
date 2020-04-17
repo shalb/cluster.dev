@@ -82,14 +82,13 @@ function yaml::create_variables {
 #######################################
 function yaml::check_that_required_variables_exist {
     local file_path=$1
+    # TODO: Add cloud provider support for required values
     arr=(
         cluster_cloud_domain
         cluster_cloud_provider
         cluster_cloud_region
-        cluster_cloud_vpc
         cluster_name
-        cluster_provisioner_instanceType
-        cluster_provisioner_type
+        cluster_cloud_provisioner_type
     )
     local required_vars=("${2:-${arr[@]}}")
 

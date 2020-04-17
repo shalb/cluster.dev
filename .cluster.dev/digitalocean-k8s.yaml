@@ -1,0 +1,21 @@
+cluster:
+  installed: false
+  name: do-test
+  cloud:
+    provider: digitalocean
+    region: fra1
+    project: default
+    domain: do.cluster.dev
+    provisioner:
+      type: managed-kubernetes
+      version: 1.16
+      nodeCount: 3
+      nodeSize: s-1vcpu-2gb
+      autoScale: true
+      minNodes: 1
+      maxNodes: 5
+  addons:
+    nginx-ingress: true
+    cert-manager: true
+  apps:
+    - /kubernetes/apps/samples

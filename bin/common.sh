@@ -13,16 +13,11 @@ source "$PRJ_ROOT"/bin/logging.sh
 #   Writes software versions
 #######################################
 function output_software_info {
-    DEBUG "Writes information about used software"
-    INFO "Software installed information:"
-    INFO "Helm"
-    helmfile -v
-    INFO "kubectl"
-    kubectl version --client
-    INFO "git"
-    git --version
-    INFO "AWS CLI"
-    aws --version
+    DEBUG "Software installed information:"
+    DEBUG "helm: $(helmfile -v)"
+    DEBUG "kubectl: $(kubectl version --client)"
+    DEBUG "git: $(git --version)"
+    DEBUG "AWS CLI: $(aws --version) "
 }
 
 #######################################
@@ -80,4 +75,32 @@ fi
 INFO "GIT_PROVIDER is set for: $GIT_PROVIDER"
 INFO "GIT_REPO_NAME is set for: $GIT_REPO_NAME"
 INFO "GIT_REPO_ROOT is set for: $GIT_REPO_ROOT"
+}
+
+
+#######################################
+# Generate a unique name for particular cluster domains, state bucketes, etc..
+# Globals:
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_name - from yaml file
+#   GIT_REPO_NAME - from provider detection
+# Outputs:
+#   CLUSTER_FULLNAME - naming for state buckets and other unique names
+#######################################
+
+function set_cluster_fullname {
+
+local cluster_name=$1
+local git_repo_name=$2
+local CLUSTER_FULLNAME=""
+
+# Define CLUSTER_FULLNAME which will be used in state files
+CLUSTER_FULLNAME=$cluster_name-$(echo "$git_repo_name" | awk -F "/" '{print$1}')
+# make sure it is not larger than 63 symbols and lowercase
+CLUSTER_FULLNAME=$(echo "$CLUSTER_FULLNAME" | cut -c 1-63 | awk '{print tolower($0)}')
+
+INFO "CLUSTER_FULLNAME is set for: $CLUSTER_FULLNAME"
+# shellcheck disable=SC2034
+FUNC_RESULT="${CLUSTER_FULLNAME}"
 }

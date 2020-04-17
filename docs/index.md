@@ -42,9 +42,9 @@ cluster:
     region: eu-central-1
     vpc: default
     domain: shalb.net
-  provisioner:
-    type: minikube
-    instanceType: m5.large
+    provisioner:
+      type: minikube
+      instanceType: m5.large
 ```
 
 You can find the complete sample in our [GitHub Repo/Quick Start](https://github.com/shalb/cluster.dev#quick-start)

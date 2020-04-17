@@ -1,7 +1,5 @@
 terraform {
-  backend "s3" {}
-
   required_providers {
-    helm = "~> 1.0"
+    digitalocean = "~> 1.16.0"
   }
 }

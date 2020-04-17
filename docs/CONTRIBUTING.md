@@ -8,6 +8,8 @@ permalink: /contributing/
 
 If you plan to make some big changes, please look over our [style guide requirements](https://github.com/shalb/cluster.dev/blob/master/docs/style-guide.md) first.
 
+If you adding additional Cloud Provider or Kubernetes Provisioner, see [add-provider-provisioner.md](add-provider-provisioner.md)
+
 ## How to contribute
 
 1. Create an issue that you are going to address in [GH Issues](https://github.com/shalb/cluster.dev/issues), for example issue `#3`.
@@ -27,9 +29,9 @@ cluster:
     region: eu-central-1
     vpc: default
     domain: shalb.net
-  provisioner:
-    type: minikube
-    instanceType: m5.large
+    provisioner:
+      type: minikube
+      instanceType: m5.large
 ```
 
 4. Create a new workflow in `.github/workflows` and name it corresponding to your issue: `gh-3.yaml`.  

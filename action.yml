@@ -1,27 +1,15 @@
 # action.yml
-name: 'Cluster.dev Kubernetes GitOps infrastructure with ArgoCD'
-description: 'Kubernetes cluster created by Terraform from simple manifest and managed apps in GitOps way with ArgoCD'
-inputs:
-  cluster-config:  # id of input
-    description: 'Path for cluster config/s file or directory'
-    required: true
-    default: '.cluster.dev'
-  cloud-user:
-    description: 'Cloud username or ID'
-    required: true
-  cloud-pass:
-    description: 'Cloud password or secret key'
-    required: true
+name: 'Cluster.dev - Deploy Kubernetes'
+description: 'Create Kubernetes Cluster in public cloud with simple manifest backed with Terraform. Manage apps in GitOps way with ArgoCD'
 outputs:
-  status: # id of output
+  status:
     description: 'An status for the job'
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  args:
-    - ${{ inputs.cluster-config }}
-    - ${{ inputs.cloud-user }}
-    - ${{ inputs.cloud-pass }}
+  env:
+    AWS_ACCESS_KEY_ID: ""
+    AWS_SECRET_ACCESS_KEY: ""
 branding:
-    icon: 'server'
-    color: 'green'
+    icon: 'upload-cloud'
+    color: 'purple'

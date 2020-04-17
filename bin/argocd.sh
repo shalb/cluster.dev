@@ -26,4 +26,6 @@ function argocd::deploy_apps {
 
     #TODO: enable deletion from ArgoCD application that are installed but not mentioned in target folders manifests
 
+    # Clean variables from previus cluster yaml parsing
+    unset cluster_apps
 }

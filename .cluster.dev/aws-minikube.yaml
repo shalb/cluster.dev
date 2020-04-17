@@ -1,0 +1,18 @@
+cluster:
+  installed: false
+  name: minikube-dev
+  cloud:
+    provider: aws
+    region: eu-central-1
+    vpc: default
+    domain: cluster.dev
+    provisioner:
+      type: minikube
+      instanceType: m5.large
+  addons:
+    nginx-ingress: true
+    cert-manager: true
+  apps:
+    - /kubernetes/apps/samples
+
+

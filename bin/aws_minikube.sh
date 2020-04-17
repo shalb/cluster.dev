@@ -58,7 +58,7 @@ function aws::minikube::pull_kubeconfig_once {
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
-#   cluster_provisioner_instanceType
+#   cluster_cloud_provisioner_instanceType
 #   cluster_cloud_domain
 #   cluster_cloud_vpc_id
 # Outputs:
@@ -68,7 +68,7 @@ function aws::minikube::deploy_cluster {
     DEBUG "Deploy Minikube cluster via Terraform"
     local cluster_name=$1
     local cluster_cloud_region=$2
-    local cluster_provisioner_instanceType=$3
+    local cluster_cloud_provisioner_instanceType=$3
     local cluster_cloud_domain=$4
     local cluster_cloud_vpc_id=$5
 
@@ -85,7 +85,7 @@ function aws::minikube::deploy_cluster {
     run_cmd "terraform plan \
                 -var='region=$cluster_cloud_region' \
                 -var='cluster_name=$CLUSTER_FULLNAME' \
-                -var='aws_instance_type=$cluster_provisioner_instanceType' \
+                -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
                 -var='hosted_zone=$cluster_cloud_domain' \
                 -var='vpc_id=$cluster_cloud_vpc_id' \
                 -input=false \
@@ -105,7 +105,7 @@ function aws::minikube::deploy_cluster {
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
-#   cluster_provisioner_instanceType
+#   cluster_cloud_provisioner_instanceType
 #   cluster_cloud_domain
 # Outputs:
 #   Writes progress status
@@ -114,7 +114,7 @@ function aws::minikube::destroy_cluster {
     DEBUG "Destroy Minikube cluster via Terraform"
     local cluster_name=$1
     local cluster_cloud_region=$2
-    local cluster_provisioner_instanceType=$3
+    local cluster_cloud_provisioner_instanceType=$3
     local cluster_cloud_domain=$4
 
     cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
@@ -131,7 +131,7 @@ function aws::minikube::destroy_cluster {
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='region=$cluster_cloud_region' \
                 -var='cluster_name=$CLUSTER_FULLNAME' \
-                -var='aws_instance_type=$cluster_provisioner_instanceType' \
+                -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
                 -var='hosted_zone=$cluster_cloud_domain'"
 
     cd - >/dev/null || ERROR "Path not found"

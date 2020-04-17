@@ -243,85 +243,6 @@ function aws::destroy_vpc {
 }
 
 #######################################
-# Deploy ArgoCD via Terraform
-# Globals:
-#   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
-# Arguments:
-#   cluster_name
-#   cluster_cloud_region
-#   cluster_cloud_domain
-# Outputs:
-#   Writes progress status
-#######################################
-function aws::init_argocd {
-    DEBUG "Deploy ArgoCD via Terraform"
-    local cluster_name=$1
-    local cluster_cloud_region=$2
-    local cluster_cloud_domain=$3
-
-    cd "$PRJ_ROOT"/terraform/aws/argocd/ || ERROR "Path not found"
-
-    INFO "ArgoCD: Init Terraform configuration"
-    run_cmd "terraform init \
-                -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform-argocd.state' \
-                -backend-config='region=$cluster_cloud_region'"
-
-    run_cmd "terraform plan \
-                -var='argo_domain=argo-$CLUSTER_FULLNAME.$cluster_cloud_domain' \
-                -input=false \
-                -out=tfplan-argocd"
-
-    INFO "ArgoCD: Installing/Reconciling"
-    run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan-argocd"
-
-    local output
-    output=$(terraform output)
-    ARGOCD_ACCESS="ArgoCD Credentials:\n\
-${output//$'\n'/'\n'}" # newline characters shielding
-
-    NOTICE "$ARGOCD_ACCESS"
-
-    echo "::set-output name=argocd::${ARGOCD_ACCESS}"
-
-    cd - >/dev/null || ERROR "Path not found"
-}
-
-#######################################
-# Destroy ArgoCD via Terraform
-# Globals:
-#   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
-# Arguments:
-#   cluster_name
-#   cluster_cloud_region
-#   cluster_cloud_domain
-# Outputs:
-#   Writes progress status
-#######################################
-function aws::destroy_argocd {
-    DEBUG "Destroy ArgoCD via Terraform"
-    local cluster_name=$1
-    local cluster_cloud_region=$2
-    local cluster_cloud_domain=$3
-
-    cd "$PRJ_ROOT"/terraform/aws/argocd/ || ERROR "Path not found"
-
-    INFO "ArgoCD: Init Terraform configuration"
-    run_cmd "terraform init \
-                -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform-argocd.state' \
-                -backend-config='region=$cluster_cloud_region'"
-
-    INFO "ArgoCD: Destroying"
-    run_cmd "terraform destroy -auto-approve -compact-warnings \
-                -var='argo_domain=argo-$CLUSTER_FULLNAME.$cluster_cloud_domain'"
-
-    cd - >/dev/null || ERROR "Path not found"
-}
-
-#######################################
 # Writes commands for user for get access to cluster
 # Globals:
 #   CLUSTER_FULLNAME
@@ -360,14 +281,13 @@ ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem ubuntu@$CLUSTER_FULLNAME.$cluster_c
 
 # Destroy all cluster.
 function aws::destroy {
-        case $cluster_provisioner_type in
+        case $cluster_cloud_provisioner_type in
         minikube)
             DEBUG "Destroy: Provisioner: Minikube"
             if aws::minikube::pull_kubeconfig_once; then
-                # aws::destroy_argocd "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
                 aws::destroy_addons "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
             fi
-            aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
+            aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain"
             # TODO: Remove kubeconfig after successful cluster destroy
             aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
             aws::destroy_route53 "$cluster_cloud_region" "$cluster_name" "$cluster_cloud_domain"
@@ -409,11 +329,21 @@ function aws::init_addons {
     run_cmd "terraform plan \
                 -var='aws_region=$cluster_cloud_region' \
                 -var='cluster_cloud_domain=$cluster_cloud_domain' \
+                -var='cluster_fullname=$CLUSTER_FULLNAME' \
                 -input=false \
                 -out=tfplan-addons"
 
     INFO "Kubernetes Addons: Installing/Reconciling"
     run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan-addons"
+
+    local output
+    output=$(terraform output)
+    ARGOCD_ACCESS="ArgoCD Credentials:\n\
+${output//$'\n'/'\n'}" # newline characters shielding
+
+    NOTICE "$ARGOCD_ACCESS"
+
+    echo "::set-output name=argocd::${ARGOCD_ACCESS}"
 
     cd - >/dev/null || ERROR "Path not found"
 }
