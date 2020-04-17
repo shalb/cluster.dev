@@ -99,7 +99,7 @@ AWS_SECRET_ACCESS_KEY = SuperAwsSecret
  ![GitHub Secrets](docs/images/gh-secrets.png)
 
 4. In your repo, create a Github Workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and  
- cluster.dev example manifest: [.cluster.dev/minikube-one.yaml](.cluster.dev/minikube-one.yaml) with cluster definition.
+ cluster.dev example manifest: [.cluster.dev/aws-minikube.yaml](.cluster.dev/aws-minikube.yaml) with cluster definition.
 
 _Or download example files to your local repo clone using the next commands:_
 
@@ -108,7 +108,7 @@ _Or download example files to your local repo clone using the next commands:_
 # Sample with Minikube cluster
 export RELEASE=v0.1.5
 mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml"
-mkdir -p .cluster.dev/ && wget -O .cluster.dev/minikube-one.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
+mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
 ```
 
 5. In cluster definition yaml you should set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).

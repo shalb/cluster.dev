@@ -3,7 +3,7 @@
 source ../bin/yaml.sh # provides parse_yaml and create_variables
 source ../bin/logging.sh # PSR-3 compliant logging
 
-CLUSTER_CONFIG_PATH='../.cluster.dev/minikube-one.yaml'
+CLUSTER_CONFIG_PATH='../.cluster.dev/aws-minikube.yaml'
 
 for CLUSTER_MANIFEST_FILE in $(find "$CLUSTER_CONFIG_PATH" -type f  || ERROR "Manifest file/folder can't be found" && exit 1 ); do
 
