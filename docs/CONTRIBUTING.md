@@ -29,9 +29,9 @@ cluster:
     region: eu-central-1
     vpc: default
     domain: shalb.net
-  provisioner:
-    type: minikube
-    instanceType: m5.large
+    provisioner:
+      type: minikube
+      instanceType: m5.large
 ```
 
 4. Create a new workflow in `.github/workflows` and name it corresponding to your issue: `gh-3.yaml`.  

@@ -7,9 +7,9 @@ cluster:
     vpc: default
     # You need a domain in Route53 account
     domain: shalb.net
-  provisioner:
-    type: minikube
-    instanceType: m5.large
+    provisioner:
+      type: minikube
+      instanceType: m5.large
   # 'apps' are actually directories in '/kubernetes/apps'
   # that contains ArgoCD project and application declarations
   apps:
