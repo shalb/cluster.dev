@@ -73,7 +73,7 @@ function digitalocean::destroy_do_spaces_bucket {
 
 # Destroy all cluster.
 function digitalocean::destroy {
-        case $cluster_provisioner_type in
+        case $cluster_cloud_provisioner_type in
         digitalocean-kubernetes)
             DEBUG "Destroy: Provisioner: DigitalOcean Kubernetes"
             digitalocean::destroy_do_spaces_bucket "$cluster_cloud_region"

@@ -88,7 +88,7 @@ function yaml::check_that_required_variables_exist {
         cluster_cloud_provider
         cluster_cloud_region
         cluster_name
-        cluster_provisioner_type
+        cluster_cloud_provisioner_type
     )
     local required_vars=("${2:-${arr[@]}}")
 

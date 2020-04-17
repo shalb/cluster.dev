@@ -77,12 +77,12 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
         # Provisioner selection
         #
-        case $cluster_provisioner_type in
+        case $cluster_cloud_provisioner_type in
         minikube)
             DEBUG "Provisioner: Minikube"
 
             # Deploy Minikube cluster via Terraform
-            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain" "$CLUSTER_VPC_ID"
+            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain" "$CLUSTER_VPC_ID"
 
             # Pull a kubeconfig to instance via kubectl
             aws::minikube::pull_kubeconfig
@@ -123,7 +123,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         # Check if bucket already exist by trying to import it
         digitalocean::init_do_spaces_bucket  "$cluster_cloud_region"
 
-        case $cluster_provisioner_type in
+        case $cluster_cloud_provisioner_type in
         managed-kubernetes)
             DEBUG "Provisioner: digitalocean-kubernetes"
 

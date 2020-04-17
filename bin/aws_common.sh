@@ -281,13 +281,13 @@ ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem ubuntu@$CLUSTER_FULLNAME.$cluster_c
 
 # Destroy all cluster.
 function aws::destroy {
-        case $cluster_provisioner_type in
+        case $cluster_cloud_provisioner_type in
         minikube)
             DEBUG "Destroy: Provisioner: Minikube"
             if aws::minikube::pull_kubeconfig_once; then
                 aws::destroy_addons "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
             fi
-            aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_provisioner_instanceType" "$cluster_cloud_domain"
+            aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain"
             # TODO: Remove kubeconfig after successful cluster destroy
             aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
             aws::destroy_route53 "$cluster_cloud_region" "$cluster_name" "$cluster_cloud_domain"
