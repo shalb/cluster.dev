@@ -33,12 +33,12 @@ cluster:
 
 
 ## Cluster Provisioners
-### Amazon AWS
+### Amazon AWS Provisioners
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.type](#provisioner.type) | + | string | `minikube` | | Select provisioner to deploy cluster with.|
 
-#### minikube provisioner options
+#### AWS Minikube
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.instanceType](#provisioner.instanceType) | + | string | `m5.large` | | Single node Kubernetes cluster AWS EC2 instance type. |
@@ -46,10 +46,11 @@ cluster:
 ### DigitalOcean
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
-| [cloud.project](#cloud.project) | - | string | ex: `Staging` | `default` | DigitalOcean Project name.|
 | [provisioner.type](#provisioner.type) | + | string | `managed-kubernetes` | | provisioner to deploy cluster with.|
+| [cloud.project](#cloud.project) | - | string | ex: `Staging` | `default` | DigitalOcean Project name.|
 
-#### managed-kubernetes provisioner options
+
+#### Managed-kubernetes
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [version](#version) | - | string | ex: `1.16` | | DigitalOcean managed Kubernetes [version](https://www.digitalocean.com/docs/kubernetes/changelog/). |
