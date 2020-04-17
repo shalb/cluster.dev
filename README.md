@@ -107,7 +107,7 @@ If you need more information about AWS users - please check [aws documentation](
 
     ```bash
     # Sample with Minikube cluster
-    export RELEASE=v0.1.5
+    export RELEASE=v0.1.6
     mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml"
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
     ```
@@ -122,7 +122,7 @@ Leave github workflow file as is.
     _Or download application samples directly to local repo clone with commands:_
 
     ```bash
-    export RELEASE=v0.1.5
+    export RELEASE=v0.1.6
     # Create directory and place ArgoCD applications inside
     mkdir -p kubernetes/apps/samples && wget -O kubernetes/apps/samples/helm-all-in-app.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-all-in-app.yaml"
     wget -O kubernetes/apps/samples/helm-dependency.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-dependency.yaml"
