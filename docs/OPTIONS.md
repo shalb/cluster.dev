@@ -38,7 +38,7 @@ cluster:
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.type](#provisioner.type) | + | string | `minikube` | | Select provisioner to deploy cluster with.|
 
-#### Minikube
+#### minikube provisioner options
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.instanceType](#provisioner.instanceType) | + | string | `m5.large` | | Single node Kubernetes cluster AWS EC2 instance type. |
@@ -46,9 +46,10 @@ cluster:
 ### DigitalOcean
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
+| [cloud.project](#cloud.project) | - | string | ex: `Staging` | `default` | DigitalOcean Project name.|
 | [provisioner.type](#provisioner.type) | + | string | `managed-kubernetes` | | provisioner to deploy cluster with.|
 
-#### Managed-kubernetes
+#### managed-kubernetes provisioner options
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [version](#version) | - | string | ex: `1.16` | | DigitalOcean managed Kubernetes [version](https://www.digitalocean.com/docs/kubernetes/changelog/). |
@@ -57,3 +58,9 @@ cluster:
 | [autoScale](#autoScale) | - | boolean | `true`, `false`  | `false` | A boolean indicating whether auto-scaling is enabled.|
 | [minNodes](#minNodes) | - | boolean |`1-512` | `1` | If `autoScale` enabled defines a minimum number of Droplets instances in cluster. |
 | [maxNodes](#maxNodes) | - | boolean |`1-512` | `1` | If `autoScale` enabled defines a maximum number of Droplets instances in cluster. |
+
+## Cluster Addons
+|  Key |  Required | Type  | Values  | Default  | Description |
+|------|-----------|--------|---------|----------|----------------------------------------------|
+| [nginx-ingress](#nginx-ingress) | - | boolean | `true`,`false` | `true` | Deployment option for [nginx-ingress](https://github.com/kubernetes/ingress-nginx) |
+| [cert-manager](#cert-manager) | - | boolean | `true`,`false` | `true` | Deployment option for [cert-manager](https://cert-manager.io/) |
