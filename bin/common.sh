@@ -92,11 +92,11 @@ INFO "GIT_REPO_ROOT is set for: $GIT_REPO_ROOT"
 function set_cluster_fullname {
 
 local cluster_name=$1
-local GIT_REPO_NAME=$2
+local git_repo_name=$2
 local CLUSTER_FULLNAME=""
 
 # Define CLUSTER_FULLNAME which will be used in state files
-CLUSTER_FULLNAME=$cluster_name-$(echo "$GIT_REPO_NAME" | awk -F "/" '{print$1}')
+CLUSTER_FULLNAME=$cluster_name-$(echo "$git_repo_name" | awk -F "/" '{print$1}')
 # make sure it is not larger than 63 symbols and lowercase
 CLUSTER_FULLNAME=$(echo "$CLUSTER_FULLNAME" | cut -c 1-63 | awk '{print tolower($0)}')
 
