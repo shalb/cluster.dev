@@ -45,11 +45,13 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
         DEBUG "Cloud Provider: AWS. Initializing access variables"
         # Define AWS credentials from ENV VARIABLES passed to container
-        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+        # TODO: Check that AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY are set
 
         # Define full cluster name
-        set_cluster_fullname
+        FUNC_RESULT="";
+        set_cluster_fullname "$cluster_name" "$GIT_REPO_NAME"
+        CLUSTER_FULLNAME=${FUNC_RESULT}
+
         # Define name for S3 bucket that would be user for terraform state
         S3_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
@@ -107,15 +109,17 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
         DEBUG "Cloud Provider: DigitalOcean. Initializing access variables"
         # Define DO credentials from ENV VARIABLES passed to container
-        export DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
-        export SPACES_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
-        export SPACES_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
+        # TODO: Check that DIGITALOCEAN_TOKEN SPACES_ACCESS_KEY_ID SPACES_SECRET_ACCESS_KEY are set
+
         # s3cmd DO remove bucket ENV VARIABLES
         AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
 
         # Define full cluster name
-        set_cluster_fullname
+        FUNC_RESULT="";
+        set_cluster_fullname "$cluster_name" "$GIT_REPO_NAME"
+        CLUSTER_FULLNAME=${FUNC_RESULT}
+
         # Define name for S3 bucket that would be user for terraform state
         DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
