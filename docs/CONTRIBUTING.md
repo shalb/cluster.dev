@@ -54,17 +54,14 @@ jobs:
     - name: Reconcile Clusters
       id: reconcile
       uses: shalb/cluster.dev@feature/GH-3 #CHANGE ME
-      with:
-        cluster-config: './.cluster.dev/gh-3.yaml' #CHANGE ME
-        cloud-user: ${{ secrets.aws_access_key_id }}
-        cloud-pass: ${{ secrets.aws_secret_access_key }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        CLUSTER_CONFIG_PATH: "./.cluster.dev/"
+        VERBOSE_LVL: DEBUG
     # Use the output from the `reconcile` step
     - name: Get the Cluster Credentials
       run: echo -e "${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}"
-env:
-  # For available log levels see:
-  # https://github.com/shalb/cluster.dev/blob/master/docs/bash-logging.md#logging-levels
-  VERBOSE_LVL: INFO
 ```
 
 5. Commit and push both files with the comment, for example: `GH-3 Initial Commit`. GitHub automatically [creates reference](https://help.github.com/en/github/writing-on-github/autolinked-references-and-urls#issues-and-pull-requests) to the related issue to let other contributors know that related work has been addressed somewhere else.
