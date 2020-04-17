@@ -36,25 +36,25 @@ cluster:
 ### Amazon AWS Provisioners
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
-| [provisioner.type](#provisioner.type) | + | string | `minikube` | | Select provisioner to deploy cluster with.|
+| [provisioner.type](#provisioner.type) | + | string | `minikube` | | Provisioner to deploy cluster with.|
 
-#### AWS Minikube
+#### AWS `minikube`
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
-| [provisioner.instanceType](#provisioner.instanceType) | + | string | `m5.large` | | Single node Kubernetes cluster AWS EC2 instance type. |
+| [provisioner.instanceType](#provisioner.instanceType) | + | string | ex:`m5.xlarge` | `m5.large` | Single node Kubernetes cluster AWS EC2 instance type. |
 
-### DigitalOcean
+### DigitalOcean Provisioners
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
-| [provisioner.type](#provisioner.type) | + | string | `managed-kubernetes` | | provisioner to deploy cluster with.|
-| [cloud.project](#cloud.project) | - | string | ex: `Staging` | `default` | DigitalOcean Project name.|
+| [provisioner.type](#provisioner.type) | + | string | `managed-kubernetes` | | Provisioner to deploy cluster with.|
+| [cloud.project](#cloud.project) | - | string | ex: `staging` | `default` | DigitalOcean Project name.|
 
 
-#### Managed-kubernetes
+#### DigitalOcean `managed-kubernetes`
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [version](#version) | - | string | ex: `1.16` | | DigitalOcean managed Kubernetes [version](https://www.digitalocean.com/docs/kubernetes/changelog/). |
-| [nodeCount](#nodeCount) | + | integer | `1-512`  | 1 | Number of Droplets instances in cluster. |
+| [nodeCount](#nodeCount) | + | integer | `1-512`  | `1` | Number of Droplets instances in cluster. |
 | [nodeSize](#nodeSize) | + | string | ex: `s-4vcpu-8gb`  | `s-1vcpu-2gb` | The slug identifier for the type of Droplet used as workers in the node pool. |
 | [autoScale](#autoScale) | - | boolean | `true`, `false`  | `false` | A boolean indicating whether auto-scaling is enabled.|
 | [minNodes](#minNodes) | - | boolean |`1-512` | `1` | If `autoScale` enabled defines a minimum number of Droplets instances in cluster. |
@@ -63,5 +63,5 @@ cluster:
 ## Cluster Addons
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
-| [nginx-ingress](#nginx-ingress) | - | boolean | `true`,`false` | `true` | Deployment option for [nginx-ingress](https://github.com/kubernetes/ingress-nginx) |
-| [cert-manager](#cert-manager) | - | boolean | `true`,`false` | `true` | Deployment option for [cert-manager](https://cert-manager.io/) |
+| [nginx-ingress](#nginx-ingress) | - | boolean | `true`,`false` | `true` | Deployment option for [nginx-ingress](https://github.com/kubernetes/ingress-nginx). |
+| [cert-manager](#cert-manager) | - | boolean | `true`,`false` | `true` | Deployment option for [cert-manager](https://cert-manager.io/). |
