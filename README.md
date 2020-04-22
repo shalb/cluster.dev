@@ -108,8 +108,8 @@ If you need more information about AWS users - please check [aws documentation](
     ```bash
     # Sample with Minikube cluster
     export RELEASE=v0.1.6
-    mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/github-workflow.yaml"
-    mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/docs/quick-start/aws/minikube-cluster-definition.yaml"
+    mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/aws.yml"
+    mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/aws-minikube.yaml"
     ```
 
 5. In cluster definition yaml you should set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).
