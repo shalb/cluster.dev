@@ -2,7 +2,7 @@
 
 Cluster.dev is an open-source system delivered as GitHub Action or Docker Image for creating and managing Kubernetes clusters with simple manifests by GitOps approach.
 
-Designed for developers that are bored to configure Kubernetes stuff and just need: kubeconfig, dashboard, logging and monitoring and deployment systems out-of-the-box.
+Designed for developers that don't want waste time to configure Kubernetes stuff and just need: kubeconfig, dashboard, logging, monitoring and deployment systems out-of-the-box.
 
 GitOps infrastructure management with Terraform and continuous deployment with ArgoCD. Easily extendable by pre-configured applications and modules. Quick integration with Jenkins, GitLab or  other CI/CD systems. Supports multiple Cloud Providers and Kubernetes versions.
 
@@ -72,7 +72,7 @@ You receive:
 
 _normally it takes 15 minutes_
 
-1. Dedicate a separate repository for the infrastructure code that will be managed by `cluster.dev`.  
+1. Create a separate repository for the infrastructure code that will be managed by `cluster.dev`in GitHub.  
 This repo will host code for your clusters, deployments, applications and other resources.  
 Clone the repo locally:
 
@@ -83,7 +83,7 @@ Clone the repo locally:
 
 **Next steps** should be done inside that repo.
 
-2. Create new user with limited access.  
+2. Create new AWS user with limited access in IAM.  
 Watch [video example](https://www.youtube.com/watch?v=ALF1Ku2lYys) to create user and apply [policy](install/aws_policy.json).  
 If you need more information about AWS users - please check [aws documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console) for details.  
 
@@ -112,7 +112,7 @@ If you need more information about AWS users - please check [aws documentation](
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/aws-minikube.yaml"
     ```
 
-5. In cluster definition yaml you should set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).
+5. In cluster definition yaml (.cluster.dev/aws-minikube.yaml) you should set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).
 
 6. You can change all other parameters or leave default values in cluster.yaml.  
 Leave github workflow file as is.
