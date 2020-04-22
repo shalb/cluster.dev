@@ -20,7 +20,7 @@ Function documentation style based on [google style example](https://sphinxcontr
 
 ## Local debug and run
 
-### Fist build
+### Build
 
 ```bash
 docker-compose build
@@ -31,6 +31,26 @@ docker-compose build
 ```bash
 docker-compose run app
 ```
+
+### Run tests
+
+Non-iteractive:
+
+```bash
+docker-compose run tests
+```
+
+Interactive:
+
+```bash
+docker-compose run mount_only_current_dir
+docker-compose run without_repo
+docker-compose run empty_repo
+docker-compose run non_empty_repo
+docker-compose run cloned_ssh_empty_repo
+docker-compose run cloned_https_empty_repo
+```
+
 
 ## Useful links
 
