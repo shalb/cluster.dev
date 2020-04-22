@@ -7,14 +7,10 @@ permalink: /add-provider-provisioner/
 ## Adding a New Provider or Provisioner
 1. Create a sample yaml cluster manifest with declaration for possible options in yaml and its naming.  
    Naming for the options should be aligned with correspondent names in terraform provider or module.
+   List of options, should be set in [OPTIONS.md](OPTIONS.md)
 
-2. Create a sample Github Action and Gitlab pipeline defining required cloud authentication credentials, like Username/Password, Personal Access Tokens, or Access files, ex:
-```yaml
-    # For user and password please use your token name and token hash
-    # https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/
-        cloud-user: ${{ secrets.DO_TOKEN_NAME }}
-        cloud-pass: ${{ secrets.DIGITALOCEAN_TOKEN }}
-```
+2. Create a sample Github Action and Gitlab pipeline defining required cloud authentication credentials, like Username/Password, Personal Access Tokens, or Access files. 
+
 3. Define required treatment in main function, ex:
 ```yaml
 # entrypoint.sh

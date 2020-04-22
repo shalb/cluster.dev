@@ -34,6 +34,10 @@ cluster:
 
 ## Cluster Provisioners
 ### Amazon AWS Provisioners
+
+Required Environment variables should be passed to container:  
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`. [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) 
+
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.type](#provisioner.type) | + | string | `minikube` | | Provisioner to deploy cluster with.|
@@ -43,7 +47,16 @@ cluster:
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.instanceType](#provisioner.instanceType) | + | string | ex:`m5.xlarge` | `m5.large` | Single node Kubernetes cluster AWS EC2 instance type. |
 
+
 ### DigitalOcean Provisioners
+
+The DigitalOcean (DO) provider is used to interact with the resources supported by DigitalOcean.
+Next environment variables should be set:  
+`DIGITALOCEAN_TOKEN` - This is the DO API token. [DO Docs](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/)  
+`SPACES_ACCESS_KEY_ID` - The access key ID used for Spaces API operations. [DO Docs](https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key)  
+`SPACES_SECRET_ACCESS_KEY` - The secret access key used for Spaces API operations.
+
+
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.type](#provisioner.type) | + | string | `managed-kubernetes` | | Provisioner to deploy cluster with.|
