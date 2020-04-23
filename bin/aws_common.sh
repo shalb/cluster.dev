@@ -133,7 +133,6 @@ function aws::init_route53 {
 #   cluster_cloud_domain
 #######################################
 function aws::destroy_route53 {
-    DEBUG "Destroying a DNS zone records"
     local default_domain="cluster.dev"
     local cluster_cloud_region=$1
     local CLUSTER_FULLNAME=$2
@@ -146,10 +145,10 @@ function aws::destroy_route53 {
         -backend-config="region=$cluster_cloud_region"
 
     # Execute terraform
+    INFO "Destroying a DNS zone $CLUSTER_FULLNAME.$cluster_cloud_domain"
         run_cmd "terraform  destroy -auto-approve  \
-                -var='region=$cluster_cloud_region' \
-                -input=false \
-                -out=tfplan"
+                -var='region=$cluster_cloud_region'" "" "false"
+
         INFO "DNS Zone: $CLUSTER_FULLNAME.$cluster_cloud_domain has been deleted."
 
     cd - >/dev/null || ERROR "Path not found"
@@ -307,7 +306,7 @@ function aws::destroy {
             aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain"
             # TODO: Remove kubeconfig after successful cluster destroy
             aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
-            aws::destroy_route53 "$cluster_cloud_region" "$cluster_name" "$cluster_cloud_domain"
+            aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
             aws::destroy_s3_bucket "$cluster_cloud_region"
         ;;
         # end of minikube

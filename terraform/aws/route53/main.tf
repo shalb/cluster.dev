@@ -8,6 +8,7 @@ resource "aws_route53_zone" "main" {
 
 resource "aws_route53_zone" "sub" {
   name = "${var.cluster_fullname}.${var.cluster_domain}"
+  force_destroy = true
 }
 
 resource "aws_route53_record" "sub-ns" {
