@@ -86,7 +86,7 @@ function aws::minikube::deploy_cluster {
                 -var='region=$cluster_cloud_region' \
                 -var='cluster_name=$CLUSTER_FULLNAME' \
                 -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
-                -var='hosted_zone=$cluster_cloud_domain' \
+                -var='hosted_zone=$CLUSTER_FULLNAME.$cluster_cloud_domain' \
                 -var='vpc_id=$cluster_cloud_vpc_id' \
                 -input=false \
                 -out=tfplan"
@@ -132,7 +132,7 @@ function aws::minikube::destroy_cluster {
                 -var='region=$cluster_cloud_region' \
                 -var='cluster_name=$CLUSTER_FULLNAME' \
                 -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
-                -var='hosted_zone=$cluster_cloud_domain'"
+                -var='hosted_zone=$CLUSTER_FULLNAME.$cluster_cloud_domain'"
 
     cd - >/dev/null || ERROR "Path not found"
 }

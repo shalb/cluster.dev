@@ -86,10 +86,7 @@ function aws::destroy_s3_bucket {
 #   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_cloud_region
-#   cluster_name
 #   cluster_cloud_domain
-# Outputs:
-#   Writes progress status
 #######################################
 function aws::init_route53 {
     DEBUG "Create a DNS domains/records if required"
@@ -106,27 +103,23 @@ function aws::init_route53 {
 
     # Create or update zone
     if [ "$cluster_cloud_domain" = "$default_domain" ]; then
-
-        INFO "The cluster domain is unset. DNS zone would be created"
+            INFO "The cluster domain is unset. DNS sub-zone would be created in $default_domain"
+            zone_delegation=true
+        else
+            INFO "The cluster domain defined. DNS sub-zone would be created in $cluster_cloud_domain"
+            zone_delegation=false
+    fi
+    # Execute terraform
         run_cmd "terraform plan -compact-warnings \
                 -var='region=$cluster_cloud_region' \
                 -var='cluster_fullname=$CLUSTER_FULLNAME' \
                 -var='cluster_domain=$cluster_cloud_domain' \
+                -var='zone_delegation=$zone_delegation' \
                 -input=false \
                 -out=tfplan"
-        INFO "Route53: Apply domain creation"
         run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
+        INFO "DNS Zone: $CLUSTER_FULLNAME.$cluster_cloud_domain has been created."
 
-        # Get ZoneID and NameServers for NS delegation.
-        zone_id=$(terraform output zone_id)
-        name_servers=$(terraform output name_servers)
-
-        INFO "DNS Zone: $CLUSTER_FULLNAME.$cluster_cloud_domain created."
-        DEBUG "zone_id:$zone_id  Name Servers:$name_servers"
-
-    else
-        INFO "The cluster domain is defined. So applying Terraform configuration for it"
-    fi
     cd - >/dev/null || ERROR "Path not found"
 }
 
@@ -137,19 +130,29 @@ function aws::init_route53 {
 #   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_cloud_region
-#   cluster_name
 #   cluster_cloud_domain
-# Outputs:
-#   Writes progress status
 #######################################
 function aws::destroy_route53 {
-    DEBUG "Destroy a DNS domains/records if required"
+    DEBUG "Destroying a DNS zone records"
+    local default_domain="cluster.dev"
     local cluster_cloud_region=$1
-    local cluster_name=$2
-    local cluster_cloud_domain=$3
+    local CLUSTER_FULLNAME=$2
+    local cluster_cloud_domain=${3:-$default_domain}
 
+    # Init terraform state for DNS
+    cd "$PRJ_ROOT"/terraform/aws/route53/ || ERROR "Path not found"
+    terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+        -backend-config="key=$cluster_name/terraform-dns.state" \
+        -backend-config="region=$cluster_cloud_region"
 
-    # TODO: destroy procedure.
+    # Execute terraform
+        run_cmd "terraform  destroy -auto-approve  \
+                -var='region=$cluster_cloud_region' \
+                -input=false \
+                -out=tfplan"
+        INFO "DNS Zone: $CLUSTER_FULLNAME.$cluster_cloud_domain has been deleted."
+
+    cd - >/dev/null || ERROR "Path not found"
 }
 
 #######################################
