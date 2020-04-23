@@ -93,26 +93,40 @@ function aws::destroy_s3_bucket {
 #######################################
 function aws::init_route53 {
     DEBUG "Create a DNS domains/records if required"
+    local default_domain="cluster.dev"
     local cluster_cloud_region=$1
-    local cluster_name=$2
-    local cluster_cloud_domain=$3
+    local CLUSTER_FULLNAME=$2
+    local cluster_cloud_domain=${3:-$default_domain}
 
+    # Init terraform state for DNS
     cd "$PRJ_ROOT"/terraform/aws/route53/ || ERROR "Path not found"
+    terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
+        -backend-config="key=$cluster_name/terraform-dns.state" \
+        -backend-config="region=$cluster_cloud_region"
 
-    if [ -z "$cluster_cloud_domain" ]; then
-        INFO "The cluster domain is unset. It is going to be created default"
+    # Create or update zone
+    if [ "$cluster_cloud_domain" = "$default_domain" ]; then
+
+        INFO "The cluster domain is unset. DNS zone would be created"
+        run_cmd "terraform plan -compact-warnings \
+                -var='region=$cluster_cloud_region' \
+                -var='cluster_fullname=$CLUSTER_FULLNAME' \
+                -var='cluster_domain=$cluster_cloud_domain' \
+                -input=false \
+                -out=tfplan"
+        INFO "Route53: Apply domain creation"
+        run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
+
+        # Get ZoneID and NameServers for NS delegation.
+        zone_id=$(terraform output zone_id)
+        name_servers=$(terraform output name_servers)
+
+        INFO "DNS Zone: $CLUSTER_FULLNAME.$cluster_cloud_domain created."
+        DEBUG "zone_id:$zone_id  Name Servers:$name_servers"
+
     else
         INFO "The cluster domain is defined. So applying Terraform configuration for it"
     fi
-
-    # terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-    #     -backend-config="key=$cluster_name/terraform.state" \
-    #     -backend-config="region=$cluster_cloud_region"
-    # terraform plan -compact-warnings \
-    #     -var="region=$cluster_cloud_region" \
-    #     -var="cluster_fullname=$CLUSTER_FULLNAME" \
-    #     -var="cluster_domain=$cluster_cloud_domain"
-
     cd - >/dev/null || ERROR "Path not found"
 }
 

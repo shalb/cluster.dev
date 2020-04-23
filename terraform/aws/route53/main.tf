@@ -11,6 +11,7 @@ resource "aws_route53_zone" "sub" {
 }
 
 resource "aws_route53_record" "sub-ns" {
+  allow_overwrite = true
   zone_id = aws_route53_zone.main.zone_id
   name    = "${var.cluster_fullname}.${var.cluster_domain}"
   type    = "NS"
