@@ -84,7 +84,7 @@ function aws::minikube::deploy_cluster {
 
     run_cmd "terraform plan \
                 -var='region=$cluster_cloud_region' \
-                -var='cluster_name=$CLUSTER_FULLNAME' \
+                -var='cluster_name=$cluster_name' \
                 -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
                 -var='hosted_zone=$CLUSTER_FULLNAME.$cluster_cloud_domain' \
                 -var='vpc_id=$cluster_cloud_vpc_id' \
@@ -130,7 +130,7 @@ function aws::minikube::destroy_cluster {
     INFO "Minikube cluster: Destroying "
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='region=$cluster_cloud_region' \
-                -var='cluster_name=$CLUSTER_FULLNAME' \
+                -var='cluster_name=$cluster_name' \
                 -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
                 -var='hosted_zone=$CLUSTER_FULLNAME.$cluster_cloud_domain'"
 
