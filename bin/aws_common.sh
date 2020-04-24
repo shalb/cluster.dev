@@ -147,7 +147,8 @@ function aws::destroy_route53 {
     # Execute terraform
     INFO "Destroying a DNS zone $CLUSTER_FULLNAME.$cluster_cloud_domain"
         run_cmd "terraform  destroy -auto-approve  \
-                -var='region=$cluster_cloud_region'" "" "false"
+                -var='region=$cluster_cloud_region' \
+                -var='cluster_fullname=$CLUSTER_FULLNAME'"
 
         INFO "DNS Zone: $CLUSTER_FULLNAME.$cluster_cloud_domain has been deleted."
 
