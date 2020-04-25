@@ -2,6 +2,13 @@ provider "aws" {
   region = var.region
 }
 
+# If DNS zone is provided by user.
+# Use it to create subzone
+data "aws_route53_zone" "existing" {
+  count = "${var.zone_delegation == "false" ? 1 : 0}"
+  name         = "${var.cluster_domain}"
+}
+
 resource "aws_route53_zone" "sub" {
   name          = "${var.cluster_fullname}.${var.cluster_domain}"
   force_destroy = true
@@ -9,7 +16,7 @@ resource "aws_route53_zone" "sub" {
 
 resource "aws_route53_record" "sub-ns" {
   allow_overwrite = true
-  zone_id         = aws_route53_zone.sub.zone_id
+  zone_id         = "${var.zone_delegation == "true" ? aws_route53_zone.sub.zone_id : data.aws_route53_zone.existing.zone_id}"
   name            = "${var.cluster_fullname}.${var.cluster_domain}"
   type            = "NS"
   ttl             = "300"
