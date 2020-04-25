@@ -6,7 +6,7 @@ provider "aws" {
 # Use it to create subzone
 data "aws_route53_zone" "existing" {
   count = "${var.zone_delegation == "false" ? 1 : 0}"
-  name         = "${var.cluster_domain}"
+  name         = "${var.cluster_domain}."
 }
 
 resource "aws_route53_zone" "sub" {
