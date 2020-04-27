@@ -31,8 +31,8 @@ function digitalocean::managed-kubernetes::deploy_cluster {
                 -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
                 -backend-config='key=$cluster_name/terraform.state' \
                 -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com' \
-                -backend-config='access_key=$SPACES_SECRET_ACCESS_KEY' \
-                -backend-config='secret_key=$SPACES_ACCESS_KEY_ID'"
+                -backend-config='access_key=$SPACES_ACCESS_KEY_ID' \
+                -backend-config='secret_key=$SPACES_SECRET_ACCESS_KEY'"
 
 
     run_cmd "terraform plan \
@@ -77,8 +77,8 @@ function digitalocean::managed-kubernetes::destroy_cluster {
                 -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
                 -backend-config='key=$cluster_name/terraform.state' \
                 -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com' \
-                -backend-config='access_key=$SPACES_SECRET_ACCESS_KEY' \
-                -backend-config='secret_key=$SPACES_ACCESS_KEY_ID'"
+                -backend-config='access_key=$SPACES_ACCESS_KEY_ID' \
+                -backend-config='secret_key=$SPACES_SECRET_ACCESS_KEY'"
 
 
     INFO "DO k8s cluster: Destroying "
