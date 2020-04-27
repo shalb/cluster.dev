@@ -12,6 +12,7 @@ Example usage:
 from __future__ import print_function, unicode_literals
 import argparse
 import os
+import shutil
 from git import Repo, InvalidGitRepositoryError, GitCommandError
 import regex
 # PyInquirer - Draw menu and user select one of items
@@ -285,6 +286,31 @@ def get_git_password(cli_arg, git):
         return password
 
 
+def remove_all_except_git(dir_path):
+    """
+    Remove all in directory except .git/
+
+    Args:
+        dir_path (str): path to dir which will cleanup.
+    """
+    for file in os.listdir(dir_path):
+        path = os.path.join(dir_path, file)
+        try:
+            if  os.path.isfile(path) or \
+                os.path.islink(path):
+
+                os.unlink(path)
+
+            elif os.path.isdir(path):
+                if path == os.path.join(dir_path, '.git'):
+                    continue
+
+                shutil.rmtree(path)
+
+        except Exception as e:
+            print(f'Failed to delete {path}. Reason: {e}')
+
+
 
 def main():
     """Logic"""
@@ -320,10 +346,11 @@ def main():
 
     if repo.heads: # Heads exist only after first commit
         cleanup_repo = ask_user('cleanup_repo')
-        if cleanup_repo:
-            # TODO: rm -rf (except .git) and commit
-            pass
 
+        if cleanup_repo:
+            remove_all_except_git(dir_path)
+            git.add('-A')
+            git.commit('-m', 'Cleanup repo')
 
     # Choose git provider
     git_provider = cli.git_provider
