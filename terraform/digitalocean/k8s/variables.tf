@@ -29,7 +29,7 @@ variable "node_type" {
 variable "node_count" {
   description = "Digital Ocean Kubernetes node pool size (e.g. `2`)"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "min_node_count" {
