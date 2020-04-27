@@ -7,6 +7,7 @@ source "$PRJ_ROOT"/bin/logging.sh # PSR-3 compliant logging
 source "$PRJ_ROOT"/bin/common.sh
 source "$PRJ_ROOT"/bin/aws_common.sh
 source "$PRJ_ROOT"/bin/digitalocean_common.sh
+source "$PRJ_ROOT"/bin/digitalocean_managed-kubernetes.sh
 source "$PRJ_ROOT"/bin/aws_minikube.sh
 source "$PRJ_ROOT"/bin/argocd.sh
 
@@ -139,7 +140,9 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
         case $cluster_cloud_provisioner_type in
         managed-kubernetes)
-            DEBUG "Provisioner: digitalocean-kubernetes"
+            DEBUG "Provisioner: managed-kubernetes"
+            # Deploy DO k8s cluster via Terraform
+            digitalocean::managed-kubernetes::deploy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_version" "$cluster_cloud_provisioner_nodeSize"
 
         ;;
         esac
