@@ -30,7 +30,7 @@ function digitalocean::managed-kubernetes::deploy_cluster {
     run_cmd "terraform init \
                 -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
                 -backend-config='key=$cluster_name/terraform.state' \
-                -backend-config='endpoint=https://$cluster_cloud_region.digitaloceanspaces.com' \
+                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com' \
                 -backend-config='access_key=$SPACES_SECRET_ACCESS_KEY' \
                 -backend-config='secret_key=$SPACES_ACCESS_KEY_ID'"
 
@@ -76,7 +76,7 @@ function digitalocean::managed-kubernetes::destroy_cluster {
     run_cmd "terraform init \
                 -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
                 -backend-config='key=$cluster_name/terraform.state' \
-                -backend-config='endpoint=https://$cluster_cloud_region.digitaloceanspaces.com' \
+                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com' \
                 -backend-config='access_key=$SPACES_SECRET_ACCESS_KEY' \
                 -backend-config='secret_key=$SPACES_ACCESS_KEY_ID'"
 
