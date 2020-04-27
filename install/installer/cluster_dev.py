@@ -20,7 +20,6 @@ from git import GitCommandError
 from git import InvalidGitRepositoryError
 from git import Repo
 from PyInquirer import prompt
-from PyInquirer import Separator
 from PyInquirer import style_from_dict
 from PyInquirer import Token
 from PyInquirer import ValidationError
@@ -47,7 +46,7 @@ def dir_is_git_repo(path):
         return False
 
 
-class RepoNameValidator(Validator):
+class RepoNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
 
     def validate(self, document=None, interactive=True):
@@ -78,7 +77,7 @@ class RepoNameValidator(Validator):
             )  # Move cursor to end
 
 
-class UserNameValidator(Validator):
+class UserNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
 
     def validate(self, document=None, interactive=True):
@@ -307,8 +306,10 @@ def get_git_password(cli_arg):
             return False
 
     except FileNotFoundError:
-        password = ask_user('git_password')
-        return password
+        pass
+
+    password = ask_user('git_password')
+    return password
 
 
 def remove_all_except_git(dir_path):
@@ -332,8 +333,8 @@ def remove_all_except_git(dir_path):
 
                 shutil.rmtree(path)
 
-        except Exception as e:
-            print(f'Failed to delete {path}. Reason: {e}')
+        except Exception as exception:  # pylint: disable=broad-except
+            print(f'Failed to delete {path}. Reason: {exception}')
 
 
 def choose_git_provider(cli_arg, repo):

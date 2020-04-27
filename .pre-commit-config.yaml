@@ -63,7 +63,7 @@ repos:
       language_version: python3
       args:
       - -i
-      - --max-line-length=120
+      - --max-line-length=100
 
 
 # Usage: http://pylint.pycqa.org/en/latest/user_guide/message-control.html
@@ -73,6 +73,6 @@ repos:
     - id: pylint
       language_version: python3
       args: [
-        '--disable=E0401', # Unable to import. Locally you could not have all imports.
-        '--disable=W0511', # 'TODO' notations.
+        '--disable=import-error', # E0401. Locally you could not have all imports.
+        '--disable=fixme', # W0511. 'TODO' notations.
       ]

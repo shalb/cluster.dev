@@ -41,15 +41,9 @@ Supported git-repo types:
 
 ## Style guide
 
-Code style checked by pylint
+Code style checked by autopep8 and pylint
 
-Pylint settings:
-
-```json
-    "python.linting.pylintArgs": [
-        "--disable=E0401"
-    ],
-```
+See its settings in [`.pre-commit-config.yaml`](https://github.com/shalb/cluster.dev/blob/master/.pre-commit-config.yaml)
 
 Function documentation style based on [google style example](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
 
