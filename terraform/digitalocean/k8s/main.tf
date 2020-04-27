@@ -6,7 +6,7 @@ resource "digitalocean_kubernetes_cluster" "k8s" {
   count   = var.enable_autoscaling ? 0 : 1
   name    = var.name
   region  = var.region
-  version = var.version
+  version = data.digitalocean_kubernetes_versions.k8s.latest_version
 
   node_pool {
     name       = "${var.name}-worker-pool"
