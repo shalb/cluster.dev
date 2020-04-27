@@ -14,9 +14,9 @@ variable "environment" {
   type        = map
   description = "(optional) Edit values below for every environment name that you want"
   default = {
-    "dev" = "Development"
+    "dev"   = "Development"
     "stage" = "Staging"
-    "prod" = "Production"
+    "prod"  = "Production"
   }
 }
 

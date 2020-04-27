@@ -24,7 +24,7 @@ $ ./cluster-dev install
 ```
 CD1: Hi, we gonna install create an infrastructure for you.  
 ```
-! if command spawned inside existing infrastructure repo, inform about it and propose 
+! if command spawned inside existing infrastructure repo, inform about it and propose
   to skip CD1-CD4 steps, ex: delete all existing configuration [yes/NO]?
 ```
 CD2: As this is a GitOps approach we need to start with the repo, please select your Git hosting:
@@ -60,7 +60,7 @@ CD6: Please select existing or we would create a separate user and role for your
 CD7: Now I'm populating sample files to your repo:
 ```
 !  show commands:
-  cd /tmp/ &&  git clone github.com/shalb/cluster-dev-samples.git 
+  cd /tmp/ &&  git clone github.com/shalb/cluster-dev-samples.git
   cp -R /tmp/cluster-dev-samples/ ~/testrepo/
 ```
 CD8: Please enter the name for your cluster:

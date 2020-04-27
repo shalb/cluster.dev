@@ -14,5 +14,3 @@ cluster:
     cert-manager: true
   apps:
     - /kubernetes/apps/samples
-
-

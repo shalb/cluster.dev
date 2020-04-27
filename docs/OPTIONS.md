@@ -36,7 +36,7 @@ cluster:
 ### Amazon AWS Provisioners
 
 Required Environment variables should be passed to container:  
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`. [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) 
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`. [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html)
 
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
