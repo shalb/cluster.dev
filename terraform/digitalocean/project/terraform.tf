@@ -1,7 +1,12 @@
 # INFO Read about spaces here https://www.digitalocean.com/docs/spaces/
 terraform {
   backend "s3" {
-    region = "us-west-1"
+    region = "us-east-1"
+    access_key = ""
+    secret_key = ""
+    bucket = ""
+    key = ""
+    endpoint = ""
     skip_requesting_account_id  = true
     skip_credentials_validation = true
     skip_get_ec2_platforms      = true
