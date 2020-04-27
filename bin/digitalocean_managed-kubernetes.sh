@@ -37,7 +37,7 @@ function digitalocean::managed-kubernetes::deploy_cluster {
 
     run_cmd "terraform plan \
                 -var='region=$cluster_cloud_region' \
-                -var='version=$cluster_cloud_provisioner_version' \
+                -var='k8s_version=$cluster_cloud_provisioner_version' \
                 -var='name=$CLUSTER_FULLNAME' \
                 -var='node_type=$cluster_cloud_provisioner_nodeSize' \
                 -input=false \
@@ -84,7 +84,7 @@ function digitalocean::managed-kubernetes::destroy_cluster {
     INFO "DO k8s cluster: Destroying "
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='region=$cluster_cloud_region' \
-                -var='version=$cluster_cloud_provisioner_version' \
+                -var='k8_version=$cluster_cloud_provisioner_version' \
                 -var='name=$CLUSTER_FULLNAME' \
                 -var='node_type=$cluster_cloud_provisioner_nodeSize'"
 
