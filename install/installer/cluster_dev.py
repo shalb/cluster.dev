@@ -269,23 +269,21 @@ def get_git_password(cli_arg, git):
         `False` if SSH-key provided (mounted)
         Otherwise - return password string
     """
-    password = cli_arg
+    # If password provided - return password
+    if cli_arg:
+        return cli_arg
 
-    if not password:
-        try:
-            use_ssh = git.remote('-v').find('git@')
+    try:
+        # Try use ssh as password
+        # Required mount: $HOME/.ssh:/home/cluster.dev/.ssh:ro
+        if os.listdir(f'{os.environ["HOME"]}/.ssh'):
+            print('Password type: ssh-key')
+            return False
 
-            if use_ssh != -1:
-                # Try use ssh as password
-                # Required mount: $HOME/.ssh:/home/cluster.dev/.ssh:ro
-                print('Password type: ssh-key')
-                return False
-        except GitCommandError:
-            pass
-
+    except FileNotFoundError:
         password = ask_user('git_password')
+        return password
 
-    return password
 
 
 def main():
