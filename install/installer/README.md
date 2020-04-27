@@ -4,6 +4,40 @@ Implement [cli-installer specification](../../docs/design/cli-installer-design.m
 
 **Status: `In progress`**
 
+#### Main features support:
+
+##### 1. Create or reuse infrastructure repo within git hosting provider
+
+Supported git-repo types:
+
+- [x] Cloned (w/ origins) empty repo
+- [x] Cloned (w/ origins) non-empty repo
+- [ ] `WIP` Created (w/o origins) empty repo
+- [ ] `WIP` Created (w/o origins) non-empty repo
+
+
+##### 2. Select and create cloud user and required permissions
+
+- [ ] Supported
+
+##### 3. Populate repo with sample files
+
+- [ ] Supported
+
+##### 4. Edit view for the first cluster config
+
+- [ ] Supported
+
+##### 5. Commit all code and install the cluster
+
+- [ ] Supported
+
+##### 6. Display credentials with output
+
+- [ ] Supported
+
+
+
 ## Style guide
 
 Code style checked by pylint
