@@ -12,9 +12,10 @@ ArgoCD - using Helm chart
 
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
-| aws\_region | Region to point External DNS addon | string | n/a | yes |
-| cluster\_cloud\_domain | Route 53 zone used for Cert-Manager and External-DNS | string | n/a | yes |
-| config\_path | Path to kubernetes config | string | "~/.kube/config" | yes |
+| aws\_region | AWS Region to apply for Addons configuration | string | n/a | yes |
+| cluster\_cloud\_domain | Route 53 zone used as a domain restrictions for cert-manager and external-dns | string | `""` | no |
+| cluster\_fullname | Full cluster name including user/organization | string | `""` | no |
+| config\_path | path to a kubernetes config file | string | `"~/.kube/config"` | no |
 
 ## Outputs
 

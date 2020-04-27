@@ -9,7 +9,7 @@ permalink: /add-provider-provisioner/
    Naming for the options should be aligned with correspondent names in terraform provider or module.
    List of options, should be set in [OPTIONS.md](OPTIONS.md)
 
-2. Create a sample Github Action and Gitlab pipeline defining required cloud authentication credentials, like Username/Password, Personal Access Tokens, or Access files. 
+2. Create a sample Github Action and Gitlab pipeline defining required cloud authentication credentials, like Username/Password, Personal Access Tokens, or Access files.
 
 3. Define required treatment in main function, ex:
 ```yaml
@@ -19,7 +19,7 @@ permalink: /add-provider-provisioner/
         ;;
 ```
 4. Define cloud related functions in a dedicated file, ex:`/bin/digitalocean_common.sh`, required functions:
-    - `init_state_bucket`  # check if exist and create a storage for terraform state 
+    - `init_state_bucket`  # check if exist and create a storage for terraform state
     - `init_vpc`           # check and create required segmentation (this could be VPC, or Project)
     - `init_dns_zone`      # create a dns sub-zone which will be used for cluster services exposing
 

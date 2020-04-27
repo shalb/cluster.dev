@@ -55,7 +55,7 @@ Trail settings:
 Management events:
     Read/Write events All
 Data events:
-    Select all S3 buckets in your account: Read, Write 
+    Select all S3 buckets in your account: Read, Write
 Storage location:
     S3 bucket: my-cloud-logs
 ~~~~
@@ -112,4 +112,3 @@ Save new policy time to time if it has many records, to prevent results loss.
 Check out its JSON version and save it to [aws_policy.json](../install/aws_policy.json)
 
 Push JSON version to repo.
-
