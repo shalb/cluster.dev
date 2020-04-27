@@ -18,7 +18,8 @@ Supported git-repo types:
 
 ##### 2. Select and create cloud user and required permissions
 
-- [ ] Supported
+- [ ] Select cloud
+- [ ] Create cloud user and required permissions
 
 ##### 3. Populate repo with sample files
 

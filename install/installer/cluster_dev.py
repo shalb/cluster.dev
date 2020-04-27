@@ -246,26 +246,26 @@ def get_git_username(cli_arg, git):
     Returns:
         username string
     """
-    user = cli_arg
-    if not user:
-        try:
-            # Required mount: $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro
-            user = git.config('--get', 'user.name')
-            print(f'Username: {user}')
-        except GitCommandError:
-            user = ask_user('git_user_name')
+    if cli_arg:
+        return cli_arg
+
+    try:
+        # Required mount: $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro
+        user = git.config('--get', 'user.name')
+        print(f'Username: {user}')
+    except GitCommandError:
+        user = ask_user('git_user_name')
 
     return user
 
 
-def get_git_password(cli_arg, git):
+def get_git_password(cli_arg):
     """
     Get SSH key from settings or password from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
             If not provided - it set to None
-        git (obj): git.Repo.git object
     Returns:
         `False` if SSH-key provided (mounted)
         Otherwise - return password string
@@ -311,6 +311,42 @@ def remove_all_except_git(dir_path):
             print(f'Failed to delete {path}. Reason: {e}')
 
 
+def choose_git_provider(cli_arg, repo):
+    """
+    Choose git provider.
+    Try automatically, if git remotes specified. Otherwise - ask user.
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+        repo (obj): git.Repo object
+    Returns:
+        git_provider string
+    """
+    # If git provider provided - return git provider
+    if cli_arg:
+        return cli_arg
+
+
+    if not repo.remotes: # Remotes not exist in locally init repos
+        git_provider = ask_user('choose_git_provider')
+        return git_provider
+
+    git = repo.git
+    remote = git.remote('-v')
+
+    if remote.find('github'):
+        git_provider = 'Github'
+    elif remote.find('bitbucket'):
+        git_provider = 'Bitbucket'
+    elif remote.find('gitlab'):
+        git_provider = 'Gitlab'
+    else:
+        git_provider = ask_user('choose_git_provider')
+
+    return git_provider
+
+
 
 def main():
     """Logic"""
@@ -352,30 +388,17 @@ def main():
             git.add('-A')
             git.commit('-m', 'Cleanup repo')
 
-    # Choose git provider
-    git_provider = cli.git_provider
-    if not git_provider:
-        if not repo.remotes: # Remotes not exist in locally init repos
-            git_provider = ask_user('choose_git_provider')
-            publish_repo = ask_user('publish_repo_to_git_provider')
-            if publish_repo:
-                # TODO: push repo to Git Provider
-                pass
-        else:
-            remote = git.remote('-v')
 
-            if remote.find('github'):
-                git_provider = 'Github'
-            elif remote.find('bitbucket'):
-                git_provider = 'Bitbucket'
-            elif remote.find('gitlab'):
-                git_provider = 'Gitlab'
-            else:
-                git_provider = ask_user('choose_git_provider')
+    git_provider = choose_git_provider(cli.git_provider, repo)
 
+    if not repo.remotes:
+        publish_repo = ask_user('publish_repo_to_git_provider')
+        if publish_repo:
+            # TODO: push repo to Git Provider
+            pass
 
     user = get_git_username(cli.git_user_name, git)
-    password = get_git_password(cli.git_password, git)
+    password = get_git_password(cli.git_password)
 
 
 #######################################################################
