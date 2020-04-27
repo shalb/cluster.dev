@@ -14,7 +14,7 @@ variable "region" {
   description = "(Required) Provide DigitalOcean region"
 }
 
-variable "version" {
+variable "k8s_version" {
   type        = string
   description = "Provide DigitalOcean Kubernetes minor version (e.g. '1.16' or '1.15')"
   default     = "1.16"

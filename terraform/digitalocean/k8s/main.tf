@@ -1,5 +1,5 @@
 data "digitalocean_kubernetes_versions" "k8s" {
-  version_prefix = "${var.version}."
+  version_prefix = "${var.k8s_version}."
 }
 
 resource "digitalocean_kubernetes_cluster" "k8s" {

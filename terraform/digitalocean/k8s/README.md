@@ -11,7 +11,7 @@
 | node\_count | Digital Ocean Kubernetes node pool size (e.g. `2`) | `number` | `2` | no |
 | node\_type | Digital Ocean Kubernetes default node pool type (e.g. `s-1vcpu-2gb` => 1vCPU, 2GB RAM) | `string` | `"s-1vcpu-2gb"` | no |
 | region | (Required) Provide DigitalOcean region | `string` | n/a | yes |
-| version | Provide DigitalOcean Kubernetes minor version (e.g. '1.16' or '1.15') | `string` | `"1.16"` | no |
+| k8s_version | Provide DigitalOcean Kubernetes minor version (e.g. '1.16' or '1.15') | `string` | `"1.16"` | no |
 
 ## Outputs
 
