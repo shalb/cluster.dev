@@ -1,5 +1,18 @@
 # Cluster.dev - Kubernetes-based Dev Environment in Minutes
 
+
+<p align="center">
+    <a href="https://cluster-dev.slack.com/join/shared_invite/zt-dhculpgn-EccDBxR8i7w65WCGNR1OEA" alt="Join Slack">
+        <img src="https://img.shields.io/badge/slack-join-light_green.svg" /></a>
+    <a href="https://github.com/shalb/cluster.dev/graphs/contributors" alt="Contributors">
+        <img src="https://img.shields.io/github/contributors/shalb/cluster.dev" /></a>
+    <a href="https://github.com/shalb/cluster.dev/pulse" alt="Activity">
+        <img src="https://img.shields.io/github/commit-activity/m/shalb/cluster.dev" /></a>
+    <a href="https://twitter.com/intent/follow?screen_name=shalbcom">
+        <img src="https://img.shields.io/twitter/follow/shalbcom?style=social&logo=twitter"
+            alt="follow on Twitter"></a>
+</p>
+
 Cluster.dev is an open-source system delivered as GitHub Action or Docker Image for creating and managing Kubernetes clusters with simple manifests by GitOps approach.
 
 Designed for developers that don't want waste time to configure Kubernetes stuff and just need: kubeconfig, dashboard, logging, monitoring and deployment systems out-of-the-box.
