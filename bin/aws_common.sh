@@ -103,8 +103,8 @@ function aws::init_route53 {
 
     # Create or update zone
     if [ "$cluster_cloud_domain" = "$default_domain" ]; then
-            INFO "The cluster domain is unset. DNS sub-zone would be created in $default_domain"
-            zone_delegation=true
+        INFO "The cluster domain is unset. DNS sub-zone would be created in $default_domain"
+        zone_delegation=true
     else
         INFO "The cluster domain defined. DNS sub-zone would be created in $cluster_cloud_domain"
         zone_delegation=false
