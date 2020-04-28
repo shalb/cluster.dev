@@ -92,7 +92,7 @@ function aws::init_route53 {
     DEBUG "Create a DNS domains/records if required"
     local default_domain="cluster.dev"
     local cluster_cloud_region=$1
-    local CLUSTER_FULLNAME=$2
+    local cluster_fullname=$2
     local cluster_cloud_domain=${3:-$default_domain}
 
     # Init terraform state for DNS
@@ -112,13 +112,13 @@ function aws::init_route53 {
     # Execute terraform
     run_cmd "terraform plan -compact-warnings \
             -var='region=$cluster_cloud_region' \
-            -var='cluster_fullname=$CLUSTER_FULLNAME' \
+            -var='cluster_fullname=$cluster_fullname' \
             -var='cluster_domain=$cluster_cloud_domain' \
             -var='zone_delegation=$zone_delegation' \
             -input=false \
             -out=tfplan"
     run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
-    INFO "DNS Zone: $CLUSTER_FULLNAME.$cluster_cloud_domain has been created."
+    INFO "DNS Zone: $cluster_fullname.$cluster_cloud_domain has been created."
 
     cd - >/dev/null || ERROR "Path not found"
 }
@@ -135,7 +135,7 @@ function aws::init_route53 {
 function aws::destroy_route53 {
     local default_domain="cluster.dev"
     local cluster_cloud_region=$1
-    local CLUSTER_FULLNAME=$2
+    local cluster_fullname=$2
     local cluster_cloud_domain=${3:-$default_domain}
 
     # Init terraform state for DNS
@@ -145,13 +145,13 @@ function aws::destroy_route53 {
         -backend-config="region=$cluster_cloud_region"
 
     # Execute terraform
-    INFO "Destroying a DNS zone $CLUSTER_FULLNAME.$cluster_cloud_domain"
+    INFO "Destroying a DNS zone $cluster_fullname.$cluster_cloud_domain"
     run_cmd "terraform  destroy -auto-approve  \
             -var='region=$cluster_cloud_region' \
             -var='cluster_domain=$cluster_cloud_domain' \
-            -var='cluster_fullname=$CLUSTER_FULLNAME'"
+            -var='cluster_fullname=$cluster_fullname'"
 
-    INFO "DNS Zone: $CLUSTER_FULLNAME.$cluster_cloud_domain has been deleted."
+    INFO "DNS Zone: $cluster_fullname.$cluster_cloud_domain has been deleted."
 
     cd - >/dev/null || ERROR "Path not found"
 }

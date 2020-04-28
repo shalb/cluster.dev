@@ -5,7 +5,7 @@ provider "aws" {
 # If DNS zone is provided by user.
 # Use it to create subzone
 data "aws_route53_zone" "existing" {
-  count = "${var.zone_delegation == "false" ? 1 : 0}"
+  count = tobool(var.zone_delegation) ? 0 : 1
   name         = "${var.cluster_domain}."
 }
 
@@ -16,7 +16,7 @@ resource "aws_route53_zone" "sub" {
 
 resource "aws_route53_record" "sub-ns" {
   allow_overwrite = true
-  zone_id         = "${var.zone_delegation == "true" ? aws_route53_zone.sub.zone_id : data.aws_route53_zone.existing.0.zone_id}"
+  zone_id         = tobool(var.zone_delegation) ? aws_route53_zone.sub.zone_id : data.aws_route53_zone.existing.0.zone_id
   name            = "${var.cluster_fullname}.${var.cluster_domain}"
   type            = "NS"
   ttl             = "300"
@@ -31,7 +31,7 @@ resource "aws_route53_record" "sub-ns" {
 
 # Delegate created zone via lambda
 resource "null_resource" "zone_delegation" {
-  count = "${var.zone_delegation == "true" ? 1 : 0}"
+  count = tobool(var.zone_delegation) ? 1 : 0
   # Update zone when DNS records are updated
   triggers = {
     zone_id    = "${aws_route53_zone.sub.zone_id}"
