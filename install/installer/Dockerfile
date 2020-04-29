@@ -6,7 +6,9 @@ RUN apk add --no-cache \
         openssh \
         # For PyInquirer
         gcc \
-        musl-dev
+        musl-dev \
+        # GPG for sign commits
+        gnupg
 
 # .ssh dir mounts with 1000:1000 rights. And can't be accessible with other rights.
 RUN addgroup -g 1000 cluster.dev && \

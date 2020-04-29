@@ -1,6 +1,6 @@
 cluster:
   installed: false
-  name: minikube-dev
+  name: dev
   cloud:
     provider: aws
     region: eu-central-1
@@ -14,5 +14,3 @@ cluster:
     cert-manager: true
   apps:
     - /kubernetes/apps/samples
-
-

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 cluster.dev installation script
 
@@ -8,14 +7,24 @@ Example usage:
     ./cluster.dev.py install -h
     ./cluster.dev.py install -p Github
 """
+from __future__ import print_function
+from __future__ import unicode_literals
 
-from __future__ import print_function, unicode_literals
 import argparse
 import os
-from git import Repo, InvalidGitRepositoryError, GitCommandError
+import shutil
+from sys import exit as _exit_
+
 import regex
+from git import GitCommandError
+from git import InvalidGitRepositoryError
+from git import Repo
+from PyInquirer import prompt
+from PyInquirer import style_from_dict
+from PyInquirer import Token
+from PyInquirer import ValidationError
+from PyInquirer import Validator
 # PyInquirer - Draw menu and user select one of items
-from PyInquirer import style_from_dict, Token, prompt, Separator, Validator, ValidationError
 
 
 #######################################################################
@@ -37,8 +46,9 @@ def dir_is_git_repo(path):
         return False
 
 
-class RepoNameValidator(Validator):
+class RepoNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
+
     def validate(self, document=None, interactive=True):
         """
         Validate user input string to Github repo name restrictions
@@ -59,15 +69,17 @@ class RepoNameValidator(Validator):
 
         if not okay:
             if not interactive:
-                exit(error_message)
+                _exit_(error_message)
 
             raise ValidationError(
                 message=error_message,
-                cursor_position=len(repo_name))  # Move cursor to end
+                cursor_position=len(repo_name),
+            )  # Move cursor to end
 
 
-class UserNameValidator(Validator):
+class UserNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
+
     def validate(self, document=None, interactive=True):
         """
         Validate user input string to Github repo name restrictions
@@ -90,11 +102,12 @@ class UserNameValidator(Validator):
 
         if not_ok or not_ok2 or not okay:
             if not interactive:
-                exit(error_message)
+                _exit_(error_message)
 
             raise ValidationError(
                 message=error_message,
-                cursor_position=len(username))  # Move cursor to end
+                cursor_position=len(username),
+            )  # Move cursor to end
 
 
 def ask_user(question_name, non_interactive_value=None):
@@ -120,7 +133,7 @@ def ask_user(question_name, non_interactive_value=None):
     prompt_style = style_from_dict({
         Token.Separator: '#6C6C6C',
         Token.QuestionMark: '#FF9D00 bold',
-        #Token.Selected: '',  # default
+        # Token.Selected: '',  # default
         Token.Selected: '#5F819D',
         Token.Pointer: '#FF9D00 bold',
         Token.Instruction: '',  # default
@@ -142,14 +155,15 @@ def ask_user(question_name, non_interactive_value=None):
             'type': 'list',
             'name': 'create_repo',
             'message': 'Create repo for you?',
-            'choices': [{
-                'name': 'No, I create or clone repo and then run tool there',
-                'value': False
-            }, {
-                'name': 'Yes',
-                'value': True,
-                'disabled': 'Unavailable at this time',
-            }, ]
+            'choices': [
+                {
+                    'name': 'No, I create or clone repo and then run tool there',
+                    'value': False,
+                }, {
+                    'name': 'Yes',
+                    'value': True,
+                    'disabled': 'Unavailable at this time',
+                }, ],
         },
         'choose_git_provider': {
             'type': 'list',
@@ -192,7 +206,7 @@ def ask_user(question_name, non_interactive_value=None):
     try:
         result = prompt(questions[question_name], style=prompt_style)[question_name]
     except KeyError:
-        exit(f'Sorry, it\'s program error. Can\'t found key "{question_name}"')
+        _exit_(f'Sorry, it\'s program error. Can\'t found key "{question_name}"')
 
     return result
 
@@ -202,27 +216,38 @@ def parse_cli_args():
     Parse CLI arguments, validate it
     """
     parser = argparse.ArgumentParser(
-        usage='' + \
+        usage='' +
         '  interactive:     ./cluster-dev.py install\n' +
-        '  non-interactive: ./cluster-dev.py install -p Github')
+        '  non-interactive: ./cluster-dev.py install -p Github',
+    )
 
-    parser.add_argument('subcommand', nargs='+', metavar='install',
-                        choices=['install'])
-    parser.add_argument('--git-provider', '-p', metavar='<provider>',
-                        dest='git_provider',
-                        help='Can be Github, Bitbucket or Gitlab',
-                        choices=GIT_PROVIDERS)
-    parser.add_argument('--create-repo', metavar='<repo_name>',
-                        dest='repo_name',
-                        help='Automatically initialize repo for you')
-    parser.add_argument('--git-user-name', metavar='<username>',
-                        dest='git_user_name',
-                        help='Username used in Git Provider.' + \
-                            'Can be automatically get from .gitconfig')
-    parser.add_argument('--git-password', metavar='<password>',
-                        dest='git_password',
-                        help='Password used in Git Provider. ' + \
-                            'Can be automatically get from .ssh')
+    parser.add_argument(
+        'subcommand', nargs='+', metavar='install',
+        choices=['install'],
+    )
+    parser.add_argument(
+        '--git-provider', '-p', metavar='<provider>',
+        dest='git_provider',
+        help='Can be Github, Bitbucket or Gitlab',
+        choices=GIT_PROVIDERS,
+    )
+    parser.add_argument(
+        '--create-repo', metavar='<repo_name>',
+        dest='repo_name',
+        help='Automatically initialize repo for you',
+    )
+    parser.add_argument(
+        '--git-user-name', metavar='<username>',
+        dest='git_user_name',
+        help='Username used in Git Provider.' +
+        'Can be automatically get from .gitconfig',
+    )
+    parser.add_argument(
+        '--git-password', metavar='<password>',
+        dest='git_password',
+        help='Password used in Git Provider. ' +
+        'Can be automatically get from .ssh',
+    )
     cli = parser.parse_args()
 
     if cli.repo_name:
@@ -245,47 +270,106 @@ def get_git_username(cli_arg, git):
     Returns:
         username string
     """
-    user = cli_arg
-    if not user:
-        try:
-            # Required mount: $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro
-            user = git.config('--get', 'user.name')
-            print(f'Username: {user}')
-        except GitCommandError:
-            user = ask_user('git_user_name')
+    if cli_arg:
+        return cli_arg
+
+    try:
+        # Required mount: $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro
+        user = git.config('--get', 'user.name')
+        print(f'Username: {user}')
+    except GitCommandError:
+        user = ask_user('git_user_name')
 
     return user
 
 
-def get_git_password(cli_arg, git):
+def get_git_password(cli_arg):
     """
     Get SSH key from settings or password from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
             If not provided - it set to None
-        git (obj): git.Repo.git object
     Returns:
         `False` if SSH-key provided (mounted)
         Otherwise - return password string
     """
-    password = cli_arg
+    # If password provided - return password
+    if cli_arg:
+        return cli_arg
 
-    if not password:
-        try:
-            use_ssh = git.remote('-v').find('git@')
+    try:
+        # Try use ssh as password
+        # Required mount: $HOME/.ssh:/home/cluster.dev/.ssh:ro
+        if os.listdir(f'{os.environ["HOME"]}/.ssh'):
+            print('Password type: ssh-key')
+            return False
 
-            if use_ssh != -1:
-                # Try use ssh as password
-                # Required mount: $HOME/.ssh:/home/cluster.dev/.ssh:ro
-                print('Password type: ssh-key')
-                return False
-        except GitCommandError:
-            pass
+    except FileNotFoundError:
+        pass
 
-        password = ask_user('git_password')
-
+    password = ask_user('git_password')
     return password
+
+
+def remove_all_except_git(dir_path):
+    """
+    Remove all in directory except .git/
+
+    Args:
+        dir_path (str): path to dir which will cleanup.
+    """
+    for file in os.listdir(dir_path):
+        path = os.path.join(dir_path, file)
+        try:
+            if os.path.isfile(path) or \
+                    os.path.islink(path):
+
+                os.unlink(path)
+
+            elif os.path.isdir(path):
+                if path == os.path.join(dir_path, '.git'):
+                    continue
+
+                shutil.rmtree(path)
+
+        except Exception as exception:  # pylint: disable=broad-except
+            print(f'Failed to delete {path}. Reason: {exception}')
+
+
+def choose_git_provider(cli_arg, repo):
+    """
+    Choose git provider.
+    Try automatically, if git remotes specified. Otherwise - ask user.
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+        repo (obj): git.Repo object
+    Returns:
+        git_provider string
+    """
+    # If git provider provided - return git provider
+    if cli_arg:
+        return cli_arg
+
+    if not repo.remotes:  # Remotes not exist in locally init repos
+        git_provider = ask_user('choose_git_provider')
+        return git_provider
+
+    git = repo.git
+    remote = git.remote('-v')
+
+    if remote.find('github'):
+        git_provider = 'Github'
+    elif remote.find('bitbucket'):
+        git_provider = 'Bitbucket'
+    elif remote.find('gitlab'):
+        git_provider = 'Gitlab'
+    else:
+        git_provider = ask_user('choose_git_provider')
+
+    return git_provider
 
 
 def main():
@@ -296,7 +380,6 @@ def main():
 
     print('Hi, we gonna create an infrastructure for you.\n')
 
-
     if not dir_is_git_repo(dir_path):
         create_repo = True
         if not cli.repo_name:
@@ -304,53 +387,38 @@ def main():
             create_repo = ask_user('create_repo')
 
         if not create_repo:
-            exit('OK. See you soon!')
+            _exit_('OK. See you soon!')
 
         repo_name = ask_user('repo_name', cli.repo_name)
 
         # TODO: setup remote origin and so on. Can be useful:
         # user = get_git_username(cli.git_user_name, git)
         # password = get_git_password(cli.git_password, git)
-        exit('TODO')
-
+        _exit_('TODO')
 
     print('Inside git repo, use it.')
 
     repo = Repo(dir_path)
     git = repo.git
 
-
-    if repo.heads: # Heads exist only after first commit
+    if repo.heads:  # Heads exist only after first commit
         cleanup_repo = ask_user('cleanup_repo')
+
         if cleanup_repo:
-            # TODO: rm -rf (except .git) and commit
+            remove_all_except_git(dir_path)
+            git.add('-A')
+            git.commit('-m', 'Cleanup repo')
+
+    git_provider = choose_git_provider(cli.git_provider, repo)
+
+    if not repo.remotes:
+        publish_repo = ask_user('publish_repo_to_git_provider')
+        if publish_repo:
+            # TODO: push repo to Git Provider
             pass
 
-
-    # Choose git provider
-    git_provider = cli.git_provider
-    if not git_provider:
-        if not repo.remotes: # Remotes not exist in locally init repos
-            git_provider = ask_user('choose_git_provider')
-            publish_repo = ask_user('publish_repo_to_git_provider')
-            if publish_repo:
-                # TODO: push repo to Git Provider
-                pass
-        else:
-            remote = git.remote('-v')
-
-            if remote.find('github'):
-                git_provider = 'Github'
-            elif remote.find('bitbucket'):
-                git_provider = 'Bitbucket'
-            elif remote.find('gitlab'):
-                git_provider = 'Gitlab'
-            else:
-                git_provider = ask_user('choose_git_provider')
-
-
     user = get_git_username(cli.git_user_name, git)
-    password = get_git_password(cli.git_password, git)
+    password = get_git_password(cli.git_password)
 
 
 #######################################################################

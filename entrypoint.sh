@@ -70,8 +70,8 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         # Check if bucket already exist by trying to import it
         aws::init_s3_bucket   "$cluster_cloud_region"
 
-        # Create a DNS domains/records if required
-        aws::init_route53   "$cluster_cloud_region" "$cluster_name" "$cluster_cloud_domain"
+        # Create a DNS zone if required
+        aws::init_route53   "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
 
         # Create a VPC or use existing defined
         FUNC_RESULT=""
