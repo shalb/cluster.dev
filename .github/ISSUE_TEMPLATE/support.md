@@ -1,6 +1,6 @@
 ---
 name: Support Request
-about: Support request or question relating to cluster.dev project
+about: Support request or a question relating to the cluster.dev project
 labels:
 - triage/support
 ---

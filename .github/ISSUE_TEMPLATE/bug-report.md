@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug encountered with cluster.dev
+about: Report a bug encountered in cluster.dev
 labels:
 - kind/bug
 ---
@@ -18,7 +18,7 @@ labels:
 ```
 
 
-<!--Optional Information (remove the comment tags around information you would like to include)-->
+<!--Optional Information (be sure to remove the comment tags around the information that you would like to include)-->
 
 <!-- Proposed Solution:-->
 
