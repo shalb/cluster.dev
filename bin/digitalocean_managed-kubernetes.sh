@@ -59,6 +59,7 @@ function digitalocean::managed-kubernetes::deploy_cluster {
                 -var='node_type=$cluster_cloud_provisioner_nodeSize' \
                 -input=false \
                 -out=tfplan"
+    fi
 
     INFO "DO k8s cluster: Creating infrastructure"
     run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
