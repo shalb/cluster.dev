@@ -1,6 +1,9 @@
 # Cluster.dev - Kubernetes-based Dev Environment in Minutes
 
-
+<p align="center">
+    <img src="https://raw.githubusercontent.com/shalb/cluster.dev/master/docs/images/cluster-dev-logo-site.png?sanitize=true"
+        width="540">
+</p>
 <p align="center">
     <a href="https://cluster-dev.slack.com/join/shared_invite/zt-dhculpgn-EccDBxR8i7w65WCGNR1OEA" alt="Join Slack">
         <img src="https://img.shields.io/static/v1?label=SLACK&message=JOIN&color=4A154B&style=for-the-badge&logo=slack" /></a>
