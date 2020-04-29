@@ -3,14 +3,15 @@
 
 <p align="center">
     <a href="https://cluster-dev.slack.com/join/shared_invite/zt-dhculpgn-EccDBxR8i7w65WCGNR1OEA" alt="Join Slack">
-        <img src="https://img.shields.io/badge/slack-join-light_green.svg" /></a>
-    <a href="https://github.com/shalb/cluster.dev/graphs/contributors" alt="Contributors">
-        <img src="https://img.shields.io/github/contributors/shalb/cluster.dev" /></a>
-    <a href="https://github.com/shalb/cluster.dev/pulse" alt="Activity">
-        <img src="https://img.shields.io/github/commit-activity/m/shalb/cluster.dev" /></a>
+        <img src="https://img.shields.io/static/v1?label=SLACK&message=JOIN&color=4A154B&style=for-the-badge&logo=slack" /></a>
     <a href="https://twitter.com/intent/follow?screen_name=shalbcom">
-        <img src="https://img.shields.io/twitter/follow/shalbcom?style=social&logo=twitter"
+        <img src="https://img.shields.io/static/v1?label=TWITTER&message=FOLLOW&color=1DA1F2&style=for-the-badge&logo=twitter"
             alt="follow on Twitter"></a>
+    <a href="https://www.facebook.com/shalb/">
+        <img src="https://img.shields.io/static/v1?label=FACEBOOK&message=FOLLOW&color=1877F2&style=for-the-badge&logo=facebook"
+            alt="follow on Facebook"></a>
+
+
 </p>
 
 Cluster.dev is an open-source system delivered as GitHub Action or Docker Image for creating and managing Kubernetes clusters with simple manifests by GitOps approach.
