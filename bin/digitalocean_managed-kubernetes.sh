@@ -13,6 +13,7 @@ source "$PRJ_ROOT"/bin/logging.sh
 #   cluster_cloud_region
 #   cluster_cloud_provisioner_version
 #   cluster_cloud_provisioner_nodeSize
+#   cluster_cloud_provisioner_autoScale
 # Outputs:
 #   Writes progress status
 #######################################
@@ -22,6 +23,9 @@ function digitalocean::managed-kubernetes::deploy_cluster {
     local cluster_cloud_region=$2
     local cluster_cloud_provisioner_version=$3
     local cluster_cloud_provisioner_nodeSize=$4
+    local cluster_cloud_provisioner_autoScale=$5
+    local cluster_cloud_provisioner_minNodes=$6
+    local cluster_cloud_provisioner_maxNodes=$7
 
     cd "$PRJ_ROOT"/terraform/digitalocean/k8s/ || ERROR "Path not found"
 
@@ -34,7 +38,18 @@ function digitalocean::managed-kubernetes::deploy_cluster {
                 -backend-config='access_key=$SPACES_ACCESS_KEY_ID' \
                 -backend-config='secret_key=$SPACES_SECRET_ACCESS_KEY'"
 
-
+    if ( $cluster_cloud_provisioner_autoScale ); then
+    run_cmd "terraform plan \
+                  -var='region=$cluster_cloud_region' \
+                  -var='k8s_version=$cluster_cloud_provisioner_version' \
+                  -var='name=$CLUSTER_FULLNAME' \
+                  -var='node_type=$cluster_cloud_provisioner_nodeSize' \
+                  -var='enable_autoscaling=$cluster_cloud_provisioner_autoScale' \
+                  -var='min_node_count=$cluster_cloud_provisioner_minNodes' \
+                  -var='max_node_count=$cluster_cloud_provisioner_maxNodes' \
+                  -input=false \
+                  -out=tfplan"
+    else
     run_cmd "terraform plan \
                 -var='region=$cluster_cloud_region' \
                 -var='k8s_version=$cluster_cloud_provisioner_version' \
