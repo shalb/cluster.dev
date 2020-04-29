@@ -14,6 +14,8 @@ source "$PRJ_ROOT"/bin/logging.sh
 #   cluster_cloud_provisioner_version
 #   cluster_cloud_provisioner_nodeSize
 #   cluster_cloud_provisioner_autoScale
+#   cluster_cloud_provisioner_minNodes
+#   cluster_cloud_provisioner_maxNodes
 # Outputs:
 #   Writes progress status
 #######################################
@@ -38,7 +40,7 @@ function digitalocean::managed-kubernetes::deploy_cluster {
                 -backend-config='access_key=$SPACES_ACCESS_KEY_ID' \
                 -backend-config='secret_key=$SPACES_SECRET_ACCESS_KEY'"
 
-    if ( $cluster_cloud_provisioner_autoScale ); then
+    if [ "$cluster_cloud_provisioner_autoScale" = "true" ]; then
     run_cmd "terraform plan \
                   -var='region=$cluster_cloud_region' \
                   -var='k8s_version=$cluster_cloud_provisioner_version' \
