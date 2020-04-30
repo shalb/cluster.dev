@@ -142,7 +142,11 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         managed-kubernetes)
             DEBUG "Provisioner: managed-kubernetes"
             # Deploy DO k8s cluster via Terraform
-            digitalocean::managed-kubernetes::deploy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_version" "$cluster_cloud_provisioner_nodeSize" "$cluster_cloud_provisioner_autoScale" "$cluster_cloud_provisioner_minNodes" "$cluster_cloud_provisioner_maxNodes"
+            if [ "$cluster_cloud_provisioner_autoScale" = "true" ]; then
+            digitalocean::managed-kubernetes::deploy_cluster_autoscale "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_version" "$cluster_cloud_provisioner_nodeSize" "$cluster_cloud_provisioner_autoScale" "$cluster_cloud_provisioner_minNodes" "$cluster_cloud_provisioner_maxNodes"
+            else
+            digitalocean::managed-kubernetes::deploy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_version" "$cluster_cloud_provisioner_nodeSize"
+            fi
 
         ;;
         esac
