@@ -1,5 +1,6 @@
 # K8S
 
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -16,3 +17,5 @@
 ## Outputs
 
 No output.
+
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
