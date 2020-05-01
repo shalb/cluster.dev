@@ -7,40 +7,45 @@ permalink: /roadmap/
 
 ## Basic Scenario
 
-- Create a state storage (AWS S3+Dynamo) for infrastructure resources.
-- Deploy a Kubernetes(Minikube) in AWS using default VPC.
-- Provision Kubernetes with Ingress, Load Balancer, Cert-Manager, ExtDNS with manifests.
-- Deploy ArgoCD on Kubernetes with Helm
-- Deploy a test "Guestbook" application to Kubernetes cluster with ArgoCD.
+[x] Create a state storage (AWS S3+Dynamo) for infrastructure resources.  
+[x] Deploy a Kubernetes(Minikube) in AWS using default VPC.  
+[x] Provision Kubernetes with addons: Ingress-Nginx, Load Balancer, Cert-Manager, ExtDNS, ArgoCD.  
+[x] Deploy a sample "WordPress" application to Kubernetes cluster using ArgoCD.  
+[x] Delivered as GitHub Actions and Docker Image.
 
-### Iteration #1
 
-- Deploy kubernetes-dashboard
-- Deploy logging with ELK
+### v0.1.x
 
-### Iteration #2
+[x] Deliver with cluster creation a default DNS sub-zone:
+  `*.username-clustername.cluster.dev`  
+[x] Create a cluster.dev backend to register newly created clusters.  
+[x] Support for GitLab CI Pipelines.  
+[x] ArgoCD sample applications (raw manifests, local helm chart, public helm chart).  
+[x] Support for DigitalOcean Kubernetes cluster [59](https://github.com/shalb/cluster.dev/issues/59)  
+[X] DigitalOcean Domains sub-zones [65](https://github.com/shalb/cluster.dev/issues/65)  
+[ ] AWS EKS provisioning  
+[ ] CLI Installer [54](https://github.com/shalb/cluster.dev/issues/54)  
 
-- Deliver with cluster creation a default DNS record:
-  `*.username-clustername.cluster.dev`
-- Create a cluster.dev backend to register newly created clusters.
+### v0.2.x
 
-### Iteration #3
+[ ] External secrets management with [godaddy/kubernetes-external-secrets](https://github.com/godaddy/kubernetes-external-secrets)  
+[ ] Team and user management with [Keycloak](https://www.keycloak.org/)  
+[ ] Apps deployment: Kubernetes Dashboard, Grafana and Kibana.  
+[ ] OIDC access to kubeconfig with Keycloak and [jetstack/kube-oidc-proxy/](https://github.com/jetstack/kube-oidc-proxy/) [53](https://github.com/shalb/cluster.dev/issues/53)  
+[ ] SSO access to ArgoCD and base applications: Kubernetes Dashboard, Grafana, Kibana  
+[ ] OIDC integration with GitHub, GitLab, Google Auth, Okta
 
-- Add support for AWS EKS provisioning
 
-### Iteration #4
+### v0.3.x
 
-- Add support for DO Kubernetes cluster
+[ ] Cost estimation during installation  
+[ ] Add GitHub runner and test GitHub Action Continuous Integration workflow  
+[ ] Argo Workflows for DAG and CI tasks inside Kubernetes cluster  
 
-### Iteration #5
 
-- Add support for GitHub SSO access to Kubernetes, Dashboard, Grafana and Kibana
-- Team and user management
+### v0.4.x
 
-### Iteration #6
+[ ] Web user interface  
+[ ] Multi-cluster support for user management and SSO  
+[ ] Multi-cluster support for ArgoCD  
 
-- Add GitHub runner and test GitHub Action Continuous Integration workflow
-
-### Iteration #7
-
-- Research Argo Workflows to create builds and CI inside Kubernetes cluster
