@@ -110,6 +110,8 @@
                 "iam:PassRole",
                 "iam:RemoveRoleFromInstanceProfile",
                 "route53:ChangeResourceRecordSets",
+                "route53:CreateHostedZone",
+                "route53:DeleteHostedZone",
                 "route53:GetChange",
                 "route53:GetHostedZone",
                 "route53:ListHostedZones",
