@@ -71,6 +71,7 @@
       "pylint",
       "readlink",
       "realpath",
+      "reconcilation",
       "reload",
       "roadmap",
       "rsa",
