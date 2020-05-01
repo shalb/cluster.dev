@@ -58,4 +58,3 @@ permalink: /roadmap/
 - [ ] Multi-cluster support for user management and SSO
 - [ ] Multi-cluster support for ArgoCD
 - [ ] [Crossplane](https://crossplane.io/) integration
-
