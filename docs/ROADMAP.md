@@ -5,42 +5,56 @@ permalink: /roadmap/
 ---
 # Project Roadmap
 
-## Basic Scenario
+### v.0.0.x Basic Scenario
 
-- Create a state storage (AWS S3+Dynamo) for infrastructure resources.
-- Deploy a Kubernetes(Minikube) in AWS using default VPC.
-- Provision Kubernetes with Ingress, Load Balancer, Cert-Manager, ExtDNS with manifests.
-- Deploy ArgoCD on Kubernetes with Helm
-- Deploy a test "Guestbook" application to Kubernetes cluster with ArgoCD.
+- [x] Create a state storage (AWS S3+Dynamo) for infrastructure resources
+- [x] Deploy a Kubernetes(Minikube) in AWS using default VPC
+- [x] Provision Kubernetes with addons: Ingress-Nginx, Load Balancer, Cert-Manager, ExtDNS, ArgoCD
+- [x] Deploy a sample "WordPress" application to Kubernetes cluster using ArgoCD
+- [x] Delivered as GitHub Actions and Docker Image
 
-### Iteration #1
 
-- Deploy kubernetes-dashboard
-- Deploy logging with ELK
+### v0.1.x - Work in Progress
 
-### Iteration #2
-
-- Deliver with cluster creation a default DNS record:
+- [x] Deliver with cluster creation a default DNS sub-zone:
   `*.username-clustername.cluster.dev`
-- Create a cluster.dev backend to register newly created clusters.
+- [x] Create a cluster.dev backend to register newly created clusters
+- [x] Support for GitLab CI Pipelines
+- [x] ArgoCD sample applications (raw manifests, local helm chart, public helm chart)
+- [x] Support for DigitalOcean Kubernetes cluster [59](https://github.com/shalb/cluster.dev/issues/59)
+- [x] DigitalOcean Domains sub-zones [65](https://github.com/shalb/cluster.dev/issues/65)
+- [ ] AWS EKS provisioning
+- [ ] CLI Installer [54](https://github.com/shalb/cluster.dev/issues/54)
 
-### Iteration #3
+### v0.2.x
 
-- Add support for AWS EKS provisioning
+- [ ] External secrets management with [godaddy/kubernetes-external-secrets](https://github.com/godaddy/kubernetes-external-secrets)
+- [ ] Team and user management with [Keycloak](https://www.keycloak.org/)
+- [ ] Apps deployment: Kubernetes Dashboard, Grafana and Kibana.
+- [ ] OIDC access to kubeconfig with Keycloak and [jetstack/kube-oidc-proxy/](https://github.com/jetstack/kube-oidc-proxy/) [53](https://github.com/shalb/cluster.dev/issues/53)
+- [ ] SSO access to ArgoCD and base applications: Kubernetes Dashboard, Grafana, Kibana
+- [ ] OIDC integration with GitHub, GitLab, Google Auth, Okta
 
-### Iteration #4
 
-- Add support for DO Kubernetes cluster
+### v0.3.x
 
-### Iteration #5
+- [ ] Support for [Operator Lifecycle Manager](https://github.com/operator-framework/operator-lifecycle-manager)
+- [ ] Add GitHub runner and test GitHub Action Continuous Integration workflow
+- [ ] Argo Workflows for DAG and CI tasks inside Kubernetes cluster
+- [ ] Google Cloud Platform Kubernetes (GKE) support
+- [ ] Custom Terraform modules and reconcilation
+- [ ] [Kind](https://kind.sigs.k8s.io/) provisioner
 
-- Add support for GitHub SSO access to Kubernetes, Dashboard, Grafana and Kibana
-- Team and user management
+### v0.4.x
 
-### Iteration #6
+- [ ] [kops](https://github.com/kubernetes/kops) provisioner support
+- [ ] [k3s](https://k3s.io) provisioner
+- [ ] Cost $$$ estimation during installation
+- [ ] Web user interface design
 
-- Add GitHub runner and test GitHub Action Continuous Integration workflow
+### v0.5.x
 
-### Iteration #7
-
-- Research Argo Workflows to create builds and CI inside Kubernetes cluster
+- [ ] Rancher RKE provisioner support
+- [ ] Multi-cluster support for user management and SSO
+- [ ] Multi-cluster support for ArgoCD
+- [ ] [Crossplane](https://crossplane.io/) integration

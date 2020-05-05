@@ -124,12 +124,12 @@ If you need more information about AWS users - please check [aws documentation](
 
     ```bash
     # Sample with Minikube cluster
-    export RELEASE=v0.1.6
+    export RELEASE=v0.1.7
     mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/aws.yml"
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/aws-minikube.yaml"
     ```
 
-5. In cluster definition yaml (.cluster.dev/aws-minikube.yaml) you should set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).
+5. In cluster definition yaml (.cluster.dev/aws-minikube.yaml) you can set your own Route53 DNS zone. If you don't have any hosted public zone you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html) or use `cluster.dev` domain.
 
 6. You can change all other parameters or leave default values in cluster.yaml.  
 Leave github workflow file as is.
@@ -139,7 +139,7 @@ Leave github workflow file as is.
     _Or download application samples directly to local repo clone with commands:_
 
     ```bash
-    export RELEASE=v0.1.6
+    export RELEASE=v0.1.7
     # Create directory and place ArgoCD applications inside
     mkdir -p kubernetes/apps/samples && wget -O kubernetes/apps/samples/helm-all-in-app.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-all-in-app.yaml"
     wget -O kubernetes/apps/samples/helm-dependency.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-dependency.yaml"
@@ -157,11 +157,13 @@ Leave github workflow file as is.
         - /kubernetes/apps/samples
     ```
 
-8. Commit and Push files to your repo and follow the Github Action execution status.  
+8. Commit and Push files to your repo.
+
+9. Set cluster to `installed: true`, commit, push and follow the Github Action execution status.  
 In GitHub action output you'll receive access instructions to your cluster and services:  
 ![GHA_GetCredentials](docs/images/gha_get_credentials.png)
 
-9. Voilà! You receive GitOps managed infrastructure in code. So now you can deploy applications, create more clusters, integrate with CI systems, experiment with the new features and everything from Git don't leaving your IDE.
+10. Voilà! You receive GitOps managed infrastructure in code. So now you can deploy applications, create more clusters, integrate with CI systems, experiment with the new features and everything from Git don't leaving your IDE.
 
 ### Cleanup [`↑`](#menu)
 

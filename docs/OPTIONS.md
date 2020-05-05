@@ -1,5 +1,7 @@
 # Options List for Cluster Manifests
-## Example Usage
+
+
+## Manifest Example
 ```yaml
 # .cluster.dev/staging.yaml
 cluster:
@@ -19,6 +21,7 @@ cluster:
   apps:
     - /kubernetes/apps/samples
 ```
+More examples could be found in [/.cluster.dev](../.cluster.dev/) directory.
 
 ## Global Options
 
@@ -76,5 +79,86 @@ Next environment variables should be set:
 ## Cluster Addons
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
-| [nginx-ingress](#nginx-ingress) | - | boolean | `true`,`false` | `true` | Deployment option for [nginx-ingress](https://github.com/kubernetes/ingress-nginx). |
-| [cert-manager](#cert-manager) | - | boolean | `true`,`false` | `true` | Deployment option for [cert-manager](https://cert-manager.io/). |
+| [nginx-ingress](#nginx-ingress) | - | boolean | `true`,`false` | `true` | Deploy [nginx-ingress](https://github.com/kubernetes/ingress-nginx). |
+| [cert-manager](#cert-manager) | - | boolean | `true`,`false` | `true` | Deploy [cert-manager](https://cert-manager.io/). |
+| [external-dns](#external-dns) | - | boolean | `true`,`false` | `true` | Deploy [external-dns](https://github.com/kubernetes-sigs/external-dns/). |
+| [argo-cd](#argo-cd) | - | boolean | `true`,`false` | `true` | Deploy [argo-cd](https://argoproj.github.io/argo-cd/). |
+
+
+# GIT Provider Support
+
+## GitHub Actions Workflow Configuration
+
+```yaml
+# sample .github/workflows/aws.yaml
+on:
+  push:
+# This how you can define after what changes it should be triggered
+    paths:
+      - '.cluster.dev/aws-minikube.yaml' 
+    branches:
+      - master
+jobs:
+  deploy_cluster_job:
+    runs-on: ubuntu-latest
+    name: Cluster.dev
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+    - name: Reconcile Clusters
+      id: reconcile
+# Here you can define what release version of action to use,
+# example: shalb/cluster.dev@master, shalb/cluster.dev@v0.1.7,  shalb/cluster.dev@test-branch
+      uses: shalb/cluster.dev@v0.1.7
+# Here the required environment variables should be set depending on Cloud Provider
+      env:
+        AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        AWS_SECRET_ACCESS_KEY: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+        CLUSTER_CONFIG_PATH: "./.cluster.dev/"
+# Here the debug level for the ACTION could be set (default: INFO)
+        VERBOSE_LVL: DEBUG
+    - name: Get the Cluster Credentials
+      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
+```
+More examples could be found in [/.github/workflows](../.github/workflows) directory.
+
+## GitLab CI/CD Pipeline Configuration
+
+```yaml
+# Example for .gitlab-ci.yml pipeline with cluster.dev job
+image: docker:19.03.0
+
+variables:
+  DOCKER_DRIVER: overlay2 # Docker Settings
+  DOCKER_TLS_CERTDIR: "/certs"
+  CLUSTER_DEV_BRANCH: "master" # Define branch or release version
+  CLUSTER_CONFIG_PATH: "./.cluster.dev/" # Path to manifests
+  DIGITALOCEAN_TOKEN: "${DIGITALOCEAN_TOKEN}"  # Environment variables depending on Cloud Provider
+  SPACES_ACCESS_KEY_ID: "${SPACES_ACCESS_KEY_ID}"
+  SPACES_SECRET_ACCESS_KEY: "${SPACES_SECRET_ACCESS_KEY}"
+
+services:
+  - docker:19.03.0-dind
+
+before_script:
+  - apk update && apk upgrade && apk add --no-cache bash git
+
+stages:
+  - cluster-dev
+
+cluster-dev:
+  only:
+    refs:
+      - master
+    changes:
+      - '.gitlab-ci.yml'
+      - '.cluster.dev/**' # Path to cluster declaration manifests
+      - '/kubernetes/apps/**' # ArgoCD application directories
+  script:
+    - git clone -b "$CLUSTER_DEV_BRANCH" https://github.com/shalb/cluster.dev.git
+    - cd cluster.dev && docker build --no-cache -t "cluster.dev" .
+    - docker run --name cluster.dev --workdir /gitlab/workspace --rm -e CI_PROJECT_PATH -e CI_PROJECT_DIR -e VERBOSE_LVL=DEBUG -e DIGITALOCEAN_TOKEN -e SPACES_ACCESS_KEY_ID -e SPACES_SECRET_ACCESS_KEY -v "${CI_PROJECT_DIR}:/gitlab/workspace" cluster.dev
+  stage: cluster-dev
+```
+Full example could be found in [/install/.gitlab-ci-sample.yml](../install/.gitlab-ci-sample.yml)
+
