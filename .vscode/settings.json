@@ -48,10 +48,13 @@
       "kibana",
       "kubeconfig",
       "kubectl",
+      "kubelet",
       "kubernetes",
       "kustomize",
       "letsencrypt",
+      "lifecycle",
       "linebreak",
+      "m",
       "minikube",
       "mkdir",
       "modules",
@@ -96,6 +99,7 @@
       "voatsap",
       "wordpress",
       "workdir",
+      "xlarge",
       "yaml's"
     ]
 }
