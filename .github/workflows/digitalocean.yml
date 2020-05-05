@@ -3,7 +3,7 @@ on:
     paths:
       - './.cluster.dev/digitalocean-k8s.yaml'
     branches:
-      - master
+      - feature/GH-59
 jobs:
   deploy_cluster_job:
     runs-on: ubuntu-latest
