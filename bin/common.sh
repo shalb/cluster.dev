@@ -30,7 +30,6 @@ function output_software_info {
 # Outputs:
 #   GIT_PROVIDER - platform for git hosting
 #   GIT_REPO_NAME - repo in "user/repository" format
-#   GIT_REPO_ROOT - full path to cloned repo files inside runner
 #######################################
 function detect_git_provider
 {
@@ -41,7 +40,6 @@ if [ ! -z ${GITHUB_REPOSITORY+h} ];
             INFO "Assuming we are running GitHub Action";
             readonly GIT_PROVIDER="github"
             readonly GIT_REPO_NAME=$GITHUB_REPOSITORY
-            readonly GIT_REPO_ROOT=$GITHUB_WORKSPACE
     else
         DEBUG "GITHUB_REPOSITORY variable is NOT set assuming we are NOT running GitHub Action";
 fi
@@ -53,7 +51,6 @@ if [ ! -z ${CI_PROJECT_PATH+l} ];
             INFO "Assuming we are running GitLab Pipeline";
             readonly GIT_PROVIDER="gitlab"
             readonly GIT_REPO_NAME=$CI_PROJECT_PATH
-            readonly GIT_REPO_ROOT=$CI_PROJECT_DIR
     else
         DEBUG "CI_PROJECT_PATH variable is NOT set assuming we are NOT running GitLab Pipeline";
 fi
@@ -65,7 +62,6 @@ if [ ! -z ${BITBUCKET_GIT_HTTP_ORIGIN+b} ];
             INFO "Assuming we are running Bitbucket Pipeline";
             readonly GIT_PROVIDER="bitbucket"
             readonly GIT_REPO_NAME=$(echo $BITBUCKET_GIT_HTTP_ORIGIN | sed -e 's/http:\/\/bitbucket.org\///g')
-            readonly GIT_REPO_ROOT=$BITBUCKET_CLONE_DIR
     else
         DEBUG "BITBUCKET_GIT_HTTP_ORIGIN variable is NOT set assuming we are NOT running Bitbucket Pipeline";
 fi
@@ -73,7 +69,6 @@ fi
 # Output final results with required variables set
 INFO "GIT_PROVIDER is set for: $GIT_PROVIDER"
 INFO "GIT_REPO_NAME is set for: $GIT_REPO_NAME"
-INFO "GIT_REPO_ROOT is set for: $GIT_REPO_ROOT"
 }
 
 
