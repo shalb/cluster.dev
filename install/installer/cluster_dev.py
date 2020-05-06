@@ -110,13 +110,14 @@ class UserNameValidator(Validator):  # pylint: disable=too-few-public-methods
             )  # Move cursor to end
 
 
-def ask_user(question_name, non_interactive_value=None):
+def ask_user(question_name, non_interactive_value=None, choices=None):
     """
     Draw menu for user interactions
 
     Args:
         question_name (str): Name from `questions` that will processed.
         non_interactive_value (str,int): used for skip interactive. Default to None
+        choices (list): used when choose params become know during execution
     Returns:
         `non_interactive_value` if it set.
         Otherwise, depends on entered `question_name`:
@@ -201,6 +202,18 @@ def ask_user(question_name, non_interactive_value=None):
             'name': 'git_password',
             'message': 'Please enter your git password',
         },
+        'choose_cloud': {
+            'type': 'list',
+            'name': 'choose_cloud',
+            'message': 'Select your Cloud',
+            'choices': CLOUDS,
+        },
+        'choose_cloud_provider': {
+            'type': 'list',
+            'name': 'choose_cloud_provider',
+            'message': 'Select your Cloud Provider',
+            'choices': choices,
+        },
     }
 
     try:
@@ -226,7 +239,7 @@ def parse_cli_args():
         choices=['install'],
     )
     parser.add_argument(
-        '--git-provider', '-p', metavar='<provider>',
+        '--git-provider', '-gp', metavar='<provider>',
         dest='git_provider',
         help='Can be Github, Bitbucket or Gitlab',
         choices=GIT_PROVIDERS,
@@ -237,16 +250,27 @@ def parse_cli_args():
         help='Automatically initialize repo for you',
     )
     parser.add_argument(
-        '--git-user-name', metavar='<username>',
+        '--git-user-name', '-gusr', metavar='<username>',
         dest='git_user_name',
         help='Username used in Git Provider.' +
         'Can be automatically get from .gitconfig',
     )
     parser.add_argument(
-        '--git-password', metavar='<password>',
+        '--git-password', '-gpwd', metavar='<password>',
         dest='git_password',
         help='Password used in Git Provider. ' +
         'Can be automatically get from .ssh',
+    )
+    parser.add_argument(
+        '--cloud', '-c', metavar='<cloud>',
+        dest='cloud',
+        help="Can be 'Amazon Web Services' or 'Digital Ocean'",
+        choices=CLOUDS,
+    )
+    parser.add_argument(
+        '--cloud-provider', '-cp', metavar='<provider>',
+        dest='cloud_provider',
+        help='Cloud provider depends on selected --cloud',
     )
     cli = parser.parse_args()
 
@@ -255,6 +279,13 @@ def parse_cli_args():
 
     if cli.git_user_name:
         UserNameValidator.validate(cli.git_user_name, interactive=False)
+
+    if cli.cloud and cli.cloud_provider:
+        if cli.cloud_provider not in CLOUD_PROVIDERS[cli.cloud]:
+            _exit_(
+                f'Cloud provider can be: {CLOUD_PROVIDERS[cli.cloud_provider]}, ' +
+                f'but provided: {cli.cloud_provider}',
+            )
 
     return cli
 
@@ -372,6 +403,46 @@ def choose_git_provider(cli_arg, repo):
     return git_provider
 
 
+def choose_cloud(cli_arg):
+    """
+    Get cloud from cli or from user input
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+    Returns:
+        cloud string
+    """
+    # If cloud provided - return cloud string
+    if cli_arg:
+        return cli_arg
+
+    cloud = ask_user('choose_cloud')
+
+    return cloud
+
+
+def choose_cloud_provider(cli_arg, cloud_providers):
+    """
+    Choose git provider.
+    Try automatically, if git remotes specified. Otherwise - ask user.
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+        cloud_providers (list)
+    Returns:
+        cloud_provider string
+    """
+    # If cloud provided - return cloud string
+    if cli_arg:
+        return cli_arg
+
+    cloud_provider = ask_user('choose_cloud_provider', choices=cloud_providers)
+
+    return cloud_provider
+
+
 def main():
     """Logic"""
 
@@ -420,12 +491,25 @@ def main():
     user = get_git_username(cli.git_user_name, git)
     password = get_git_password(cli.git_password)
 
+    cloud = choose_cloud(cli.cloud)
+    cloud_provider = choose_cloud_provider(cli.cloud_provider, CLOUD_PROVIDERS[cloud])
+
 
 #######################################################################
 #                         G L O B A L   A R G S                       #
 #######################################################################
-
 GIT_PROVIDERS = ['Github', 'Bitbucket', 'Gitlab']
+CLOUDS = ['Amazon Web Services', 'Digital Ocean']
+CLOUD_PROVIDERS = {
+    'Amazon Web Services': [
+        'Minikube',
+        'AWS EKS',
+    ],
+    'Digital Ocean': [
+        'Minikube',
+        'Managed Kubernetes',
+    ],
+}
 
 if __name__ == "__main__":
     # execute only if run as a script

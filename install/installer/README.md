@@ -18,7 +18,7 @@ Supported git-repo types:
 
 ##### 2. Select and create cloud user and required permissions
 
-- [ ] Select cloud
+- [x] Select cloud
 - [ ] Create cloud user and required permissions
 
 ##### 3. Populate repo with sample files
@@ -36,6 +36,11 @@ Supported git-repo types:
 ##### 6. Display credentials with output
 
 - [ ] Supported
+
+##### 7. Create binary
+
+- [ ] [Creating standalone Mac OS X applications](https://www.metachris.com/2015/11/create-standalone-mac-os-x-applications-with-python-and-py2app/) | [py2app docs](https://py2app.readthedocs.io/en/latest/)
+- [ ] [py2exe - Create standalone Windows app](https://www.py2exe.org/)
 
 
 
