@@ -52,20 +52,20 @@ Required Environment variables should be passed to container:
 | [provisioner.instanceType](#provisioner.instanceType) | + | string | ex:`m5.xlarge` | `m5.large` | Single node Kubernetes cluster AWS EC2 instance type. |
 
 #### AWS EKS
-|  Key |  Required | Type  | Values  | Default  | Description |
+|  Key ___________________________________________________________________________ |  Required __________| Type ________ | Values _____________________________________________________  | Default ________________ |Description ______________________________________________________________________________________________|
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.version](#provisioner.version) | + | string | ex:`1.15`,`1.16` | `1.16` | Kubernetes version. |
-| [provisioner.node_group.name](#provisioner.node_group.name) | + | string | ex:`spot-group`,`on-demand-group` | `node-group` | Name for Kubernetes workers node group name. |
-| [provisioner.node_group.type](#provisioner.node_group.type) | - | string | ex:`spot`,`on-demand` | `on-demand` | Type for Kubernetes workers node group. |
-| [provisioner.node_group.instance_type](#provisioner.node_group.instance_type) | - | string | ex:`t3.medium`,`c5.xlarge` | `m5.large` | Kubernetes workers node size. |
+| [provisioner.node_group.name](#provisioner.node_group.name) | + | string | ex:`spot-group`, `on-demand-group` | `node-group` | Name for Kubernetes workers node group name. |
+| [provisioner.node_group.type](#provisioner.node_group.type) | - | string | ex:`spot`, `on-demand` | `on-demand` | Type for Kubernetes workers node group. |
+| [provisioner.node_group.instance_type](#provisioner.node_group.instance_type) | - | string | ex:`t3.medium`, `c5.xlarge` | `m5.large` | Kubernetes workers node size. |
 | [provisioner.node_group.asg_desired_capacity](#provisioner.node_group.asg_desired_capacity) | - | integer | `1`..<=`asg_max_size` | `1` | Desired worker capacity in the autoscaling group. |
 | [provisioner.node_group.asg_max_size](#provisioner.node_group.asg_max_size) | - | integer | `1`..`cloud limit` | `3` | Maximum worker capacity in the autoscaling group. |
 | [provisioner.node_group.asg_min_size](#provisioner.node_group.asg_min_size) | - | integer | `1`..<=`asg_max_size` | `1` | Minimum worker capacity in the autoscaling group. |
 | [provisioner.node_group.root_volume_size](#provisioner.node_group.root_volume_size) | - | integer | `20`..`cloud limit` | `40` | root volume size of workers instances. |
 | [provisioner.node_group.kubelet_extra_args](#provisioner.node_group.kubelet_extra_args) | - | string | `--node-labels=kubernetes.io/lifecycle=spot|on-demand` | `` |  This string is passed directly to kubelet if set. Useful for adding labels or taints. |
-| [provisioner.node_group.additional_security_group_ids](#provisioner.node_group.additional_security_group_ids) | - | [list] | ex:`sg-233ba1` | `` |  A list of additional security group ids to include in worker launch config. |
-| [provisioner.node_group.override_instance_types](#provisioner.node_group.override_instance_types) | - | list | ex:`["m5.large", "m5a.large",`,`c5.xlarge]` |  | A list of override instance types for mixed instances policy. |
-| [provisioner.node_group.spot_allocation_strategy](#provisioner.node_group.spot_allocation_strategy) | - | string | `lowest-price`,`capacity-optimized` | `lowest-price` |  If 'lowest-price', the Auto Scaling group launches instances using the Spot pools with the lowest price, and evenly allocates your instances across the number of Spot pools. If 'capacity-optimized', the Auto Scaling group launches instances using Spot pools that are optimally chosen based on the available Spot capacity. |
+| [provisioner.node_group.additional_security_group_ids](#provisioner.node_group.additional_security_group_ids) | - | list | ex:`["sg-233ba1","sg-ff5322"]` | `` |  A list of additional security group ids to include in worker launch config. |
+| [provisioner.node_group.override_instance_types](#provisioner.node_group.override_instance_types) | - | list | ex:`["m5.large", "m5a.large", c5.xlarge]` |  | A list of override instance types for mixed instances policy. |
+| [provisioner.node_group.spot_allocation_strategy](#provisioner.node_group.spot_allocation_strategy) | - | string | `lowest-price`, `capacity-optimized` | `lowest-price` |  If 'lowest-price', the Auto Scaling group launches instances using the Spot pools with the lowest price, and evenly allocates your instances across the number of Spot pools.  If 'capacity-optimized', the Auto Scaling group launches instances using Spot pools that are optimally chosen based on the available Spot capacity. |
 | [provisioner.node_group.spot_instance_pools](#provisioner.node_group.spot_instance_pools) | - | integer | `1`..`cloud limit` | `10` | Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. |
 | [provisioner.node_group.spot_max_price](#provisioner.node_group.spot_max_price) | - | float | "" | "" | Maximum price per unit hour that the user is willing to pay for the Spot instances. Default is the on-demand price. |
 | [provisioner.node_group.on_demand_base_capacity](#provisioner.node_group.on_demand_base_capacity) | - | integer | `0`..`100` | `0` | Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. |
