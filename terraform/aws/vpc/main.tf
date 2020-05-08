@@ -10,7 +10,7 @@ module "vpc" {
 
   name               = "${var.cluster_name}-vpc"
   cidr               = var.vpc_cidr
-  azs                = [var.availability_zones]
+  azs                = tolist(var.availability_zones)
   enable_nat_gateway = true
   enable_vpn_gateway = true
 
