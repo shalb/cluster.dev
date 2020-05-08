@@ -3,13 +3,18 @@ variable "region" {
   description = "The AWS region."
 }
 
+variable "availability_zones" {
+  type        = string
+  description = "The AWS Availability Zone(s) inside region."
+}
+
 variable "cluster_name" {
   type        = string
-  description = "Name of the cluster"
+  description = "Name of the cluster."
 }
 
 variable "vpc_cidr" {
   type        = string
   description = "Vpc CIDR"
-  default     = "10.18.0.0/16"
+  default     = "10.8.0.0/18"
 }

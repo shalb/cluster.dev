@@ -25,6 +25,7 @@
       "argoproj",
       "autoscaling",
       "awscli",
+      "cidr",
       "clusterdev",
       "clustername",
       "config",

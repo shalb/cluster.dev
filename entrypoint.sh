@@ -74,7 +74,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
         # Create a VPC or use existing defined
         FUNC_RESULT=""
-        aws::init_vpc   "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
+        aws::init_vpc   "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_vpc_cidr"
         readonly CLUSTER_VPC_ID=${FUNC_RESULT}
 
         # Provisioner selection
