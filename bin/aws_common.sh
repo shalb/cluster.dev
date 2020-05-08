@@ -180,7 +180,7 @@ function aws::init_vpc {
     DEBUG "Create a VPC or use existing defined"
     local cluster_cloud_vpc=$1
     local cluster_cloud_vpc_id=""
-    local availability_zones=${4:-$cluster_cloud_region'a'} # if azs are not set we use 'a'-zone by default
+    local availability_zones=${4:-$cluster_cloud_region"a"} # if azs are not set we use 'a'-zone by default
     local vpc_cidr=$5
 
     cd "$PRJ_ROOT"/terraform/aws/vpc/ || ERROR "Path not found"
@@ -201,7 +201,7 @@ function aws::init_vpc {
             run_cmd "terraform plan \
                         -var='region=$cluster_cloud_region' \
                         -var='cluster_name=$CLUSTER_FULLNAME' \
-                        -var='availability_zones=$availability_zones' \
+                        -var='availability_zones=\'$availability_zones\'' \
                         -var='vpc_cidr=$vpc_cidr' \
                         -input=false \
                         -out=tfplan"
