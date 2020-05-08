@@ -4,7 +4,7 @@ variable "region" {
 }
 
 variable "availability_zones" {
-  type        = string
+  type        = list(string)
   description = "The AWS Availability Zone(s) inside region."
 }
 
