@@ -201,7 +201,7 @@ function aws::init_vpc {
             run_cmd "terraform plan \
                         -var='region=$cluster_cloud_region' \
                         -var='cluster_name=$CLUSTER_FULLNAME' \
-                        -var='availability_zones=\'$availability_zones\'' \
+                        -var='availability_zones=$availability_zones' \
                         -var='vpc_cidr=$vpc_cidr' \
                         -input=false \
                         -out=tfplan"
