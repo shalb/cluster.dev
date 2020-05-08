@@ -1,5 +1,18 @@
 # Options List for Cluster Manifests
 
+   * [Options List for Cluster Manifests](#options-list-for-cluster-manifests)
+      * [Manifest Example](#manifest-example)
+      * [Global Options](#global-options)
+      * [Cluster Provisioners](#cluster-provisioners)
+         * [Amazon AWS Provisioners](#amazon-aws-provisioners)
+            * [AWS Minikube](#aws-minikube)
+            * [AWS EKS](#aws-eks)
+         * [DigitalOcean Provisioners](#digitalocean-provisioners)
+            * [DigitalOcean Managed Kubernetes](#digitalocean-managed-kubernetes)
+      * [Cluster Addons](#cluster-addons)
+   * [GIT Provider Support](#git-provider-support)
+      * [GitHub Actions Workflow Configuration](#github-actions-workflow-configuration)
+      * [GitLab CI/CD Pipeline Configuration](#gitlab-cicd-pipeline-configuration)
 
 ## Manifest Example
 ```yaml
@@ -21,7 +34,7 @@ cluster:
   apps:
     - /kubernetes/apps/samples
 ```
-More examples could be found in [/.cluster.dev](../.cluster.dev/) directory.
+*More examples could be found in [/.cluster.dev](../.cluster.dev/) directory.*
 
 ## Global Options
 
@@ -52,6 +65,9 @@ Required Environment variables should be passed to container:
 | [provisioner.instanceType](#provisioner.instanceType) | + | string | ex:`m5.xlarge` | `m5.large` | Single node Kubernetes cluster AWS EC2 instance type. |
 
 #### AWS EKS
+
+*example yaml file: [.cluster.dev/aws-eks.yaml](../.cluster.dev/aws-eks.yaml)*
+
 |  Key |  Required | Type  | Values &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Default  |Description &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.version](#provisioner.version) | + | string | ex:`1.15`,`1.16` | `1.16` | Kubernetes version. |
@@ -63,7 +79,7 @@ Required Environment variables should be passed to container:
 | [provisioner.node_group.asg_min_size](#provisioner.node_group.asg_min_size) | - | integer | `1`..<=`asg_max_size` | `1` | Minimum worker capacity in the autoscaling group. |
 | [provisioner.node_group.root_volume_size](#provisioner.node_group.root_volume_size) | - | integer | `20`..`cloud limit` | `40` | root volume size of workers instances. |
 | [provisioner.node_group.kubelet_extra_args](#provisioner.node_group.kubelet_extra_args) | - | string | `--node-labels=kubernetes.io/lifecycle=spot` |  |  This string is passed directly to kubelet if set. Useful for adding labels or taints. |
-| [provisioner.node_group.additional_security_group_ids](#provisioner.node_group.additional_security_group_ids) | - | [list] | ex:`sg-233ba1` |  |  A list of additional security group ids to include in worker launch config. |
+| [provisioner.node_group.additional_security_group_ids](#provisioner.node_group.additional_security_group_ids) | - | list | ex:`["sg-233ba1","sg-2221bb"]` |  |  A list of additional security group ids to include in worker launch config. |
 | [provisioner.node_group.override_instance_types](#provisioner.node_group.override_instance_types) | - | list | ex:`["m5.large", "m5a.large", c5.xlarge]` |  | A list of override instance types for mixed instances policy. |
 | [provisioner.node_group.spot_allocation_strategy](#provisioner.node_group.spot_allocation_strategy) | - | string | `lowest-price`, `capacity-optimized` | `lowest-price` |  If 'lowest-price', the Auto Scaling group launches instances using the Spot pools with the lowest price, and evenly allocates your instances across the number of Spot pools.  If 'capacity-optimized', the Auto Scaling group launches instances using Spot pools that are optimally chosen based on the available Spot capacity. |
 | [provisioner.node_group.spot_instance_pools](#provisioner.node_group.spot_instance_pools) | - | integer | `1`..`cloud limit` | `10` | Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. |
@@ -88,6 +104,9 @@ Next environment variables should be set:
 
 
 #### DigitalOcean Managed Kubernetes
+
+*example yaml file: [.cluster.dev/digitalocean-k8s.yaml](../.cluster.dev/digitalocean-k8s.yaml)*
+
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [version](#version) | - | string | ex: `1.16` | | DigitalOcean managed Kubernetes [version](https://www.digitalocean.com/docs/kubernetes/changelog/). |
