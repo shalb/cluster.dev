@@ -132,6 +132,8 @@ Next environment variables should be set:
 
 ## GitHub Actions Workflow Configuration
 
+*More examples could be found in [/.github/workflows](../.github/workflows) directory.*
+
 ```yaml
 # sample .github/workflows/aws.yaml
 on:
@@ -163,9 +165,11 @@ jobs:
     - name: Get the Cluster Credentials
       run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
 ```
-More examples could be found in [/.github/workflows](../.github/workflows) directory.
 
 ## GitLab CI/CD Pipeline Configuration
+
+*Full example could be found in [/install/.gitlab-ci-sample.yml](../install/.gitlab-ci-sample.yml)*
+
 
 ```yaml
 # Example for .gitlab-ci.yml pipeline with cluster.dev job
@@ -203,5 +207,4 @@ cluster-dev:
     - docker run --name cluster.dev --workdir /gitlab/workspace --rm -e CI_PROJECT_PATH -e CI_PROJECT_DIR -e VERBOSE_LVL=DEBUG -e DIGITALOCEAN_TOKEN -e SPACES_ACCESS_KEY_ID -e SPACES_SECRET_ACCESS_KEY -v "${CI_PROJECT_DIR}:/gitlab/workspace" cluster.dev
   stage: cluster-dev
 ```
-Full example could be found in [/install/.gitlab-ci-sample.yml](../install/.gitlab-ci-sample.yml)
 
