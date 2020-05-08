@@ -15,6 +15,8 @@
       * [GitLab CI/CD Pipeline Configuration](#gitlab-cicd-pipeline-configuration)
 
 ## Manifest Example
+*More examples could be found in [/.cluster.dev](../.cluster.dev/) directory.*
+
 ```yaml
 # .cluster.dev/staging.yaml
 cluster:
@@ -34,7 +36,6 @@ cluster:
   apps:
     - /kubernetes/apps/samples
 ```
-*More examples could be found in [/.cluster.dev](../.cluster.dev/) directory.*
 
 ## Global Options
 
@@ -110,7 +111,7 @@ Next environment variables should be set:
 
 *example yaml file: [.cluster.dev/digitalocean-k8s.yaml](../.cluster.dev/digitalocean-k8s.yaml)*
 
-|  Key |  Required | Type  | Values  | Default  | Description |
+|  Key |  Required | Type  | Values&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  | Default  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [version](#version) | - | string | ex: `1.16` | | DigitalOcean managed Kubernetes [version](https://www.digitalocean.com/docs/kubernetes/changelog/). |
 | [nodeCount](#nodeCount) | + | integer | `1-512`  | `1` | Number of Droplets instances in cluster. |
