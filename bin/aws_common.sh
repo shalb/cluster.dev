@@ -260,6 +260,7 @@ function aws::destroy_vpc {
             INFO "VPC: Destroying"
             run_cmd "terraform destroy -auto-approve -compact-warnings \
                         -var='region=$cluster_cloud_region' \
+                        -var='availability_zones=$availability_zones' \
                         -var='cluster_name=$CLUSTER_FULLNAME'"
             ;;
         *)
