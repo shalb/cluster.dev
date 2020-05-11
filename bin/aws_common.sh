@@ -233,11 +233,15 @@ function aws::init_vpc {
 #   cluster_cloud_vpc
 #   cluster_name
 #   cluster_cloud_region
+#   availability_zones
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::destroy_vpc {
     local cluster_cloud_vpc=$1
+    local availability_zones=${4:-$cluster_cloud_region"a"} # if azs are not set we use 'a'-zone by default
+    availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
+
     DEBUG "Destroy created VPC keep default unchanged"
     cd "$PRJ_ROOT"/terraform/aws/vpc/ || ERROR "Path not found"
 
@@ -314,7 +318,7 @@ function aws::destroy {
             fi
             aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain"
             # TODO: Remove kubeconfig after successful cluster destroy
-            aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
+            aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
             aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
             aws::destroy_s3_bucket "$cluster_cloud_region"
         ;;
