@@ -101,3 +101,24 @@ function set_cluster_fullname {
     # shellcheck disable=SC2034
     FUNC_RESULT="${CLUSTER_FULLNAME}"
 }
+
+#######################################
+# Convert string value to terraform list
+# Globals:
+# Arguments:
+#   string in format: "some1, some2, someT"
+# Outputs:
+#   list in ["some1", "some2", "someT"]
+#######################################
+function to_tf_list {
+    local source_string=$1
+    local result=""
+        IFS=', ' read -r -a array <<< "$source_string";
+        for element in "${array[@]}"
+            do
+                result+=\ "\"$element\"",
+            done
+                result="[${result::-1} ]"
+        echo "$result"
+}
+
