@@ -5,9 +5,10 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
-| cluster\_name | Name of the cluster | string | n/a | yes |
+| availability\_zones | The AWS Availability Zone(s) inside region. | list | n/a | yes |
+| cluster\_name | Name of the cluster. | string | n/a | yes |
 | region | The AWS region. | string | n/a | yes |
-| vpc\_cidr | Vpc CIDR | string | `"10.18.0.0/16"` | no |
+| vpc\_cidr | Vpc CIDR | string | `"10.8.0.0/18"` | no |
 
 ## Outputs
 

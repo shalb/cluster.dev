@@ -121,4 +121,3 @@ function to_tf_list {
                 result="[${result::-1} ]"
         echo "$result"
 }
-

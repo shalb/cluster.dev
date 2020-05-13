@@ -142,7 +142,7 @@ on:
   push:
 # This how you can define after what changes it should be triggered
     paths:
-      - '.cluster.dev/aws-minikube.yaml' 
+      - '.cluster.dev/aws-minikube.yaml'
     branches:
       - master
 jobs:
@@ -209,4 +209,3 @@ cluster-dev:
     - docker run --name cluster.dev --workdir /gitlab/workspace --rm -e CI_PROJECT_PATH -e CI_PROJECT_DIR -e VERBOSE_LVL=DEBUG -e DIGITALOCEAN_TOKEN -e SPACES_ACCESS_KEY_ID -e SPACES_SECRET_ACCESS_KEY -v "${CI_PROJECT_DIR}:/gitlab/workspace" cluster.dev
   stage: cluster-dev
 ```
-
