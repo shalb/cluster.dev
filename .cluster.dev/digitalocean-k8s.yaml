@@ -9,7 +9,7 @@ cluster:
     provisioner:
       type: managed-kubernetes
       version: 1.16
-      nodeCount: 1
+      nodeCount: 2
       nodeSize: s-1vcpu-2gb
   addons:
     nginx-ingress: true
