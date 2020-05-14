@@ -13,8 +13,11 @@ from __future__ import unicode_literals
 import argparse
 import os
 import shutil
+from configparser import ConfigParser
+from configparser import NoOptionError
 from sys import exit as _exit_
 
+import boto3
 import regex
 from git import GitCommandError
 from git import InvalidGitRepositoryError
@@ -101,6 +104,37 @@ class UserNameValidator(Validator):  # pylint: disable=too-few-public-methods
         not_ok2 = regex.match('^.*-$', username)
 
         if not_ok or not_ok2 or not okay:
+            if not interactive:
+                _exit_(error_message)
+
+            raise ValidationError(
+                message=error_message,
+                cursor_position=len(username),
+            )  # Move cursor to end
+
+
+class AWSUserNameValidator(Validator):  # pylint: disable=too-few-public-methods
+    """Validate user input"""
+
+    def validate(self, document=None, interactive=True):
+        """
+        Validate user input string to AWS username restrictions
+
+        Raises:
+            ValidationError: If intput string not match regex.
+                Show error message for user and get him change fix error
+        """
+        username = self
+        if interactive:
+            username = document.text
+
+        error_message = 'Please enter a valid AWS username. ' + \
+            'It should have 1-64 only latin letters, ' + \
+            'numbers and symbols: _+=,.@-'
+
+        okay = regex.match('^[A-Za-z0-9_+=,.@-]{1,64}$', username)
+
+        if not okay:
             if not interactive:
                 _exit_(error_message)
 
@@ -214,6 +248,39 @@ def ask_user(question_name, non_interactive_value=None, choices=None):
             'message': 'Select your Cloud Provider',
             'choices': choices,
         },
+        'cloud_login': {
+            'type': 'input',
+            'name': 'cloud_login',
+            'message': 'Please enter your Cloud programatic key',
+        },
+        'cloud_password': {
+            'type': 'password',
+            'name': 'cloud_password',
+            'message': 'Please enter your Cloud programatic secret',
+        },
+        'cloud_token': {
+            'type': 'password',
+            'name': 'cloud_token',
+            'message': 'Please enter your Cloud token',
+        },
+        'choose_config_section': {
+            'type': 'list',
+            'name': 'choose_config_section',
+            'message': 'Select credentials section that will be used to deploy cluster.dev',
+            'choices': choices,
+        },
+        'aws_session_token': {
+            'type': 'password',
+            'name': 'aws_session_token',
+            'message': 'Please enter your AWS Session token',
+        },
+        'aws_cloud_user': {
+            'type': 'input',
+            'name': 'aws_cloud_user',
+            'message': 'Please enter username for cluster.dev user',
+            'validate': AWSUserNameValidator,
+            'default': 'cluster.dev',
+        },
     }
 
     try:
@@ -231,7 +298,7 @@ def parse_cli_args():
     parser = argparse.ArgumentParser(
         usage='' +
         '  interactive:     ./cluster-dev.py install\n' +
-        '  non-interactive: ./cluster-dev.py install -p Github',
+        '  non-interactive: ./cluster-dev.py install -gp Github',
     )
 
     parser.add_argument(
@@ -264,7 +331,7 @@ def parse_cli_args():
     parser.add_argument(
         '--cloud', '-c', metavar='<cloud>',
         dest='cloud',
-        help="Can be 'Amazon Web Services' or 'Digital Ocean'",
+        help="Can be AWS or DigitalOcean",
         choices=CLOUDS,
     )
     parser.add_argument(
@@ -272,6 +339,27 @@ def parse_cli_args():
         dest='cloud_provider',
         help='Cloud provider depends on selected --cloud',
     )
+    parser.add_argument(
+        '--cloud-programatic-login', '-clogin', metavar='<ACCESS_KEY_ID>',
+        dest='cloud_login',
+        help='AWS_ACCESS_KEY_ID or SPACES_ACCESS_KEY_ID',
+    )
+    parser.add_argument(
+        '--cloud-programatic-password', '-cpwd', metavar='<SECRET_ACCESS_KEY>',
+        dest='cloud_password',
+        help='AWS_SECRET_ACCESS_KEY or SPACES_SECRET_ACCESS_KEY',
+    )
+    parser.add_argument(
+        '--cloud-token', '-ctoken', metavar='<TOKEN>',
+        dest='cloud_token',
+        help='SESSION_TOKEN or DIGITALOCEAN_TOKEN',
+    )
+    parser.add_argument(
+        '--cloud-user', '-cuser', metavar='<user>',
+        dest='cloud_user',
+        help='User name which be created/used for cluster.dev. Applicable only for AWS',
+    )
+
     cli = parser.parse_args()
 
     if cli.repo_name:
@@ -443,6 +531,214 @@ def choose_cloud_provider(cli_arg, cloud_providers):
     return cloud_provider
 
 
+def get_data_from_aws_config(login, password):
+    """
+    Get and parse config from file
+
+    Args:
+        login (str): CLI argument provided by user.
+        password (str): CLI argument provided by user.
+    Returns:
+        config ConfigParser obj|False: config, if exists. Otherwise - False
+    """
+    # Skip if CLI args provided
+    if login and password:
+        return False
+
+    try:
+        # Required mount: $HOME/.aws/:/home/cluster.dev/.aws/:ro
+
+        # User can have multiply creds, ask him what should be used
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#configuring-credentials
+        file = f'{os.environ["HOME"]}/.aws/credentials'
+        os.path.isfile(file)
+
+        config = ConfigParser()
+        config.read(file)
+
+    except FileNotFoundError:
+        return False
+
+    return config
+
+
+def get_aws_config_section(config):
+    """
+    Ask user which section in config should be use for extracting credentials
+
+    Args:
+        config (ConfigParser obj|False): INI config
+    Returns:
+        config_section str|False: section name, if exists. Otherwise - False
+    """
+    # Skip if CLI args provided or configs doesn't exist
+    if not config:
+        return False
+
+    if len(config.sections()) == 0:
+        return False
+    elif len(config.sections()) == 1:
+        section = config.sections()[0]
+        print(f'Use AWS creds from file, section "{config.sections()[0]}"')
+    else:
+        section = ask_user('choose_config_section', config.sections())
+
+    return section
+
+
+def get_aws_login(cli_arg, config, config_section):
+    """
+    Get cloud programatic login from settings or from user input
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+        config (ConfigParser obj|False): INI config
+        config_section (str|False): INI config section
+    Returns:
+        cloud_login string
+    """
+    # If cloud_login provided - return cloud string
+    if cli_arg:
+        return cli_arg
+
+    if not config:
+        cloud_login = ask_user('cloud_login')
+        return cloud_login
+
+    cloud_login = config.get(config_section, 'aws_access_key_id')
+
+    return cloud_login
+
+
+def get_aws_password(cli_arg, config, config_section):
+    """
+    Get cloud programatic password from settings or from user input
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+        config (ConfigParser obj|False): INI config
+        config_section (str|False): INI config section
+    Returns:
+        cloud_password string
+    """
+    # If cloud_password provided - return cloud string
+    if cli_arg:
+        return cli_arg
+
+    if not config:
+        cloud_password = ask_user('cloud_password')
+        return cloud_password
+
+    cloud_password = config.get(config_section, 'aws_secret_access_key')
+
+    return cloud_password
+
+
+def get_aws_session(cli_arg, config, config_section, mfa_disabled=False):
+    """
+    Get cloud session from settings or from user input
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+        config (ConfigParser obj|False): INI config
+        config_section (str|False): INI config section
+        mfa_disabled (str): CLI argument provided by user.
+            If not provided - it set to None
+    Returns:
+        session_token string
+    """
+    # If session_token provided - return cloud string
+    if cli_arg:
+        return cli_arg
+
+    # If login provided but session - not, user may not have MFA enabled
+    if mfa_disabled:
+        print('SESSION_TOKEN not found, try without MFA')
+        return None
+
+    if not config:
+        session_token = ask_user('aws_session_token')
+        return session_token
+
+    try:
+        session_token = config.get(config_section, 'aws_session_token')
+    except NoOptionError:
+        print('SESSION_TOKEN not found, try without MFA')
+        return None
+
+    return session_token
+
+
+def get_do_token(cli_arg):
+    """
+    Get cloud token from user input
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+        cloud (str): Cloud name
+    Returns:
+        cloud_token string
+    """
+    # If cloud_token provided - return cloud_token string
+    if cli_arg:
+        return cli_arg
+
+    cloud_token = ask_user('cloud_token')
+
+    return cloud_token
+
+
+def get_aws_user(cli_arg):
+    """
+    Get cloud user name from user input
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+    Returns:
+        cloud_user string
+    """
+    # If cloud_user provided - return cloud_user string
+    if cli_arg:
+        return cli_arg
+
+    cloud_user = ask_user('aws_cloud_user')
+
+    return cloud_user
+
+
+def create_aws_user_and_req_permitions(user, login, password, session):
+    """
+    Create cloud user and attach needed permitions
+
+    Args:
+        user (str): Cluster.dev user name
+        login (str): Cloud programatic login
+        password (str): Cloud programatic password
+        session (str): Cloud session token
+    """
+    iam = boto3.client(
+        'iam',
+        aws_access_key_id=login,
+        aws_secret_access_key=password,
+        aws_session_token=session,
+    )
+    try:
+        iam.get_user(UserName=user)
+    except iam.exceptions.NoSuchEntityException:
+
+        # TODO: create user
+        _exit_('BOTO user not found')
+
+    print(response)
+    # TODO: return login & password
+    return
+
+
 def main():
     """Logic"""
 
@@ -492,6 +788,26 @@ def main():
     password = get_git_password(cli.git_password)
 
     cloud = choose_cloud(cli.cloud)
+    cloud_user = get_aws_user(cli.cloud_user)
+
+    if cloud == 'AWS':
+        config = get_data_from_aws_config(cli.cloud_login, cli.cloud_password)
+        config_section = get_aws_config_section(config)
+        access_key = get_aws_login(cli.cloud_login, config, config_section)
+        secret_key = get_aws_password(cli.cloud_password, config, config_section)
+        session_token = get_aws_session(cli.cloud_token, config, config_section, cli.cloud_login)
+
+        create_aws_user_and_req_permitions(cloud_user, access_key, secret_key, session_token)
+
+    # elif cloud == 'DigitalOcean':
+        # TODO
+        # https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/
+        # cloud_login = get_do_login(cli.cloud_login)
+        # cloud_password = get_do_password(cli.cloud_password)
+        # cloud_token = get_do_token(cli.cloud_token)
+
+        # create_cloud_user_and_req_permitions(cloud, cli.cloud_user, cloud_login, cloud_password)
+
     cloud_provider = choose_cloud_provider(cli.cloud_provider, CLOUD_PROVIDERS[cloud])
 
 
@@ -499,13 +815,13 @@ def main():
 #                         G L O B A L   A R G S                       #
 #######################################################################
 GIT_PROVIDERS = ['Github', 'Bitbucket', 'Gitlab']
-CLOUDS = ['Amazon Web Services', 'Digital Ocean']
+CLOUDS = ['AWS', 'DigitalOcean']
 CLOUD_PROVIDERS = {
-    'Amazon Web Services': [
+    'AWS': [
         'Minikube',
         'AWS EKS',
     ],
-    'Digital Ocean': [
+    'DigitalOcean': [
         'Minikube',
         'Managed Kubernetes',
     ],

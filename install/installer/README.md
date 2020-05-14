@@ -19,7 +19,8 @@ Supported git-repo types:
 ##### 2. Select and create cloud user and required permissions
 
 - [x] Select cloud
-- [ ] Create cloud user and required permissions
+- [x] Get all needed creds for cloud user (AWS)
+- [ ] Create cloud user and required permissions (AWS)
 
 ##### 3. Populate repo with sample files
 

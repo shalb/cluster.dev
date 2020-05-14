@@ -14,6 +14,7 @@ services:
       - ./mount_folder:/app/current_dir:rw # Folder where run docker-container
       - $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro # For get git username
       - $HOME/.ssh:/home/cluster.dev/.ssh:ro # For get ssh key as git password
+      - $HOME/.aws/:/home/cluster.dev/.aws/:ro # For create user and attach permissions in AWS
 
       # When we commit something
       - $HOME/.gnupg/:/home/cluster.dev/.gnupg/:rw # For gpg sign used
@@ -64,6 +65,12 @@ services:
       - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
       - $HOME/.gnupg/:/home/cluster.dev/.gnupg/:rw # For gpg sign used
 
+  test_base_aws: &test_base_aws
+    <<: *test_base_empty
+    volumes:
+      - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
+      - $HOME/.aws/:/home/cluster.dev/.aws/:ro # For create user and attach permissions in AWS
+
   test_base_full: &test_base_full
     <<: *test_base_empty
     volumes:
@@ -71,6 +78,7 @@ services:
       - $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro # For get git username
       - $HOME/.ssh:/home/cluster.dev/.ssh:ro # For get ssh key as git password
       - $HOME/.gnupg/:/home/cluster.dev/.gnupg/:rw # For gpg sign used
+      - $HOME/.aws/:/home/cluster.dev/.aws/:ro # For create user and attach permissions in AWS
 
 
 # TODO: Create case with empty git config (username)

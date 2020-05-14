@@ -29,6 +29,7 @@
       "clustername",
       "config",
       "configurables",
+      "creds",
       "digitalocean",
       "editorconfig",
       "enabled",
