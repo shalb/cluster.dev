@@ -24,13 +24,14 @@
     "mauve.terraform",
     "erd0s.terraform-autocomplete",
 
-
     // YAML
     "redhat.vscode-yaml",
     "oderwat.indent-rainbow",
 
     // Documentation
     "bierner.markdown-preview-github-styles",
+    "yzhang.markdown-all-in-one",
+    "DavidAnson.vscode-markdownlint",
   ],
   // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
   "unwantedRecommendations": [

@@ -16,7 +16,7 @@ RUN addgroup -g 1000 cluster.dev && \
 USER cluster.dev
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip --no-cache-dir install -r requirements.txt
 
 COPY cluster_dev.py .
 ENTRYPOINT ["python", "cluster_dev.py"]
