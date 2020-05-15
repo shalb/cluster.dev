@@ -1,9 +1,3 @@
-variable "enable_autoscaling" {
-  description = "Enable / Disable Digital Ocean Kubernetes autoscale feature (e.g. `false`)"
-  type        = bool
-  default     = false
-}
-
 variable "name" {
   type        = string
   description = "(Required) Provide DigitalOcean cluster name"
@@ -26,12 +20,6 @@ variable "node_type" {
   default     = "s-1vcpu-2gb"
 }
 
-variable "node_count" {
-  description = "Digital Ocean Kubernetes node pool size (e.g. `2`)"
-  type        = number
-  default     = 1
-}
-
 variable "min_node_count" {
   description = "Digital Ocean Kubernetes min nodes with autoscale feature (e.g. `1`)"
   type        = number
@@ -39,7 +27,7 @@ variable "min_node_count" {
 }
 
 variable "max_node_count" {
-  description = "Digital Ocean Kubernetes max nodes with autoscale feature (e.g. `3`)"
+  description = "Digital Ocean Kubernetes max nodes with autoscale feature (e.g. `2`)"
   type        = number
-  default     = 3
+  default     = 2
 }
