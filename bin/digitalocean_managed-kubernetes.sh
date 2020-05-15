@@ -24,8 +24,8 @@ function digitalocean::managed-kubernetes::deploy_cluster {
     local cluster_cloud_region=$2
     local cluster_cloud_provisioner_version=$3
     local cluster_cloud_provisioner_nodeSize=$4
-    local cluster_cloud_provisioner_minNodes=$6
-    local cluster_cloud_provisioner_maxNodes=$7
+    local cluster_cloud_provisioner_minNodes=$5
+    local cluster_cloud_provisioner_maxNodes=$6
 
     cd "$PRJ_ROOT"/terraform/digitalocean/k8s/ || ERROR "Path not found"
 
@@ -75,8 +75,8 @@ function digitalocean::managed-kubernetes::destroy_cluster {
     local cluster_cloud_region=$2
     local cluster_cloud_provisioner_version=$3
     local cluster_cloud_provisioner_nodeSize=$4
-    local cluster_cloud_provisioner_minNodes=$6
-    local cluster_cloud_provisioner_maxNodes=$7
+    local cluster_cloud_provisioner_minNodes=$5
+    local cluster_cloud_provisioner_maxNodes=$6
 
     cd "$PRJ_ROOT"/terraform/digitalocean/k8s/ || ERROR "Path not found"
 
