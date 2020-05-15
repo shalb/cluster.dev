@@ -121,18 +121,18 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         set_cluster_fullname "$cluster_name" "$GIT_REPO_NAME"
         CLUSTER_FULLNAME=${FUNC_RESULT}
 
+        # Define name for S3 bucket that would be user for terraform state
+        DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
+
         # Destroy if installed: false
         if [ "$cluster_installed" = "false" ]; then
             if (digitalocean::is_do_spaces_bucket_exists "$cluster_cloud_region"); then
                 digitalocean::destroy
             else
-                DEBUG "S3 Spaces bucket ${S3_BACKEND_BUCKET} not exists. Nothing to destroy."
+                DEBUG "S3 Spaces bucket ${DO_SPACES_BACKEND_BUCKET} not exists. Nothing to destroy."
             fi
             continue
         fi
-
-        # Define name for S3 bucket that would be user for terraform state
-        DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
         # Create and init backend.
         # Check if bucket already exist by trying to import it
