@@ -1,7 +1,5 @@
 on:
   push:
-    paths:
-      - './.cluster.dev/digitalocean-k8s.yaml'
     branches:
       - feature/GH-59
 jobs:
