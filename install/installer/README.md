@@ -20,11 +20,14 @@ Supported git-repo types:
 
 - [x] Select cloud
 - [x] Get all needed creds for cloud user (AWS)
-- [ ] Create cloud user and required permissions (AWS)
+- [x] Create cloud user and required permissions (AWS)
+- [x] Get creds for new user (AWS)
 
-##### 3. Populate repo with sample files
+##### 3. Git an Git Providers
 
-- [ ] Supported
+- [ ] Add secrets to github repo
+- [ ] Add secrets to gitlab repo
+- [ ] Populate repo with sample files
 
 ##### 4. Edit view for the first cluster config
 

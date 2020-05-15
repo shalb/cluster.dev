@@ -16,7 +16,7 @@
 
 # Info
 
-This document explains how to create or update [aws_policy.json](../install/aws_policy.json)
+This document explains how to create or update [aws_policy.json](../install/installer/aws_policy.json)
 
 # Requirements
 
@@ -109,6 +109,6 @@ Open visual [policy editor](https://console.aws.amazon.com/iam/home?#/policies$n
 
 Save new policy time to time if it has many records, to prevent results loss.
 
-Check out its JSON version and save it to [aws_policy.json](../install/aws_policy.json)
+Check out its JSON version and save it to [aws_policy.json](../install/installer/aws_policy.json)
 
 Push JSON version to repo.

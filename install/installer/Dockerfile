@@ -18,6 +18,6 @@ USER cluster.dev
 COPY requirements.txt .
 RUN pip --no-cache-dir install -r requirements.txt
 
-COPY cluster_dev.py .
+COPY cluster_dev.py aws_policy.json ./
 ENTRYPOINT ["python", "cluster_dev.py"]
 CMD ["-h"]

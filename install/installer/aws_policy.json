@@ -104,6 +104,7 @@
                 "iam:GetPolicy",
                 "iam:GetPolicyVersion",
                 "iam:GetRole",
+                "iam:ListAccessKeys",
                 "iam:ListEntitiesForPolicy",
                 "iam:ListInstanceProfilesForRole",
                 "iam:ListPolicyVersions",

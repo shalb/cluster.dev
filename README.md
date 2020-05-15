@@ -101,7 +101,7 @@ Clone the repo locally:
 **Next steps** should be done inside that repo.
 
 2. Create new AWS user with limited access in IAM.  
-Watch [video example](https://www.youtube.com/watch?v=ALF1Ku2lYys) to create user and apply [policy](install/aws_policy.json).  
+Watch [video example](https://www.youtube.com/watch?v=ALF1Ku2lYys) to create user and apply [policy](install/installer/aws_policy.json).  
 If you need more information about AWS users - please check [aws documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console) for details.  
 
     Resulting access pair should look like:

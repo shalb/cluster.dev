@@ -11,6 +11,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
+import json
 import os
 import shutil
 from configparser import ConfigParser
@@ -281,6 +282,11 @@ def ask_user(question_name, non_interactive_value=None, choices=None):
             'validate': AWSUserNameValidator,
             'default': 'cluster.dev',
         },
+        'aws_secret_key': {
+            'type': 'password',
+            'name': 'aws_secret_key',
+            'message': f'Please enter AWS Secret Key for {choices}',
+        },
     }
 
     try:
@@ -357,7 +363,9 @@ def parse_cli_args():
     parser.add_argument(
         '--cloud-user', '-cuser', metavar='<user>',
         dest='cloud_user',
-        help='User name which be created/used for cluster.dev. Applicable only for AWS',
+        help='User name which be created/used for cluster.dev. Applicable only for AWS. ' +
+        'If specified user exist, -clogin and -cpwd will be try use as it ' +
+        'AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.',
     )
 
     cli = parser.parse_args()
@@ -711,7 +719,7 @@ def get_aws_user(cli_arg):
     return cloud_user
 
 
-def create_aws_user_and_req_permitions(user, login, password, session):
+def create_aws_user_and_permitions(user, login, password, session):
     """
     Create cloud user and attach needed permitions
 
@@ -720,6 +728,8 @@ def create_aws_user_and_req_permitions(user, login, password, session):
         login (str): Cloud programatic login
         password (str): Cloud programatic password
         session (str): Cloud session token
+    Returns:
+        dict {'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}
     """
     iam = boto3.client(
         'iam',
@@ -727,16 +737,75 @@ def create_aws_user_and_req_permitions(user, login, password, session):
         aws_secret_access_key=password,
         aws_session_token=session,
     )
+    keys_created = False
+    # 'If specified user exist, -clogin and -cpwd will be try use as it
+    # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
     try:
-        iam.get_user(UserName=user)
+        # Required "iam:ListAccessKeys"
+        response = iam.list_access_keys(UserName=user)
+
+        if response['AccessKeyMetadata'][0]['AccessKeyId'] == login:
+            print(f'Specified creds belong to exist user {user}, use it')
+
+            return {
+                'key': login,
+                'secret': password,
+                'created': keys_created,
+            }
     except iam.exceptions.NoSuchEntityException:
+        pass
 
-        # TODO: create user
-        _exit_('BOTO user not found')
+    try:  # Create/get policy_arn for user
+        with open('aws_policy.json', 'r') as file:
+            policy = json.dumps(json.load(file))
 
-    print(response)
-    # TODO: return login & password
-    return
+        response = iam.create_policy(
+            PolicyName='cluster.dev-policy',
+            Path='/cluster.dev/',
+            PolicyDocument=policy,
+            Description='Policy for https://cluster.dev propertly work. ' +
+                        'Created by CLI instalator',
+        )
+        policy_arn = response['Policy']['Arn']
+        print('Policy created')
+
+    except iam.exceptions.EntityAlreadyExistsException:
+        response = iam.list_policies(
+            Scope='Local',
+            PathPrefix='/cluster.dev/',
+        )
+        policy_arn = response['Policies'][0]['Arn']
+
+    try:  # When cluster.dev user created, but provided creds for another user
+        iam.get_user(UserName=user)
+
+        response = iam.list_access_keys(UserName=user)
+        key = response['AccessKeyMetadata'][0]['AccessKeyId']
+
+        secret = ask_user('aws_secret_key', choices={'user': user, 'key': key})
+
+    except iam.exceptions.NoSuchEntityException:
+        # Create user and access keys
+        iam.create_user(
+            Path='/cluster.dev/',
+            UserName=user,
+        )
+        iam.attach_user_policy(
+            UserName=user,
+            PolicyArn=policy_arn,
+        )
+        print(f'User created')
+
+        response = iam.create_access_key(UserName=user)
+        key = response['AccessKey']['AccessKeyId']
+        secret = response['AccessKey']['SecretAccessKey']
+        keys_created = True
+
+    return {
+        'key': key,
+        'secret': secret,
+        'created': keys_created,
+    }
 
 
 def main():
@@ -793,12 +862,18 @@ def main():
     if cloud == 'AWS':
         config = get_data_from_aws_config(cli.cloud_login, cli.cloud_password)
         config_section = get_aws_config_section(config)
+
         access_key = get_aws_login(cli.cloud_login, config, config_section)
         secret_key = get_aws_password(cli.cloud_password, config, config_section)
         session_token = get_aws_session(cli.cloud_token, config, config_section, cli.cloud_login)
 
-        create_aws_user_and_req_permitions(cloud_user, access_key, secret_key, session_token)
-
+        creds = create_aws_user_and_permitions(cloud_user, access_key, secret_key, session_token)
+        if creds['created']:
+            print(
+                f'Credentials for user "{cloud_user}":\n' +
+                f'aws_access_key_id={creds["key"]}\n' +
+                f'aws_secret_access_key={creds["secret"]}',
+            )
     # elif cloud == 'DigitalOcean':
         # TODO
         # https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/
