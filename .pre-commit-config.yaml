@@ -82,4 +82,8 @@ repos:
     hooks:
     - id: mypy
       language_version: python3
-      args: [--ignore-missing-imports]
+      args: [
+        --ignore-missing-imports,
+        --disallow-untyped-calls,
+        --warn-redundant-casts,
+      ]
