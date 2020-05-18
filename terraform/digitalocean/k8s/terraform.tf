@@ -1,5 +1,7 @@
 # INFO Read about spaces here https://www.digitalocean.com/docs/spaces/
 terraform {
+  required_version = ">= 0.12.0"
+
   backend "s3" {
     skip_requesting_account_id  = true
     skip_credentials_validation = true
