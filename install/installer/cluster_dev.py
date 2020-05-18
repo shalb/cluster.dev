@@ -319,56 +319,56 @@ def parse_cli_args() -> object:
     )
     parser.add_argument(
         '--git-provider', '-gp', metavar='<provider>',
-        dest='git_provider',
+        dest='git_provider', default='',
         help='Can be Github, Bitbucket or Gitlab',
         choices=GIT_PROVIDERS,
     )
     parser.add_argument(
         '--create-repo', metavar='<repo_name>',
-        dest='repo_name',
+        dest='repo_name', default='',
         help='Automatically initialize repo for you',
     )
     parser.add_argument(
         '--git-user-name', '-gusr', metavar='<username>',
-        dest='git_user_name',
+        dest='git_user_name', default='',
         help='Username used in Git Provider.' +
         'Can be automatically get from .gitconfig',
     )
     parser.add_argument(
         '--git-password', '-gpwd', metavar='<password>',
-        dest='git_password',
+        dest='git_password', default='',
         help='Password used in Git Provider. ' +
         'Can be automatically get from .ssh',
     )
     parser.add_argument(
         '--cloud', '-c', metavar='<cloud>',
-        dest='cloud',
+        dest='cloud', default='',
         help="Can be AWS or DigitalOcean",
         choices=CLOUDS,
     )
     parser.add_argument(
         '--cloud-provider', '-cp', metavar='<provider>',
-        dest='cloud_provider',
+        dest='cloud_provider', default='',
         help='Cloud provider depends on selected --cloud',
     )
     parser.add_argument(
         '--cloud-programatic-login', '-clogin', metavar='<ACCESS_KEY_ID>',
-        dest='cloud_login',
+        dest='cloud_login', default='',
         help='AWS_ACCESS_KEY_ID or SPACES_ACCESS_KEY_ID',
     )
     parser.add_argument(
         '--cloud-programatic-password', '-cpwd', metavar='<SECRET_ACCESS_KEY>',
-        dest='cloud_password',
+        dest='cloud_password', default='',
         help='AWS_SECRET_ACCESS_KEY or SPACES_SECRET_ACCESS_KEY',
     )
     parser.add_argument(
         '--cloud-token', '-ctoken', metavar='<TOKEN>',
-        dest='cloud_token',
+        dest='cloud_token', default='',
         help='SESSION_TOKEN or DIGITALOCEAN_TOKEN',
     )
     parser.add_argument(
         '--cloud-user', '-cuser', metavar='<user>',
-        dest='cloud_user',
+        dest='cloud_user', default='',
         help='User name which be created/used for cluster.dev. Applicable only for AWS. ' +
         'If specified user exist, -clogin and -cpwd will be try use as it ' +
         'AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.',
@@ -393,13 +393,13 @@ def parse_cli_args() -> object:
 
 
 @typechecked
-def get_git_username(cli_arg: {str, None}, git: object) -> str:
+def get_git_username(cli_arg: str, git: object) -> str:
     """
     Get username from settings or from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
         git (obj): git.Repo.git object
     Returns:
         username string
@@ -418,13 +418,13 @@ def get_git_username(cli_arg: {str, None}, git: object) -> str:
 
 
 @typechecked
-def get_git_password(cli_arg: {str, None}) -> {str, bool}:
+def get_git_password(cli_arg: str) -> {str, bool}:
     """
     Get SSH key from settings or password from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
     Returns:
         `False` if SSH-key provided (mounted)
         Otherwise - return password string
@@ -474,14 +474,14 @@ def remove_all_except_git(dir_path: str):
 
 
 @typechecked
-def choose_git_provider(cli_arg: {str, None}, repo: object) -> str:
+def choose_git_provider(cli_arg: str, repo: object) -> str:
     """
     Choose git provider.
     Try automatically, if git remotes specified. Otherwise - ask user.
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
         repo (obj): git.Repo object
     Returns:
         git_provider string
@@ -510,13 +510,13 @@ def choose_git_provider(cli_arg: {str, None}, repo: object) -> str:
 
 
 @typechecked
-def choose_cloud(cli_arg: {str, None}) -> str:
+def choose_cloud(cli_arg: str) -> str:
     """
     Get cloud from cli or from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
     Returns:
         cloud string
     """
@@ -530,14 +530,14 @@ def choose_cloud(cli_arg: {str, None}) -> str:
 
 
 @typechecked
-def choose_cloud_provider(cli_arg: {str, None}, cloud_providers: list) -> str:
+def choose_cloud_provider(cli_arg: str, cloud_providers: list) -> str:
     """
     Choose git provider.
     Try automatically, if git remotes specified. Otherwise - ask user.
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
         cloud_providers (list)
     Returns:
         cloud_provider string
@@ -552,7 +552,7 @@ def choose_cloud_provider(cli_arg: {str, None}, cloud_providers: list) -> str:
 
 
 @typechecked
-def get_data_from_aws_config(login: {str, None}, password: {str, None}) -> {str, object}:
+def get_data_from_aws_config(login: str, password: str) -> {str, object}:
     """
     Get and parse config from file
 
@@ -609,13 +609,13 @@ def get_aws_config_section(config: {object, bool}) -> {str, bool}:
 
 
 @typechecked
-def get_aws_login(cli_arg: {str, None}, config: {object, bool}, config_section: {str, bool}) -> str:
+def get_aws_login(cli_arg: str, config: {object, bool}, config_section: {str, bool}) -> str:
     """
     Get cloud programatic login from settings or from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
         config (ConfigParser obj|False): INI config
         config_section (str|False): INI config section
     Returns:
@@ -635,17 +635,13 @@ def get_aws_login(cli_arg: {str, None}, config: {object, bool}, config_section: 
 
 
 @typechecked
-def get_aws_password(
-        cli_arg: {str, None},
-        config: {object, bool},
-        config_section: {str, bool},
-) -> str:
+def get_aws_password(cli_arg: str, config: {object, bool}, config_section: {str, bool}) -> str:
     """
     Get cloud programatic password from settings or from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
         config (ConfigParser obj|False): INI config
         config_section (str|False): INI config section
     Returns:
@@ -666,21 +662,21 @@ def get_aws_password(
 
 @typechecked
 def get_aws_session(
-        cli_arg: {str, None},
+        cli_arg: str,
         config: {object, bool},
         config_section: {str, bool},
-        mfa_disabled: str = None,
-) -> {str, None}:
+        mfa_disabled: str = '',
+) -> str:
     """
     Get cloud session from settings or from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
         config (ConfigParser obj|False): INI config
         config_section (str|False): INI config section
         mfa_disabled (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
     Returns:
         session_token string
     """
@@ -691,7 +687,7 @@ def get_aws_session(
     # If login provided but session - not, user may not have MFA enabled
     if mfa_disabled:
         print('SESSION_TOKEN not found, try without MFA')
-        return None
+        return ''
 
     if not config:
         session_token = ask_user('aws_session_token')
@@ -701,19 +697,19 @@ def get_aws_session(
         session_token = config.get(config_section, 'aws_session_token')
     except NoOptionError:
         print('SESSION_TOKEN not found, try without MFA')
-        return None
+        return ''
 
     return session_token
 
 
 @typechecked
-def get_do_token(cli_arg: {str, None}) -> str:
+def get_do_token(cli_arg: str) -> str:
     """
     Get cloud token from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
     Returns:
         cloud_token string
     """
@@ -727,13 +723,13 @@ def get_do_token(cli_arg: {str, None}) -> str:
 
 
 @typechecked
-def get_aws_user(cli_arg: {str, None}) -> str:
+def get_aws_user(cli_arg: str) -> str:
     """
     Get cloud user name from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
-            If not provided - it set to None
+            If not provided - it set to empty string
     Returns:
         cloud_user string
     """
@@ -747,12 +743,7 @@ def get_aws_user(cli_arg: {str, None}) -> str:
 
 
 @typechecked
-def create_aws_user_and_permitions(
-        user: str,
-        login: str,
-        password: str,
-        session: {str, None},
-) -> dict:
+def create_aws_user_and_permitions(user: str, login: str, password: str, session: str) -> dict:
     """
     Create cloud user and attach needed permitions
 
