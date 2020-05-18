@@ -30,3 +30,5 @@ override.tf.json
 
 # Ignore files with sensetive data
 tests/config.sh
+
+.mypy_cache/

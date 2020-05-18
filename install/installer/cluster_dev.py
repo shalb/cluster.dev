@@ -757,9 +757,9 @@ def get_aws_user(cli_arg: str) -> str:
 
 
 @typechecked
-def create_aws_user_and_permitions(user: str, login: str, password: str, session: str) -> dict:
+def create_aws_user_and_permissions(user: str, login: str, password: str, session: str) -> dict:
     """
-    Create cloud user and attach needed permitions
+    Create cloud user and attach needed permissions
 
     Args:
         user (str): Cluster.dev user name
@@ -1049,7 +1049,7 @@ def main():
         secret_key = get_aws_password(cli.cloud_password, config, config_section)
         session_token = get_aws_session(cli.cloud_token, config, config_section, cli.cloud_login)
 
-        creds = create_aws_user_and_permitions(cloud_user, access_key, secret_key, session_token)
+        creds = create_aws_user_and_permissions(cloud_user, access_key, secret_key, session_token)
         if creds['created']:
             print(
                 f'Credentials for user "{cloud_user}":\n' +
@@ -1067,7 +1067,7 @@ def main():
         # cloud_password = get_do_password(cli.cloud_password)
         # cloud_token = get_do_token(cli.cloud_token)
 
-        # create_cloud_user_and_req_permitions(cloud, cli.cloud_user, cloud_login, cloud_password)
+        # create_cloud_user_and_req_permissions(cloud, cli.cloud_user, cloud_login, cloud_password)
 
     cloud_provider = choose_cloud_provider(cli.cloud_provider, CLOUD_PROVIDERS[cloud])
 
