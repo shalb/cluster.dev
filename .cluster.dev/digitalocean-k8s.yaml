@@ -1,5 +1,5 @@
 cluster:
-  installed: false
+  installed: true
   name: do-dev
   cloud:
     provider: digitalocean
