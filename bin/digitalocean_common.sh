@@ -50,8 +50,8 @@ function digitalocean::is_do_spaces_bucket_exists {
 
     # Create and init backend.
     run_cmd "terraform init"
-
-    terraform import -var="region=$cluster_cloud_region" -var="do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET" digitalocean_spaces_bucket.terraform_state "$cluster_cloud_region","$DO_SPACES_BACKEND_BUCKET" >/dev/null 2>&1
+    INFO "Importing DO Spaces bucket for Terraform states."
+    terraform import -var="region=$cluster_cloud_region" -var="do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET" digitalocean_spaces_bucket.terraform_state `$cluster_cloud_region`,`$DO_SPACES_BACKEND_BUCKET` >/dev/null 2>&1
     return $?
 }
 
