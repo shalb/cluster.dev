@@ -28,14 +28,15 @@ from PyInquirer import style_from_dict
 from PyInquirer import Token
 from PyInquirer import ValidationError
 from PyInquirer import Validator
-# PyInquirer - Draw menu and user select one of items
+from typeguard import typechecked
 
 
 #######################################################################
 #                          F U N C T I O N S                          #
 #######################################################################
 
-def dir_is_git_repo(path):
+@typechecked
+def dir_is_git_repo(path: str) -> bool:
     """
     Check if directory is a Git repository
     Args:
@@ -50,6 +51,7 @@ def dir_is_git_repo(path):
         return False
 
 
+@typechecked
 class RepoNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
 
@@ -81,6 +83,7 @@ class RepoNameValidator(Validator):  # pylint: disable=too-few-public-methods
             )  # Move cursor to end
 
 
+@typechecked
 class UserNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
 
@@ -114,6 +117,7 @@ class UserNameValidator(Validator):  # pylint: disable=too-few-public-methods
             )  # Move cursor to end
 
 
+@typechecked
 class AWSUserNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
 
@@ -145,7 +149,8 @@ class AWSUserNameValidator(Validator):  # pylint: disable=too-few-public-methods
             )  # Move cursor to end
 
 
-def ask_user(question_name, non_interactive_value=None, choices=None):
+@typechecked
+def ask_user(question_name: str, non_interactive_value=None, choices=None):
     """
     Draw menu for user interactions
 
@@ -297,7 +302,8 @@ def ask_user(question_name, non_interactive_value=None, choices=None):
     return result
 
 
-def parse_cli_args():
+@typechecked
+def parse_cli_args() -> object:
     """
     Parse CLI arguments, validate it
     """
@@ -386,7 +392,8 @@ def parse_cli_args():
     return cli
 
 
-def get_git_username(cli_arg, git):
+@typechecked
+def get_git_username(cli_arg: {str, None}, git: object) -> str:
     """
     Get username from settings or from user input
 
@@ -410,7 +417,8 @@ def get_git_username(cli_arg, git):
     return user
 
 
-def get_git_password(cli_arg):
+@typechecked
+def get_git_password(cli_arg: {str, None}) -> {str, bool}:
     """
     Get SSH key from settings or password from user input
 
@@ -439,7 +447,8 @@ def get_git_password(cli_arg):
     return password
 
 
-def remove_all_except_git(dir_path):
+@typechecked
+def remove_all_except_git(dir_path: str):
     """
     Remove all in directory except .git/
 
@@ -464,7 +473,8 @@ def remove_all_except_git(dir_path):
             print(f'Failed to delete {path}. Reason: {exception}')
 
 
-def choose_git_provider(cli_arg, repo):
+@typechecked
+def choose_git_provider(cli_arg: {str, None}, repo: object) -> str:
     """
     Choose git provider.
     Try automatically, if git remotes specified. Otherwise - ask user.
@@ -499,7 +509,8 @@ def choose_git_provider(cli_arg, repo):
     return git_provider
 
 
-def choose_cloud(cli_arg):
+@typechecked
+def choose_cloud(cli_arg: {str, None}) -> str:
     """
     Get cloud from cli or from user input
 
@@ -518,7 +529,8 @@ def choose_cloud(cli_arg):
     return cloud
 
 
-def choose_cloud_provider(cli_arg, cloud_providers):
+@typechecked
+def choose_cloud_provider(cli_arg: {str, None}, cloud_providers: list) -> str:
     """
     Choose git provider.
     Try automatically, if git remotes specified. Otherwise - ask user.
@@ -539,7 +551,8 @@ def choose_cloud_provider(cli_arg, cloud_providers):
     return cloud_provider
 
 
-def get_data_from_aws_config(login, password):
+@typechecked
+def get_data_from_aws_config(login: {str, None}, password: {str, None}) -> {str, object}:
     """
     Get and parse config from file
 
@@ -570,7 +583,8 @@ def get_data_from_aws_config(login, password):
     return config
 
 
-def get_aws_config_section(config):
+@typechecked
+def get_aws_config_section(config: {object, bool}) -> {str, bool}:
     """
     Ask user which section in config should be use for extracting credentials
 
@@ -594,7 +608,8 @@ def get_aws_config_section(config):
     return section
 
 
-def get_aws_login(cli_arg, config, config_section):
+@typechecked
+def get_aws_login(cli_arg: {str, None}, config: {object, bool}, config_section: {str, bool}) -> str:
     """
     Get cloud programatic login from settings or from user input
 
@@ -619,7 +634,12 @@ def get_aws_login(cli_arg, config, config_section):
     return cloud_login
 
 
-def get_aws_password(cli_arg, config, config_section):
+@typechecked
+def get_aws_password(
+        cli_arg: {str, None},
+        config: {object, bool},
+        config_section: {str, bool},
+) -> str:
     """
     Get cloud programatic password from settings or from user input
 
@@ -644,7 +664,13 @@ def get_aws_password(cli_arg, config, config_section):
     return cloud_password
 
 
-def get_aws_session(cli_arg, config, config_section, mfa_disabled=False):
+@typechecked
+def get_aws_session(
+        cli_arg: {str, None},
+        config: {object, bool},
+        config_section: {str, bool},
+        mfa_disabled: str = None,
+) -> {str, None}:
     """
     Get cloud session from settings or from user input
 
@@ -680,14 +706,14 @@ def get_aws_session(cli_arg, config, config_section, mfa_disabled=False):
     return session_token
 
 
-def get_do_token(cli_arg):
+@typechecked
+def get_do_token(cli_arg: {str, None}) -> str:
     """
     Get cloud token from user input
 
     Args:
         cli_arg (str): CLI argument provided by user.
             If not provided - it set to None
-        cloud (str): Cloud name
     Returns:
         cloud_token string
     """
@@ -700,7 +726,8 @@ def get_do_token(cli_arg):
     return cloud_token
 
 
-def get_aws_user(cli_arg):
+@typechecked
+def get_aws_user(cli_arg: {str, None}) -> str:
     """
     Get cloud user name from user input
 
@@ -719,7 +746,13 @@ def get_aws_user(cli_arg):
     return cloud_user
 
 
-def create_aws_user_and_permitions(user, login, password, session):
+@typechecked
+def create_aws_user_and_permitions(
+        user: str,
+        login: str,
+        password: str,
+        session: {str, None},
+) -> dict:
     """
     Create cloud user and attach needed permitions
 
