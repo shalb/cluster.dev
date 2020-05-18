@@ -8,7 +8,10 @@ RUN apk add --no-cache \
         gcc \
         musl-dev \
         # GPG for sign commits
-        gnupg
+        gnupg \
+        # For PyNaCl
+        libffi-dev \
+        make
 
 # .ssh dir mounts with 1000:1000 rights. And can't be accessible with other rights.
 RUN addgroup -g 1000 cluster.dev && \

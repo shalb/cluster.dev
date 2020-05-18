@@ -4,6 +4,29 @@ Implement [cli-installer specification](../../docs/design/cli-installer-design.m
 
 **Status: `In progress`**
 
+## Usage
+
+Build:
+
+```bash
+PATH_TO_INSTALLER="/full_path_to_repo/install/installer/"
+PATH_TO_INSTALLER=/home/vm/code/SHALB/cluster.dev/cluster.dev/install/installer
+docker build -t cli-installer "$PATH_TO_INSTALLER"
+```
+
+Run:
+
+```bash
+docker run \
+    -v "$(pwd)":/app/current_dir \
+    -e GITHUB_TOKEN \
+    cli-installer \
+    install
+```
+
+`-e` - Mount host env vars inside container
+
+
 #### Main features support:
 
 ##### 1. Create or reuse infrastructure repo within git hosting provider
@@ -25,7 +48,7 @@ Supported git-repo types:
 
 ##### 3. Git an Git Providers
 
-- [ ] Add secrets to github repo
+- [x] Add secrets to github repo
 - [ ] Add secrets to gitlab repo
 - [ ] Populate repo with sample files
 

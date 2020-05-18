@@ -14,15 +14,19 @@ import argparse
 import json
 import os
 import shutil
+from base64 import b64encode
 from configparser import ConfigParser
 from configparser import NoOptionError
 from sys import exit as _exit_
 
 import boto3
 import regex
+from agithub.GitHub import GitHub
 from git import GitCommandError
 from git import InvalidGitRepositoryError
 from git import Repo
+from nacl import encoding
+from nacl import public
 from PyInquirer import prompt
 from PyInquirer import style_from_dict
 from PyInquirer import Token
@@ -292,6 +296,11 @@ def ask_user(question_name: str, non_interactive_value=None, choices=None):
             'name': 'aws_secret_key',
             'message': f'Please enter AWS Secret Key for {choices}',
         },
+        'github_token': {
+            'type': 'password',
+            'name': 'github_token',
+            'message': 'Please enter GITHUB_TOKEN. It can be generated at https://github.com/settings/tokens',
+        },
     }
 
     try:
@@ -339,6 +348,11 @@ def parse_cli_args() -> object:
         dest='git_password', default='',
         help='Password used in Git Provider. ' +
         'Can be automatically get from .ssh',
+    )
+    parser.add_argument(
+        '--git-token', '-gtoken', metavar='<token>',
+        dest='git_token', default='',
+        help='Token for API access. For ex. GITHUB_TOKEN',
     )
     parser.add_argument(
         '--cloud', '-c', metavar='<cloud>',
@@ -818,7 +832,7 @@ def create_aws_user_and_permitions(user: str, login: str, password: str, session
             UserName=user,
             PolicyArn=policy_arn,
         )
-        print(f'User created')
+        print('User created')
 
         response = iam.create_access_key(UserName=user)
         key = response['AccessKey']['AccessKeyId']
@@ -832,6 +846,149 @@ def create_aws_user_and_permitions(user: str, login: str, password: str, session
     }
 
 
+@typechecked
+def get_git_token(cli_arg: str, provider: str) -> str:
+    """
+    Get github token from user input or settings
+
+    Args:
+        cli_arg (str): CLI argument provided by user.
+            If not provided - it set to None
+        providercloud (str): Provider name
+    Returns:
+        git_token string
+    """
+    # If git_token provided - return git_token string
+    if cli_arg:
+        return cli_arg
+
+    # Required env variables from host: GITHUB_TOKEN
+    if provider == 'Github':
+        if 'GITHUB_TOKEN' in os.environ:
+            git_token = os.environ['GITHUB_TOKEN']
+            print('Use GITHUB_TOKEN from env')
+        else:
+            git_token = ask_user('github_token')
+
+    return git_token
+
+
+@typechecked
+def get_repo_name_from_url(url: str) -> str:
+    """
+    Get git repository name from git remote url
+    """
+    last_slash_index = url.rfind("/")
+    last_suffix_index = url.rfind(".git")
+
+    if last_slash_index < 0 or last_suffix_index < 0:
+        _exit_(f'ERROR: Check `git remote -v`. Badly formatted origin: {url}')
+
+    return url[last_slash_index + 1:last_suffix_index]
+
+
+@typechecked
+def get_repo_owner_from_url(url: str) -> str:
+    """
+    Get git repository owner from git remote url
+    """
+    last_slash_index = url.rfind("/")
+
+    # IF HTTPS: https://github.com/shalb/cluster.dev.git
+    prefix_index = url.find("/", 8)
+    # IF SSH: git@github.com:shalb/cluster.dev.git
+    if prefix_index == last_slash_index:
+        prefix_index = url.find(":")
+
+    if last_slash_index < 0 or prefix_index < 0:
+        _exit_(f'ERROR: Check `git remote -v`. Badly formatted origin: {url}')
+
+    return url[prefix_index + 1:last_slash_index]
+
+
+@typechecked
+def encrypt(public_key: str, secret_value: str) -> str:
+    """Encrypt a Unicode string using the public key."""
+    public_key = public.PublicKey(public_key.encode("utf-8"), encoding.Base64Encoder())
+    sealed_box = public.SealedBox(public_key)
+    encrypted = sealed_box.encrypt(secret_value.encode("utf-8"))
+    return b64encode(encrypted).decode("utf-8")
+
+
+@typechecked
+def create_github_secrets(creds: dict, cloud: str, repo: object, git_token: str):
+    """
+    Create Github repo secrets for specified Cloud.
+
+    Args:
+        creds (dict(str)): Programmatic access to cloud
+            { 'key': str, 'secret': str, ... }
+        cloud (str): Cloud name
+        repo (obj): git.Repo object
+        git_token(str): Git Provider token
+    """
+
+    g = GitHub(token=git_token)
+
+    remote = repo.remotes.origin.url
+    owner = get_repo_owner_from_url(remote)
+    repo_name = get_repo_name_from_url(remote)
+
+    # Get public key for encryption
+    # https://developer.github.com/v3/actions/secrets/#get-a-repository-public-key
+    status, public_key = getattr(
+        getattr(
+            getattr(
+                g.repos, owner,
+            ), repo_name,
+        ).actions.secrets, 'public-key',
+    ).get()
+
+    if status != 200:
+        _exit_(f'Can\'t access Github. Full error: {public_key}')
+
+    if cloud == 'AWS':
+        key = 'AWS_ACCESS_KEY_ID'
+        secret = 'AWS_SECRET_ACCESS_KEY'
+
+    # Put secret to repo
+    # https://developer.github.com/v3/actions/secrets/#create-or-update-a-repository-secret
+    body = {
+        'encrypted_value': encrypt(public_key['key'], creds['key']),
+        'key_id': public_key['key_id'],
+    }
+    status, data = getattr(
+        getattr(
+            getattr(
+                g.repos, owner,
+            ), repo_name,
+        ).actions.secrets, key,
+    ).put(
+        body=body,
+    )
+    if status not in (201, 204):
+        _exit_(f'ERROR ocurred when try populate access_key to repo. {data}')
+
+    body = {
+        'encrypted_value': encrypt(public_key['key'], creds['secret']),
+        'key_id': public_key['key_id'],
+    }
+    status, data = getattr(
+        getattr(
+            getattr(
+                g.repos, owner,
+            ), repo_name,
+        ).actions.secrets, secret,
+    ).put(
+        body=body,
+    )
+    if status not in (201, 204):
+        _exit_(f'ERROR ocurred when try populate secret_key to repo. {data}')
+
+    print('Secrets added to Github repo')
+
+
+@typechecked
 def main():
     """Logic"""
 
@@ -870,6 +1027,7 @@ def main():
             git.commit('-m', 'Cleanup repo')
 
     git_provider = choose_git_provider(cli.git_provider, repo)
+    git_token = get_git_token(cli.git_token, git_provider)
 
     if not repo.remotes:
         publish_repo = ask_user('publish_repo_to_git_provider')
@@ -898,6 +1056,10 @@ def main():
                 f'aws_access_key_id={creds["key"]}\n' +
                 f'aws_secret_access_key={creds["secret"]}',
             )
+
+    if git_provider == 'Github':
+        create_github_secrets(creds, cloud, repo, git_token)
+
     # elif cloud == 'DigitalOcean':
         # TODO
         # https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/
@@ -913,7 +1075,7 @@ def main():
 #######################################################################
 #                         G L O B A L   A R G S                       #
 #######################################################################
-GIT_PROVIDERS = ['Github', 'Bitbucket', 'Gitlab']
+GIT_PROVIDERS = ['Github']  # , 'Bitbucket', 'Gitlab']
 CLOUDS = ['AWS', 'DigitalOcean']
 CLOUD_PROVIDERS = {
     'AWS': [

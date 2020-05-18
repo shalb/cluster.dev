@@ -8,6 +8,9 @@ services:
   app: &app
     build: .
     image: cli-installer:latest
+    environment:
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+
     volumes:
       - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
 
