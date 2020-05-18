@@ -7,9 +7,6 @@ Example usage:
     ./cluster.dev.py install -h
     ./cluster.dev.py install -p Github
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
 import json
 import os
