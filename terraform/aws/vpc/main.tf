@@ -20,15 +20,18 @@ module "vpc" {
   public_subnet_tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
     "kubernetes.io/role/elb"                    = "1"
+    "cluster.dev/subnet_type" = "public"
   }
   private_subnets = [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k + 4)]
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = "1"
+    "cluster.dev/subnet_type" = "private"
   }
-  database_subnets = [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k + 8)]
+# database_subnets could be created in case of AZ's > 1
+  database_subnets = length(var.availability_zones) > 1 ? [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k + 8)] : []
   tags = {
     Terraform                  = "true"
-    "cluster.dev-cluster_name" = var.cluster_name
+    "cluster.dev/subnet_type" = "database"
   }
 }
 
