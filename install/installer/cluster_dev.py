@@ -14,10 +14,12 @@ import shutil
 from base64 import b64encode
 from configparser import ConfigParser
 from configparser import NoOptionError
+from pathlib import Path
 from sys import exit as _exit_
 
 import boto3
 import regex
+import wget
 from agithub.GitHub import GitHub
 from git import GitCommandError
 from git import InvalidGitRepositoryError
@@ -31,10 +33,10 @@ from PyInquirer import ValidationError
 from PyInquirer import Validator
 from typeguard import typechecked
 
-
 #######################################################################
 #                          F U N C T I O N S                          #
 #######################################################################
+
 
 @typechecked
 def dir_is_git_repo(path: str) -> bool:
@@ -378,6 +380,11 @@ def parse_cli_args() -> object:
         help='User name which be created/used for cluster.dev. Applicable only for AWS. ' +
         'If specified user exist, -clogin and -cpwd will be try use as it ' +
         'AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.',
+    )
+    parser.add_argument(
+        '--cluster-dev-version', '-version', metavar='<cluster.dev release>',
+        dest='release_version',
+        help='Specify cluster.dev release or last realease will be used',
     )
 
     cli = parser.parse_args()
@@ -858,6 +865,72 @@ def create_github_secrets(creds: dict, cloud: str, repo: object, git_token: str)
 
 
 @typechecked
+def get_last_release(owner: str = 'shalb', repo: str = 'cluster.dev') -> str:
+    """
+    Get last Github repo release
+
+    Args:
+        owner (str): repo owner name. Default: 'shalb'
+        repo (str): repo name. Default: 'cluster.dev'
+    Return:
+        realise_version string
+    """
+
+    g = GitHub()
+    status, data = getattr(getattr(g.repos, owner), repo).releases.latest.get()
+
+    if status != 200:
+        _exit_(f'Can\'t access Github. Full error: {data}')
+
+    return data['tag_name']
+
+
+@typechecked
+def add_sample_cluster_dev_files(
+        cloud: str,
+        cloud_provider: str,
+        git_provider: str,
+        repo_path: str,
+        release: str,
+):
+    """
+    Populate repo with sample files
+
+    Args:
+        cloud (str): Cloud name
+        cloud_provider (str): Cloud provider name
+        git_provider (str): Git Provider name
+        repo_path (str): Relative path to repo
+    """
+    repo_url = f'https://raw.githubusercontent.com/shalb/cluster.dev/{release}'
+
+    # Create CI config dir and add files
+    if git_provider == 'Github':
+        ci_path = os.path.join(repo_path, '.github', 'workflows')
+        Path(ci_path).mkdir(parents=True, exist_ok=True)
+
+        ci_file_url = f'{repo_url}/.github/workflows/aws.yml'
+
+    ci_file_path = os.path.join(ci_path, 'main.yml')
+    wget.download(ci_file_url, ci_file_path)
+
+    # Create cluster.dev config dir and add files
+    config_path = os.path.join(repo_path, '.cluster.dev')
+    Path(config_path).mkdir(parents=True, exist_ok=True)
+
+    if cloud == 'AWS':
+        if cloud_provider == 'Minikube':
+            config_file_name = 'aws-minikube.yaml'
+
+    config_file_url = f'{repo_url}/.cluster.dev/{config_file_name}'
+
+    config_file_path = os.path.join(config_path, config_file_name)
+    wget.download(config_file_url, config_file_path)
+
+    print('\nRepo populated with sample files')
+
+
+@typechecked
 def main():
     """Logic"""
 
@@ -925,10 +998,6 @@ def main():
                 f'aws_access_key_id={creds["key"]}\n' +
                 f'aws_secret_access_key={creds["secret"]}',
             )
-
-    if git_provider == 'Github':
-        create_github_secrets(creds, cloud, repo, git_token)
-
     # elif cloud == 'DigitalOcean':
         # TODO
         # https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/
@@ -940,6 +1009,12 @@ def main():
 
     cloud_provider = cli.cloud_provider or \
         ask_user('choose_cloud_provider', choices=CLOUD_PROVIDERS[cloud])
+
+    if git_provider == 'Github':
+        create_github_secrets(creds, cloud, repo, git_token)
+
+    release_version = cli.release_version or get_last_release()
+    add_sample_cluster_dev_files(cloud, cloud_provider, git_provider, dir_path, release_version)
 
 
 #######################################################################

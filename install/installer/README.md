@@ -50,15 +50,13 @@ Supported git-repo types:
 
 - [x] Add secrets to github repo
 - [ ] Add secrets to gitlab repo
-- [ ] Populate repo with sample files
 
-##### 4. Edit view for the first cluster config
+##### 4. Populate repo with files and push
 
-- [ ] Supported
-
-##### 5. Commit all code and install the cluster
-
-- [ ] Supported
+- [x] Populate repo with sample files
+- [ ] Commit and push all code.
+- [ ] Set `installed: true` and push - Install the cluster
+- [ ] Open Edit View for the first cluster config
 
 ##### 6. Display credentials with output
 
