@@ -58,7 +58,8 @@ def dir_is_git_repo(path: str) -> bool:
 class RepoNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
 
-    def validate(self, document=None, interactive=True):
+    @typechecked
+    def validate(self: Validator, document=None, interactive: bool = True):
         """
         Validate user input string to Github repo name restrictions
 
@@ -90,7 +91,8 @@ class RepoNameValidator(Validator):  # pylint: disable=too-few-public-methods
 class UserNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
 
-    def validate(self, document=None, interactive=True):
+    @typechecked
+    def validate(self: Validator, document=None, interactive: bool = True):
         """
         Validate user input string to Github repo name restrictions
 
@@ -124,7 +126,8 @@ class UserNameValidator(Validator):  # pylint: disable=too-few-public-methods
 class AWSUserNameValidator(Validator):  # pylint: disable=too-few-public-methods
     """Validate user input"""
 
-    def validate(self, document=None, interactive=True):
+    @typechecked
+    def validate(self: Validator, document=None, interactive: bool = True):
         """
         Validate user input string to AWS username restrictions
 
@@ -426,12 +429,12 @@ def get_git_username(git: object) -> str:
 
 
 @typechecked
-def get_git_password() -> {str, bool}:
+def get_git_password() -> str:
     """
     Get SSH key from settings or password from user input
 
     Returns:
-        `False` if SSH-key provided (mounted)
+        empty string if SSH-key provided (mounted)
         Otherwise - return password string
     """
     try:
@@ -439,7 +442,7 @@ def get_git_password() -> {str, bool}:
         # Required mount: $HOME/.ssh:/home/cluster.dev/.ssh:ro
         if os.listdir(f'{os.environ["HOME"]}/.ssh'):
             print('Password type: ssh-key')
-            return False
+            return ''
 
     except FileNotFoundError:
         pass
@@ -475,7 +478,7 @@ def remove_all_except_git(dir_path: str):
 
 
 @typechecked
-def choose_git_provider(repo: object) -> str:
+def choose_git_provider(repo: Repo) -> str:
     """
     Choose git provider.
     Try automatically, if git remotes specified. Otherwise - ask user.
@@ -505,7 +508,7 @@ def choose_git_provider(repo: object) -> str:
 
 
 @typechecked
-def get_data_from_aws_config(login: str, password: str) -> {str, object}:
+def get_data_from_aws_config(login: str, password: str) -> {bool, object}:
     """
     Get and parse config from file
 
@@ -537,22 +540,23 @@ def get_data_from_aws_config(login: str, password: str) -> {str, object}:
 
 
 @typechecked
-def get_aws_config_section(config: {object, bool}) -> {str, bool}:
+def get_aws_config_section(config: {object, bool}) -> str:
     """
     Ask user which section in config should be use for extracting credentials
 
     Args:
         config (ConfigParser obj|False): INI config
     Returns:
-        config_section str|False: section name, if exists. Otherwise - False
+        config_section string: section name, if exists. Otherwise - empty string
     """
     # Skip if CLI args provided or configs doesn't exist
     if not config:
-        return False
+        return ''
 
     if len(config.sections()) == 0:
-        return False
-    elif len(config.sections()) == 1:
+        return ''
+
+    if len(config.sections()) == 1:
         section = config.sections()[0]
         print(f'Use AWS creds from file, section "{config.sections()[0]}"')
     else:
@@ -562,13 +566,13 @@ def get_aws_config_section(config: {object, bool}) -> {str, bool}:
 
 
 @typechecked
-def get_aws_login(config: {object, bool}, config_section: {str, bool}) -> str:
+def get_aws_login(config: {object, bool}, config_section: str) -> str:
     """
     Get cloud programatic login from settings or from user input
 
     Args:
         config (ConfigParser obj|False): INI config
-        config_section (str|False): INI config section
+        config_section (str): INI config section
     Returns:
         cloud_login string
     """
@@ -582,13 +586,13 @@ def get_aws_login(config: {object, bool}, config_section: {str, bool}) -> str:
 
 
 @typechecked
-def get_aws_password(config: {object, bool}, config_section: {str, bool}) -> str:
+def get_aws_password(config: {object, bool}, config_section: str) -> str:
     """
     Get cloud programatic password from settings or from user input
 
     Args:
         config (ConfigParser obj|False): INI config
-        config_section (str|False): INI config section
+        config_section (str): INI config section
     Returns:
         cloud_password string
     """
@@ -603,11 +607,7 @@ def get_aws_password(config: {object, bool}, config_section: {str, bool}) -> str
 
 
 @typechecked
-def get_aws_session(
-        config: {object, bool},
-        config_section: {str, bool},
-        mfa_disabled: str = '',
-) -> str:
+def get_aws_session(config: {object, bool}, config_section: str, mfa_disabled: str = '') -> str:
     """
     Get cloud session from settings or from user input
 
@@ -792,7 +792,7 @@ def encrypt(public_key: str, secret_value: str) -> str:
 
 
 @typechecked
-def create_github_secrets(creds: dict, cloud: str, repo: object, git_token: str):
+def create_github_secrets(creds: dict, cloud: str, repo: Repo, git_token: str):
     """
     Create Github repo secrets for specified Cloud.
 
@@ -804,7 +804,7 @@ def create_github_secrets(creds: dict, cloud: str, repo: object, git_token: str)
         git_token(str): Git Provider token
     """
 
-    g = GitHub(token=git_token)
+    gh_api = GitHub(token=git_token)
 
     remote = repo.remotes.origin.url
     owner = get_repo_owner_from_url(remote)
@@ -812,16 +812,23 @@ def create_github_secrets(creds: dict, cloud: str, repo: object, git_token: str)
 
     # Get public key for encryption
     # https://developer.github.com/v3/actions/secrets/#get-a-repository-public-key
-    status, public_key = getattr(
-        getattr(
-            getattr(
-                g.repos, owner,
-            ), repo_name,
-        ).actions.secrets, 'public-key',
-    ).get()
+    for i in range(3, -1, -1):
+        if i == 0:
+            _exit_('ERROR: Can\'t access Github. Please, try again later')
+        try:
+            status, public_key = getattr(
+                getattr(
+                    getattr(
+                        gh_api.repos, owner,
+                    ), repo_name,
+                ).actions.secrets, 'public-key',
+            ).get()
+            break
+        except TimeoutError:
+            print(f'Can\'t access Github. Timeout error. Attempts left: {i}')
 
     if status != 200:
-        _exit_(f'Can\'t access Github. Full error: {public_key}')
+        _exit_(f'Can\'t get repo public-key. Full error: {public_key}')
 
     if cloud == 'AWS':
         key = 'AWS_ACCESS_KEY_ID'
@@ -833,15 +840,24 @@ def create_github_secrets(creds: dict, cloud: str, repo: object, git_token: str)
         'encrypted_value': encrypt(public_key['key'], creds['key']),
         'key_id': public_key['key_id'],
     }
-    status, data = getattr(
-        getattr(
-            getattr(
-                g.repos, owner,
-            ), repo_name,
-        ).actions.secrets, key,
-    ).put(
-        body=body,
-    )
+
+    for i in range(3, -1, -1):
+        if i == 0:
+            _exit_('ERROR: Can\'t access Github. Please, try again later')
+        try:
+            status, data = getattr(
+                getattr(
+                    getattr(
+                        gh_api.repos, owner,
+                    ), repo_name,
+                ).actions.secrets, key,
+            ).put(
+                body=body,
+            )
+            break
+        except TimeoutError:
+            print(f'Can\'t access Github. Timeout error. Attempts left: {i}')
+
     if status not in (201, 204):
         _exit_(f'ERROR ocurred when try populate access_key to repo. {data}')
 
@@ -849,15 +865,24 @@ def create_github_secrets(creds: dict, cloud: str, repo: object, git_token: str)
         'encrypted_value': encrypt(public_key['key'], creds['secret']),
         'key_id': public_key['key_id'],
     }
-    status, data = getattr(
-        getattr(
-            getattr(
-                g.repos, owner,
-            ), repo_name,
-        ).actions.secrets, secret,
-    ).put(
-        body=body,
-    )
+
+    for i in range(3, -1, -1):
+        if i == 0:
+            _exit_('ERROR: Can\'t access Github. Please, try again later')
+        try:
+            status, data = getattr(
+                getattr(
+                    getattr(
+                        gh_api.repos, owner,
+                    ), repo_name,
+                ).actions.secrets, secret,
+            ).put(
+                body=body,
+            )
+            break
+        except TimeoutError:
+            print(f'Can\'t access Github. Timeout error. Attempts left: {i}')
+
     if status not in (201, 204):
         _exit_(f'ERROR ocurred when try populate secret_key to repo. {data}')
 
@@ -876,8 +901,8 @@ def get_last_release(owner: str = 'shalb', repo: str = 'cluster.dev') -> str:
         realise_version string
     """
 
-    g = GitHub()
-    status, data = getattr(getattr(g.repos, owner), repo).releases.latest.get()
+    gh_api = GitHub()
+    status, data = getattr(getattr(gh_api.repos, owner), repo).releases.latest.get()
 
     if status != 200:
         _exit_(f'Can\'t access Github. Full error: {data}')
@@ -927,7 +952,7 @@ def add_sample_cluster_dev_files(
     config_file_path = os.path.join(config_path, config_file_name)
     wget.download(config_file_url, config_file_path)
 
-    print('\nRepo populated with sample files')
+    print('\nLocal repo populated with sample files')
 
 
 @typechecked
