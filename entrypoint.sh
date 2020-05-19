@@ -115,6 +115,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         # s3cmd DO remove bucket ENV VARIABLES
         AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
+        DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
 
         # Define full cluster name
         FUNC_RESULT="";
