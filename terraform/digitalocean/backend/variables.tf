@@ -8,6 +8,6 @@ variable "region" {
   description = "(Required) Region for Spaces DO terraform backend"
 }
 
-variable "do_token" {}
-variable "do_access_key" {}
-variable "do_secret_key" {}
+variable "digitalocean_token" {}
+variable "spaces_access_id" {}
+variable "spaces_secret_key" {}

@@ -47,16 +47,11 @@ function digitalocean::init_do_spaces_bucket {
 function digitalocean::is_do_spaces_bucket_exists {
     local cluster_cloud_region=$1
     cd "$PRJ_ROOT"/terraform/digitalocean/backend/ || ERROR "Path not found"
-
-    # for terraform backend
-    export TF_VAR_do_token=${DIGITALOCEAN_TOKEN}
-    export TF_VAR_do_access_key=${SPACES_ACCESS_KEY_ID}
-    export TF_VAR_do_secret_key=${SPACES_SECRET_ACCESS_KEY}
-
+    
     # Create and init backend.
     run_cmd "terraform init"
     INFO "Importing DO Spaces bucket for Terraform states."
-    terraform import -var="region=$cluster_cloud_region" -var="do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET" digitalocean_spaces_bucket.terraform_state "$cluster_cloud_region","$DO_SPACES_BACKEND_BUCKET"
+    terraform import -var="region=$cluster_cloud_region" -var="digitalocean_token=${DIGITALOCEAN_TOKEN}" -var="spaces_access_id=${SPACES_ACCESS_KEY_ID}" -var="spaces_secret_key=${SPACES_SECRET_ACCESS_KEY}" -var="do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET" digitalocean_spaces_bucket.terraform_state "$cluster_cloud_region","$DO_SPACES_BACKEND_BUCKET"
     return $?
 }
 
