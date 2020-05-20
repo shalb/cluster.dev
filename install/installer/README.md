@@ -54,9 +54,10 @@ Supported git-repo types:
 ##### 4. Populate repo with files and push
 
 - [x] Populate repo with sample files
-- [ ] Commit and push all code.
-- [ ] Set `installed: true` and push - Install the cluster
+- [x] Commit and push all code.
+- [x] Set `installed: true`
 - [ ] Open Edit View for the first cluster config
+- [ ] Commit and push - Install the cluster
 
 ##### 6. Display credentials with output
 

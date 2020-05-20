@@ -8,6 +8,7 @@ Example usage:
     ./cluster.dev.py install -p Github
 """
 import argparse
+import glob
 import json
 import os
 import shutil
@@ -956,6 +957,54 @@ def add_sample_cluster_dev_files(
 
 
 @typechecked
+def commit_and_push(git: object, message: str):
+    """
+    Stage, commit and push all changes
+
+    Args:
+        git (obj): git.Repo.git object
+        message(str): Commit message body
+    """
+    git.add('-A')
+    try:
+        git.commit('-m', message)
+    except GitCommandError:
+        print('Nothing to commit, working tree clean')
+
+    git.push()
+
+    print(message)
+
+
+@typechecked
+def set_cluster_installed(value: bool, repo_path: str):
+    """
+    Set cluster.installed option in cluster config file
+
+    Args:
+        value (bool): Value that should be set to `installed` option
+        repo_path (str): Relative path to repo
+    """
+    # Get last edited file in /.cluster.dev/
+    # *.yaml means all files with .yaml extention
+    config_mask = os.path.join(repo_path, '.cluster.dev', '*.yaml')
+    config_files = glob.glob(config_mask)
+    last_changed_config_path = max(config_files, key=os.path.getmtime)
+
+    # Change `installed` value
+    prev_value = json.dumps(not value)
+    new_value = json.dumps(value)
+
+    with open(last_changed_config_path, 'r') as conf:
+        file = conf.read()
+
+    new_file = file.replace(f'installed: {prev_value}', f'installed: {new_value}')
+
+    with open(last_changed_config_path, 'w') as conf:
+        conf.write(new_file)
+
+
+@typechecked
 def main():
     """Logic"""
 
@@ -1040,6 +1089,9 @@ def main():
 
     release_version = cli.release_version or get_last_release()
     add_sample_cluster_dev_files(cloud, cloud_provider, git_provider, dir_path, release_version)
+    commit_and_push(git, 'cluster.dev: Add sample files')
+
+    set_cluster_installed(True, dir_path)
 
 
 #######################################################################
