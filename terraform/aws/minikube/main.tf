@@ -2,18 +2,35 @@ provider "aws" {
   region = var.region
 }
 
-resource "aws_default_subnet" "default" {
-  availability_zone = "${var.region}a"
+# If VPC is provided - use data objects
+data "aws_vpc" "provided" {
+  id    = var.vpc_id
+  count = var.vpc_id != "" ? 1 : 0
+}
+
+data "aws_subnet_ids" "vpc_subnets" {
+  count  = var.vpc_id != "" ? 1 : 0
+  vpc_id = var.vpc_id
   tags = {
-    Name = "Default subnet for cluster.dev"
+    "cluster.dev/subnet_type" = "public"
   }
 }
 
+# If VPC not provided - use default one
+resource "aws_default_vpc" "default" {
+  count = var.vpc_id != "" ? 0 : 1
+  tags = {
+    Name = "Default VPC"
+  }
+}
 
-data "aws_subnet_ids" "vpc_subnets" {
-  count = var.vpc_id != "" ? 1 : 0
-
-  vpc_id = var.vpc_id
+resource "aws_default_subnet" "default" {
+  count             = var.vpc_id != "" ? 0 : 1
+  availability_zone = "${var.region}a"
+  tags = {
+    Name                      = "Default subnet for cluster.dev"
+    "cluster.dev/subnet_type" = "default"
+  }
 }
 
 data "template_file" "k8s_userdata" {
