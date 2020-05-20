@@ -11,7 +11,10 @@ RUN apk add --no-cache \
         gnupg \
         # For PyNaCl
         libffi-dev \
-        make
+        make \
+        # Editor
+        neovim && \
+        ln -s /usr/bin/nvim /usr/bin/editor
 
 # .ssh dir mounts with 1000:1000 rights. And can't be accessible with other rights.
 RUN addgroup -g 1000 cluster.dev && \

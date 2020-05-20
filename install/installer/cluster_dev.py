@@ -939,6 +939,9 @@ def add_sample_cluster_dev_files(
 
     ci_file_path = os.path.join(ci_path, 'main.yml')
     wget.download(ci_file_url, ci_file_path)
+    # User should have rights to edit file
+    # But get inside Docker real uif:gid into Docker not trivial
+    os.chmod(ci_file_path, 0o666)
 
     # Create cluster.dev config dir and add files
     config_path = os.path.join(repo_path, '.cluster.dev')
@@ -952,6 +955,9 @@ def add_sample_cluster_dev_files(
 
     config_file_path = os.path.join(config_path, config_file_name)
     wget.download(config_file_url, config_file_path)
+    # User should have rights to edit file
+    # But get inside Docker real uif:gid into Docker not trivial
+    os.chmod(config_file_path, 0o666)
 
     print('\nLocal repo populated with sample files')
 
@@ -977,30 +983,43 @@ def commit_and_push(git: object, message: str):
 
 
 @typechecked
-def set_cluster_installed(value: bool, repo_path: str):
+def last_edited_config_path(repo_path: str) -> str:
     """
-    Set cluster.installed option in cluster config file
+    Get path to last edited .cluster.dev config
 
     Args:
-        value (bool): Value that should be set to `installed` option
         repo_path (str): Relative path to repo
+    Return:
+        last_changed_config_path string - Relative path to last edited config
     """
-    # Get last edited file in /.cluster.dev/
     # *.yaml means all files with .yaml extention
     config_mask = os.path.join(repo_path, '.cluster.dev', '*.yaml')
     config_files = glob.glob(config_mask)
     last_changed_config_path = max(config_files, key=os.path.getmtime)
 
+    return last_changed_config_path
+
+
+@typechecked
+def set_cluster_installed(value: bool, config_path: str):
+    """
+    Set cluster.installed option in cluster config file
+
+    Args:
+        value (bool): Value that should be set to `installed` option
+        config_path (str): Relative path to .cluster.dev config
+    """
+
     # Change `installed` value
     prev_value = json.dumps(not value)
     new_value = json.dumps(value)
 
-    with open(last_changed_config_path, 'r') as conf:
+    with open(config_path, 'r') as conf:
         file = conf.read()
 
     new_file = file.replace(f'installed: {prev_value}', f'installed: {new_value}')
 
-    with open(last_changed_config_path, 'w') as conf:
+    with open(config_path, 'w') as conf:
         conf.write(new_file)
 
 
@@ -1091,7 +1110,11 @@ def main():
     add_sample_cluster_dev_files(cloud, cloud_provider, git_provider, dir_path, release_version)
     commit_and_push(git, 'cluster.dev: Add sample files')
 
-    set_cluster_installed(True, dir_path)
+    config_path = last_edited_config_path(dir_path)
+    set_cluster_installed(True, config_path)
+    # Open editor
+    os.system(f'editor "{config_path}"')
+    commit_and_push(git, 'cluster.dev: Up cluster')
 
 
 #######################################################################
