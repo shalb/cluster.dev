@@ -27,6 +27,7 @@ module "vpc" {
     "kubernetes.io/role/internal-elb" = "1"
     "cluster.dev/subnet_type" = "private"
   }
+
 # TODO: add IAM policy to create DB Subnet
 # database_subnets could be created in case of AZ's > 1
 #  database_subnets = length(var.availability_zones) > 1 ? [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k + 8)] : []
@@ -34,7 +35,8 @@ module "vpc" {
 #    Terraform                  = "true"
 #    "cluster.dev/subnet_type" = "database"
 #  }
-#}
+
+}
 
 output "vpc_id" {
   value = module.vpc.vpc_id
