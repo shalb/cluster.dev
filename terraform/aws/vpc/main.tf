@@ -12,7 +12,7 @@ module "vpc" {
   cidr               = var.vpc_cidr
   azs                = var.availability_zones
   enable_nat_gateway = true
-  enable_vpn_gateway = true
+  enable_vpn_gateway = false
 
   enable_dns_hostnames = true
   enable_dns_support   = true
