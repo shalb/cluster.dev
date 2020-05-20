@@ -6,8 +6,12 @@ Implement [cli-installer specification](../../docs/design/cli-installer-design.m
 
 ## Usage
 
-1. Check that your AWS user [have this rights](../installer_aws_install_req_permissions.json).
-2. Create Github repo and clone it.
+1. Check that your AWS user:
+
+    1.1. [Have this rights](../installer_aws_install_req_permissions.json)
+
+    1.2. You have it programmatic access key and secret.
+2. Create github repo and clone it.
 3. Then, run inside cloned repo:
 
 ```bash
