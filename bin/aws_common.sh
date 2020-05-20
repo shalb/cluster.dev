@@ -144,11 +144,21 @@ function aws::destroy_route53 {
         -backend-config="key=$cluster_name/terraform-dns.state" \
         -backend-config="region=$cluster_cloud_region"
 
+    # Create or update zone
+    if [ "$cluster_cloud_domain" = "$default_domain" ]; then
+        INFO "The cluster domain is unset. DNS sub-zone would be created in $default_domain"
+        zone_delegation=true
+    else
+        INFO "The cluster domain defined. DNS sub-zone would be created in $cluster_cloud_domain"
+        zone_delegation=false
+    fi
+
     # Execute terraform
     INFO "Destroying a DNS zone $cluster_fullname.$cluster_cloud_domain"
     run_cmd "terraform  destroy -auto-approve  \
             -var='region=$cluster_cloud_region' \
             -var='cluster_domain=$cluster_cloud_domain' \
+            -var='zone_delegation=$zone_delegation' \
             -var='cluster_fullname=$cluster_fullname'"
 
     INFO "DNS Zone: $cluster_fullname.$cluster_cloud_domain has been deleted."
@@ -182,7 +192,7 @@ function aws::init_vpc {
     local cluster_cloud_vpc_id=""
     local availability_zones=${4:-$cluster_cloud_region"a"} # if azs are not set we use 'a'-zone by default
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
-    local vpc_cidr=$5
+    local vpc_cidr=${5:-"10.8.0.0/18"} # set default VPC cidr
 
     cd "$PRJ_ROOT"/terraform/aws/vpc/ || ERROR "Path not found"
 
