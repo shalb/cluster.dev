@@ -1116,6 +1116,13 @@ def main():
     os.system(f'editor "{config_path}"')
     commit_and_push(git, 'cluster.dev: Up cluster')
 
+    # Show likn to logs. Temporary solution
+    if git_provider == 'Github':
+        remote = repo.remotes.origin.url
+        owner = get_repo_owner_from_url(remote)
+        repo_name = get_repo_name_from_url(remote)
+        print(f'See logs at: https://github.com/{owner}/{repo_name}/actions')
+
 
 #######################################################################
 #                         G L O B A L   A R G S                       #
