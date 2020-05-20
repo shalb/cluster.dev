@@ -639,7 +639,13 @@ def get_aws_session(config: {object, bool}, config_section: str, mfa_disabled: s
 
 
 @typechecked
-def create_aws_user_and_permissions(user: str, login: str, password: str, session: str) -> dict:
+def create_aws_user_and_permissions(
+        user: str,
+        login: str,
+        password: str,
+        session: str,
+        release: str,
+) -> dict:
     """
     Create cloud user and attach needed permissions
 
@@ -648,6 +654,7 @@ def create_aws_user_and_permissions(user: str, login: str, password: str, sessio
         login (str): Cloud programatic login
         password (str): Cloud programatic password
         session (str): Cloud session token
+        release (str): cluster.dev release tag
     Returns:
         dict {'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}
     """
@@ -658,27 +665,44 @@ def create_aws_user_and_permissions(user: str, login: str, password: str, sessio
         aws_session_token=session,
     )
     keys_created = False
+    link = f'https://github.com/shalb/cluster.dev/blob/{release}' + \
+        '/install/installer_aws_install_req_permissions.json'
+
     # 'If specified user exist, -clogin and -cpwd will be try use as it
     # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-    try:
-        # Required "iam:ListAccessKeys"
+    try:  # Required "iam:ListUsers"???, "iam:ListAccessKeys"
         response = iam.list_access_keys(UserName=user)
 
-        if response['AccessKeyMetadata'][0]['AccessKeyId'] == login:
-            print(f'Specified creds belong to exist user {user}, use it')
+        try:
+            if response['AccessKeyMetadata'][0]['AccessKeyId'] == login:
+                print(f'Specified creds belong to exist user {user}, use it')
+
+                return {
+                    'key': login,
+                    'secret': password,
+                    'created': keys_created,
+                }
+        except IndexError:  # User have no programattic access keys
+            # Required "iam:CreateAccessKey"
+            response = iam.create_access_key(UserName=user)
 
             return {
-                'key': login,
-                'secret': password,
-                'created': keys_created,
+                'key': response['AccessKey']['AccessKeyId'],
+                'secret': response['AccessKey']['SecretAccessKey'],
+                'created': True,
             }
-    except iam.exceptions.NoSuchEntityException:
+
+    except iam.exceptions.NoSuchEntityException:  # User not yet exist
         pass
 
-    try:  # Create/get policy_arn for user
-        with open('aws_policy.json', 'r') as file:
-            policy = json.dumps(json.load(file))
+    except iam.exceptions.ClientError as error:
+        _exit_(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
 
+    # Create/get policy_arn for user
+    with open('aws_policy.json', 'r') as file:
+        policy = json.dumps(json.load(file))
+
+    try:  # Required "iam:CreatePolicy"
         response = iam.create_policy(
             PolicyName='cluster.dev-policy',
             Path='/cluster.dev/',
@@ -689,14 +713,22 @@ def create_aws_user_and_permissions(user: str, login: str, password: str, sessio
         policy_arn = response['Policy']['Arn']
         print('Policy created')
 
-    except iam.exceptions.EntityAlreadyExistsException:
-        response = iam.list_policies(
-            Scope='Local',
-            PathPrefix='/cluster.dev/',
-        )
-        policy_arn = response['Policies'][0]['Arn']
+    except iam.exceptions.EntityAlreadyExistsException:  # Policy already exist
+        try:  # Required "iam:ListPolicies"
+            response = iam.list_policies(
+                Scope='Local',
+                PathPrefix='/cluster.dev/',
+            )
+            policy_arn = response['Policies'][0]['Arn']
 
-    try:  # When cluster.dev user created, but provided creds for another user
+        except iam.exceptions.ClientError as error:
+            _exit_(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+
+    except iam.exceptions.ClientError as error:
+        _exit_(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+
+    try:  # Required "iam:GetUser"
+        # When cluster.dev user created, but provided creds for another user
         iam.get_user(UserName=user)
 
         response = iam.list_access_keys(UserName=user)
@@ -706,20 +738,27 @@ def create_aws_user_and_permissions(user: str, login: str, password: str, sessio
 
     except iam.exceptions.NoSuchEntityException:
         # Create user and access keys
-        iam.create_user(
-            Path='/cluster.dev/',
-            UserName=user,
-        )
-        iam.attach_user_policy(
-            UserName=user,
-            PolicyArn=policy_arn,
-        )
+        try:  # Required "iam:CreateUser", "iam:AttachUserPolicy"
+            iam.create_user(
+                Path='/cluster.dev/',
+                UserName=user,
+            )
+            iam.attach_user_policy(
+                UserName=user,
+                PolicyArn=policy_arn,
+            )
+        except iam.exceptions.ClientError as error:
+            _exit_(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+
         print('User created')
 
         response = iam.create_access_key(UserName=user)
         key = response['AccessKey']['AccessKeyId']
         secret = response['AccessKey']['SecretAccessKey']
         keys_created = True
+
+    except iam.exceptions.ClientError as error:
+        _exit_(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
 
     return {
         'key': key,
@@ -1083,7 +1122,11 @@ def main():
         secret_key = cli.cloud_password or get_aws_password(config, config_section)
         session_token = cli.cloud_token or get_aws_session(config, config_section, cli.cloud_login)
 
-        creds = create_aws_user_and_permissions(cloud_user, access_key, secret_key, session_token)
+        release_version = cli.release_version or get_last_release()
+
+        creds = create_aws_user_and_permissions(
+            cloud_user, access_key, secret_key, session_token, release_version,
+        )
         if creds['created']:
             print(
                 f'Credentials for user "{cloud_user}":\n' +
@@ -1105,7 +1148,6 @@ def main():
     if git_provider == 'Github':
         create_github_secrets(creds, cloud, repo, git_token)
 
-    release_version = cli.release_version or get_last_release()
     add_sample_cluster_dev_files(cloud, cloud_provider, git_provider, dir_path, release_version)
     commit_and_push(git, 'cluster.dev: Add sample files')
 

@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+      {
+          "Sid": "VisualEditor0",
+          "Effect": "Allow",
+          "Action": [
+              "iam:CreatePolicy",
+              "iam:ListPolicies",
+              "iam:AttachUserPolicy",
+              "iam:GetUser",
+              "iam:CreateUser",
+              "iam:CreateAccessKey",
+              "iam:ListAccessKeys"
+          ],
+          "Resource": "*"
+      }
+  ]
+}

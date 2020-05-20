@@ -6,11 +6,12 @@ Implement [cli-installer specification](../../docs/design/cli-installer-design.m
 
 ## Usage
 
-1. Create github repo and clone it.
-2. Then, run:
+1. Check that your AWS user [have this rights](../installer_aws_install_req_permissions.json).
+2. Create Github repo and clone it.
+3. Then, run inside cloned repo:
 
 ```bash
-TAG=0.1.1
+TAG=0.1.2
 docker run -it \
     -v "$(pwd)":/app/current_dir \
     -v "$HOME"/.gitconfig:/home/cluster.dev/.gitconfig:ro \
@@ -29,7 +30,7 @@ docker run -it \
 ## Build and push new image
 
 ```bash
-TAG=
+TAG=0.1.2
 PATH_TO_INSTALLER="/full_path_to_repo/install/installer/"
 
 docker build -t shalb/cluster.dev-cli-installer:latest -t shalb/cluster.dev-cli-installer:$TAG "$PATH_TO_INSTALLER"
