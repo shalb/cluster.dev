@@ -6,31 +6,38 @@ Implement [cli-installer specification](../../docs/design/cli-installer-design.m
 
 ## Usage
 
-Build:
+1. Create github repo and clone it.
+2. Then, run:
 
 ```bash
-PATH_TO_INSTALLER="/full_path_to_repo/install/installer/"
-PATH_TO_INSTALLER=/home/vm/code/SHALB/cluster.dev/cluster.dev/install/installer
-docker build -t cli-installer "$PATH_TO_INSTALLER"
-```
-
-Run:
-
-```bash
+TAG=0.1.1
 docker run -it \
     -v "$(pwd)":/app/current_dir \
     -v "$HOME"/.gitconfig:/home/cluster.dev/.gitconfig:ro \
     -v "$HOME"/.ssh:/home/cluster.dev/.ssh:ro \
     -v "$HOME"/.aws:/home/cluster.dev/.aws:ro \
     -e GITHUB_TOKEN \
-    shalb/cluster.dev-cli-installer \
+    -e UID=$(id -u) \
+    -e GID=$(id -g) \
+    shalb/cluster.dev-cli-installer:$TAG \
     install
 ```
 
 `-e` - Mount host env vars inside container
 
 
-#### Main features support:
+## Build and push new image
+
+```bash
+TAG=
+PATH_TO_INSTALLER="/full_path_to_repo/install/installer/"
+
+docker build -t shalb/cluster.dev-cli-installer:latest -t shalb/cluster.dev-cli-installer:$TAG "$PATH_TO_INSTALLER"
+docker push shalb/cluster.dev-cli-installer:latest
+docker push shalb/cluster.dev-cli-installer:$TAG
+```
+
+#### Main features support
 
 ##### 1. Create or reuse infrastructure repo within git hosting provider
 

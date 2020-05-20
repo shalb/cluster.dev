@@ -16,14 +16,10 @@ RUN apk add --no-cache \
         neovim && \
         ln -s /usr/bin/nvim /usr/bin/editor
 
-# .ssh dir mounts with 1000:1000 rights. And can't be accessible with other rights.
-RUN addgroup -g 1000 cluster.dev && \
-    adduser -u 1000 -D -G cluster.dev cluster.dev
-USER cluster.dev
-
 COPY requirements.txt .
 RUN pip --no-cache-dir install -r requirements.txt
 
-COPY cluster_dev.py aws_policy.json ./
-ENTRYPOINT ["python", "cluster_dev.py"]
-CMD ["-h"]
+COPY entrypoint.sh cluster_dev.py aws_policy.json ./
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD [ "-h" ]

@@ -10,6 +10,8 @@ services:
     image: cli-installer:latest
     environment:
       GITHUB_TOKEN: ${GITHUB_TOKEN}
+      UID: ${UID:-1000}
+      GID: ${GID:-1000}
 
     volumes:
       - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
