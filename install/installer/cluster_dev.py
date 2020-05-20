@@ -1023,7 +1023,6 @@ def set_cluster_installed(value: bool, config_path: str):
         conf.write(new_file)
 
 
-@typechecked
 def main():
     """Logic"""
 

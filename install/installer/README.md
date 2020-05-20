@@ -17,10 +17,13 @@ docker build -t cli-installer "$PATH_TO_INSTALLER"
 Run:
 
 ```bash
-docker run \
+docker run -it \
     -v "$(pwd)":/app/current_dir \
+    -v "$HOME"/.gitconfig:/home/cluster.dev/.gitconfig:ro \
+    -v "$HOME"/.ssh:/home/cluster.dev/.ssh:ro \
+    -v "$HOME"/.aws:/home/cluster.dev/.aws:ro \
     -e GITHUB_TOKEN \
-    cli-installer \
+    shalb/cluster.dev-cli-installer \
     install
 ```
 

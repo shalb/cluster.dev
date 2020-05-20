@@ -16,7 +16,7 @@ services:
 
       - ./mount_folder:/app/current_dir:rw # Folder where run docker-container
       - $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro # For get git username
-      - $HOME/.ssh:/home/cluster.dev/.ssh:ro # For get ssh key as git password
+      - $HOME/.ssh/:/home/cluster.dev/.ssh/:ro # For get ssh key as git password
       - $HOME/.aws/:/home/cluster.dev/.aws/:ro # For create user and attach permissions in AWS
 
       # When we commit something
