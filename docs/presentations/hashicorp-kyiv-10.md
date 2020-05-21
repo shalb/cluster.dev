@@ -12,46 +12,27 @@ Love: family, urban tourism, tech, football, electronic music.
 
 CTO @ SHALB
 
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
 
 
 ### About Company
@@ -68,7 +49,26 @@ We build more than **100 production** infrastructures in last **11 years**.
 
 Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc.. 
 
-
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
 
 ### Company Specializations Vectors
 
@@ -81,6 +81,26 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 	- Databases
 	- Security
 
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
 
 ### Common Modern Infrastructure
 
@@ -108,7 +128,49 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 - Secrets and Certificates:
   Vault, Cert-manager, 1Password, SSM, Secrets manager
 
-### So we Decide to Create System which 
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+### So we Decide to Create Platform To Quick Launch GitOps Infrastructures
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
 
 ### Cluster.dev Objectives
 
@@ -128,6 +190,29 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 
  - [Eating your own dog food](https://en.wikipedia.org/wiki/Eating_your_own_dog_food)
 
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+
 ### Implementation
 
   - simple yaml that describes:
@@ -140,6 +225,28 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
     - Kuberentes objects and CRD's
     - ArgoCD projects and applications
 
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+
 ### Resources to be created by Installer
 
    - GitHub Repo
@@ -148,6 +255,27 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
    - Security Credentials
    - Microservice Initializer
 
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
 
 ### Resources to be created and *reconciled* by Container
 
@@ -170,6 +298,26 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
      - ArgoCD
      - Keycloak (tbd)
 
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
 
 ### Resources to be created and *reconciled* by ArgoCD
 
@@ -187,13 +335,79 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 
 - Your custom workloads (Helm, Kustomize, CRD's, raw yaml manifests)
 
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+
 ## Demo time
 
 Installer at [DockerHub](https://hub.docker.com/r/shalb/cluster.dev-cli-installer)  
 Test Repo at [voatsap/testrepo](https://github.com/voatsap/testrepo)  
 New Repo at [GitHub](https://github.com/new)
 
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
 
 ## Roadmap
 
 [ROADMAP.md](https://github.com/shalb/cluster.dev/blob/master/docs/ROADMAP.md)
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+## Thanks! Please star us: cluster.dev
