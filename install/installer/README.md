@@ -15,7 +15,7 @@ Implement [cli-installer specification](../../docs/design/cli-installer-design.m
 3. Then, run inside cloned repo:
 
 ```bash
-TAG=0.1.2
+TAG=0.1.3
 docker run -it \
     -v "$(pwd)":/app/current_dir \
     -v "$HOME"/.gitconfig:/home/cluster.dev/.gitconfig:ro \
@@ -34,7 +34,7 @@ docker run -it \
 ## Build and push new image
 
 ```bash
-TAG=0.1.2
+TAG=0.1.3
 PATH_TO_INSTALLER="/full_path_to_repo/install/installer/"
 
 docker build -t shalb/cluster.dev-cli-installer:latest -t shalb/cluster.dev-cli-installer:$TAG "$PATH_TO_INSTALLER"
