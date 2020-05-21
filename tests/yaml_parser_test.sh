@@ -26,7 +26,6 @@ for (( i=0; i<${node_group_lenght}; i++ ));
     echo  "    asg_min_size                  = ${cluster_cloud_provisioner_node_group__asg_min_size[i]}"
     echo  "    root_volume_size              = ${cluster_cloud_provisioner_node_group__root_volume_size[i]}"
     echo  "    kubelet_extra_args            = ${cluster_cloud_provisioner_node_group__kubelet_extra_args[i]}"
-    echo  "    additional_security_group_ids = ${cluster_cloud_provisioner_node_group__additional_security_group_ids[i]}"
     echo  "    override_instance_types       = ${cluster_cloud_provisioner_node_group__instance_type_override[i]}"
     echo  "    spot_allocation_strategy      = ${cluster_cloud_provisioner_node_group__spot_allocation_strategy[i]}"
     echo  "    spot_instance_pools           = ${cluster_cloud_provisioner_node_group__spot_instance_pools[i]}"

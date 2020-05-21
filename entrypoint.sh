@@ -8,6 +8,7 @@ source "$PRJ_ROOT"/bin/common.sh
 source "$PRJ_ROOT"/bin/aws_common.sh
 source "$PRJ_ROOT"/bin/digitalocean_common.sh
 source "$PRJ_ROOT"/bin/aws_minikube.sh
+source "$PRJ_ROOT"/bin/aws_eks.sh
 source "$PRJ_ROOT"/bin/argocd.sh
 
 
@@ -101,6 +102,23 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         # end of minikube
         eks)
             DEBUG "Cloud Provider: AWS. Provisioner: EKS"
+                        # Deploy Minikube cluster via Terraform
+            aws::eks::deploy_cluster    "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain" "$CLUSTER_VPC_ID" "$cluster_version" \
+                                        "$cluster_cloud_provisioner_additional_security_group_ids" \
+                                        "${cluster_cloud_provisioner_node_group__name[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__instance_type[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__asg_desired_capacity[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__asg_max_size[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__asg_min_size[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__root_volume_size[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__kubelet_extra_args[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__instance_type_override[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__spot_allocation_strategy[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__spot_instance_pools[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__spot_max_price[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__on_demand_base_capacity[@]}" \
+                                        "${cluster_cloud_provisioner_node_group__on_demand_percentage_above_base_capacity[@]}" \
+
             ;;
         esac
         ;;

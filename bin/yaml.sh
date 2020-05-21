@@ -4,7 +4,7 @@
 source "$PRJ_ROOT"/bin/logging.sh
 
 # Based on https://gist.github.com/pkuczynski/8665367
-
+# TODO: refactor due to imposible to set objects attributes https://github.com/jasperes/bash-yaml/#known-issues
 #######################################
 # Read YAML file from Bash script and print out each KV in format:
 # main_sublevel_sublevel2=value
