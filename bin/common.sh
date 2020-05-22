@@ -113,11 +113,15 @@ function set_cluster_fullname {
 function to_tf_list {
     local source_string=$1
     local result=""
+        if  [[ ! -z $source_string ]] ; then
         IFS=', ' read -r -a array <<< "$source_string";
         for element in "${array[@]}"
             do
                 result+=\ "\"$element\"",
             done
                 result="[${result::-1} ]"
+            else
+             result="[]"
+        fi
         echo "$result"
 }

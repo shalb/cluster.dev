@@ -28,7 +28,7 @@ function aws::eks::deploy_cluster {
     local cluster_cloud_domain=$4
     local vpc_id=$5
     local cluster_version=${6:-"1.16"} # set default Kubernetes version
-    local worker_additional_security_group_ids=${7:-[]}
+    local worker_additional_security_group_ids=${7}
     worker_additional_security_group_ids=$(to_tf_list "$worker_additional_security_group_ids")
 
 # Generate worker_groups.tfvars with worker_groups_launch_template to pass module and create workers
@@ -44,7 +44,7 @@ function aws::eks::deploy_cluster {
                     echo    asg_min_size                  = "${cluster_cloud_provisioner_node_group__asg_min_size[i]}" >> worker_groups.tfvars
                     echo    root_volume_size              = "${cluster_cloud_provisioner_node_group__root_volume_size[i]}" >> worker_groups.tfvars
                     echo    kubelet_extra_args            = \""${cluster_cloud_provisioner_node_group__kubelet_extra_args[i]}"\" >> worker_groups.tfvars
-                    echo    override_instance_types       =  $(to_tf_list "${cluster_cloud_provisioner_node_group__instance_type_override[i]:-[]}") >> worker_groups.tfvars
+                    echo    override_instance_types       =  $(to_tf_list "${cluster_cloud_provisioner_node_group__instance_type_override[i]}") >> worker_groups.tfvars
                     echo    spot_allocation_strategy      = \""${cluster_cloud_provisioner_node_group__spot_allocation_strategy[i]}"\" >> worker_groups.tfvars
                     echo    spot_instance_pools           = "${cluster_cloud_provisioner_node_group__spot_instance_pools[i]:-10}" >> worker_groups.tfvars
                     echo    spot_max_price                = \""${cluster_cloud_provisioner_node_group__spot_max_price[i]}"\" >> worker_groups.tfvars
