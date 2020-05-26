@@ -84,6 +84,7 @@
       "shalb",
       "shellcheck",
       "source",
+      "styleguide",
       "subcommand",
       "submodules",
       "sysctl",
@@ -99,6 +100,7 @@
       "vcpu",
       "vname",
       "voatsap",
+      "wemake",
       "wordpress",
       "workdir",
       "yaml's"
