@@ -48,6 +48,7 @@ def dir_is_git_repo(path: str) -> bool:
     """Check if directory is a Git repository.
     Args:
         path: (str) path to directory
+
     Returns:
         bool: True if successful, False otherwise.
     """
@@ -65,6 +66,7 @@ def ask_user(question_name: str, choices=None):
     Args:
         question_name: (str) Name from `questions` that will processed.
         choices: Used when choose params become know during execution
+
     Returns:
         Depends on entered `question_name`:
             create_repo: (bool) True or False
@@ -206,7 +208,7 @@ def ask_user(question_name: str, choices=None):
     try:
         result = prompt(questions[question_name], style=prompt_style)[question_name]
     except KeyError:
-        sys_exit(f'Sorry, it\'s program error. Can\'t found key "{question_name}"')
+        sys_exit(f"Sorry, it's program error. Can't found key '{question_name}'")
 
     return result
 
@@ -337,6 +339,7 @@ def get_git_username(git: object) -> str:
 
     Args:
         git: (obj) git.Repo.git object
+
     Returns:
         username string
     """
@@ -401,6 +404,7 @@ def choose_git_provider(repo: Repo) -> str:
 
     Args:
         repo: (obj) git.Repo object
+
     Returns:
         git_provider string
     """
@@ -430,6 +434,7 @@ def get_data_from_aws_config(login: str, password: str) -> {bool, object}:
     Args:
         login: (str) CLI argument provided by user.
         password: (str) CLI argument provided by user.
+
     Returns:
         config ConfigParser obj|False: config, if exists. Otherwise - False
     """
@@ -460,6 +465,7 @@ def get_aws_config_section(config: {object, bool}) -> str:
 
     Args:
         config (ConfigParser obj|False): INI config
+
     Returns:
         config_section string: section name, if exists. Otherwise - empty string
     """
@@ -486,6 +492,7 @@ def get_aws_login(config: {object, bool}, config_section: str) -> str:
     Args:
         config (ConfigParser obj|False): INI config
         config_section: (str) INI config section
+
     Returns:
         cloud_login string
     """
@@ -505,6 +512,7 @@ def get_aws_password(config: {object, bool}, config_section: str) -> str:
     Args:
         config: (ConfigParser obj|False) INI config
         config_section: (str) INI config section
+
     Returns:
         cloud_password string
     """
@@ -527,6 +535,7 @@ def get_aws_session(config: {object, bool}, config_section: str, mfa_disabled: s
         config_section: (str) INI config section
         mfa_disabled: (str) CLI argument provided by user.
             If not provided - it set to empty string
+
     Returns:
         session_token string
     """
@@ -564,6 +573,7 @@ def create_aws_user_and_permissions(
         password: (str) Cloud programatic password
         session: (str) Cloud session token
         release: (str) cluster.dev release tag
+
     Returns:
         dict {'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}
     """
@@ -682,6 +692,7 @@ def get_git_token(provider: str) -> str:
 
     Args:
         providercloud: (str) Provider name
+
     Returns:
         git_token string
     """
@@ -728,11 +739,19 @@ def get_repo_owner_from_url(url: str) -> str:
 
 @typechecked
 def encrypt(public_key: str, secret_value: str) -> str:
-    """Encrypt a Unicode string using the public key."""
-    public_key = public.PublicKey(public_key.encode("utf-8"), encoding.Base64Encoder())
+    """Encrypt a Unicode string using the public key.
+
+    Args:
+        public_key: (str) encryption salt public key
+        secret_value: (str) value for encrypt
+
+    Returns:
+        Encrypted Unicode string
+    """
+    public_key = public.PublicKey(public_key.encode('utf-8'), encoding.Base64Encoder())
     sealed_box = public.SealedBox(public_key)
-    encrypted = sealed_box.encrypt(secret_value.encode("utf-8"))
-    return b64encode(encrypted).decode("utf-8")
+    encrypted = sealed_box.encrypt(secret_value.encode('utf-8'))
+    return b64encode(encrypted).decode('utf-8')
 
 
 @typechecked
@@ -740,13 +759,11 @@ def create_github_secrets(creds: dict, cloud: str, repo: Repo, git_token: str):
     """Create Github repo secrets for specified Cloud.
 
     Args:
-        creds: (dict) Programmatic access to cloud
-            { 'key': str, 'secret': str, ... }
+        creds: (dict) Programmatic access to cloud. { 'key': str, 'secret': str, ... }
         cloud: (str) Cloud name
         repo: (obj) git.Repo object
         git_token: (str) Git Provider token
     """
-
     gh_api = GitHub(token=git_token)
 
     remote = repo.remotes.origin.url
@@ -757,7 +774,7 @@ def create_github_secrets(creds: dict, cloud: str, repo: Repo, git_token: str):
     # https://developer.github.com/v3/actions/secrets/#get-a-repository-public-key
     for i in range(3, -1, -1):
         if i == 0:
-            sys_exit('ERROR: Can\'t access Github. Please, try again later')
+            sys_exit("ERROR: Can't access Github. Please, try again later")
         try:
             status, public_key = getattr(
                 getattr(
@@ -768,14 +785,14 @@ def create_github_secrets(creds: dict, cloud: str, repo: Repo, git_token: str):
             ).get()
             break
         except TimeoutError:
-            echo(f'Can\'t access Github. Timeout error. Attempts left: {i}')
+            echo(f"Can't access Github. Timeout error. Attempts left: {i}")
 
-    if status != 200:
-        sys_exit(f'Can\'t get repo public-key. Full error: {public_key}')
+    if status != 200:  # noqa: WPS432
+        sys_exit(f"Can't get repo public-key. Full error: {public_key}")
 
     if cloud == 'AWS':
         key = 'AWS_ACCESS_KEY_ID'
-        secret = 'AWS_SECRET_ACCESS_KEY'
+        secret = 'AWS_SECRET_ACCESS_KEY'  # noqa: S105
 
     # Put secret to repo
     # https://developer.github.com/v3/actions/secrets/#create-or-update-a-repository-secret
@@ -786,9 +803,9 @@ def create_github_secrets(creds: dict, cloud: str, repo: Repo, git_token: str):
 
     for i in range(3, -1, -1):
         if i == 0:
-            sys_exit('ERROR: Can\'t access Github. Please, try again later')
+            sys_exit("ERROR: Can't access Github. Please, try again later")
         try:
-            status, data = getattr(
+            status, response = getattr(
                 getattr(
                     getattr(
                         gh_api.repos, owner,
@@ -799,10 +816,10 @@ def create_github_secrets(creds: dict, cloud: str, repo: Repo, git_token: str):
             )
             break
         except TimeoutError:
-            echo(f'Can\'t access Github. Timeout error. Attempts left: {i}')
+            echo(f"Can't access Github. Timeout error. Attempts left: {i}")
 
-    if status not in (201, 204):
-        sys_exit(f'ERROR ocurred when try populate access_key to repo. {data}')
+    if status not in {201, 204}:
+        sys_exit(f'ERROR ocurred when try populate access_key to repo. {response}')
 
     body = {
         'encrypted_value': encrypt(public_key['key'], creds['secret']),
@@ -811,9 +828,9 @@ def create_github_secrets(creds: dict, cloud: str, repo: Repo, git_token: str):
 
     for i in range(3, -1, -1):
         if i == 0:
-            sys_exit('ERROR: Can\'t access Github. Please, try again later')
+            sys_exit("ERROR: Can't access Github. Please, try again later")
         try:
-            status, data = getattr(
+            status, response = getattr(
                 getattr(
                     getattr(
                         gh_api.repos, owner,
@@ -824,10 +841,10 @@ def create_github_secrets(creds: dict, cloud: str, repo: Repo, git_token: str):
             )
             break
         except TimeoutError:
-            echo(f'Can\'t access Github. Timeout error. Attempts left: {i}')
+            echo(f"Can't access Github. Timeout error. Attempts left: {i}")
 
-    if status not in (201, 204):
-        sys_exit(f'ERROR ocurred when try populate secret_key to repo. {data}')
+    if status not in {201, 204}:
+        sys_exit(f'ERROR ocurred when try populate secret_key to repo. {response}')
 
     echo('Secrets added to Github repo')
 
@@ -839,17 +856,17 @@ def get_last_release(owner: str = 'shalb', repo: str = 'cluster.dev') -> str:
     Args:
         owner: (str) repo owner name. Default: 'shalb'
         repo: (str) repo name. Default: 'cluster.dev'
-    Return:
+
+    Returns:
         realise_version string
     """
-
     gh_api = GitHub()
-    status, data = getattr(getattr(gh_api.repos, owner), repo).releases.latest.get()
+    status, response = getattr(getattr(gh_api.repos, owner), repo).releases.latest.get()
 
-    if status != 200:
-        sys_exit(f'Can\'t access Github. Full error: {data}')
+    if status != 200:  # noqa: WPS432
+        sys_exit(f"Can't access Github. Full error: {response}")
 
-    return data['tag_name']
+    return response['tag_name']
 
 
 @typechecked
@@ -867,6 +884,7 @@ def add_sample_cluster_dev_files(
         cloud_provider: (str) Cloud provider name
         git_provider: (str) Git Provider name
         repo_path: (str) Relative path to repo
+        release: (str) cluster.dev release version. Can be tag commit or branch.
     """
     repo_url = f'https://raw.githubusercontent.com/shalb/cluster.dev/{release}'
 
@@ -881,7 +899,7 @@ def add_sample_cluster_dev_files(
     wget.download(ci_file_url, ci_file_path)
     # User should have rights to edit file
     # But get inside Docker real uif:gid into Docker not trivial
-    os.chmod(ci_file_path, 0o666)
+    os.chmod(ci_file_path, 0o666)  # noqa: WPS432, S103
 
     # Create cluster.dev config dir and add files
     config_path = os.path.join(repo_path, '.cluster.dev')
@@ -897,7 +915,7 @@ def add_sample_cluster_dev_files(
     wget.download(config_file_url, config_file_path)
     # User should have rights to edit file
     # But get inside Docker real uif:gid into Docker not trivial
-    os.chmod(config_file_path, 0o666)
+    os.chmod(config_file_path, 0o666)  # noqa: WPS432, S103
 
     echo('\nLocal repo populated with sample files')
 
@@ -927,43 +945,41 @@ def last_edited_config_path(repo_path: str) -> str:
 
     Args:
         repo_path: (str) Relative path to repo
-    Return:
-        last_changed_config_path string - Relative path to last edited config
+
+    Returns:
+        string - Relative path to last edited config
     """
     # *.yaml means all files with .yaml extention
     config_mask = os.path.join(repo_path, '.cluster.dev', '*.yaml')
     config_files = glob.glob(config_mask)
-    last_changed_config_path = max(config_files, key=os.path.getmtime)
 
-    return last_changed_config_path
+    return max(config_files, key=os.path.getmtime)
 
 
 @typechecked
-def set_cluster_installed(value: bool, config_path: str):
+def set_cluster_installed(config_path: str, installed: bool):
     """Set cluster.installed option in cluster config file.
 
     Args:
-        value: (bool) Value that should be set to `installed` option
         config_path: (str) Relative path to .cluster.dev config
+        installed: (bool) Value that should be set to `installed` option
     """
-
     # Change `installed` value
-    prev_value = json.dumps(not value)
-    new_value = json.dumps(value)
+    prev_value = json.dumps(not installed)
+    new_value = json.dumps(installed)
 
-    with open(config_path, 'r') as conf:
-        file = conf.read()
+    with open(config_path, 'r') as cfo:
+        conf = cfo.read()
 
-    new_file = file.replace(f'installed: {prev_value}', f'installed: {new_value}')
+    new_conf = conf.replace(f'installed: {prev_value}', f'installed: {new_value}')
 
-    with open(config_path, 'w') as conf:
-        conf.write(new_file)
+    with open(config_path, 'w') as cfn:
+        cfn.write(new_conf)
 
 
 @typechecked
 def main() -> None:
     """Logic."""
-
     cli = parse_cli_args()
     dir_path = os.path.relpath('current_dir')
 
@@ -1029,8 +1045,8 @@ def main() -> None:
         if creds['created']:
             echo(
                 f'Credentials for user "{cloud_user}":\n'
-                f'aws_access_key_id={creds["key"]}\n'
-                f'aws_secret_access_key={creds["secret"]}',
+                + f'aws_access_key_id={creds["key"]}\n'
+                + f'aws_secret_access_key={creds["secret"]}',
             )
     # elif cloud == 'DigitalOcean':
         # TODO
@@ -1041,8 +1057,10 @@ def main() -> None:
 
         # create_cloud_user_and_req_permissions(cloud, cli.cloud_user, cloud_login, cloud_password)
 
-    cloud_provider = cli.cloud_provider or \
-        ask_user('choose_cloud_provider', choices=CLOUD_PROVIDERS[cloud])
+    cloud_provider = (
+        cli.cloud_provider
+        or ask_user('choose_cloud_provider', choices=CLOUD_PROVIDERS[cloud])
+    )
 
     if git_provider == 'Github':
         create_github_secrets(creds, cloud, repo, git_token)
@@ -1051,9 +1069,9 @@ def main() -> None:
     commit_and_push(git, 'cluster.dev: Add sample files')
 
     config_path = last_edited_config_path(dir_path)
-    set_cluster_installed(True, config_path)
+    set_cluster_installed(config_path, installed=True)
     # Open editor
-    os.system(f'editor "{config_path}"')
+    os.system(f'editor "{config_path}"')  # noqa: S605
     commit_and_push(git, 'cluster.dev: Up cluster')
 
     # Show likn to logs. Temporary solution

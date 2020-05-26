@@ -64,6 +64,7 @@
       "nargs",
       "nestedkey",
       "noarch",
+      "noqa",
       "oidc",
       "only",
       "openssh",
