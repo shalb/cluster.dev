@@ -15,7 +15,8 @@ source "$PRJ_ROOT"/bin/logging.sh
 #   cluster_cloud_domain
 #   cluster_cloud_vpc_id
 #   cluster_cloud_provisioner_version
-#   cluster_cloud_provisioner_node_group__name[@]
+#   worker_additional_security_group_ids
+#   cluster_cloud_provisioner_node_group__*[@] - arrays of nodegroups
 # Outputs:
 #   Writes progress status
 #######################################
@@ -25,7 +26,7 @@ function aws::eks::deploy_cluster {
     local region=$2
     local availability_zones=${3:-$cluster_cloud_region"a"} # if azs are not set we use 'a'-zone by default
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
-    local cluster_cloud_domain=$4
+    local cluster_cloud_domain=$4 # TODO: remove and shift
     local vpc_id=$5
     local cluster_version=${6:-"1.16"} # set default Kubernetes version
     local worker_additional_security_group_ids=${7}
@@ -55,8 +56,7 @@ function aws::eks::deploy_cluster {
                     echo "]" >> worker_groups.tfvars
 
     INFO "EKS Cluster: worker_groups.tfvars prepared"
-    cat worker_groups.tfvars
-    cp worker_groups.tfvars "$PRJ_ROOT"/terraform/aws/eks/
+    mv worker_groups.tfvars "$PRJ_ROOT"/terraform/aws/eks/
 
     cd "$PRJ_ROOT"/terraform/aws/eks/ || ERROR "Path not found"
 
@@ -64,7 +64,7 @@ function aws::eks::deploy_cluster {
     INFO "EKS Cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform.state' \
+                -backend-config='key=$cluster_name/terraform-eks.state' \
                 -backend-config='region=$region'"
 
 
@@ -93,34 +93,68 @@ function aws::eks::deploy_cluster {
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
-#   cluster_cloud_provisioner_instanceType
+#   cluster_cloud_availability_zones
 #   cluster_cloud_domain
+#   cluster_cloud_vpc_id
+#   cluster_cloud_provisioner_version
+#   worker_additional_security_group_ids
+#   cluster_cloud_provisioner_node_group__*[@] - arrays of nodegroups
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::eks::destroy_cluster {
-    DEBUG "Destroy eks cluster via Terraform"
+    DEBUG "Deploy EKS cluster via Terraform"
     local cluster_name=$1
-    local cluster_cloud_region=$2
-    local cluster_cloud_provisioner_instanceType=$3
+    local region=$2
+    local availability_zones=${3:-$cluster_cloud_region"a"} # if azs are not set we use 'a'-zone by default
+    availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
     local cluster_cloud_domain=$4
+    local vpc_id=$5
+    local cluster_version=${6:-"1.16"} # set default Kubernetes version
+    local worker_additional_security_group_ids=${7}
+    worker_additional_security_group_ids=$(to_tf_list "$worker_additional_security_group_ids")
 
     cd "$PRJ_ROOT"/terraform/aws/eks/ || ERROR "Path not found"
 
     # Deploy main Terraform code
-    INFO "eks cluster: Initializing Terraform configuration"
+    INFO "EKS cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform.state' \
-                -backend-config='region=$cluster_cloud_region'"
+                -backend-config='key=$cluster_name/terraform-eks.state' \
+                -backend-config='region=$region'"
 
 
-    INFO "eks cluster: Destroying "
+    INFO "EKS cluster: Destroying "
     run_cmd "terraform destroy -auto-approve -compact-warnings \
-                -var='region=$cluster_cloud_region' \
                 -var='cluster_name=$CLUSTER_FULLNAME' \
-                -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
-                -var='hosted_zone=$CLUSTER_FULLNAME.$cluster_cloud_domain'"
+                -var='region=$region' \
+                -var='availability_zones=$availability_zones'"
 
     cd - >/dev/null || ERROR "Path not found"
+}
+
+
+#######################################
+# Pull a kubeconfig to instance via kubectl
+# Globals:
+#   CLUSTER_FULLNAME
+# Arguments:
+#   None
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::eks::pull_kubeconfig {
+    DEBUG "Pull a kubeconfig to instance via kubectl"
+    local WAIT_TIMEOUT=5
+
+    export KUBECONFIG="$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME"
+    run_cmd "aws s3 cp '$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME' 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME'" "" false
+    run_cmd "cp '$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null" "" false
+
+    INFO "EKS Cluster: Waiting for the Kubernetes Cluster to get ready"
+    until kubectl version --request-timeout=5s >/dev/null 2>&1; do
+        DEBUG "Waiting ${WAIT_TIMEOUT}s"
+        sleep $WAIT_TIMEOUT
+    done
+    INFO "EKS Cluster: Ready to use!"
 }

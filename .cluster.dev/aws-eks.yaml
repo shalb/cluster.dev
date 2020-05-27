@@ -20,16 +20,16 @@ cluster:
           on_demand_percentage_above_base_capacity: 0
           asg_desired_capacity: 1
           asg_min_size: 1
-          asg_max_size: 3
+          asg_max_size: 1
           root_volume_size: 50
-          kubelet_extra_args: --node-labels=kubernetes.io/lifecycle=spot
+          kubelet_extra_args: --node-labels=node.kubernetes.io/lifecycle=spot
         - name: on-demand-group
           instance_type: t3.medium
           asg_desired_capacity: 1
           asg_min_size: 1
-          asg_max_size: 3
+          asg_max_size: 1
           root_volume_size: 20
-          kubelet_extra_args: --node-labels=kubernetes.io/lifecycle=on-demand
+          kubelet_extra_args: --node-labels=node.kubernetes.io/lifecycle=on-demand
   addons:
     nginx-ingress: true
     cert-manager: true

@@ -1,4 +1,4 @@
-variable "aws_region" {
+variable "region" {
   type        = string
   description = "AWS Region to apply for Addons configuration"
 }

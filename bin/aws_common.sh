@@ -321,6 +321,7 @@ ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem ubuntu@$CLUSTER_FULLNAME.$cluster_c
 
 # Destroy all cluster.
 function aws::destroy {
+
         case $cluster_cloud_provisioner_type in
         minikube)
             DEBUG "Destroy: Provisioner: Minikube"
@@ -328,16 +329,21 @@ function aws::destroy {
                 aws::destroy_addons "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
             fi
             aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain"
-            # TODO: Remove kubeconfig after successful cluster destroy
-            aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
-            aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
-            aws::destroy_s3_bucket "$cluster_cloud_region"
+
         ;;
         # end of minikube
         eks)
             DEBUG "Destroy: Provisioner: EKS"
+            # Destroy Cluster
+            aws::eks::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain"
             ;;
         esac
+
+        # Destroy all cluster components
+        # TODO: Remove kubeconfig after successful cluster destroy
+        aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
+        aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
+        aws::destroy_s3_bucket "$cluster_cloud_region"
 }
 
 #######################################
@@ -357,6 +363,7 @@ function aws::init_addons {
     local cluster_name=$1
     local cluster_cloud_region=$2
     local cluster_cloud_domain=$3
+    local config_path=${4:-"~/.kube/config"}
 
     cd "$PRJ_ROOT"/terraform/aws/addons/ || ERROR "Path not found"
 
@@ -367,9 +374,10 @@ function aws::init_addons {
                 -backend-config='region=$cluster_cloud_region'"
 
     run_cmd "terraform plan \
-                -var='aws_region=$cluster_cloud_region' \
+                -var='region=$cluster_cloud_region' \
                 -var='cluster_cloud_domain=$cluster_cloud_domain' \
                 -var='cluster_fullname=$CLUSTER_FULLNAME' \
+                -var='config_path=$config_path' \
                 -input=false \
                 -out=tfplan-addons"
 
@@ -417,7 +425,7 @@ function aws::destroy_addons {
     INFO "Kubernetes Addons: Destroying"
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='cluster_cloud_domain=$cluster_cloud_domain' \
-                -var='aws_region=$cluster_cloud_region'" "" "false"
+                -var='region=$cluster_cloud_region'" "" "false"
 
     cd - >/dev/null || ERROR "Path not found"
 }

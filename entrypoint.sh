@@ -102,7 +102,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         # end of minikube
         eks)
             DEBUG "Cloud Provider: AWS. Provisioner: EKS"
-                        # Deploy Minikube cluster via Terraform
+            # Deploy Minikube cluster via Terraform
             aws::eks::deploy_cluster    "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain" "$CLUSTER_VPC_ID" "$cluster_version" \
                                         "$cluster_cloud_provisioner_additional_security_group_ids" \
                                         "${cluster_cloud_provisioner_node_group__name[@]}" \
@@ -118,6 +118,12 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
                                         "${cluster_cloud_provisioner_node_group__spot_max_price[@]}" \
                                         "${cluster_cloud_provisioner_node_group__on_demand_base_capacity[@]}" \
                                         "${cluster_cloud_provisioner_node_group__on_demand_percentage_above_base_capacity[@]}" \
+
+            # Pull a kubeconfig to instance via kubectl
+            aws::eks::pull_kubeconfig
+
+            # Deploy Kubernetes Addons via Terraform
+            aws::init_addons   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME"
 
             ;;
         esac

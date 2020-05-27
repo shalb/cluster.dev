@@ -1,7 +1,3 @@
-provider "aws" {
-  region = var.region
-}
-
 # If VPC is provided - use data objects
 data "aws_vpc" "provided" {
   id    = var.vpc_id
@@ -50,8 +46,9 @@ module "eks" {
   vpc_id                               = var.vpc_id != "" ? var.vpc_id : aws_default_vpc.default[0].id
   worker_groups_launch_template        = var.worker_groups_launch_template
   worker_additional_security_group_ids = [aws_security_group.worker_group_mgmt.id]
-  cluster_endpoint_private_access      = "false"
+  cluster_endpoint_private_access      = "true"
   cluster_endpoint_public_access       = "true"
+  enable_irsa                          = "true"
   # TODO: redesign AWS_PROFILE to be set
   #kubeconfig_aws_authenticator_env_variables = {
   #  AWS_PROFILE = "${var.awsprofile}"
