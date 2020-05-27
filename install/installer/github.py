@@ -48,9 +48,6 @@ def get_repo_public_key(gh_api: GitHub, owner: str, repo_name: str) -> dict:
             `key_id` - Github salt ID.
     """
     for attempts_left in range(3, -1, -1):
-        if attempts_left == 0:
-            sys.exit("ERROR: Can't access Github. Please, try again later")
-
         try:
             status, public_key = getattr(
                 getattr(
@@ -62,9 +59,10 @@ def get_repo_public_key(gh_api: GitHub, owner: str, repo_name: str) -> dict:
 
         except TimeoutError:
             logger.warning(f"Can't access Github. Timeout error. Attempts left: {attempts_left}")
-            continue
-
-        break
+        else:
+            break
+    else:
+        sys.exit("ERROR: Can't access Github. Please, try again later")
 
     if status != 200:  # noqa: WPS432
         sys.exit(f"Can't get repo public-key. Full error: {public_key}")
@@ -86,9 +84,6 @@ def add_secret(gh_api: GitHub, owner: str, repo_name: str, key: str, body: dict)
         body: (dict) Secret body, that include: `{'encrypted_value': str, 'key_id': str}`.
     """
     for attempts_left in range(3, -1, -1):
-        if attempts_left == 0:
-            sys.exit("ERROR: Can't access Github. Please, try again later")
-
         try:
             status, response = getattr(
                 getattr(
@@ -101,9 +96,10 @@ def add_secret(gh_api: GitHub, owner: str, repo_name: str, key: str, body: dict)
             )
         except TimeoutError:
             logger.warning(f"Can't access Github. Timeout error. Attempts left: {attempts_left}")
-            continue
-
-        break
+        else:
+            break
+    else:
+        sys.exit("ERROR: Can't access Github. Please, try again later")
 
     if status not in {201, 204}:
         sys.exit(f'ERROR ocurred when try populate access_key to repo. {response}')

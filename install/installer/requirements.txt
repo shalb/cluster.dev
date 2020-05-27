@@ -2,6 +2,6 @@ gitpython==3.1.0 # Get info from git
 PyInquirer==1.0.3 # CLI questions
 boto3==1.13.3 # AWS API
 agithub==2.2.2 # Github API
-PyNaCl==1.3.0 # Encription for Github Secrets
+PyNaCl==1.3.0 # Encryption for Github Secrets
 wget==3.2 # Download sample cluster.dev files
-typeguard==2.7.1 # dev dependency, function typecheker. Maybe good idea use http://mypy-lang.org/ than CPython
+typeguard==2.7.1 # dev dependency, function type-checker. Maybe good idea use http://mypy-lang.org/ than CPython

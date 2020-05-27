@@ -157,12 +157,12 @@ def ask_user(question_name: str, choices=None):
             'message': 'Select your Cloud Provider',
             'choices': choices,
         },
-        'cloud_login': {
+        'cloud_login': {  # TODO: Add validation (and for cli arg)
             'type': 'input',
             'name': 'cloud_login',
             'message': 'Please enter your Cloud programatic key',
         },
-        'cloud_password': {
+        'cloud_password': {  # TODO: Add validation (and for cli arg)
             'type': 'password',
             'name': 'cloud_password',
             'message': 'Please enter your Cloud programatic secret',
@@ -212,11 +212,11 @@ def ask_user(question_name: str, choices=None):
 
 
 @typechecked
-def parse_cli_args() -> object:
+def parse_cli_args() -> argparse.Namespace:
     """Parse CLI arguments, validate it.
 
     Returns:
-        object: (argparse.Namespace) object that have all params entered by user.
+        argparse.Namespace: object that have all params entered by user.
     """
     parser = argparse.ArgumentParser(
         usage=''
@@ -329,8 +329,8 @@ def parse_cli_args() -> object:
     if cli.cloud and cli.cloud_provider:
         if cli.cloud_provider not in CLOUD_PROVIDERS[cli.cloud]:
             sys.exit(
-                f'Cloud provider can be: {CLOUD_PROVIDERS[cli.cloud_provider]}, ' +
-                f'but provided: {cli.cloud_provider}',
+                f'Cloud provider can be: {CLOUD_PROVIDERS[cli.cloud_provider]}, '
+                + f'but provided: {cli.cloud_provider}',
             )
 
     return cli
@@ -346,12 +346,12 @@ def get_git_username(git: object) -> str:
     Returns:
         username string.
     """
-    try:
-        # Required mount: $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro
+    try:  # Required mount: $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro
         user = git.config('--get', 'user.name')
-        logger.info(f'Username: {user}')
     except GitCommandError:
         user = ask_user('git_user_name')
+    else:
+        logger.info(f'Username: {user}')
 
     return user
 
@@ -488,7 +488,7 @@ def get_aws_login(config: {object, bool}, config_section: str) -> str:
     Returns:
         cloud_login string.
     """
-    if not config:
+    if not config or not config_section:
         return ask_user('cloud_login')
 
     return config.get(config_section, 'aws_access_key_id')
@@ -576,7 +576,11 @@ def create_aws_user_and_permissions(
     # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
     try:  # Required "iam:ListUsers"???, "iam:ListAccessKeys"
         response = iam.list_access_keys(UserName=user)
-
+    except iam.exceptions.NoSuchEntityException:  # User not yet exist
+        pass
+    except iam.exceptions.ClientError as error:
+        sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+    else:
         try:
             if response['AccessKeyMetadata'][0]['AccessKeyId'] == login:
                 logger.info(f'Specified creds belong to exist user "{user}", use it')
@@ -596,12 +600,6 @@ def create_aws_user_and_permissions(
                 'created': True,
             }
 
-    except iam.exceptions.NoSuchEntityException:  # User not yet exist
-        pass
-
-    except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
-
     # Create/get policy_arn for user
     with open('aws_policy.json', 'r') as policy_file:
         policy = json.dumps(json.load(policy_file))
@@ -614,9 +612,6 @@ def create_aws_user_and_permissions(
             Description='Policy for https://cluster.dev propertly work. '
             + 'Created by CLI instalator',
         )
-        policy_arn = response['Policy']['Arn']
-        logger.info('Policy created')
-
     except iam.exceptions.EntityAlreadyExistsException:  # Policy already exist
         try:  # Required "iam:ListPolicies"
             response = iam.list_policies(
@@ -625,21 +620,18 @@ def create_aws_user_and_permissions(
             )
         except iam.exceptions.ClientError as error:  # noqa: WPS440
             sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
-
-        policy_arn = response['Policies'][0]['Arn']
+        else:
+            policy_arn = response['Policies'][0]['Arn']
 
     except iam.exceptions.ClientError as error:  # noqa: WPS440
         sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+    else:
+        policy_arn = response['Policy']['Arn']
+        logger.info('Policy created')
 
     try:  # Required "iam:GetUser"
         # When cluster.dev user created, but provided creds for another user
         iam.get_user(UserName=user)
-
-        response = iam.list_access_keys(UserName=user)
-        key = response['AccessKeyMetadata'][0]['AccessKeyId']
-
-        secret = ask_user('aws_secret_key', choices={'user': user, 'key': key})
-
     except iam.exceptions.NoSuchEntityException:
         # Create user and access keys
         try:  # Required "iam:CreateUser"
@@ -657,16 +649,22 @@ def create_aws_user_and_permissions(
             )
         except iam.exceptions.ClientError as error:  # noqa: WPS440
             sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+        else:
+            logger.info('User created')
 
-        logger.info('User created')
-
-        response = iam.create_access_key(UserName=user)
-        key = response['AccessKey']['AccessKeyId']
-        secret = response['AccessKey']['SecretAccessKey']
-        keys_created = True
+            response = iam.create_access_key(UserName=user)
+            key = response['AccessKey']['AccessKeyId']
+            secret = response['AccessKey']['SecretAccessKey']
+            keys_created = True
 
     except iam.exceptions.ClientError as error:  # noqa: WPS440
         sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+
+    else:
+        response = iam.list_access_keys(UserName=user)
+        key = response['AccessKeyMetadata'][0]['AccessKeyId']
+
+        secret = ask_user('aws_secret_key', choices={'user': user, 'key': key})
 
     return {
         'key': key,

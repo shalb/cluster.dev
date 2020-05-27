@@ -108,6 +108,4 @@ repos:
     - --extend-ignore=
               WPS305, <!-- Found `f` string -->
               E501,   <!-- line too long (> 79 characters). Use 100 -->
-              I001,   <!-- isort found an import in the wrong position. Use reorder-python-imports -->
-              I003,   <!-- isort expected 1 blank line in imports. Use reorder-python-imports -->
-              I004,   <!-- isort found an unexpected blank line in imports. Use reorder-python-imports -->
+              I,      <!-- opt out of using isort in favor of reorder-python-imports -->

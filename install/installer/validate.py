@@ -10,7 +10,7 @@ from typeguard import typechecked
 
 @typechecked  # pylint: disable=too-few-public-methods
 class RepoName(Validator):
-    """Validate user input."""
+    """Validator for the Github repository name input."""
 
     @typechecked
     def validate(self: Validator, document=None, interactive: bool = True):
@@ -38,19 +38,21 @@ class RepoName(Validator):
 
         okay = regex.match('^[A-Za-z0-9_-]{1,100}$', repo_name)
 
-        if not okay:
-            if not interactive:
-                sys.exit(error_message)
+        if okay:
+            return
 
-            raise ValidationError(
-                message=error_message,
-                cursor_position=len(repo_name),
-            )  # Move cursor to end
+        if not interactive:
+            sys.exit(error_message)
+
+        raise ValidationError(
+            message=error_message,
+            cursor_position=len(repo_name),
+        )  # Move cursor to end
 
 
 @typechecked  # pylint: disable=too-few-public-methods
 class UserName(Validator):
-    """Validate user input."""
+    """Validator for the Github username input."""
 
     @typechecked
     def validate(self: Validator, document=None, interactive: bool = True):
@@ -93,7 +95,7 @@ class UserName(Validator):
 
 @typechecked  # pylint: disable=too-few-public-methods
 class AWSUserName(Validator):
-    """Validate user input."""
+    """Validator for the AWS username input."""
 
     @typechecked
     def validate(self: Validator, document=None, interactive: bool = True):
@@ -121,11 +123,13 @@ class AWSUserName(Validator):
 
         okay = regex.match('^[A-Za-z0-9_+=,.@-]{1,64}$', username)
 
-        if not okay:
-            if not interactive:
-                sys.exit(error_message)
+        if okay:
+            return
 
-            raise ValidationError(
-                message=error_message,
-                cursor_position=len(username),
-            )  # Move cursor to end
+        if not interactive:
+            sys.exit(error_message)
+
+        raise ValidationError(
+            message=error_message,
+            cursor_position=len(username),
+        )  # Move cursor to end
