@@ -9,28 +9,31 @@ Example usage:
 import argparse
 import glob
 import json
+import logging
 import os
 import shutil
-from base64 import b64encode
+import sys
 from configparser import ConfigParser
 from configparser import NoOptionError
 from contextlib import suppress
 from pathlib import Path
-from sys import exit as sys_exit
 
 import boto3
+import github
 import validate
 import wget
-from agithub.GitHub import GitHub
 from git import GitCommandError
 from git import InvalidGitRepositoryError
 from git import Repo
-from nacl import encoding
-from nacl import public
 from PyInquirer import prompt
 from PyInquirer import style_from_dict
 from PyInquirer import Token
 from typeguard import typechecked
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler(sys.stdout))
 
 #######################################################################
 #                          F U N C T I O N S                          #
@@ -38,25 +41,21 @@ from typeguard import typechecked
 
 
 @typechecked
-def echo(msg: str) -> None:
-    """Print message to stdout."""
-    print(msg)  # noqa: WPS421
-
-
-@typechecked
 def dir_is_git_repo(path: str) -> bool:
     """Check if directory is a Git repository.
+
     Args:
-        path: (str) path to directory
+        path: (str) path to directory.
 
     Returns:
         bool: True if successful, False otherwise.
     """
     try:
         Repo(path)
-        return True
     except InvalidGitRepositoryError:
         return False
+
+    return True
 
 
 @typechecked
@@ -65,16 +64,14 @@ def ask_user(question_name: str, choices=None):
 
     Args:
         question_name: (str) Name from `questions` that will processed.
-        choices: Used when choose params become know during execution
+        choices: Used when choose params become know during execution.
 
     Returns:
         Depends on entered `question_name`:
-            create_repo: (bool) True or False
-            git_provider (string): Provider name. See `GIT_PROVIDERS` for variants
+            create_repo: (bool) True or False.
+            git_provider (string): Provider name. See `GIT_PROVIDERS` for variants.
             repo_name (string,int): Repo name. Have built-in validator,
-                so user can't enter invalid repository name
-    Raises:
-        KeyError: If `question_name` not exist in `questions`
+            so user can't enter invalid repository name.
     """
     prompt_style = style_from_dict({
         Token.Separator: '#6C6C6C',
@@ -109,7 +106,8 @@ def ask_user(question_name: str, choices=None):
                     'name': 'Yes',
                     'value': True,
                     'disabled': 'Unavailable at this time',
-                }, ],
+                },
+            ],
         },
         'choose_git_provider': {
             'type': 'list',
@@ -201,25 +199,29 @@ def ask_user(question_name: str, choices=None):
             'type': 'password',
             'name': 'github_token',
             'message': 'Please enter GITHUB_TOKEN. '
-                       'It can be generated at https://github.com/settings/tokens',
+            + 'It can be generated at https://github.com/settings/tokens',
         },
     }
 
     try:
-        result = prompt(questions[question_name], style=prompt_style)[question_name]
+        answer = prompt(questions[question_name], style=prompt_style)[question_name]
     except KeyError:
-        sys_exit(f"Sorry, it's program error. Can't found key '{question_name}'")
+        sys.exit(f"Sorry, it's program error. Can't found key '{question_name}'")
 
-    return result
+    return answer
 
 
 @typechecked
 def parse_cli_args() -> object:
-    """Parse CLI arguments, validate it."""
+    """Parse CLI arguments, validate it.
+
+    Returns:
+        object: (argparse.Namespace) object that have all params entered by user.
+    """
     parser = argparse.ArgumentParser(
         usage=''
-        '  interactive:     ./cluster-dev.py install\n'
-        '  non-interactive: ./cluster-dev.py install -gp Github',
+        + '  interactive:     ./cluster-dev.py install\n'
+        + '  non-interactive: ./cluster-dev.py install -gp Github',
     )
 
     parser.add_argument('subcommand', nargs='+', metavar='install', choices=['install'])
@@ -233,7 +235,8 @@ def parse_cli_args() -> object:
         choices=GIT_PROVIDERS,
     )
     parser.add_argument(
-        '--create-repo', metavar='<repo_name>',
+        '--create-repo',
+        metavar='<repo_name>',
         dest='repo_name',
         help='Automatically initialize repo for you',
     )
@@ -265,7 +268,7 @@ def parse_cli_args() -> object:
         '-c',
         metavar='<cloud>',
         dest='cloud',
-        help="Can be AWS or DigitalOcean",
+        help='Can be AWS or DigitalOcean',
         choices=CLOUDS,
     )
     parser.add_argument(
@@ -325,7 +328,7 @@ def parse_cli_args() -> object:
 
     if cli.cloud and cli.cloud_provider:
         if cli.cloud_provider not in CLOUD_PROVIDERS[cli.cloud]:
-            sys_exit(
+            sys.exit(
                 f'Cloud provider can be: {CLOUD_PROVIDERS[cli.cloud_provider]}, ' +
                 f'but provided: {cli.cloud_provider}',
             )
@@ -338,15 +341,15 @@ def get_git_username(git: object) -> str:
     """Get username from settings or from user input.
 
     Args:
-        git: (obj) git.Repo.git object
+        git: (obj) git.Repo.git object.
 
     Returns:
-        username string
+        username string.
     """
     try:
         # Required mount: $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro
         user = git.config('--get', 'user.name')
-        echo(f'Username: {user}')
+        logger.info(f'Username: {user}')
     except GitCommandError:
         user = ask_user('git_user_name')
 
@@ -358,18 +361,17 @@ def get_git_password() -> str:
     """Get SSH key from settings or password from user input.
 
     Returns:
-        empty string if SSH-key provided (mounted)
-        Otherwise - return password string
+        empty string if SSH-key provided (mounted).
+        Otherwise - return password string.
     """
     with suppress(FileNotFoundError):
         # Try use ssh as password
         # Required mount: $HOME/.ssh:/home/cluster.dev/.ssh:ro
         os.listdir(f'{os.environ["HOME"]}/.ssh')
-        echo('Password type: ssh-key')
+        logger.info('Password type: ssh-key')
         return ''
 
-    password = ask_user('git_password')
-    return password
+    return ask_user('git_password')
 
 
 @typechecked
@@ -379,12 +381,10 @@ def remove_all_except_git(dir_path: str):
     Args:
         dir_path: (str) path to dir which will cleanup.
     """
-    for file in os.listdir(dir_path):
-        path = os.path.join(dir_path, file)
+    for filename in os.listdir(dir_path):
+        path = os.path.join(dir_path, filename)
         try:
-            if os.path.isfile(path) or \
-                    os.path.islink(path):
-
+            if os.path.isfile(path) or os.path.islink(path):
                 os.unlink(path)
 
             elif os.path.isdir(path):
@@ -394,23 +394,21 @@ def remove_all_except_git(dir_path: str):
                 shutil.rmtree(path)
 
         except Exception as exception:  # pylint: disable=broad-except
-            echo(f'Failed to delete {path}. Reason: {exception}')
+            logger.warning(f'Failed to delete {path}. Reason: {exception}')
 
 
 @typechecked
 def choose_git_provider(repo: Repo) -> str:
-    """Choose git provider.
-    Try automatically, if git remotes specified. Otherwise - ask user.
+    """Choose git provider. Try automatically, if git remotes specified. Otherwise - ask user.
 
     Args:
-        repo: (obj) git.Repo object
+        repo: (obj) git.Repo object.
 
     Returns:
-        git_provider string
+        git_provider string.
     """
     if not repo.remotes:  # Remotes not exist in locally init repos
-        git_provider = ask_user('choose_git_provider')
-        return git_provider
+        return ask_user('choose_git_provider')
 
     git = repo.git
     remote = git.remote('-v')
@@ -436,25 +434,20 @@ def get_data_from_aws_config(login: str, password: str) -> {bool, object}:
         password: (str) CLI argument provided by user.
 
     Returns:
-        config ConfigParser obj|False: config, if exists. Otherwise - False
+        config ConfigParser obj|False: config, if exists. Otherwise - False.
     """
     # Skip if CLI args provided
     if login and password:
         return False
 
-    try:
-        # Required mount: $HOME/.aws/:/home/cluster.dev/.aws/:ro
-
-        # User can have multiply creds, ask him what should be used
-        # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#configuring-credentials
-        file = f'{os.environ["HOME"]}/.aws/credentials'
-        os.path.isfile(file)
-
-        config = ConfigParser()
-        config.read(file)
-
+    path = f'{os.environ["HOME"]}/.aws/credentials'
+    try:  # Required mount: $HOME/.aws/:/home/cluster.dev/.aws/:ro
+        os.path.isfile(path)
     except FileNotFoundError:
         return False
+
+    config = ConfigParser()
+    config.read(path)
 
     return config
 
@@ -464,22 +457,21 @@ def get_aws_config_section(config: {object, bool}) -> str:
     """Ask user which section in config should be use for extracting credentials.
 
     Args:
-        config (ConfigParser obj|False): INI config
+        config (ConfigParser obj|False): INI config.
 
     Returns:
-        config_section string: section name, if exists. Otherwise - empty string
+        str: section name, if exists. Otherwise - empty string.
     """
     # Skip if CLI args provided or configs doesn't exist
-    if not config:
-        return ''
-
-    if len(config.sections()) == 0:
+    if not config or not config.sections():
         return ''
 
     if len(config.sections()) == 1:
         section = config.sections()[0]
-        echo(f'Use AWS creds from file, section "{config.sections()[0]}"')
+        logger.info(f'Use AWS creds from file, section "{config.sections()[0]}"')
     else:
+        # User can have multiply creds, ask him what should be used
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#configuring-credentials
         section = ask_user('choose_config_section', choices=config.sections())
 
     return section
@@ -490,19 +482,16 @@ def get_aws_login(config: {object, bool}, config_section: str) -> str:
     """Get cloud programatic login from settings or from user input.
 
     Args:
-        config (ConfigParser obj|False): INI config
-        config_section: (str) INI config section
+        config (ConfigParser obj|False): INI config.
+        config_section: (str) INI config section.
 
     Returns:
-        cloud_login string
+        cloud_login string.
     """
     if not config:
-        cloud_login = ask_user('cloud_login')
-        return cloud_login
+        return ask_user('cloud_login')
 
-    cloud_login = config.get(config_section, 'aws_access_key_id')
-
-    return cloud_login
+    return config.get(config_section, 'aws_access_key_id')
 
 
 @typechecked
@@ -510,20 +499,16 @@ def get_aws_password(config: {object, bool}, config_section: str) -> str:
     """Get cloud programatic password from settings or from user input.
 
     Args:
-        config: (ConfigParser obj|False) INI config
-        config_section: (str) INI config section
+        config: (ConfigParser obj|False) INI config.
+        config_section: (str) INI config section.
 
     Returns:
-        cloud_password string
+        cloud_password string.
     """
-
     if not config:
-        cloud_password = ask_user('cloud_password')
-        return cloud_password
+        return ask_user('cloud_password')
 
-    cloud_password = config.get(config_section, 'aws_secret_access_key')
-
-    return cloud_password
+    return config.get(config_section, 'aws_secret_access_key')
 
 
 @typechecked
@@ -531,27 +516,25 @@ def get_aws_session(config: {object, bool}, config_section: str, mfa_disabled: s
     """Get cloud session from settings or from user input.
 
     Args:
-        config: (ConfigParser obj|False) INI config
-        config_section: (str) INI config section
-        mfa_disabled: (str) CLI argument provided by user.
-            If not provided - it set to empty string
+        config: (ConfigParser obj|False) INI config.
+        config_section: (str) INI config section.
+        mfa_disabled: (str) CLI argument provided by user. If not provided - set to empty string.
 
     Returns:
-        session_token string
+        session_token string.
     """
     # If login provided but session - not, user may not have MFA enabled
     if mfa_disabled:
-        echo('SESSION_TOKEN not found, try without MFA')
+        logger.info('SESSION_TOKEN not found, try without MFA')
         return ''
 
     if not config:
-        session_token = ask_user('aws_session_token')
-        return session_token
+        return ask_user('aws_session_token')
 
     try:
         session_token = config.get(config_section, 'aws_session_token')
     except NoOptionError:
-        echo('SESSION_TOKEN not found, try without MFA')
+        logger.info('SESSION_TOKEN not found, try without MFA')
         return ''
 
     return session_token
@@ -559,23 +542,23 @@ def get_aws_session(config: {object, bool}, config_section: str, mfa_disabled: s
 
 @typechecked
 def create_aws_user_and_permissions(
-        user: str,
-        login: str,
-        password: str,
-        session: str,
-        release: str,
+    user: str,
+    login: str,
+    password: str,
+    session: str,
+    release: str,
 ) -> dict:
     """Create cloud user and attach needed permissions.
 
     Args:
-        user: (str) Cluster.dev user name
-        login: (str) Cloud programatic login
-        password: (str) Cloud programatic password
-        session: (str) Cloud session token
-        release: (str) cluster.dev release tag
+        user: (str) Cluster.dev user name.
+        login: (str) Cloud programatic login.
+        password: (str) Cloud programatic password.
+        session: (str) Cloud session token.
+        release: (str) cluster.dev release tag.
 
     Returns:
-        dict {'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}
+        dict - {'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}.
     """
     iam = boto3.client(
         'iam',
@@ -584,8 +567,10 @@ def create_aws_user_and_permissions(
         aws_session_token=session,
     )
     keys_created = False
-    link = f'https://github.com/shalb/cluster.dev/blob/{release}' + \
-        '/install/installer_aws_install_req_permissions.json'
+    link = (
+        f'https://github.com/shalb/cluster.dev/blob/{release}'
+        + '/install/installer_aws_install_req_permissions.json'
+    )
 
     # 'If specified user exist, -clogin and -cpwd will be try use as it
     # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
@@ -594,7 +579,7 @@ def create_aws_user_and_permissions(
 
         try:
             if response['AccessKeyMetadata'][0]['AccessKeyId'] == login:
-                echo(f'Specified creds belong to exist user {user}, use it')
+                logger.info(f'Specified creds belong to exist user "{user}", use it')
 
                 return {
                     'key': login,
@@ -615,22 +600,22 @@ def create_aws_user_and_permissions(
         pass
 
     except iam.exceptions.ClientError as error:
-        sys_exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+        sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
 
     # Create/get policy_arn for user
-    with open('aws_policy.json', 'r') as file:
-        policy = json.dumps(json.load(file))
+    with open('aws_policy.json', 'r') as policy_file:
+        policy = json.dumps(json.load(policy_file))
 
     try:  # Required "iam:CreatePolicy"
         response = iam.create_policy(
             PolicyName='cluster.dev-policy',
             Path='/cluster.dev/',
             PolicyDocument=policy,
-            Description='Policy for https://cluster.dev propertly work. ' +
-                        'Created by CLI instalator',
+            Description='Policy for https://cluster.dev propertly work. '
+            + 'Created by CLI instalator',
         )
         policy_arn = response['Policy']['Arn']
-        echo('Policy created')
+        logger.info('Policy created')
 
     except iam.exceptions.EntityAlreadyExistsException:  # Policy already exist
         try:  # Required "iam:ListPolicies"
@@ -638,13 +623,13 @@ def create_aws_user_and_permissions(
                 Scope='Local',
                 PathPrefix='/cluster.dev/',
             )
-            policy_arn = response['Policies'][0]['Arn']
+        except iam.exceptions.ClientError as error:  # noqa: WPS440
+            sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
 
-        except iam.exceptions.ClientError as error:
-            sys_exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+        policy_arn = response['Policies'][0]['Arn']
 
-    except iam.exceptions.ClientError as error:
-        sys_exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+    except iam.exceptions.ClientError as error:  # noqa: WPS440
+        sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
 
     try:  # Required "iam:GetUser"
         # When cluster.dev user created, but provided creds for another user
@@ -657,27 +642,31 @@ def create_aws_user_and_permissions(
 
     except iam.exceptions.NoSuchEntityException:
         # Create user and access keys
-        try:  # Required "iam:CreateUser", "iam:AttachUserPolicy"
+        try:  # Required "iam:CreateUser"
             iam.create_user(
                 Path='/cluster.dev/',
                 UserName=user,
             )
+        except iam.exceptions.ClientError as error:  # noqa: WPS440
+            sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+
+        try:  # Required "iam:AttachUserPolicy"
             iam.attach_user_policy(
                 UserName=user,
                 PolicyArn=policy_arn,
             )
-        except iam.exceptions.ClientError as error:
-            sys_exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+        except iam.exceptions.ClientError as error:  # noqa: WPS440
+            sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
 
-        echo('User created')
+        logger.info('User created')
 
         response = iam.create_access_key(UserName=user)
         key = response['AccessKey']['AccessKeyId']
         secret = response['AccessKey']['SecretAccessKey']
         keys_created = True
 
-    except iam.exceptions.ClientError as error:
-        sys_exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
+    except iam.exceptions.ClientError as error:  # noqa: WPS440
+        sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
 
     return {
         'key': key,
@@ -691,17 +680,16 @@ def get_git_token(provider: str) -> str:
     """Get github token from user input or settings.
 
     Args:
-        providercloud: (str) Provider name
+        provider: (str) Provider name.
 
     Returns:
-        git_token string
+        git_token string.
     """
-
     # Required env variables from host: GITHUB_TOKEN
     if provider == 'Github':
-        if 'GITHUB_TOKEN' in os.environ:
-            git_token = os.environ['GITHUB_TOKEN']
-            echo('Use GITHUB_TOKEN from env')
+        git_token = os.environ.get('GITHUB_TOKEN')
+        if git_token is not None:
+            logger.info('Use GITHUB_TOKEN from env')
         else:
             git_token = ask_user('github_token')
 
@@ -710,180 +698,62 @@ def get_git_token(provider: str) -> str:
 
 @typechecked
 def get_repo_name_from_url(url: str) -> str:
-    """Get git repository name from git remote url."""
-    last_slash_index = url.rfind("/")
-    last_suffix_index = url.rfind(".git")
+    """Get git repository name from git remote url.
+
+    Args:
+        url: (str) git remote url. Can be "git@" or "https://".
+
+    Returns:
+        str: git repository name.
+    """
+    last_slash_index = url.rfind('/')
+    last_suffix_index = url.rfind('.git')
 
     if last_slash_index < 0 or last_suffix_index < 0:
-        sys_exit(f'ERROR: Check `git remote -v`. Badly formatted origin: {url}')
+        sys.exit(f'ERROR: Check `git remote -v`. Badly formatted origin: {url}')
 
     return url[last_slash_index + 1:last_suffix_index]
 
 
 @typechecked
 def get_repo_owner_from_url(url: str) -> str:
-    """Get git repository owner from git remote url."""
-    last_slash_index = url.rfind("/")
+    """Get git repository owner from git remote url.
+
+    Args:
+        url: (str) git remote url. Can be "git@" or "https://".
+
+    Returns:
+        str: git repository owner (user or organization).
+    """
+    last_slash_index = url.rfind('/')
 
     # IF HTTPS: https://github.com/shalb/cluster.dev.git
-    prefix_index = url.find("/", 8)
+    prefix_index = url.find('/', 8)
     # IF SSH: git@github.com:shalb/cluster.dev.git
     if prefix_index == last_slash_index:
-        prefix_index = url.find(":")
+        prefix_index = url.find(':')
 
     if last_slash_index < 0 or prefix_index < 0:
-        sys_exit(f'ERROR: Check `git remote -v`. Badly formatted origin: {url}')
+        sys.exit(f'ERROR: Check `git remote -v`. Badly formatted origin: {url}')
 
     return url[prefix_index + 1:last_slash_index]
 
 
 @typechecked
-def encrypt(public_key: str, secret_value: str) -> str:
-    """Encrypt a Unicode string using the public key.
-
-    Args:
-        public_key: (str) encryption salt public key
-        secret_value: (str) value for encrypt
-
-    Returns:
-        Encrypted Unicode string
-    """
-    public_key = public.PublicKey(public_key.encode('utf-8'), encoding.Base64Encoder())
-    sealed_box = public.SealedBox(public_key)
-    encrypted = sealed_box.encrypt(secret_value.encode('utf-8'))
-    return b64encode(encrypted).decode('utf-8')
-
-
-@typechecked
-def create_github_secrets(creds: dict, cloud: str, repo: Repo, git_token: str):
-    """Create Github repo secrets for specified Cloud.
-
-    Args:
-        creds: (dict) Programmatic access to cloud. { 'key': str, 'secret': str, ... }
-        cloud: (str) Cloud name
-        repo: (obj) git.Repo object
-        git_token: (str) Git Provider token
-    """
-    gh_api = GitHub(token=git_token)
-
-    remote = repo.remotes.origin.url
-    owner = get_repo_owner_from_url(remote)
-    repo_name = get_repo_name_from_url(remote)
-
-    # Get public key for encryption
-    # https://developer.github.com/v3/actions/secrets/#get-a-repository-public-key
-    for i in range(3, -1, -1):
-        if i == 0:
-            sys_exit("ERROR: Can't access Github. Please, try again later")
-        try:
-            status, public_key = getattr(
-                getattr(
-                    getattr(
-                        gh_api.repos, owner,
-                    ), repo_name,
-                ).actions.secrets, 'public-key',
-            ).get()
-            break
-        except TimeoutError:
-            echo(f"Can't access Github. Timeout error. Attempts left: {i}")
-
-    if status != 200:  # noqa: WPS432
-        sys_exit(f"Can't get repo public-key. Full error: {public_key}")
-
-    if cloud == 'AWS':
-        key = 'AWS_ACCESS_KEY_ID'
-        secret = 'AWS_SECRET_ACCESS_KEY'  # noqa: S105
-
-    # Put secret to repo
-    # https://developer.github.com/v3/actions/secrets/#create-or-update-a-repository-secret
-    body = {
-        'encrypted_value': encrypt(public_key['key'], creds['key']),
-        'key_id': public_key['key_id'],
-    }
-
-    for i in range(3, -1, -1):
-        if i == 0:
-            sys_exit("ERROR: Can't access Github. Please, try again later")
-        try:
-            status, response = getattr(
-                getattr(
-                    getattr(
-                        gh_api.repos, owner,
-                    ), repo_name,
-                ).actions.secrets, key,
-            ).put(
-                body=body,
-            )
-            break
-        except TimeoutError:
-            echo(f"Can't access Github. Timeout error. Attempts left: {i}")
-
-    if status not in {201, 204}:
-        sys_exit(f'ERROR ocurred when try populate access_key to repo. {response}')
-
-    body = {
-        'encrypted_value': encrypt(public_key['key'], creds['secret']),
-        'key_id': public_key['key_id'],
-    }
-
-    for i in range(3, -1, -1):
-        if i == 0:
-            sys_exit("ERROR: Can't access Github. Please, try again later")
-        try:
-            status, response = getattr(
-                getattr(
-                    getattr(
-                        gh_api.repos, owner,
-                    ), repo_name,
-                ).actions.secrets, secret,
-            ).put(
-                body=body,
-            )
-            break
-        except TimeoutError:
-            echo(f"Can't access Github. Timeout error. Attempts left: {i}")
-
-    if status not in {201, 204}:
-        sys_exit(f'ERROR ocurred when try populate secret_key to repo. {response}')
-
-    echo('Secrets added to Github repo')
-
-
-@typechecked
-def get_last_release(owner: str = 'shalb', repo: str = 'cluster.dev') -> str:
-    """Get last Github repo release.
-
-    Args:
-        owner: (str) repo owner name. Default: 'shalb'
-        repo: (str) repo name. Default: 'cluster.dev'
-
-    Returns:
-        realise_version string
-    """
-    gh_api = GitHub()
-    status, response = getattr(getattr(gh_api.repos, owner), repo).releases.latest.get()
-
-    if status != 200:  # noqa: WPS432
-        sys_exit(f"Can't access Github. Full error: {response}")
-
-    return response['tag_name']
-
-
-@typechecked
 def add_sample_cluster_dev_files(
-        cloud: str,
-        cloud_provider: str,
-        git_provider: str,
-        repo_path: str,
-        release: str,
+    cloud: str,
+    cloud_provider: str,
+    git_provider: str,
+    repo_path: str,
+    release: str,
 ):
     """Populate repo with sample files.
 
     Args:
-        cloud: (str) Cloud name
-        cloud_provider: (str) Cloud provider name
-        git_provider: (str) Git Provider name
-        repo_path: (str) Relative path to repo
+        cloud: (str) Cloud name.
+        cloud_provider: (str) Cloud provider name.
+        git_provider: (str) Git Provider name.
+        repo_path: (str) Relative path to repo.
         release: (str) cluster.dev release version. Can be tag commit or branch.
     """
     repo_url = f'https://raw.githubusercontent.com/shalb/cluster.dev/{release}'
@@ -917,7 +787,7 @@ def add_sample_cluster_dev_files(
     # But get inside Docker real uif:gid into Docker not trivial
     os.chmod(config_file_path, 0o666)  # noqa: WPS432, S103
 
-    echo('\nLocal repo populated with sample files')
+    logger.info('\nLocal repo populated with sample files')
 
 
 @typechecked
@@ -925,18 +795,18 @@ def commit_and_push(git: object, message: str):
     """Stage, commit and push all changes.
 
     Args:
-        git: (obj) git.Repo.git object
-        message: (str) Commit message body
+        git: (obj) git.Repo.git object.
+        message: (str) Commit message body.
     """
     git.add('-A')
     try:
         git.commit('-m', message)
     except GitCommandError:
-        echo('Nothing to commit, working tree clean')
+        logger.warning('Nothing to commit, working tree clean')
 
     git.push()
 
-    echo(message)
+    logger.info(message)
 
 
 @typechecked
@@ -944,10 +814,10 @@ def last_edited_config_path(repo_path: str) -> str:
     """Get path to last edited .cluster.dev config.
 
     Args:
-        repo_path: (str) Relative path to repo
+        repo_path: (str) Relative path to repo.
 
     Returns:
-        string - Relative path to last edited config
+        str: Relative path to last edited config.
     """
     # *.yaml means all files with .yaml extention
     config_mask = os.path.join(repo_path, '.cluster.dev', '*.yaml')
@@ -961,8 +831,8 @@ def set_cluster_installed(config_path: str, installed: bool):
     """Set cluster.installed option in cluster config file.
 
     Args:
-        config_path: (str) Relative path to .cluster.dev config
-        installed: (bool) Value that should be set to `installed` option
+        config_path: (str) Relative path to .cluster.dev config.
+        installed: (bool) Value that should be set to `installed` option.
     """
     # Change `installed` value
     prev_value = json.dumps(not installed)
@@ -983,25 +853,25 @@ def main() -> None:
     cli = parse_cli_args()
     dir_path = os.path.relpath('current_dir')
 
-    echo('Hi, we gonna create an infrastructure for you.\n')
+    logger.info('Hi, we gonna create an infrastructure for you.\n')
 
     if not dir_is_git_repo(dir_path):
         create_repo = True
         if not cli.repo_name:
-            echo('As this is a GitOps approach we need to start with the git repo.')
+            logger.info('As this is a GitOps approach we need to start with the git repo.')
             create_repo = ask_user('create_repo')
 
         if not create_repo:
-            sys_exit('OK. See you soon!')
+            sys.exit('OK. See you soon!')
 
         repo_name = cli.repo_name or ask_user('repo_name')
 
         # TODO: setup remote origin and so on. Can be useful:
         # user = get_git_username(cli.git_user_name, git)
         # password = get_git_password(cli.git_password, git)
-        sys_exit('TODO')
+        sys.exit('TODO')
 
-    echo('Inside git repo, use it.')
+    logger.info('Inside git repo, use it.')
 
     repo = Repo(dir_path)
     git = repo.git
@@ -1037,13 +907,13 @@ def main() -> None:
         secret_key = cli.cloud_password or get_aws_password(config, config_section)
         session_token = cli.cloud_token or get_aws_session(config, config_section, cli.cloud_login)
 
-        release_version = cli.release_version or get_last_release()
+        release_version = cli.release_version or github.get_last_release()
 
         creds = create_aws_user_and_permissions(
             cloud_user, access_key, secret_key, session_token, release_version,
         )
         if creds['created']:
-            echo(
+            logger.info(
                 f'Credentials for user "{cloud_user}":\n'
                 + f'aws_access_key_id={creds["key"]}\n'
                 + f'aws_secret_access_key={creds["secret"]}',
@@ -1062,8 +932,12 @@ def main() -> None:
         or ask_user('choose_cloud_provider', choices=CLOUD_PROVIDERS[cloud])
     )
 
+    remote = repo.remotes.origin.url
+    owner = get_repo_owner_from_url(remote)
+    repo_name = get_repo_name_from_url(remote)
+
     if git_provider == 'Github':
-        create_github_secrets(creds, cloud, repo, git_token)
+        github.create_secrets(creds, cloud, owner, repo_name, git_token)
 
     add_sample_cluster_dev_files(cloud, cloud_provider, git_provider, dir_path, release_version)
     commit_and_push(git, 'cluster.dev: Add sample files')
@@ -1074,12 +948,9 @@ def main() -> None:
     os.system(f'editor "{config_path}"')  # noqa: S605
     commit_and_push(git, 'cluster.dev: Up cluster')
 
-    # Show likn to logs. Temporary solution
+    # Show link to logs. Temporary solution
     if git_provider == 'Github':
-        remote = repo.remotes.origin.url
-        owner = get_repo_owner_from_url(remote)
-        repo_name = get_repo_name_from_url(remote)
-        echo(f'See logs at: https://github.com/{owner}/{repo_name}/actions')
+        logger.info(f'See logs at: https://github.com/{owner}/{repo_name}/actions')
 
 
 #######################################################################

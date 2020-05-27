@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """User input validators."""
-from sys import exit as sys_exit
+import sys
 
 import regex
 from PyInquirer import ValidationError
@@ -20,12 +20,12 @@ class RepoName(Validator):
             document: (prompt_toolkit.document.Document)
                 Contain validation data in interactive mode.
                 When not interactive, not used and set to None.
-            interactive: (bool) Work mode
+            interactive: (bool) Work mode.
                 Set to False when check CLI params input, Default to True.
 
         Raises:
             ValidationError: If intput string not match regex.
-                Show error message for user and get him change fix error
+                Show error message for user and get him change fix error.
         """
         repo_name = self
         if interactive:
@@ -40,7 +40,7 @@ class RepoName(Validator):
 
         if not okay:
             if not interactive:
-                sys_exit(error_message)
+                sys.exit(error_message)
 
             raise ValidationError(
                 message=error_message,
@@ -60,12 +60,12 @@ class UserName(Validator):
             document: (prompt_toolkit.document.Document)
                 Contain validation data in interactive mode.
                 When not interactive, not used and set to None.
-            interactive: (bool) Work mode
+            interactive: (bool) Work mode.
                 Set to False when check CLI params input, Default to True.
 
         Raises:
             ValidationError: If intput string not match regex.
-                Show error message for user and get him change fix error
+                Show error message for user and get him change fix error.
         """
         username = self
         if interactive:
@@ -83,7 +83,7 @@ class UserName(Validator):
 
         if not_ok or not_ok2 or not okay:
             if not interactive:
-                sys_exit(error_message)
+                sys.exit(error_message)
 
             raise ValidationError(
                 message=error_message,
@@ -103,12 +103,12 @@ class AWSUserName(Validator):
             document: (prompt_toolkit.document.Document)
                 Contain validation data in interactive mode.
                 When not interactive, not used and set to None.
-            interactive: (bool) Work mode
+            interactive: (bool) Work mode.
                 Set to False when check CLI params input, Default to True.
 
         Raises:
             ValidationError: If intput string not match regex.
-                Show error message for user and get him change fix error
+                Show error message for user and get him change fix error.
         """
         username = self
         if interactive:
@@ -123,7 +123,7 @@ class AWSUserName(Validator):
 
         if not okay:
             if not interactive:
-                sys_exit(error_message)
+                sys.exit(error_message)
 
             raise ValidationError(
                 message=error_message,

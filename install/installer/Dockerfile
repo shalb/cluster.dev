@@ -19,7 +19,12 @@ RUN apk add --no-cache \
 COPY requirements.txt .
 RUN pip --no-cache-dir install -r requirements.txt
 
-COPY entrypoint.sh cluster_dev.py aws_policy.json ./
+COPY entrypoint.sh \
+    cluster_dev.py \
+    github.py \
+    validate.py \
+    aws_policy.json \
+        ./
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD [ "-h" ]
