@@ -216,7 +216,7 @@ def parse_cli_args() -> argparse.Namespace:
     """Parse CLI arguments, validate it.
 
     Returns:
-        argparse.Namespace: object that have all params entered by user.
+        argparse.Namespace: object that contains all params entered by user.
     """
     parser = argparse.ArgumentParser(
         usage=''
