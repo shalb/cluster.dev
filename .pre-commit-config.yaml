@@ -87,23 +87,22 @@ repos:
         --warn-redundant-casts,
       ]
 
-# pip3 install wemake-python-styleguide
-- repo: local
+- repo: https://gitlab.com/pycqa/flake8.git
+  rev: 3.8.2
   hooks:
-    - id: flake8
-      name: flake8
-      description: Python style guide enforcement
-      entry: flake8
-      args:
-        - --max-returns=2
-        - --max-arguments=4
-        # https://www.flake8rules.com/
-        # https://wemake-python-stylegui.de/en/latest/pages/usage/violations/index.html
-        - --ignore=
-                  WPS305, <!-- Found `f` string -->
-                  E501,   <!-- line too long (> 79 characters). Use 100 -->
-                  I001,   <!-- isort found an import in the wrong position. Use reorder-python-imports -->
-                  W503,   <!-- Deprecated rule. Use W504 instead. -->
-      language: python
-      language_version: python3
-      types: [python]
+  - id: flake8
+    language_version: python3
+    additional_dependencies:
+    - flake8-2020
+    - flake8-docstrings
+    - flake8-pytest-style
+    - wemake-python-styleguide
+    args:
+    - --max-returns=2
+    - --max-arguments=4
+    # https://www.flake8rules.com/
+    # https://wemake-python-stylegui.de/en/latest/pages/usage/violations/index.html
+    - --extend-ignore=
+              WPS305, <!-- Found `f` string -->
+              E501,   <!-- line too long (> 79 characters). Use 100 -->
+              I001,   <!-- isort found an import in the wrong position. Use reorder-python-imports -->
