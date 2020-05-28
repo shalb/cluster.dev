@@ -35,3 +35,7 @@ For the successful module documentation initialization, you need to create `READ
 It is needed for [terraform-docs](https://github.com/antonbabenko/pre-commit-terraform#notes-about-terraform_docs-hooks) hooks. The hook rewrites all the things inside with every `.tf` file change.
 
 Then run `pre-commit run --all-files` or make some changes in any `.tf` file in the same dir (for ex. `variable "name" {` -> `variable "name"{`).
+
+### Terraform code structure
+
+If you'd like to know how we preferred structure tf-code, see [this article](terraform-code-structure.md).
