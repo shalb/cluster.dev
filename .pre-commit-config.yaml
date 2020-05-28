@@ -102,7 +102,8 @@ repos:
     args:
     - --max-returns=2 # Default settings
     - --max-arguments=4 # Default settings
-    - --max-string-usages=6 # Project specific
+    - --max-string-usages=6 # Project specific. Default - 3
+    - --max-local-variables=6 # Project specific. Default - 5
     # https://www.flake8rules.com/
     # https://wemake-python-stylegui.de/en/latest/pages/usage/violations/index.html
     - --extend-ignore=

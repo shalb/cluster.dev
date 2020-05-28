@@ -3,6 +3,8 @@
 import logging
 import sys
 from base64 import b64encode
+from typing import Dict
+from typing import Union
 
 from agithub.GitHub import GitHub
 from nacl import encoding
@@ -32,7 +34,7 @@ def encrypt(public_key: str, secret_value: str) -> str:
 
 
 @typechecked
-def get_repo_public_key(gh_api: GitHub, owner: str, repo_name: str) -> dict:
+def get_repo_public_key(gh_api: GitHub, owner: str, repo_name: str) -> Dict[str, str]:
     """Get repository public key (salt) for encryption.
 
     Details: https://developer.github.com/v3/actions/secrets/#get-a-repository-public-key
@@ -43,7 +45,7 @@ def get_repo_public_key(gh_api: GitHub, owner: str, repo_name: str) -> dict:
         repo_name: (str) Repository name.
 
     Returns:
-        dict: `{'key': str, 'key_id': str}` where:
+        Dict[str, str]: `{'key': str, 'key_id': str}` where:
             `key` is public key (salt) for encryption.
             `key_id` - Github salt ID.
     """
@@ -71,7 +73,7 @@ def get_repo_public_key(gh_api: GitHub, owner: str, repo_name: str) -> dict:
 
 
 @typechecked  # noqa: WPS211
-def add_secret(gh_api: GitHub, owner: str, repo_name: str, key: str, body: dict):
+def add_secret(gh_api: GitHub, owner: str, repo_name: str, key: str, body: Dict[str, str]):
     """Add/update Github encrypted KeyValue storage - Github repo Secrets.
 
     Details: https://developer.github.com/v3/actions/secrets/#create-or-update-a-repository-secret
@@ -81,7 +83,7 @@ def add_secret(gh_api: GitHub, owner: str, repo_name: str, key: str, body: dict)
         owner: (str) Repository owner (user or organization).
         repo_name: (str) Repository name.
         key: (str) Secret name.
-        body: (dict) Secret body, that include: `{'encrypted_value': str, 'key_id': str}`.
+        body: (Dict[str, str]) Secret body, that include: `{'encrypted_value': str, 'key_id': str}`.
     """
     for attempts_left in range(3, -1, -1):
         try:
@@ -107,7 +109,7 @@ def add_secret(gh_api: GitHub, owner: str, repo_name: str, key: str, body: dict)
 
 @typechecked  # noqa: WPS211
 def create_secrets(
-    creds: dict,
+    creds: Dict[str, Union[str, bool]],
     cloud: str,
     owner: str,
     repo_name: str,
@@ -116,7 +118,8 @@ def create_secrets(
     """Create Github repo secrets for specified Cloud.
 
     Args:
-        creds: (dict) Programmatic access to cloud. { 'key': str, 'secret': str, ... }.
+        creds: (Dict[str, Union[str, bool]]) Programmatic access to cloud:
+        `{ 'key': str, 'secret': str, ... }`.
         cloud: (str) Cloud name.
         owner: (str) Repository owner (user or organization).
         repo_name: (str) Repository name.

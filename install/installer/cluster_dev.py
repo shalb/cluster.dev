@@ -17,6 +17,8 @@ from configparser import ConfigParser
 from configparser import NoOptionError
 from contextlib import suppress
 from pathlib import Path
+from typing import Dict
+from typing import Union
 
 import boto3
 import github
@@ -89,9 +91,9 @@ def ask_user(question_name: str, choices=None):
     #
     # 'NAME' should be same.
     # Example:
-    #    'NAME': {
+    #    `'NAME': {
     #        'name': 'NAME'
-    #    }
+    #    }`
     #
     questions = {
         'create_repo': {
@@ -399,7 +401,9 @@ def remove_all_except_git(dir_path: str):
 
 @typechecked
 def choose_git_provider(repo: Repo) -> str:
-    """Choose git provider. Try automatically, if git remotes specified. Otherwise - ask user.
+    """Choose git provider.
+
+    Try automatically, if git remotes specified. Otherwise - ask user.
 
     Args:
         repo: (obj) git.Repo object.
@@ -468,7 +472,7 @@ def get_aws_config_section(config: {object, bool}) -> str:
 
     if len(config.sections()) == 1:
         section = config.sections()[0]
-        logger.info(f'Use AWS creds from file, section "{config.sections()[0]}"')
+        logger.info(f'Use AWS creds from file, section "{section}"')
     else:
         # User can have multiply creds, ask him what should be used
         # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#configuring-credentials
@@ -518,7 +522,8 @@ def get_aws_session(config: {object, bool}, config_section: str, mfa_disabled: s
     Args:
         config: (ConfigParser obj|False) INI config.
         config_section: (str) INI config section.
-        mfa_disabled: (str) CLI argument provided by user. If not provided - set to empty string.
+        mfa_disabled: (str) CLI argument provided by user.
+        If not provided - set to empty string.
 
     Returns:
         session_token string.
@@ -547,7 +552,7 @@ def create_aws_user_and_permissions(
     password: str,
     session: str,
     release: str,
-) -> dict:
+) -> Dict[str, Union[str, bool]]:
     """Create cloud user and attach needed permissions.
 
     Args:
@@ -558,7 +563,8 @@ def create_aws_user_and_permissions(
         release: (str) cluster.dev release tag.
 
     Returns:
-        dict - {'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}.
+        Dict[str, Union[str, bool]]:
+        `{'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}`.
     """
     iam = boto3.client(
         'iam',
@@ -577,7 +583,7 @@ def create_aws_user_and_permissions(
     try:  # Required "iam:ListUsers"???, "iam:ListAccessKeys"
         response = iam.list_access_keys(UserName=user)
     except iam.exceptions.NoSuchEntityException:  # User not yet exist
-        pass
+        logger.debug(f'User "{user}" does not exist yet')
     except iam.exceptions.ClientError as error:
         sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
     else:
@@ -845,7 +851,7 @@ def set_cluster_installed(config_path: str, installed: bool):
         cfn.write(new_conf)
 
 
-@typechecked
+@typechecked  # noqa: WPS231, WPS213, WPS210
 def main() -> None:
     """Logic."""
     cli = parse_cli_args()
@@ -865,8 +871,8 @@ def main() -> None:
         repo_name = cli.repo_name or ask_user('repo_name')
 
         # TODO: setup remote origin and so on. Can be useful:
-        # user = get_git_username(cli.git_user_name, git)
-        # password = get_git_password(cli.git_password, git)
+        # user = cli.git_user_name or get_git_username(git)  # noqa: E800
+        # password = cli.git_password or get_git_password()  # noqa: E800
         sys.exit('TODO')
 
     logger.info('Inside git repo, use it.')
@@ -889,7 +895,7 @@ def main() -> None:
         publish_repo = ask_user('publish_repo_to_git_provider')
         if publish_repo:
             # TODO: push repo to Git Provider
-            pass
+            sys.exit('TODO')
 
     user = cli.git_user_name or get_git_username(git)
     password = cli.git_password or get_git_password()
@@ -916,14 +922,12 @@ def main() -> None:
                 + f'aws_access_key_id={creds["key"]}\n'
                 + f'aws_secret_access_key={creds["secret"]}',
             )
-    # elif cloud == 'DigitalOcean':
+    # elif cloud == 'DigitalOcean':  # noqa: E800
         # TODO
         # https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/
-        # cloud_login = cli.cloud_login or get_do_login()
-        # cloud_password = cli.cloud_password or get_do_password()
-        # cloud_token = cli.cloud_token or ask_user('cloud_token')
-
-        # create_cloud_user_and_req_permissions(cloud, cli.cloud_user, cloud_login, cloud_password)
+        # cloud_login = cli.cloud_login or get_do_login()  # noqa: E800
+        # cloud_password = cli.cloud_password or get_do_password()  # noqa: E800
+        # cloud_token = cli.cloud_token or ask_user('cloud_token')  # noqa: E800
 
     cloud_provider = (
         cli.cloud_provider

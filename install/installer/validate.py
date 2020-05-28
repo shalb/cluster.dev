@@ -14,7 +14,7 @@ class RepoName(Validator):
 
     @typechecked
     def validate(self: Validator, document=None, interactive: bool = True):
-        """Validate user input string to Github repo name restrictions.
+        """Verify that the user input string conforms Github username requirements.
 
         Args:
             document: (prompt_toolkit.document.Document)
@@ -56,7 +56,7 @@ class UserName(Validator):
 
     @typechecked
     def validate(self: Validator, document=None, interactive: bool = True):
-        """Validate user input string to Github repo name restrictions.
+        """Verify that the user input string conforms Github repo name requirements.
 
         Args:
             document: (prompt_toolkit.document.Document)
@@ -99,7 +99,7 @@ class AWSUserName(Validator):
 
     @typechecked
     def validate(self: Validator, document=None, interactive: bool = True):
-        """Validate user input string to AWS username restrictions.
+        """Verify that the user input string conforms AWS username requirements.
 
         Args:
             document: (prompt_toolkit.document.Document)
