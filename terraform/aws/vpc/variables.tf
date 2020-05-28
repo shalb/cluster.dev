@@ -18,3 +18,9 @@ variable "vpc_cidr" {
   description = "Vpc CIDR"
   default     = "10.8.0.0/18"
 }
+
+variable "vpc_id" {
+  type        = string
+  description = "Vpc ID, or create or default"
+  default     = "default"
+}

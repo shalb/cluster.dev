@@ -1,12 +1,8 @@
-locals {}
-
-provider "aws" {
-  region = var.region
-}
-
+# If vpc_id = "create" use module to create new VPC
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "2.15.0"
+  create_vpc = (var.vpc_id == "create" ? "true" : "false")
+  source     = "terraform-aws-modules/vpc/aws"
+  version    = "2.15.0"
 
   name               = "${var.cluster_name}-vpc"
   cidr               = var.vpc_cidr
@@ -20,24 +16,59 @@ module "vpc" {
   public_subnet_tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
     "kubernetes.io/role/elb"                    = "1"
-    "cluster.dev/subnet_type" = "public"
+    "cluster.dev/subnet_type"                   = "public"
   }
   private_subnets = [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k + 4)]
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = "1"
-    "cluster.dev/subnet_type" = "private"
+    "cluster.dev/subnet_type"         = "private"
   }
 
-# TODO: add IAM policy to create DB Subnet
-# database_subnets could be created in case of AZ's > 1
-#  database_subnets = length(var.availability_zones) > 1 ? [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k + 8)] : []
-#  tags = {
-#    Terraform                  = "true"
-#    "cluster.dev/subnet_type" = "database"
-#  }
-
+  # TODO: add IAM policy to create DB Subnet
+  # database_subnets could be created in case of AZ's > 1
+  #  database_subnets = length(var.availability_zones) > 1 ? [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k + 8)] : []
+  #  tags = {
+  #    Terraform                  = "true"
+  #    "cluster.dev/subnet_type" = "database"
+  #  }
 }
 
-output "vpc_id" {
-  value = module.vpc.vpc_id
+# If vpc_id is provided ex('vpc-2b2212c') - use data objects to get outputs
+data "aws_vpc" "provided" {
+  id    = var.vpc_id
+  count = var.vpc_id != "default" && var.vpc_id != "create" ? 1 : 0
+}
+
+# TODO: document that subnets of existing vpc should be tagged with next tag
+data "aws_subnet_ids" "vpc_subnets_provided_private" {
+  count  = var.vpc_id != "default" && var.vpc_id != "create" ? 1 : 0
+  vpc_id = var.vpc_id
+  tags = {
+    "cluster.dev/subnet_type" = "private"
+  }
+}
+
+data "aws_subnet_ids" "vpc_subnets_provided_public" {
+  count  = var.vpc_id != "default" && var.vpc_id != "create" ? 1 : 0
+  vpc_id = var.vpc_id
+  tags = {
+    "cluster.dev/subnet_type" = "public"
+  }
+}
+
+# If vpc_id is not provided - use default VPC's as a resource
+resource "aws_default_vpc" "default" {
+  count = var.vpc_id == "default" ? 1 : 0
+  tags = {
+    Name = "Default VPC"
+  }
+}
+
+resource "aws_default_subnet" "default" {
+  count             = var.vpc_id == "default" ? 1 : 0
+  availability_zone = "${var.region}a"
+  tags = {
+    Name                      = "Default subnet for cluster.dev"
+    "cluster.dev/subnet_type" = "default"
+  }
 }
