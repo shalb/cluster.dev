@@ -72,7 +72,7 @@ module "_" {}
 
 ## `8-outputs.tf`
 
-In alphabet order
+Sort alphabetically.
 
 ```terraform
 output "_" {
