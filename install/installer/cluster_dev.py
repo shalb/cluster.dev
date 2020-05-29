@@ -18,6 +18,7 @@ from configparser import NoOptionError
 from contextlib import suppress
 from pathlib import Path
 from typing import Dict
+from typing import TYPE_CHECKING
 from typing import Union
 
 import boto3
@@ -32,6 +33,8 @@ from PyInquirer import style_from_dict
 from PyInquirer import Token
 from typeguard import typechecked
 
+if TYPE_CHECKING or typechecked:
+    from git.cmd import Git  # noqa: WPS433
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -230,7 +233,6 @@ def parse_cli_args() -> argparse.Namespace:
 
     parser.add_argument(
         '--git-provider',
-        '-gp',
         metavar='<provider>',
         dest='git_provider',
         help='Can be Github, Bitbucket or Gitlab',
@@ -244,7 +246,6 @@ def parse_cli_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--git-user-name',
-        '-gusr',
         metavar='<username>',
         dest='git_user_name',
         help='Username used in Git Provider.' +
@@ -252,7 +253,6 @@ def parse_cli_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--git-password',
-        '-gpwd',
         metavar='<password>',
         dest='git_password',
         help='Password used in Git Provider. ' +
@@ -260,14 +260,12 @@ def parse_cli_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--git-token',
-        '-gtoken',
         metavar='<token>',
         dest='git_token',
         help='Token for API access. For ex. GITHUB_TOKEN',
     )
     parser.add_argument(
         '--cloud',
-        '-c',
         metavar='<cloud>',
         dest='cloud',
         help='Can be AWS or DigitalOcean',
@@ -275,14 +273,12 @@ def parse_cli_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--cloud-provider',
-        '-cp',
         metavar='<provider>',
         dest='cloud_provider',
         help='Cloud provider depends on selected --cloud',
     )
     parser.add_argument(
         '--cloud-programatic-login',
-        '-clogin',
         metavar='<ACCESS_KEY_ID>',
         dest='cloud_login',
         default='',
@@ -290,7 +286,6 @@ def parse_cli_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--cloud-programatic-password',
-        '-cpwd',
         metavar='<SECRET_ACCESS_KEY>',
         dest='cloud_password',
         default='',
@@ -298,23 +293,20 @@ def parse_cli_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--cloud-token',
-        '-ctoken',
         metavar='<TOKEN>',
         dest='cloud_token',
         help='SESSION_TOKEN or DIGITALOCEAN_TOKEN',
     )
     parser.add_argument(
         '--cloud-user',
-        '-cuser',
         metavar='<user>',
         dest='cloud_user',
-        help='User name which be created/used for cluster.dev. Applicable only for AWS. ' +
-        'If specified user exist, -clogin and -cpwd will be try use as it ' +
-        'AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.',
+        help='User name which be created/used for cluster.dev. Applicable only for AWS. '
+        + 'If specified user exist, --cloud-programatic-login and --cloud-programatic-password '
+        + 'will be try use as it AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.',
     )
     parser.add_argument(
         '--cluster-dev-version',
-        '-version',
         metavar='<cluster.dev release>',
         dest='release_version',
         help='Specify cluster.dev release or last realease will be used',
@@ -339,11 +331,11 @@ def parse_cli_args() -> argparse.Namespace:
 
 
 @typechecked
-def get_git_username(git: object) -> str:
+def get_git_username(git: Git) -> str:
     """Get username from settings or from user input.
 
     Args:
-        git: (obj) git.Repo.git object.
+        git: (git.cmd.Git) Manages communication with the Git binary.
 
     Returns:
         username string.
@@ -406,7 +398,7 @@ def choose_git_provider(repo: Repo) -> str:
     Try automatically, if git remotes specified. Otherwise - ask user.
 
     Args:
-        repo: (obj) git.Repo object.
+        repo: (git.Repo) Package with general repository related functions
 
     Returns:
         git_provider string.
@@ -430,7 +422,7 @@ def choose_git_provider(repo: Repo) -> str:
 
 
 @typechecked
-def get_data_from_aws_config(login: str, password: str) -> {bool, object}:
+def get_data_from_aws_config(login: str, password: str) -> {bool, ConfigParser}:
     """Get and parse config from file.
 
     Args:
@@ -438,7 +430,7 @@ def get_data_from_aws_config(login: str, password: str) -> {bool, object}:
         password: (str) CLI argument provided by user.
 
     Returns:
-        config ConfigParser obj|False: config, if exists. Otherwise - False.
+        config configparser.ConfigParser|False: config, if exists. Otherwise - False.
     """
     # Skip if CLI args provided
     if login and password:
@@ -457,11 +449,11 @@ def get_data_from_aws_config(login: str, password: str) -> {bool, object}:
 
 
 @typechecked
-def get_aws_config_section(config: {object, bool}) -> str:
+def get_aws_config_section(config: {ConfigParser, bool}) -> str:
     """Ask user which section in config should be use for extracting credentials.
 
     Args:
-        config (ConfigParser obj|False): INI config.
+        config (configparser.ConfigParser|False): INI config.
 
     Returns:
         str: section name, if exists. Otherwise - empty string.
@@ -482,11 +474,11 @@ def get_aws_config_section(config: {object, bool}) -> str:
 
 
 @typechecked
-def get_aws_login(config: {object, bool}, config_section: str) -> str:
+def get_aws_login(config: {ConfigParser, bool}, config_section: str) -> str:
     """Get cloud programatic login from settings or from user input.
 
     Args:
-        config (ConfigParser obj|False): INI config.
+        config (configparser.ConfigParser|False): INI config.
         config_section: (str) INI config section.
 
     Returns:
@@ -499,11 +491,11 @@ def get_aws_login(config: {object, bool}, config_section: str) -> str:
 
 
 @typechecked
-def get_aws_password(config: {object, bool}, config_section: str) -> str:
+def get_aws_password(config: {ConfigParser, bool}, config_section: str) -> str:
     """Get cloud programatic password from settings or from user input.
 
     Args:
-        config: (ConfigParser obj|False) INI config.
+        config: (configparser.ConfigParser|False) INI config.
         config_section: (str) INI config section.
 
     Returns:
@@ -516,14 +508,18 @@ def get_aws_password(config: {object, bool}, config_section: str) -> str:
 
 
 @typechecked
-def get_aws_session(config: {object, bool}, config_section: str, mfa_disabled: str = '') -> str:
+def get_aws_session(
+    config: {ConfigParser, bool},
+    config_section: str,
+    mfa_disabled: str = '',
+) -> str:
     """Get cloud session from settings or from user input.
 
     Args:
-        config: (ConfigParser obj|False) INI config.
+        config: (configparser.ConfigParser|False) INI config.
         config_section: (str) INI config section.
         mfa_disabled: (str) CLI argument provided by user.
-        If not provided - set to empty string.
+            If not provided - set to empty string.
 
     Returns:
         session_token string.
@@ -578,7 +574,9 @@ def create_aws_user_and_permissions(
         + '/install/installer_aws_install_req_permissions.json'
     )
 
-    # 'If specified user exist, -clogin and -cpwd will be try use as it
+    # If specified user exist, --cloud-programatic-login and
+    # --cloud-programatic-password will be try use as it
+
     # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
     try:  # Required "iam:ListUsers"???, "iam:ListAccessKeys"
         response = iam.list_access_keys(UserName=user)
@@ -795,11 +793,11 @@ def add_sample_cluster_dev_files(
 
 
 @typechecked
-def commit_and_push(git: object, message: str):
+def commit_and_push(git: Git, message: str):
     """Stage, commit and push all changes.
 
     Args:
-        git: (obj) git.Repo.git object.
+        git: (git.cmd.Git) Manages communication with the Git binary.
         message: (str) Commit message body.
     """
     git.add('-A')

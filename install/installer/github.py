@@ -119,7 +119,7 @@ def create_secrets(
 
     Args:
         creds: (Dict[str, Union[str, bool]]) Programmatic access to cloud:
-        `{ 'key': str, 'secret': str, ... }`.
+            `{ 'key': str, 'secret': str, ... }`.
         cloud: (str) Cloud name.
         owner: (str) Repository owner (user or organization).
         repo_name: (str) Repository name.
