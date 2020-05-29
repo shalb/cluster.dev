@@ -196,13 +196,8 @@ function aws::init_vpc {
 
     cd "$PRJ_ROOT"/terraform/aws/vpc/ || ERROR "Path not found"
 
-    case ${cluster_cloud_vpc} in
-        default|"")
-            INFO "Use default VPC"
-            ;;
-        create)
-            # Create new VPC and get ID.
-            NOTICE "Creating new VPC"
+            # Create/Init VPC and get ID.
+            NOTICE "Initing VPC"
             INFO "VPC: Initializing Terraform configuration"
             run_cmd "terraform init \
                         -backend-config='bucket=$S3_BACKEND_BUCKET' \
@@ -214,20 +209,18 @@ function aws::init_vpc {
                         -var='cluster_name=$CLUSTER_FULLNAME' \
                         -var='availability_zones=$availability_zones' \
                         -var='vpc_cidr=$vpc_cidr' \
+                        -var='vpc_id=$cluster_cloud_vpc' \
                         -input=false \
                         -out=tfplan"
 
-            INFO "VPC: Creating infrastructure"
+            INFO "VPC: Apply infrastructure"
             run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
             # Get VPC ID for later use.
             cluster_cloud_vpc_id=$(terraform output vpc_id)
-            ;;
-        *)
-            # Use client VPC ID.
+
             INFO "VPC ID in use: ${cluster_cloud_vpc}"
             cluster_cloud_vpc_id=${cluster_cloud_vpc}
-            ;;
-    esac
+
     # shellcheck disable=SC2034
     FUNC_RESULT="${cluster_cloud_vpc_id}"
 
@@ -255,12 +248,6 @@ function aws::destroy_vpc {
     DEBUG "Destroy created VPC keep default unchanged"
     cd "$PRJ_ROOT"/terraform/aws/vpc/ || ERROR "Path not found"
 
-    case ${cluster_cloud_vpc} in
-        default|"")
-            INFO "Default VPC, no need to destroy."
-            ;;
-        create)
-            # Create new VPC and get ID.
             INFO "VPC: Initializing Terraform configuration"
             run_cmd "terraform init \
                         -backend-config='bucket=$S3_BACKEND_BUCKET' \
@@ -271,13 +258,8 @@ function aws::destroy_vpc {
             run_cmd "terraform destroy -auto-approve -compact-warnings \
                         -var='region=$cluster_cloud_region' \
                         -var='availability_zones=$availability_zones' \
+                        -var='vpc_id=$cluster_cloud_vpc' \
                         -var='cluster_name=$CLUSTER_FULLNAME'"
-            ;;
-        *)
-            # Use client VPC ID.
-            INFO "Custom VPC, no need to destroy."
-            ;;
-    esac
 
     cd - >/dev/null || ERROR "Path not found"
 }
