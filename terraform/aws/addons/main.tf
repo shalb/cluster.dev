@@ -1,22 +1,7 @@
-######################
-# Deploy Cert Manager
-######################
-
-data "template_file" "cert-manager-dns-issuer" {
-  template = file("cert-manager-dns-issuer.yaml")
-  vars = {
-    dns_zones  = var.cluster_cloud_domain
-    region = var.region
-  }
-}
-
-resource "null_resource" "cert_manager_install" {
+# Check for kubeconfig and update resources when cluster gets re-created.
+resource "null_resource" "kubeconfig_update" {
   triggers = {
-    config_contents   = filemd5(var.config_path)
-    k8s_yaml_contents = md5(data.template_file.cert-manager-dns-issuer.rendered)
-  }
-  provisioner "local-exec" {
-    command = "kubectl apply --kubeconfig ${var.config_path} -f 'https://github.com/jetstack/cert-manager/releases/download/v0.13.0/cert-manager-no-webhook.yaml' && echo \"${data.template_file.cert-manager-dns-issuer.rendered}\" | kubectl apply -f - "
+    policy_sha1 = "${sha1(file(var.config_path))}"
   }
 }
 
@@ -42,9 +27,8 @@ resource "null_resource" "nginx_ingress_install" {
 # Deploy ArgoCD
 ######################
 locals {
-  argocd_domain = "argocd.${var.cluster_fullname}.${var.cluster_cloud_domain}"
+  argocd_domain = "argocd.${var.cluster_name}.${var.cluster_cloud_domain}"
 }
-
 
 # Generate and bcrypt password
 resource "random_password" "argocd_pass" {
@@ -68,24 +52,20 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-data "helm_repository" "argo" {
-  name = "argo"
-  url  = "https://argoproj.github.io/argo-helm"
-}
-
 # Deploy ArgoCD with Helm provider
 resource "helm_release" "argo-cd" {
   name       = "argo-cd"
-  repository = data.helm_repository.argo.metadata[0].name
+  repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
   version    = "2.0.0"
   namespace  = "argocd"
 
   values = [
-    file("argocd-values.yaml")
+    file("templates/argocd-values.yaml")
   ]
   depends_on = [
     null_resource.kubeconfig_update,
+    helm_release.cert_manager,
   ]
   set {
     name  = "server.certificate.domain"

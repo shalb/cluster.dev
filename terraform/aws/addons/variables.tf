@@ -9,7 +9,7 @@ variable "cluster_cloud_domain" {
   default     = ""
 }
 
-variable "cluster_fullname" {
+variable "cluster_name" {
   type        = string
   description = "Full cluster name including user/organization"
   default     = ""
