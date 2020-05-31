@@ -70,7 +70,6 @@ function aws::minikube::deploy_cluster {
     local cluster_cloud_region=$2
     local cluster_cloud_provisioner_instanceType=$3
     local cluster_cloud_domain=$4
-    local cluster_cloud_vpc_id=$5
 
     cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
 

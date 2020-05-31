@@ -190,7 +190,7 @@ function aws::init_vpc {
     DEBUG "Create a VPC or use existing defined"
     local cluster_cloud_vpc=$1
     local cluster_cloud_vpc_id=""
-    local availability_zones=${4:-$cluster_cloud_region"a"} # if azs are not set we use 'a'-zone by default
+    local availability_zones=$4
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
     local vpc_cidr=${5:-"10.8.0.0/18"} # set default VPC cidr
 
@@ -242,7 +242,7 @@ function aws::init_vpc {
 #######################################
 function aws::destroy_vpc {
     local cluster_cloud_vpc=$1
-    local availability_zones=${4:-$cluster_cloud_region"a"} # if azs are not set we use 'a'-zone by default
+    local availability_zones=$4
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
 
     DEBUG "Destroy created VPC keep default unchanged"
