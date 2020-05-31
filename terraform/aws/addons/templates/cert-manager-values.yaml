@@ -1,0 +1,12 @@
+ingressShim:
+  defaultIssuerName: letsencrypt-prod
+  defaultIssuerKind: ClusterIssuer
+  defaultACMEChallengeType: dns01
+
+securityContext:
+  enabled: false
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: "${eks_service_account}"
