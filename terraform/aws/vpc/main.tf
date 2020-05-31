@@ -64,11 +64,20 @@ resource "aws_default_vpc" "default" {
   }
 }
 
-resource "aws_default_subnet" "default" {
+resource "aws_default_subnet" "default_az0" {
   count             = var.vpc_id == "default" ? 1 : 0
-  availability_zone = "${var.region}a"
+  availability_zone = var.availability_zones[0] != "" ? var.availability_zones[0] : "${var.region}a"
   tags = {
-    Name                      = "Default subnet for cluster.dev"
+    Name                      = "Default subnet for cluster.dev in AZ1"
+    "cluster.dev/subnet_type" = "default"
+  }
+}
+
+resource "aws_default_subnet" "default_az1" {
+  count             = var.vpc_id == "default" ? 1 : 0
+  availability_zone = var.availability_zones[1] != "" ? var.availability_zones[1] : "${var.region}b"
+  tags = {
+    Name                      = "Default subnet for cluster.dev in AZ2"
     "cluster.dev/subnet_type" = "default"
   }
 }

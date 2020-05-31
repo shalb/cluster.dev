@@ -1,12 +1,19 @@
-# cluster.dev variables
 variable "region" {
-  description = "AWS Region"
+  type        = string
+  description = "The AWS region."
+}
+variable "availability_zones" {
+  type        = list
+  description = "The AWS Availability Zone(s) inside region."
+}
+variable "cluster_name" {
+  description = "Name of the EKS cluster. Also used as a prefix in names of related resources."
   type        = string
 }
 
-variable "availability_zones" {
-  description = "AWS AZs inside region"
-  type        = list(string)
+variable "workers_subnets_type" {
+  description = "Type of subnets to use on worker nodes: public or private"
+  default = "private"
 }
 
 ## Original module variables excepts `subnets` variable (commented)
@@ -25,12 +32,6 @@ variable "cluster_log_retention_in_days" {
   description = "Number of days to retain log events. Default retention - 90 days."
   type        = number
 }
-
-variable "cluster_name" {
-  description = "Name of the EKS cluster. Also used as a prefix in names of related resources."
-  type        = string
-}
-
 variable "cluster_security_group_id" {
   description = "If provided, the EKS cluster will be attached to this security group. If not given, a security group will be created with necessary ingress/egress to work with the workers"
   type        = string
@@ -85,14 +86,12 @@ variable "map_users" {
   }))
   default = []
 }
-
 /*
 variable "subnets" {
   description = "A list of subnets to place the EKS cluster and workers within."
   type        = list(string)
 }
 */
-
 variable "tags" {
   description = "A map of tags to add to all resources."
   type        = map(string)
