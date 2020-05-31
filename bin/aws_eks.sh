@@ -31,14 +31,20 @@ function aws::eks::deploy_cluster {
     local cluster_version=${6:-"1.16"} # set default Kubernetes version
     local worker_additional_security_group_ids=${7}
     worker_additional_security_group_ids=$(to_tf_list "$worker_additional_security_group_ids")
+    # define subnet type based on vpc type
+    local workers_subnets_type="private"
+        if [ "$vpc_id" == "default" ]; then
+            workers_subnets_type="public" ;
+        fi
 
-# Generate worker_groups.tfvars with worker_groups_launch_template to pass module and create workers
+            # Generate worker_groups.tfvars with worker_groups_launch_template to pass module and create workers
             node_group_lenght=${#cluster_cloud_provisioner_node_group__name[@]}
                     echo "worker_groups_launch_template = [" > worker_groups.tfvars
             for (( i=0; i<${node_group_lenght}; i++ ));
                 do
                     echo "{" >>  worker_groups.tfvars
                     echo    name                          = \""${cluster_cloud_provisioner_node_group__name[i]}"\" >> worker_groups.tfvars
+                    # TODO: Add bastion access ex: echo    key_name                      = \""ec2-key"\" >> worker_groups.tfvars
                     echo    instance_type                 = \""${cluster_cloud_provisioner_node_group__instance_type[i]}"\" >> worker_groups.tfvars
                     echo    asg_desired_capacity          = "${cluster_cloud_provisioner_node_group__asg_desired_capacity[i]}" >> worker_groups.tfvars
                     echo    asg_max_size                  = "${cluster_cloud_provisioner_node_group__asg_max_size[i]}" >> worker_groups.tfvars
@@ -51,6 +57,9 @@ function aws::eks::deploy_cluster {
                     echo    spot_max_price                = \""${cluster_cloud_provisioner_node_group__spot_max_price[i]}"\" >> worker_groups.tfvars
                     echo    on_demand_base_capacity       = "${cluster_cloud_provisioner_node_group__on_demand_base_capacity[i]:-0}" >> worker_groups.tfvars
                     echo    on_demand_percentage_above_base_capacity = "${cluster_cloud_provisioner_node_group__on_demand_percentage_above_base_capacity[i]:-0}" >> worker_groups.tfvars
+                    if [ "$vpc_id" == "default" ]; then
+                    echo    public_ip                     = "true" >> worker_groups.tfvars
+                    fi
                     echo "}," >>  worker_groups.tfvars
                 done
                     echo "]" >> worker_groups.tfvars
@@ -64,7 +73,7 @@ function aws::eks::deploy_cluster {
     INFO "EKS Cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform-eks.state' \
+                -backend-config='key=states/terraform-eks.state' \
                 -backend-config='region=$region'"
 
 
@@ -75,6 +84,7 @@ function aws::eks::deploy_cluster {
                 -var='vpc_id=$vpc_id' \
                 -var='cluster_version=$cluster_version' \
                 -var='worker_additional_security_group_ids=$worker_additional_security_group_ids' \
+                -var='workers_subnets_type=$workers_subnets_type' \
                 -var-file='worker_groups.tfvars' \
                 -input=false \
                 -out=tfplan"
@@ -120,7 +130,7 @@ function aws::eks::destroy_cluster {
     INFO "EKS cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform-eks.state' \
+                -backend-config='key=states/terraform-eks.state' \
                 -backend-config='region=$region'"
 
 
@@ -128,6 +138,7 @@ function aws::eks::destroy_cluster {
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='cluster_name=$CLUSTER_FULLNAME' \
                 -var='region=$region' \
+                -var='vpc_id=$vpc_id' \
                 -var='availability_zones=$availability_zones'"
 
     cd - >/dev/null || ERROR "Path not found"
