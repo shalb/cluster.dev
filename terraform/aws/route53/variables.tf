@@ -3,7 +3,7 @@ variable "region" {
   description = "The AWS region."
 }
 
-variable "cluster_fullname" {
+variable "cluster_name" {
   type        = string
   description = "Full name of the cluster"
 }
