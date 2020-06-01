@@ -74,9 +74,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         aws::init_route53   "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
 
         # Create a VPC or use existing defined
-        FUNC_RESULT=""
         aws::init_vpc   "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_vpc_cidr"
-        readonly CLUSTER_VPC_ID=${FUNC_RESULT}
 
         # Provisioner selection
         #
@@ -85,7 +83,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
             DEBUG "Provisioner: Minikube"
 
             # Deploy Minikube cluster via Terraform
-            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain" "$CLUSTER_VPC_ID"
+            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain"
 
             # Pull a kubeconfig to instance via kubectl
             aws::minikube::pull_kubeconfig
@@ -103,7 +101,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         eks)
             DEBUG "Cloud Provider: AWS. Provisioner: EKS"
             # Deploy Minikube cluster via Terraform
-            aws::eks::deploy_cluster    "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain" "$CLUSTER_VPC_ID" "$cluster_version" \
+            aws::eks::deploy_cluster    "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain" "$cluster_cloud_vpc" "$cluster_version" \
                                         "$cluster_cloud_provisioner_additional_security_group_ids" \
                                         "${cluster_cloud_provisioner_node_group__name[@]}" \
                                         "${cluster_cloud_provisioner_node_group__instance_type[@]}" \

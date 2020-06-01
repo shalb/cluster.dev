@@ -45,15 +45,17 @@ resource "helm_release" "cert_manager" {
 module "iam_assumable_role_cert_manager" {
   source                        = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
   version                       = "~> v2.6.0"
-  create_role                   = true
-  role_name                     = "eks-cert-manager-${data.terraform_remote_state.eks.outputs.cluster_id}-${random_id.random_role_id.hex}"
-  provider_url                  = replace(data.terraform_remote_state.eks.outputs.cluster_oidc_issuer_url, "https://", "")
-  role_policy_arns              = [aws_iam_policy.cert_manager.arn]
+  create_role                   = var.eks ? true : false
+  role_name                     = "eks-cert-manager-${data.terraform_remote_state.k8s.outputs.cluster_id}-${random_id.random_role_id.hex}"
+  provider_url                  = replace(data.terraform_remote_state.k8s.outputs.cluster_oidc_issuer_url, "https://", "")
+  role_policy_arns              = [var.eks && length(aws_iam_policy.cert_manager) >= 1 ? aws_iam_policy.cert_manager.0.arn : ""]
   oidc_fully_qualified_subjects = ["system:serviceaccount:cert-manager:cert-manager"]
 }
 
 resource "aws_iam_policy" "cert_manager" {
-  name   = "AllowCertManagerUpdates-${data.terraform_remote_state.eks.outputs.cluster_id}-${random_id.random_role_id.hex}"
+  count = var.eks ? 1 : 0
+
+  name   = "AllowCertManagerUpdates-${data.terraform_remote_state.k8s.outputs.cluster_id}-${random_id.random_role_id.hex}"
   policy = <<-EOF
 {
   "Version": "2012-10-17",

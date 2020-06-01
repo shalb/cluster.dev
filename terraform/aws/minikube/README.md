@@ -1,5 +1,8 @@
 # Minikune
 
+Creates a single instance Kubernetes installation with kubeadm.
+
+
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
 

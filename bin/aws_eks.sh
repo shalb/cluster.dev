@@ -24,7 +24,7 @@ function aws::eks::deploy_cluster {
     DEBUG "Deploy eks cluster via Terraform"
     local cluster_name=$1
     local region=$2
-    local availability_zones=${3:-$cluster_cloud_region"a"} # if azs are not set we use 'a'-zone by default
+    local availability_zones=${3:-$region"a"} # if azs are not set we use 'a'-zone by default
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
     local cluster_cloud_domain=$4 # TODO: remove and shift
     local vpc_id=$5
@@ -73,7 +73,7 @@ function aws::eks::deploy_cluster {
     INFO "EKS Cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=states/terraform-eks.state' \
+                -backend-config='key=states/terraform-k8s.state' \
                 -backend-config='region=$region'"
 
 
@@ -130,7 +130,7 @@ function aws::eks::destroy_cluster {
     INFO "EKS cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=states/terraform-eks.state' \
+                -backend-config='key=states/terraform-k8s.state' \
                 -backend-config='region=$region'"
 
 

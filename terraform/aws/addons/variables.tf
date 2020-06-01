@@ -20,3 +20,9 @@ variable "config_path" {
   description = "path to a kubernetes config file"
   default     = "~/.kube/config"
 }
+
+variable "eks" {
+  type        = bool
+  description = "Define if addons would be deployed to EKS cluster"
+  default     = false
+}

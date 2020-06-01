@@ -15,12 +15,16 @@ provider "helm" {
 }
 
 ## Get remote states to use in roles
-data "terraform_remote_state" "eks" {
+data "terraform_remote_state" "k8s" {
   backend = "s3"
   config = {
     bucket = var.cluster_name
-    key    = "states/terraform-eks.state"
+    key    = "states/terraform-k8s.state"
     region = var.region
+  }
+  defaults = {
+    cluster_id = ""
+    cluster_oidc_issuer_url = ""
   }
 }
 

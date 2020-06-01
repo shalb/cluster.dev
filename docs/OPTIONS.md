@@ -47,7 +47,7 @@ cluster:
 |[cloud.region](#cloud.region)| + | string |  ex: `us-east-1`, `do-fra-1` | | Define cloud provider region to create cluster |
 |[cloud.availability_zones](#cloud.availability_zones)| - | string | ex:  `us-east-1b`, `us-east-1c`| `cloud.region'a'`,`cloud.region'b'`| Networks and nodes location inside single region. Minimum two zones should be defined. Cluster nodes could be spread across different datacenters. Used for High Availability, multiple zones could lead to cost increase.|
 |[cloud.domain](#cloud.domain)| - | string| FQDN ex: `cluster.dev`, `example.org` | `cluster.dev` | To expose cluster resources the DNS zone is required. If set to `cluster.dev` the installer would create a zone `cluster-name-organization.cluster.dev` and point it to your cloud service NS'es. Alternate you can set your own zone which already exist in target cloud.|
-|[cloud.vpc](#cloud.vpc)| - |string|`default`, `create`, `vpc_id`| `default`| Virtual Private Cloud. `default` - use default one, `create` - installer would create a new VPC, `vpc_id` - define already existent.|
+|[cloud.vpc](#cloud.vpc)| - |string|`default`, `create`, `vpc_id`| `default`| Virtual Private Cloud. `default` - use default one, `create` - installer would create a new VPC, `vpc_id` - define already existent and in that case networks should be manually tagged with "cluster.dev/subnet_type" = "private|public" tags to become usable.|
 |[cloud.vpc_cidr](#cloud.vpc)| - |string| ex:`10.2.0.0/16`, `192.168.0.0/20`| `10.8.0.0/18`| The CIDR block for the VPC. Cluster pods would use ip's from that pool. If you need peering between VPC's their cidrs should be unique.|
 
 

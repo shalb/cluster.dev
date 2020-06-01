@@ -77,7 +77,7 @@ function aws::minikube::deploy_cluster {
     INFO "Minikube cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=states/terraform.state' \
+                -backend-config='key=states/terraform-k8s.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
 
@@ -121,7 +121,7 @@ function aws::minikube::destroy_cluster {
     INFO "Minikube cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=states/terraform.state' \
+                -backend-config='key=states/terraform-k8s.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
 
