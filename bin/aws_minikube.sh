@@ -67,9 +67,9 @@ function aws::minikube::pull_kubeconfig_once {
 function aws::minikube::deploy_cluster {
     DEBUG "Deploy Minikube cluster via Terraform"
     local cluster_name=$1
-    local cluster_cloud_region=$2
-    local cluster_cloud_provisioner_instanceType=$3
-    local cluster_cloud_domain=$4
+    local region=$2
+    local cluster_cloud_domain=$3
+    local aws_instance_type=$4
 
     cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
 
@@ -82,10 +82,10 @@ function aws::minikube::deploy_cluster {
 
 
     run_cmd "terraform plan \
-                -var='region=$cluster_cloud_region' \
-                -var='cluster_name=$CLUSTER_FULLNAME' \
-                -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
-                -var='hosted_zone=$CLUSTER_FULLNAME.$cluster_cloud_domain' \
+                -var='cluster_name=$cluster_name' \
+                -var='region=$region' \
+                -var='hosted_zone=$cluster_name.$cluster_cloud_domain' \
+                -var='aws_instance_type=$aws_instance_type' \
                 -input=false \
                 -out=tfplan"
 
@@ -111,9 +111,9 @@ function aws::minikube::deploy_cluster {
 function aws::minikube::destroy_cluster {
     DEBUG "Destroy Minikube cluster via Terraform"
     local cluster_name=$1
-    local cluster_cloud_region=$2
-    local cluster_cloud_provisioner_instanceType=$3
-    local cluster_cloud_domain=$4
+    local region=$2
+    local cluster_cloud_domain=$3
+    local aws_instance_type=$4
 
     cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
 
@@ -127,10 +127,10 @@ function aws::minikube::destroy_cluster {
 
     INFO "Minikube cluster: Destroying "
     run_cmd "terraform destroy -auto-approve -compact-warnings \
-                -var='region=$cluster_cloud_region' \
-                -var='cluster_name=$CLUSTER_FULLNAME' \
-                -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
-                -var='hosted_zone=$CLUSTER_FULLNAME.$cluster_cloud_domain'"
+                -var='cluster_name=$cluster_name' \
+                -var='region=$region' \
+                -var='hosted_zone=$cluster_name.$cluster_cloud_domain' \
+                -var='aws_instance_type=$aws_instance_type'"
 
     cd - >/dev/null || ERROR "Path not found"
 }

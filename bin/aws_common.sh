@@ -189,7 +189,6 @@ function aws::destroy_route53 {
 function aws::init_vpc {
     DEBUG "Create a VPC or use existing defined"
     local cluster_cloud_vpc=$1
-    local cluster_cloud_vpc_id=""
     local availability_zones=$4
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
     local vpc_cidr=${5:-"10.8.0.0/18"} # set default VPC cidr
@@ -197,7 +196,6 @@ function aws::init_vpc {
     cd "$PRJ_ROOT"/terraform/aws/vpc/ || ERROR "Path not found"
 
             # Create/Init VPC and get ID.
-            NOTICE "Initing VPC"
             INFO "VPC: Initializing Terraform configuration"
             run_cmd "terraform init \
                         -backend-config='bucket=$S3_BACKEND_BUCKET' \
@@ -205,24 +203,16 @@ function aws::init_vpc {
                         -backend-config='region=$cluster_cloud_region'"
 
             run_cmd "terraform plan \
-                        -var='region=$cluster_cloud_region' \
+                        -var='vpc_id=$cluster_cloud_vpc' \
                         -var='cluster_name=$CLUSTER_FULLNAME' \
+                        -var='region=$cluster_cloud_region' \
                         -var='availability_zones=$availability_zones' \
                         -var='vpc_cidr=$vpc_cidr' \
-                        -var='vpc_id=$cluster_cloud_vpc' \
                         -input=false \
                         -out=tfplan"
 
-            INFO "VPC: Apply infrastructure"
+            INFO "VPC: Apply infrastructure changes"
             run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
-            # Get VPC ID for later use.
-            cluster_cloud_vpc_id=$(terraform output vpc_id)
-
-            INFO "VPC ID in use: ${cluster_cloud_vpc}"
-            cluster_cloud_vpc_id=${cluster_cloud_vpc}
-
-    # shellcheck disable=SC2034
-    FUNC_RESULT="${cluster_cloud_vpc_id}"
 
     cd - >/dev/null || ERROR "Path not found"
 }
@@ -300,7 +290,6 @@ ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem ubuntu@$CLUSTER_FULLNAME.$cluster_c
 
 }
 
-
 # Destroy all cluster.
 function aws::destroy {
 
@@ -308,22 +297,21 @@ function aws::destroy {
         minikube)
             DEBUG "Destroy: Provisioner: Minikube"
             if aws::minikube::pull_kubeconfig_once; then
-                aws::destroy_addons "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
+                aws::destroy_addons "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
             fi
-            aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain"
-
+            aws::minikube::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$cluster_cloud_provisioner_instanceType"
         ;;
         # end of minikube
         eks)
             DEBUG "Destroy: Provisioner: EKS"
             # Destroy Cluster
-            aws::eks::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain"
+            aws::eks::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain"
             ;;
         esac
 
         # Destroy all cluster components
         # TODO: Remove kubeconfig after successful cluster destroy
-        aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
+        aws::destroy_vpc "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
         aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
         aws::destroy_s3_bucket "$cluster_cloud_region"
 }

@@ -39,19 +39,17 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
     yaml::create_variables "$CLUSTER_MANIFEST_FILE"
     yaml::check_that_required_variables_exist "$CLUSTER_MANIFEST_FILE"
 
+    # Define full cluster name
+    FUNC_RESULT="";
+    set_cluster_fullname "$cluster_name" "$GIT_REPO_NAME"
+    CLUSTER_FULLNAME=${FUNC_RESULT}
+
     # Cloud selection. Declared via yaml::create_variables()
     # shellcheck disable=SC2154
     case $cluster_cloud_provider in
     aws)
 
         DEBUG "Cloud Provider: AWS. Initializing access variables"
-        # Define AWS credentials from ENV VARIABLES passed to container
-        # TODO: Check that AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY are set
-
-        # Define full cluster name
-        FUNC_RESULT="";
-        set_cluster_fullname "$cluster_name" "$GIT_REPO_NAME"
-        CLUSTER_FULLNAME=${FUNC_RESULT}
 
         # Define name for S3 bucket that would be user for terraform state
         S3_BACKEND_BUCKET=$CLUSTER_FULLNAME
@@ -74,7 +72,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         aws::init_route53   "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
 
         # Create a VPC or use existing defined
-        aws::init_vpc   "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_vpc_cidr"
+        aws::init_vpc   "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_vpc_cidr"
 
         # Provisioner selection
         #
@@ -83,13 +81,13 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
             DEBUG "Provisioner: Minikube"
 
             # Deploy Minikube cluster via Terraform
-            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain"
+            aws::minikube::deploy_cluster   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$cluster_cloud_provisioner_instanceType"
 
             # Pull a kubeconfig to instance via kubectl
             aws::minikube::pull_kubeconfig
 
             # Deploy Kubernetes Addons via Terraform
-            aws::init_addons   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
+            aws::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
 
             # Deploy ArgoCD apps via kubectl
             argocd::deploy_apps   "$cluster_apps"
@@ -101,7 +99,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         eks)
             DEBUG "Cloud Provider: AWS. Provisioner: EKS"
             # Deploy Minikube cluster via Terraform
-            aws::eks::deploy_cluster    "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain" "$cluster_cloud_vpc" "$cluster_version" \
+            aws::eks::deploy_cluster    "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain" "$cluster_cloud_vpc" "$cluster_version" \
                                         "$cluster_cloud_provisioner_additional_security_group_ids" \
                                         "${cluster_cloud_provisioner_node_group__name[@]}" \
                                         "${cluster_cloud_provisioner_node_group__instance_type[@]}" \
@@ -121,7 +119,7 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
             aws::eks::pull_kubeconfig
 
             # Deploy Kubernetes Addons via Terraform
-            aws::init_addons   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME"
+            aws::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME"
 
             ;;
         esac
