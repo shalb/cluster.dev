@@ -5,7 +5,7 @@
         width="540">
 </p>
 <p align="center">
-    <a href="https://cluster-dev.slack.com/join/shared_invite/zt-dhculpgn-EccDBxR8i7w65WCGNR1OEA" alt="Join Slack">
+    <a href="https://join.slack.com/t/cluster-dev/shared_invite/zt-eg4q6jae-v0~zgrBLYTTXt~CjnjmprA" alt="Join Slack">
         <img src="https://img.shields.io/static/v1?label=SLACK&message=JOIN&color=4A154B&style=for-the-badge&logo=slack" /></a>
     <a href="https://twitter.com/intent/follow?screen_name=shalbcom">
         <img src="https://img.shields.io/static/v1?label=TWITTER&message=FOLLOW&color=1DA1F2&style=for-the-badge&logo=twitter"

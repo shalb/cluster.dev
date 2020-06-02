@@ -1,5 +1,7 @@
 # INFO Read about spaces here https://www.digitalocean.com/docs/spaces/
 terraform {
+  required_version = ">= 0.12.0"
+
   backend "s3" {
     region = "us-east-1"
     access_key = ""
