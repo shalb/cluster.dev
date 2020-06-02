@@ -81,7 +81,6 @@ jobs:
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          # Strip git ref prefix from version
           VERSION="master-latest"
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
@@ -95,7 +94,7 @@ jobs:
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          # Strip git ref prefix from version
+          #Get branch name
           VERSION=${GITHUB_REF#refs/heads/}
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
