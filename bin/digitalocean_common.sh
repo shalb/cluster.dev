@@ -68,7 +68,7 @@ function digitalocean::destroy_do_spaces_bucket {
     DEBUG "Destroy existing DO Spaces bucket for Terraform states. Bucket name: '${DO_SPACES_BACKEND_BUCKET}'"
     INFO "Destroying DO Spaces bucket for Terraform states."
     local cluster_cloud_region=$1
-    run_cmd "s3cmd rb s3://${DO_SPACES_BACKEND_BUCKET} --host='$cluster_cloud_region.digitaloceanspaces.com' --host-bucket='%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com' --force"
+    run_cmd "s3cmd rb s3://${DO_SPACES_BACKEND_BUCKET} --host='$cluster_cloud_region.digitaloceanspaces.com' --host-bucket='%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com' --recursive --force"
 }
 
 # Destroy all cluster.
