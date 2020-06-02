@@ -1,4 +1,4 @@
-# Terraform modules structure
+# Terraform modules' structure
 
 ## Filenames <!-- omit in toc -->
 
@@ -8,9 +8,9 @@
 * [`9-vars.tf`](#9-varstf)
 * [`README.md`](#readmemd)
 
-`.yaml`, `.sh` and other related to module files put directly to module folder.
+Put the `.yaml`, `.sh` and other module-related files directly to the module folder.
 
-Also, look our [style-guide](style-guide.md) for check other best practices.
+Also, look our [style-guide](style-guide.md) to check other best practices.
 
 ## `0-init.tf`
 
@@ -22,10 +22,10 @@ Sort `terraform_remote_state` alphabetically.
 #
 
 terraform {
-  required_version = ">= X.Y.Z" # minimum required terraform version. Older - better.
+  required_version = ">= X.Y.Z" # minimum required Terraform version. Use the oldest version if possible.
 
   required_providers {
-    _ = "~> X.Y" # used provider version, pin only MAJOR.MINOR. Newest - better.
+    _ = "~> X.Y" # version of the used provider, pin only MAJOR.MINOR. Use the newest version if possible.
   }
 
   backend "_" {}
@@ -100,7 +100,7 @@ variable "_" {
 ```md
 # Module name
 
-Describe What this module do.
+Describe what the module does.
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs

@@ -38,4 +38,4 @@ Then run `pre-commit run --all-files` or make some changes in any `.tf` file in 
 
 ### Terraform code structure
 
-If you'd like to know how we preferred structure tf-code, see [this article](terraform-code-structure.md).
+If you'd like to know how we prefer to structure the tf-code, please see [this article](terraform-code-structure.md).
