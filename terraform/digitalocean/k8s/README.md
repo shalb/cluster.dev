@@ -14,6 +14,9 @@
 
 ## Outputs
 
-No output.
+| Name | Description |
+|------|-------------|
+| cluster\_status | A string indicating the current status of the cluster. Potential values include running, provisioning, and errored. |
+| cluster\_endpoint | The base URL of the API server on the Kubernetes master node. |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
