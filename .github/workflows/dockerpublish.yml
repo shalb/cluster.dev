@@ -1,0 +1,103 @@
+name: Docker
+
+on:
+
+  # Publish releases as 'latest'.
+  release:
+    types: [published]
+
+  push:
+    # Publish `master` as Docker `master-latest` image
+    # Publish for any branch as well
+    branches:
+      - master
+      - '*'
+
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - 'v*'
+
+  # Run tests for any PRs.
+  pull_request:
+
+
+env:
+  IMAGE_NAME: cluster.dev
+
+jobs:
+  # Run tests.
+  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        run: |
+          docker build . --file Dockerfile
+
+  # Push image to GitHub Packages.
+  # See also https://docs.docker.com/docker-hub/builds/
+  push:
+    # Ensure test job passes before pushing image.
+    needs: test
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image
+        run: docker build . --file Dockerfile --tag $IMAGE_NAME
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username mk51 --password ${{ secrets.DOCKER_PASS }}
+
+
+      - name: Push image for release
+        if: github.event_name == 'release'
+        run: |
+          IMAGE_ID=docker.io/clusterdev/$IMAGE_NAME
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:latest
+          docker push $IMAGE_ID:latest
+
+      - name: Push image for master branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          IMAGE_ID=docker.io/clusterdev/$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          # Strip git ref prefix from version
+          VERSION="master-latest"
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION-${GITHUB_SHA}
+          docker push $IMAGE_ID:$VERSION-${GITHUB_SHA}
+
+      - name: Push image for other branch
+        if: github.event_name == 'push' && github.ref != 'refs/heads/master'
+        run: |
+          IMAGE_ID=docker.io/clusterdev/$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          # Strip git ref prefix from version
+          VERSION=${GITHUB_REF#refs/heads/}
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION-${GITHUB_SHA}
+          docker push $IMAGE_ID:$VERSION-${GITHUB_SHA}
