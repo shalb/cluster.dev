@@ -52,7 +52,7 @@ jobs:
         run: docker build . --file Dockerfile --tag $IMAGE_NAME
 
       - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username mk51 --password ${{ secrets.DOCKER_PASS }}
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username clusterdevbot --password ${{ secrets.DOCKER_PASS }}
 
 
       - name: Push image for release
