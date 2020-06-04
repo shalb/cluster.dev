@@ -35,7 +35,7 @@ jobs:
 
       - name: Run tests
         run: |
-          docker build . --file Dockerfile
+          docker build . 
 
   # Push image to Docker Hub
   push:
@@ -70,10 +70,10 @@ jobs:
           echo VERSION=$VERSION
           
           docker tag "$IMAGE" "$REGISTRY/$IMAGE:$VERSION"
-          docker push "$IMAGE:$VERSION"
+          docker push "$REGISTRY/$IMAGE:$VERSION"
           
           docker tag "$IMAGE" "$REGISTRY/$IMAGE:latest"
-          docker push "$IMAGE:latest"
+          docker push "$REGISTRY/$IMAGE:latest"
 
       - name: Push image for master branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
