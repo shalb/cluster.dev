@@ -15,7 +15,7 @@ source "$PRJ_ROOT"/bin/argocd.sh
 # Mandatory variables passed to container by config
 readonly CLUSTER_CONFIG_PATH=${CLUSTER_CONFIG_PATH:-"./.cluster.dev/"}
 
-# Detect Git hosting and set: GIT_PROVIDER, GIT_REPO_NAME, GIT_REPO_ROOT, CLUSTER_FULLNAME constants
+# Detect Git hosting and set: GIT_PROVIDER, GIT_REPO_NAME, CLUSTER_FULLNAME constants
 detect_git_provider
 
 # =========================================================================== #

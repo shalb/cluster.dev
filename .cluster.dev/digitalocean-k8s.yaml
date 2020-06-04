@@ -1,6 +1,6 @@
 cluster:
-  installed: false
-  name: do-test
+  installed: true
+  name: do-dev
   cloud:
     provider: digitalocean
     region: fra1
@@ -9,11 +9,8 @@ cluster:
     provisioner:
       type: managed-kubernetes
       version: 1.16
-      nodeCount: 3
+      nodeCount: 1
       nodeSize: s-1vcpu-2gb
-      autoScale: true
-      minNodes: 1
-      maxNodes: 5
   addons:
     nginx-ingress: true
     cert-manager: true

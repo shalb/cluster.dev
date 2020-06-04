@@ -3,7 +3,7 @@ on:
     paths:
       - './.cluster.dev/digitalocean-k8s.yaml'
     branches:
-      - master
+      - feature/GH-59
 jobs:
   deploy_cluster_job:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Reconcile Clusters
       id: reconcile
-      uses: shalb/cluster.dev@master
+      uses: shalb/cluster.dev@feature/GH-59
       env:
         DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
         SPACES_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY_ID }}

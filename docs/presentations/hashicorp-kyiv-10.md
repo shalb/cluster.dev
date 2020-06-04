@@ -4,13 +4,13 @@
 
 ### About Me
 
-Volodymyr Tsap, 34  
+**Volodymyr Tsap**, 34  
 Kyiv, Ukraine  
-Love: family, urban tourism, tech, football, electronic music.
+CTO @ [SHALB.com](https://www.shalb.com)
+
+Love: urban tourism, tech, football, electronic music.
 
 17 years of work experience in infrastructure management.   
-
-CTO @ SHALB
 
 <br />
 <br />
@@ -43,9 +43,7 @@ DevOPS as a Service Company
 
 Team - 15 happy SHALB'ers.  
 
-Building and supporting infrastructures.
-
-We build more than **100 production** infrastructures in last **11 years**.
+We have built more than **100 production** infrastructures in last **11 years**.
 
 Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc.. 
 
@@ -149,7 +147,30 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 <br />
 <br />
 
-### So we Decide to Create Platform To Quick Launch GitOps Infrastructures
+### So we decided to create a Platform for quick launch of the common infrastructure patterns.
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+###                         And name it: "cluster.dev"
 
 <br />
 <br />
@@ -174,17 +195,17 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 
 ### Cluster.dev Objectives
 
- - Everything in code: Infrastructure, Workloads, Pipelines, Users, Dashboards
+ - Everything in code: Infrastructure, Workloads, Pipelines, Users, Dashboards, etc..
 
- - GitOps - repo as a single source of truth 
+ - GitOps - repo as a single source of truth
 
  - Well known tooling. **No programming skills** required
 
  - **Community driven** tools and modules
 
- - Opionated and battle tested configuration defaults
+ - Opionated and battle tested configuration **defaults**
 
- - Full customization and plugin extendability
+ - Full **customization** and plugin extendability
 
  - Shipped as all-in-one Docker Image
 
@@ -215,12 +236,12 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 
 ### Implementation
 
-  - simple yaml that describes:
+  - Simple yaml that describes:
     - Cloud Setting (Projects/VPC/Networking)
     - Kubernetes cluster
     - Core Addons
-  - objects **declarations** stored in git repo
-  - objects **states** stored in: 
+  - Objects **declarations** stored in git repo
+  - Objects **states** stored in: 
     - Terraform state files
     - Kuberentes objects and CRD's
     - ArgoCD projects and applications
@@ -247,7 +268,7 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 <br />
 
 
-### Resources to be created by Installer
+### Resources created by Installer
 
    - GitHub Repo
    - Cloud User
@@ -277,7 +298,7 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 <br />
 <br />
 
-### Resources to be created and *reconciled* by Container
+### Resources created and *reconciled* by Container
 
    - Terraform state bucket storage
 
@@ -319,7 +340,7 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 <br />
 <br />
 
-### Resources to be created and *reconciled* by ArgoCD
+### Resources created and *reconciled* by ArgoCD
 
 - ArgoCD itself
 
@@ -357,11 +378,37 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 <br />
 
 
-## Demo time
+## Principle Diagram
+![cluster.dev technical diagram](../images/cluster-dev-technical-diagram.png)
 
-Installer at [DockerHub](https://hub.docker.com/r/shalb/cluster.dev-cli-installer)  
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+
+## Demo Time
+
 Test Repo at [voatsap/testrepo](https://github.com/voatsap/testrepo)  
-New Repo at [GitHub](https://github.com/new)
+New Repo at [GitHub](https://github.com/new)  
+Installer at [DockerHub](https://hub.docker.com/r/shalb/cluster.dev-cli-installer)  
+
 
 <br />
 <br />
@@ -410,4 +457,29 @@ New Repo at [GitHub](https://github.com/new)
 <br />
 <br />
 
-## Thanks! Please star us: cluster.dev
+
+## Questions?
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+## Thanks you! 
+## STAR us https://cluster.dev

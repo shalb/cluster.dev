@@ -31,7 +31,6 @@ function output_software_info {
 # Outputs:
 #   GIT_PROVIDER - platform for git hosting
 #   GIT_REPO_NAME - repo in "user/repository" format
-#   GIT_REPO_ROOT - full path to cloned repo files inside runner
 #######################################
 function detect_git_provider {
         # Check if it is GitHub

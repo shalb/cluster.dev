@@ -50,7 +50,6 @@ docker run  -d --rm \
             -v "${SRC_PATH}:/tests/workspace" \
             -e GIT_PROVIDER="test-run" \
             -e GIT_REPO_NAME="test-run" \
-            -e GIT_REPO_ROOT="/tests/workspace" \
             -e "AWS_ACCESS_KEY_ID" \
             -e "AWS_SECRET_ACCESS_KEY" \
             -e "CLUSTER_CONFIG_PATH" \
