@@ -33,12 +33,12 @@ DEBUG "Manifests: $MANIFESTS"
 
     for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         NOTICE "Now run: $CLUSTER_MANIFEST_FILE"
-        DEBUG "Path where start new cycle: $PWD"
 
-    # Parse Yaml Manifest and export variables with
-    # https://github.com/shalb/yamltoenv
+    # Unset all env variables by `cluster_` that could be kept from previous run
+    while read var; do unset $var; done < <(env | grep cluster_ | awk -F "=" '{print$1}')
+    # Parse Yaml Manifest and export variables with https://github.com/shalb/yamltoenv
     source <(/bin/yamltoenv -f "$CLUSTER_MANIFEST_FILE")
-
+    # Check required variables are set
     yaml::check_that_required_variables_exist "$CLUSTER_MANIFEST_FILE"
 
     # Define full cluster name
@@ -53,7 +53,7 @@ DEBUG "Manifests: $MANIFESTS"
 
         DEBUG "Cloud Provider: AWS. Initializing access variables"
 
-        # Define name for S3 bucket that would be user for terraform state
+        # Define name for S3 bucket that would be user for terraform state.
         S3_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
         # Destroy if installed: false
@@ -66,17 +66,16 @@ DEBUG "Manifests: $MANIFESTS"
             continue
         fi
 
-        # Create and init backend.
-        # Check if bucket already exist by trying to import it
+        # Create and init backend. Check if bucket already exist by trying to import it.
         aws::init_s3_bucket   "$cluster_cloud_region"
 
-        # Create a DNS zone if required
+        # Create a DNS zone if required.
         aws::init_route53   "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
 
-        # Create a VPC or use existing defined
+        # Create a VPC or use existing defined.
         aws::init_vpc   "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_vpc_cidr"
 
-        # Provisioner selection
+        # Provisioner selection.
         #
         case $cluster_cloud_provisioner_type in
         minikube)
@@ -106,7 +105,7 @@ DEBUG "Manifests: $MANIFESTS"
         esac
 
             # Deploy ArgoCD apps via kubectl
-            argocd::deploy_apps  "$CLUSTER_MANIFEST_FILE"
+            argocd::deploy_apps
 
             # Writes commands for user for get access to cluster
             aws::output_access_keys   "$cluster_cloud_domain"
