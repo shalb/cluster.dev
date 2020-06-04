@@ -2,11 +2,11 @@ terraform {
   backend "s3" {}
 
   required_providers {
-    random = "~> 2.2.1"
+    random     = "~> 2.2.1"
     kubernetes = "~> 1.11.3"
-    aws = "~> 2.64.0"
-    local = "~> 1.4.0"
-    null = "~> 2.1.2"
+    aws        = "~> 2.64.0"
+    local      = "~> 1.4.0"
+    null       = "~> 2.1.2"
   }
 }
 
@@ -23,8 +23,8 @@ data "terraform_remote_state" "vpc" {
   }
   defaults = {
     private_subnets = []
-    public_subnets = []
-    vpc_id = ""
-    vpc_cidr = ""
+    public_subnets  = []
+    vpc_id          = ""
+    vpc_cidr        = ""
   }
 }

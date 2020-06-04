@@ -7,11 +7,11 @@ output "vpc_id" {
 }
 
 output "private_subnets" {
-  value = var.vpc_id == "create" ? module.vpc.private_subnets : (var.vpc_id == "default" ? [ aws_default_subnet.default_az0[0].id, aws_default_subnet.default_az1[0].id ] : data.aws_subnet_ids.vpc_subnets_provided_private[0].ids)
+  value = var.vpc_id == "create" ? module.vpc.private_subnets : (var.vpc_id == "default" ? [aws_default_subnet.default_az0[0].id, aws_default_subnet.default_az1[0].id] : data.aws_subnet_ids.vpc_subnets_provided_private[0].ids)
 }
 
 output "public_subnets" {
-  value = var.vpc_id == "create" ? module.vpc.public_subnets : (var.vpc_id == "default" ? [ aws_default_subnet.default_az0[0].id, aws_default_subnet.default_az1[0].id ] : data.aws_subnet_ids.vpc_subnets_provided_public[0].ids)
+  value = var.vpc_id == "create" ? module.vpc.public_subnets : (var.vpc_id == "default" ? [aws_default_subnet.default_az0[0].id, aws_default_subnet.default_az1[0].id] : data.aws_subnet_ids.vpc_subnets_provided_public[0].ids)
 }
 
 output "vpc_cidr" {

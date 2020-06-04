@@ -33,4 +33,3 @@ resource "aws_security_group" "worker_group_mgmt" {
     cidr_blocks = [data.terraform_remote_state.vpc.outputs.vpc_cidr]
   }
 }
-

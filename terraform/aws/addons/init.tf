@@ -1,11 +1,11 @@
 terraform {
   backend "s3" {}
   required_providers {
-    helm = "~> 1.0"
+    helm       = "~> 1.0"
     kubernetes = "~> 1.11"
-    null = "~> 2.1"
-    random = "~> 2.2"
-    template = "~> 2.1"
+    null       = "~> 2.1"
+    random     = "~> 2.2"
+    template   = "~> 2.1"
   }
 }
 provider "aws" {
@@ -23,7 +23,7 @@ data "terraform_remote_state" "k8s" {
     region = var.region
   }
   defaults = {
-    cluster_id = ""
+    cluster_id              = ""
     cluster_oidc_issuer_url = ""
   }
 }

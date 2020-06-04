@@ -12,7 +12,7 @@ resource "null_resource" "cert_manager_crds" {
     command = "kubectl apply -n cert-manager --validate=false -f ${local.crd-path}/${local.cert-manager-version}/cert-manager.crds.yaml"
   }
   provisioner "local-exec" {
-    when = destroy
+    when    = destroy
     command = "exit 0"
   }
   triggers = {
@@ -87,8 +87,8 @@ resource "aws_iam_policy" "cert_manager" {
 data "template_file" "clusterissuers_production" {
   template = file("templates/cert-manager-dns-issuer.yaml")
   vars = {
-    dns_zones  = var.cluster_cloud_domain
-    region = var.region
+    dns_zones = var.cluster_cloud_domain
+    region    = var.region
     # Do not need role with IRSA/EKS is present
     role = ""
   }
