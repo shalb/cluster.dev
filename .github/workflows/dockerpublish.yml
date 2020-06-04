@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build image
-        run: run: docker build -t $IMAGE .
+        run: docker build -t $IMAGE .
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKER_USER }} --password ${{ secrets.DOCKER_PASS }}
