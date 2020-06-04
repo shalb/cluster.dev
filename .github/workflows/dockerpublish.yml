@@ -34,8 +34,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Run tests
-        run: |
-          docker build . 
+        run: docker build . 
 
   # Push image to Docker Hub
   push:
