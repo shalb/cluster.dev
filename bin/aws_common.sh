@@ -275,18 +275,19 @@ aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeco
 export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n\
 kubectl get ns \n
 "
-    SSH_ACCESS_MESSAGE="\
-Download your bastion ssh key using commands: \n\
-aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem \n\
-ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem ubuntu@$CLUSTER_FULLNAME.$cluster_cloud_domain \n
-"
-
     NOTICE "$KUBECONFIG_DOWNLOAD_MESSAGE"
-    NOTICE "$SSH_ACCESS_MESSAGE"
+
+#    SSH_ACCESS_MESSAGE="\
+#Download your bastion ssh key using commands: \n\
+#aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem \n\
+#ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem ubuntu@$CLUSTER_FULLNAME.$cluster_cloud_domain \n
+#"
+#    NOTICE "$SSH_ACCESS_MESSAGE"
+
 
     # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig|ssh)"
     echo "::set-output name=kubeconfig::${KUBECONFIG_DOWNLOAD_MESSAGE}"
-    echo "::set-output name=ssh::${SSH_ACCESS_MESSAGE}"
+#    echo "::set-output name=ssh::${SSH_ACCESS_MESSAGE}"
 
 }
 
@@ -348,6 +349,7 @@ function aws::init_addons {
                 -var='cluster_cloud_domain=$cluster_cloud_domain' \
                 -var='cluster_name=$CLUSTER_FULLNAME' \
                 -var='config_path=$config_path' \
+                -var='eks=true' \
                 -input=false \
                 -out=tfplan-addons"
 

@@ -56,7 +56,7 @@ resource "aws_iam_policy" "external_dns" {
         "route53:ChangeResourceRecordSets"
       ],
       "Resource": [
-        "arn:aws:route53:::hostedzone/${data.terraform_remote_state.k8s.outputs.zone_id}"
+        "arn:aws:route53:::hostedzone/${data.terraform_remote_state.dns.outputs.zone_id}"
       ]
     },
     {
