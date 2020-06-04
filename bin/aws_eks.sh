@@ -64,7 +64,7 @@ function aws::eks::deploy_cluster {
                     echo "]" >> worker_groups.tfvars
 
     INFO "EKS Cluster: worker_groups.tfvars prepared"
-    cp worker_groups.tfvars "$PRJ_ROOT"/terraform/aws/eks/
+    mv worker_groups.tfvars "$PRJ_ROOT"/terraform/aws/eks/
 
     cd "$PRJ_ROOT"/terraform/aws/eks/ || ERROR "Path not found"
 
