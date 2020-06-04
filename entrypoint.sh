@@ -31,12 +31,14 @@ output_software_info
 MANIFESTS=$(find "$CLUSTER_CONFIG_PATH" -type f) || ERROR "Manifest file/folder can't be found"
 DEBUG "Manifests: $MANIFESTS"
 
-for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
-    NOTICE "Now run: $CLUSTER_MANIFEST_FILE"
-    DEBUG "Path where start new cycle: $PWD"
+    for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
+        NOTICE "Now run: $CLUSTER_MANIFEST_FILE"
+        DEBUG "Path where start new cycle: $PWD"
 
-    yaml::parse "$CLUSTER_MANIFEST_FILE"
-    yaml::create_variables "$CLUSTER_MANIFEST_FILE"
+    # Parse Yaml Manifest and export variables with
+    # https://github.com/shalb/yamltoenv
+    source <(/bin/yamltoenv -f "$CLUSTER_MANIFEST_FILE")
+
     yaml::check_that_required_variables_exist "$CLUSTER_MANIFEST_FILE"
 
     # Define full cluster name
@@ -79,7 +81,6 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
         case $cluster_cloud_provisioner_type in
         minikube)
             DEBUG "Provisioner: Minikube"
-
             # Deploy Minikube cluster via Terraform
             aws::minikube::deploy_cluster   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$cluster_cloud_provisioner_instanceType"
 
@@ -88,32 +89,12 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
             # Deploy Kubernetes Addons via Terraform
             aws::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
-
-            # Deploy ArgoCD apps via kubectl
-            argocd::deploy_apps   "$cluster_apps"
-
-            # Writes commands for user for get access to cluster
-            aws::output_access_keys   "$cluster_cloud_domain"
         ;;
         # end of minikube
         eks)
             DEBUG "Cloud Provider: AWS. Provisioner: EKS"
             # Deploy Minikube cluster via Terraform
-            aws::eks::deploy_cluster    "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain" "$cluster_cloud_vpc" "$cluster_version" \
-                                        "$cluster_cloud_provisioner_additional_security_group_ids" \
-                                        "${cluster_cloud_provisioner_node_group__name[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__instance_type[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__asg_desired_capacity[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__asg_max_size[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__asg_min_size[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__root_volume_size[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__kubelet_extra_args[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__instance_type_override[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__spot_allocation_strategy[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__spot_instance_pools[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__spot_max_price[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__on_demand_base_capacity[@]}" \
-                                        "${cluster_cloud_provisioner_node_group__on_demand_percentage_above_base_capacity[@]}" \
+            aws::eks::deploy_cluster    "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain" "$cluster_cloud_vpc" "$cluster_version"
 
             # Pull a kubeconfig to instance via kubectl
             aws::eks::pull_kubeconfig
@@ -123,6 +104,12 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
 
             ;;
         esac
+
+            # Deploy ArgoCD apps via kubectl
+            argocd::deploy_apps  "$CLUSTER_MANIFEST_FILE"
+
+            # Writes commands for user for get access to cluster
+            aws::output_access_keys   "$cluster_cloud_domain"
         ;;
 
     digitalocean)
