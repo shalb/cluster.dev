@@ -144,7 +144,8 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
             DEBUG "Provisioner: managed-kubernetes"
             # Deploy DO k8s cluster via Terraform
             digitalocean::managed-kubernetes::deploy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_version" "$cluster_cloud_provisioner_nodeSize" "$cluster_cloud_provisioner_minNodes" "$cluster_cloud_provisioner_maxNodes"
-
+            # Writes commands for user for get access to cluster
+            digitalocean::output_access_keys
         ;;
         esac
 

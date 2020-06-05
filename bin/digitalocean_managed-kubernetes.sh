@@ -100,3 +100,26 @@ function digitalocean::managed-kubernetes::destroy_cluster {
 
     cd - >/dev/null || ERROR "Path not found"
 }
+
+#######################################
+# Writes commands for user for get access to cluster
+# Globals:
+#   CLUSTER_FULLNAME
+# Outputs:
+#   Writes commands to get cluster's kubeconfig
+#######################################
+function digitalocean:output_access_keys {
+    DEBUG "Writes commands for user for get access to cluster"
+
+    KUBECONFIG_DOWNLOAD_MESSAGE="\
+Please, download doctl official utility on page https://github.com/digitalocean/doctl/releases and get your kubeconfig using commands: \n\
+doctl kubernetes cluster kubeconfig save ${CLUSTER_FULLNAME} \n\
+kubectl get ns \n
+"
+
+    NOTICE "$KUBECONFIG_DOWNLOAD_MESSAGE"
+
+    # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig)"
+    echo "::set-output name=kubeconfig::${KUBECONFIG_DOWNLOAD_MESSAGE}"
+
+}
