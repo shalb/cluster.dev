@@ -21,4 +21,4 @@ jobs:
         CLUSTER_CONFIG_PATH: "./.cluster.dev/digitalocean-k8s.yaml"
         VERBOSE_LVL: "DEBUG"
     - name: Get the Cluster Credentials
-      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}"
+      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}"
