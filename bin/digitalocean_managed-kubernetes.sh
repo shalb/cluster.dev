@@ -108,7 +108,7 @@ function digitalocean::managed-kubernetes::destroy_cluster {
 # Outputs:
 #   Writes commands to get cluster's kubeconfig
 #######################################
-function digitalocean:output_access_keys {
+function digitalocean::output_access_keys {
     DEBUG "Writes commands for user for get access to cluster"
 
     KUBECONFIG_DOWNLOAD_MESSAGE="\
