@@ -112,9 +112,10 @@ function digitalocean::output_access_keys {
     DEBUG "Writes commands for user for get access to cluster"
 
     KUBECONFIG_DOWNLOAD_MESSAGE="\
-Please, download doctl official utility on page https://github.com/digitalocean/doctl/releases and get your kubeconfig using commands: \n\
+Please, download doctl official utility on page https://github.com/digitalocean/doctl/releases and get your kubeconfig using command: \n\
 doctl kubernetes cluster kubeconfig save ${CLUSTER_FULLNAME} \n\
-kubectl get ns \n
+Check that cluster is running \n\
+kubectl cluster-info \n
 "
 
     NOTICE "$KUBECONFIG_DOWNLOAD_MESSAGE"
