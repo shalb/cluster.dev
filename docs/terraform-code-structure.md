@@ -2,17 +2,17 @@
 
 ## Filenames <!-- omit in toc -->
 
-* [`0-init.tf`](#0-inittf)
-* [`1-main.tf`](#1-maintf)
-* [`8-outputs.tf`](#8-outputstf)
-* [`9-vars.tf`](#9-varstf)
+* [`init.tf`](#inittf)
+* [`main.tf`](#maintf)
+* [`outputs.tf`](#outputstf)
+* [`vars.tf`](#varstf)
 * [`README.md`](#readmemd)
 
-Put the `.yaml`, `.sh` and other module-related files directly to the module folder.
+Put the `.yaml`, `.sh` and other module-related files to subdir(s), `./templates` for instance.
 
 Also, look our [style-guide](style-guide.md) to check other best practices.
 
-## `0-init.tf`
+## `init.tf`
 
 Sort `terraform_remote_state` alphabetically.
 
@@ -42,7 +42,7 @@ data "terraform_remote_state" "" {}
 ```
 
 
-## `1-main.tf`
+## `main.tf`
 
 Sort in logic order. Sort alphabetically when possible.
 
@@ -70,7 +70,7 @@ module "_" {}
 
 ```
 
-## `8-outputs.tf`
+## `outputs.tf`
 
 Sort alphabetically.
 
@@ -82,7 +82,7 @@ output "_" {
 
 ```
 
-## `9-vars.tf`
+## `vars.tf`
 
 Sort alphabetically.
 
