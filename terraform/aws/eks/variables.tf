@@ -13,6 +13,7 @@ variable "cluster_name" {
 
 variable "workers_subnets_type" {
   description = "Type of subnets to use on worker nodes: public or private"
+  type        = string
   default     = "private"
 }
 
