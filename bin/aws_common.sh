@@ -312,6 +312,9 @@ function aws::destroy {
     eks)
         DEBUG "Destroy: Provisioner: EKS"
         # Destroy Cluster
+        if aws::eks::pull_kubeconfig_once; then
+            aws::destroy_addons "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
+        fi
         aws::eks::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain"
         ;;
     esac

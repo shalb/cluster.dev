@@ -168,3 +168,23 @@ function aws::eks::pull_kubeconfig {
     done
     INFO "EKS Cluster: Ready to use!"
 }
+
+#######################################
+# Try get kubeconfig to instance via kubectl
+# Globals:
+#   CLUSTER_FULLNAME
+# Arguments:
+#   None
+# Outputs:
+#   Writes progress status
+#######################################
+function aws::eks::pull_kubeconfig_once {
+    DEBUG "EKS: Pull a kubeconfig to instance via kubectl"
+
+    INFO "Copy kubeconfig to cluster.dev executor"
+    export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+    run_cmd "aws s3 cp 's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' 2>/dev/null" "" "false"
+    run_cmd "cp '$HOME/.kube/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null" "" "false"
+    kubectl version --request-timeout=5s >/dev/null 2>&1
+    return $?
+}
