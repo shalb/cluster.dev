@@ -45,7 +45,7 @@ Team - 15 happy SHALB'ers.
 
 We have built more than **100 production** infrastructures in last **11 years**.
 
-Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
+Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc.
 
 <br />
 <br />
