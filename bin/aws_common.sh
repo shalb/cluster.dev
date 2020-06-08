@@ -281,18 +281,8 @@ kubectl get ns \n
 "
     NOTICE "$KUBECONFIG_DOWNLOAD_MESSAGE"
 
-#    SSH_ACCESS_MESSAGE="\
-#Download your bastion ssh key using commands: \n\
-#aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem \n\
-#ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem ubuntu@$CLUSTER_FULLNAME.$cluster_cloud_domain \n
-#"
-#    NOTICE "$SSH_ACCESS_MESSAGE"
-
-
-    # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig|ssh)"
+    # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig)"
     echo "::set-output name=kubeconfig::${KUBECONFIG_DOWNLOAD_MESSAGE}"
-#    echo "::set-output name=ssh::${SSH_ACCESS_MESSAGE}"
-
 }
 
 # Destroy all cluster.
