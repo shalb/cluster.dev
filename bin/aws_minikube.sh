@@ -54,13 +54,11 @@ function aws::minikube::pull_kubeconfig_once {
 # Deploy Minikube cluster via Terraform
 # Globals:
 #   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
-#   cluster_cloud_provisioner_instanceType
 #   cluster_cloud_domain
-#   cluster_cloud_vpc_id
+#   cluster_cloud_provisioner_instanceType
 # Outputs:
 #   Writes progress status
 #######################################
@@ -99,12 +97,11 @@ function aws::minikube::deploy_cluster {
 # Destroy Minikube cluster via Terraform
 # Globals:
 #   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
-#   cluster_cloud_provisioner_instanceType
 #   cluster_cloud_domain
+#   cluster_cloud_provisioner_instanceType
 # Outputs:
 #   Writes progress status
 #######################################

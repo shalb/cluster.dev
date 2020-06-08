@@ -285,30 +285,42 @@ kubectl get ns \n
     echo "::set-output name=kubeconfig::${KUBECONFIG_DOWNLOAD_MESSAGE}"
 }
 
-# Destroy all cluster.
+#######################################
+# Function to destroy all resources in cluster and cloud resources
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_cloud_vpc
+#   cluster_name
+#   cluster_cloud_region
+#   availability_zones
+# Outputs:
+#   Writes progress status
+#######################################
 function aws::destroy {
 
-        case $cluster_cloud_provisioner_type in
-        minikube)
-            DEBUG "Destroy: Provisioner: Minikube"
-            if aws::minikube::pull_kubeconfig_once; then
-                aws::destroy_addons "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
-            fi
-            aws::minikube::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$cluster_cloud_provisioner_instanceType"
+    case $cluster_cloud_provisioner_type in
+    minikube)
+        DEBUG "Destroy: Provisioner: Minikube"
+        if aws::minikube::pull_kubeconfig_once; then
+            aws::destroy_addons "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
+        fi
+        aws::minikube::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$cluster_cloud_provisioner_instanceType"
+    ;;
+    # end of minikube
+    eks)
+        DEBUG "Destroy: Provisioner: EKS"
+        # Destroy Cluster
+        aws::eks::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain"
         ;;
-        # end of minikube
-        eks)
-            DEBUG "Destroy: Provisioner: EKS"
-            # Destroy Cluster
-            aws::eks::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain"
-            ;;
-        esac
+    esac
 
-        # Destroy all cluster components
-        # TODO: Remove kubeconfig after successful cluster destroy
-        aws::destroy_vpc "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
-        aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
-        aws::destroy_s3_bucket "$cluster_cloud_region"
+    # Destroy all cluster components
+    # TODO: Remove kubeconfig after successful cluster destroy
+    aws::destroy_vpc "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
+    aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
+    aws::destroy_s3_bucket "$cluster_cloud_region"
 }
 
 #######################################

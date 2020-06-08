@@ -33,46 +33,46 @@ function output_software_info {
 #   GIT_REPO_NAME - repo in "user/repository" format
 #######################################
 function detect_git_provider {
-        # Check if it is GitHub
-        # https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables
-        if [ ! -z ${GITHUB_REPOSITORY+h} ];
-                then DEBUG "GITHUB_REPOSITORY variable is set to $GITHUB_REPOSITORY"
-                    INFO "Assuming we are running GitHub Action";
-                    readonly GIT_PROVIDER="github"
-                    readonly GIT_REPO_NAME=$GITHUB_REPOSITORY
-                    readonly GIT_REPO_ROOT=$GITHUB_WORKSPACE
-            else
-                DEBUG "GITHUB_REPOSITORY variable is NOT set assuming we are NOT running GitHub Action";
-        fi
+    # Check if it is GitHub
+    # https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables
+    if [ ! -z ${GITHUB_REPOSITORY+h} ];
+            then DEBUG "GITHUB_REPOSITORY variable is set to $GITHUB_REPOSITORY"
+                INFO "Assuming we are running GitHub Action";
+                readonly GIT_PROVIDER="github"
+                readonly GIT_REPO_NAME=$GITHUB_REPOSITORY
+                readonly GIT_REPO_ROOT=$GITHUB_WORKSPACE
+        else
+            DEBUG "GITHUB_REPOSITORY variable is NOT set assuming we are NOT running GitHub Action";
+    fi
 
-        # Check if it is GitLab
-        # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
-        if [ ! -z ${CI_PROJECT_PATH+l} ];
-                then DEBUG "CI_PROJECT_PATH variable is set to $CI_PROJECT_PATH"
-                    INFO "Assuming we are running GitLab Pipeline";
-                    readonly GIT_PROVIDER="gitlab"
-                    readonly GIT_REPO_NAME=$CI_PROJECT_PATH
-                    readonly GIT_REPO_ROOT=$CI_PROJECT_DIR
-            else
-                DEBUG "CI_PROJECT_PATH variable is NOT set assuming we are NOT running GitLab Pipeline";
-        fi
+    # Check if it is GitLab
+    # https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+    if [ ! -z ${CI_PROJECT_PATH+l} ];
+            then DEBUG "CI_PROJECT_PATH variable is set to $CI_PROJECT_PATH"
+                INFO "Assuming we are running GitLab Pipeline";
+                readonly GIT_PROVIDER="gitlab"
+                readonly GIT_REPO_NAME=$CI_PROJECT_PATH
+                readonly GIT_REPO_ROOT=$CI_PROJECT_DIR
+        else
+            DEBUG "CI_PROJECT_PATH variable is NOT set assuming we are NOT running GitLab Pipeline";
+    fi
 
-        # Check if it is Bitbucket
-        # https://confluence.atlassian.com/bitbucket/variables-in-pipelines-794502608.html#Variablesinpipelines-Defaultvariables
-        if [ ! -z ${BITBUCKET_GIT_HTTP_ORIGIN+b} ];
-                then DEBUG "BITBUCKET_GIT_HTTP_ORIGIN variable is set to $BITBUCKET_GIT_HTTP_ORIGIN"
-                    INFO "Assuming we are running Bitbucket Pipeline";
-                    readonly GIT_PROVIDER="bitbucket"
-                    readonly GIT_REPO_NAME=$(echo $BITBUCKET_GIT_HTTP_ORIGIN | sed -e 's/http:\/\/bitbucket.org\///g')
-                    readonly GIT_REPO_ROOT=$BITBUCKET_CLONE_DIR
-            else
-                DEBUG "BITBUCKET_GIT_HTTP_ORIGIN variable is NOT set assuming we are NOT running Bitbucket Pipeline";
-        fi
+    # Check if it is Bitbucket
+    # https://confluence.atlassian.com/bitbucket/variables-in-pipelines-794502608.html#Variablesinpipelines-Defaultvariables
+    if [ ! -z ${BITBUCKET_GIT_HTTP_ORIGIN+b} ];
+            then DEBUG "BITBUCKET_GIT_HTTP_ORIGIN variable is set to $BITBUCKET_GIT_HTTP_ORIGIN"
+                INFO "Assuming we are running Bitbucket Pipeline";
+                readonly GIT_PROVIDER="bitbucket"
+                readonly GIT_REPO_NAME=$(echo $BITBUCKET_GIT_HTTP_ORIGIN | sed -e 's/http:\/\/bitbucket.org\///g')
+                readonly GIT_REPO_ROOT=$BITBUCKET_CLONE_DIR
+        else
+            DEBUG "BITBUCKET_GIT_HTTP_ORIGIN variable is NOT set assuming we are NOT running Bitbucket Pipeline";
+    fi
 
-        # Output final results with required variables set
-        INFO "GIT_PROVIDER is set for: $GIT_PROVIDER"
-        INFO "GIT_REPO_NAME is set for: $GIT_REPO_NAME"
-        INFO "GIT_REPO_ROOT is set for: $GIT_REPO_ROOT"
+    # Output final results with required variables set
+    INFO "GIT_PROVIDER is set for: $GIT_PROVIDER"
+    INFO "GIT_REPO_NAME is set for: $GIT_REPO_NAME"
+    INFO "GIT_REPO_ROOT is set for: $GIT_REPO_ROOT"
 }
 
 
@@ -112,15 +112,15 @@ function set_cluster_fullname {
 function to_tf_list {
     local source_string=$1
     local result=""
-        if  [[ ! -z $source_string ]] ; then
-        IFS=', ' read -r -a array <<< "$source_string";
-        for element in "${array[@]}"
-            do
-                result+=\ "\"$element\"",
-            done
-                result="[${result::-1} ]"
-            else
-            result="[]"
-        fi
-        echo "$result"
+    if  [[ ! -z $source_string ]] ; then
+    IFS=', ' read -r -a array <<< "$source_string";
+    for element in "${array[@]}"
+        do
+            result+=\ "\"$element\"",
+        done
+            result="[${result::-1} ]"
+        else
+        result="[]"
+    fi
+    echo "$result"
 }
