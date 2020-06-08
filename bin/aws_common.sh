@@ -83,9 +83,9 @@ function aws::destroy_s3_bucket {
 # TODO: implement switch for domain. https://github.com/shalb/cluster.dev/issues/2
 # Globals:
 #   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_cloud_region
+#   cluster_name
 #   cluster_cloud_domain
 #######################################
 function aws::init_route53 {
@@ -127,9 +127,9 @@ function aws::init_route53 {
 # Destroy a DNS domains/records if required
 # Globals:
 #   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_cloud_region
+#   cluster_name
 #   cluster_cloud_domain
 #######################################
 function aws::destroy_route53 {
@@ -189,6 +189,8 @@ function aws::destroy_route53 {
 function aws::init_vpc {
     DEBUG "Create a VPC or use existing defined"
     local cluster_cloud_vpc=$1
+    local cluster_name=$2
+    local cluster_cloud_region=$3
     local availability_zones=$4
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
     local vpc_cidr=${5:-"10.8.0.0/18"} # set default VPC cidr
@@ -204,7 +206,7 @@ function aws::init_vpc {
 
             run_cmd "terraform plan \
                         -var='vpc_id=$cluster_cloud_vpc' \
-                        -var='cluster_name=$CLUSTER_FULLNAME' \
+                        -var='cluster_name=$cluster_name' \
                         -var='region=$cluster_cloud_region' \
                         -var='availability_zones=$availability_zones' \
                         -var='vpc_cidr=$vpc_cidr' \
@@ -232,6 +234,8 @@ function aws::init_vpc {
 #######################################
 function aws::destroy_vpc {
     local cluster_cloud_vpc=$1
+    local cluster_name=$2
+    local cluster_cloud_region=$3
     local availability_zones=$4
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
 
@@ -249,7 +253,7 @@ function aws::destroy_vpc {
                         -var='region=$cluster_cloud_region' \
                         -var='availability_zones=$availability_zones' \
                         -var='vpc_id=$cluster_cloud_vpc' \
-                        -var='cluster_name=$CLUSTER_FULLNAME'"
+                        -var='cluster_name=$cluster_name'"
 
     cd - >/dev/null || ERROR "Path not found"
 }
