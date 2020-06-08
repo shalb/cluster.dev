@@ -7,15 +7,14 @@ FROM hashicorp/terraform:light as terraform
 # TODO create own image with terraform and helmfile versioning
 
 FROM chatwork/helmfile:$HELMFILE_VERSION
-ENV YAMLTOENV_VERSION=v0.0.3
+ARG YAMLTOENV_VERSION=v0.0.3
 
 COPY --from=terraform /bin/terraform /bin/terraform
 
 ### Install s3cmd
-RUN /usr/bin/python3.8 -m pip install --upgrade pip
-RUN pip3 install --no-cache-dir --upgrade s3cmd
-
-RUN curl -L  https://github.com/shalb/yamltoenv/releases/download/${YAMLTOENV_VERSION}/yamltoenv_${YAMLTOENV_VERSION}_linux_amd64.tgz |  tar -xvz \
+RUN python3 -m pip install --upgrade pip && \
+    pip3 install --no-cache-dir --upgrade s3cmd && \
+    curl -L  https://github.com/shalb/yamltoenv/releases/download/${YAMLTOENV_VERSION}/yamltoenv_${YAMLTOENV_VERSION}_linux_amd64.tgz |  tar -xvz \
     && rm -f yamltoenv_${YAMLTOENV_VERSION}_linux_amd64.tgz && mv yamltoenv /bin/
 
 ENV PRJ_ROOT /app
