@@ -14,13 +14,14 @@ module "vpc" {
   enable_dns_support   = true
   # in case when vpc cidr block provided by user, we split it to blocks for each subnet
   # which is relative to number of availability zones. See details on cidrsubnet in terraform docs
-  public_subnets       = [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k)]
+  # https://www.terraform.io/docs/configuration/functions/cidrsubnet.html
+  public_subnets       = [for subnet_num, az in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, subnet_num)]
   public_subnet_tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
     "kubernetes.io/role/elb"                    = "1"
     "cluster.dev/subnet_type"                   = "public"
   }
-  private_subnets = [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k + 4)]
+  private_subnets = [for subnet_num, az in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, subnet_num + 4)]
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = "1"
     "cluster.dev/subnet_type"         = "private"
@@ -28,7 +29,7 @@ module "vpc" {
 
   # TODO: add IAM policy to create DB Subnet
   # database_subnets could be created in case of AZ's > 1
-  #  database_subnets = length(var.availability_zones) > 1 ? [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k + 8)] : []
+  #  database_subnets = length(var.availability_zones) > 1 ? [for subnet_num, az in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, subnet_num + 8)] : []
   #  tags = {
   #    Terraform                  = "true"
   #    "cluster.dev/subnet_type" = "database"
