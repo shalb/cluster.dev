@@ -12,6 +12,8 @@ module "vpc" {
 
   enable_dns_hostnames = true
   enable_dns_support   = true
+  # in case when vpc cidr block provided by user, we split it to blocks for each subnet
+  # which is relative to number of availability zones. See details on cidrsubnet in terraform docs
   public_subnets       = [for k, v in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, k)]
   public_subnet_tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"

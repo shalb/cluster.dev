@@ -14,7 +14,6 @@ variable "workers_subnets_type" {
   description = "Type of subnets to use on worker nodes: public or private"
   type        = string
   default     = "private"
-  type        = string
 }
 variable "cluster_version" {
   description = "Kubernetes version to use for the EKS cluster."
