@@ -1,11 +1,11 @@
 cluster:
-  installed: true
+  installed: false
   name: dev-eks
   cloud:
     provider: aws
     region: eu-central-1
     availability_zones: eu-central-1b, eu-central-1c
-    vpc: create
+    vpc: default
     domain: cluster.dev
     provisioner:
       type: eks
