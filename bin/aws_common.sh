@@ -50,7 +50,7 @@ function aws::is_s3_bucket_exists {
 
     # Create and init backend.
     run_cmd "terraform init"
-    run_cmd "terraform import -var=region=$cluster_cloud_region -var=s3_backend_bucket=$S3_BACKEND_BUCKET aws_s3_bucket.terraform_state $S3_BACKEND_BUCKET 2>/dev/null"
+    terraform import -var=region=$cluster_cloud_region -var=s3_backend_bucket=$S3_BACKEND_BUCKET aws_s3_bucket.terraform_state $S3_BACKEND_BUCKET >/dev/null 2>&1
     return $?
 }
 
