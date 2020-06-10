@@ -124,3 +124,23 @@ function to_tf_list {
     fi
     echo "$result"
 }
+
+###########################################
+# Function generates a tfvars file variable
+# Globals:
+# Arguments:
+#   tf_var_name - name of variable
+#   yaml_var - variables's value
+#   filename - filename where variable should be stored
+# Outputs:
+#   list in ["some1", "some2", "someT"]
+##########################################
+function add_tfvars {
+    local tf_var_name=$1
+    local yaml_var="$2"
+    local filename=${3:-"additional.tfvars"}
+    # Sometimes we need to add brackets to input variable, so thats why we have a second condition in check
+    if [[ ! -z "${yaml_var}" ]] && [[ "$yaml_var" != \"\" ]] && [[ $yaml_var != "[]" ]] ; then
+        echo $tf_var_name =  "$yaml_var" >> $filename
+    fi
+}
