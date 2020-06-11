@@ -26,10 +26,9 @@ function aws::eks::deploy_cluster {
     local region=$2
     local availability_zones=${3:-$region"a"} # if azs are not set we use 'a'-zone by default
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
-    local cluster_cloud_domain=$4 # TODO: remove and shift
-    local vpc_id=$5
-    local cluster_version=${6:-"1.16"} # set default Kubernetes version
-    local worker_additional_security_group_ids=$7
+    local vpc_id=$4
+    local cluster_version=${5:-"1.16"} # set default Kubernetes version
+    local worker_additional_security_group_ids=$6
     worker_additional_security_group_ids=$(to_tf_list "$worker_additional_security_group_ids")
     # define subnet type based on vpc type
     local workers_subnets_type="private"
@@ -115,10 +114,9 @@ function aws::eks::destroy_cluster {
     local region=$2
     local availability_zones=${3:-$cluster_cloud_region"a"} # if azs are not set we use 'a'-zone by default
     availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
-    local cluster_cloud_domain=$4
-    local vpc_id=$5
-    local cluster_version=${6:-"1.16"} # set default Kubernetes version
-    local worker_additional_security_group_ids=${7}
+    local vpc_id=$4
+    local cluster_version=${5:-"1.16"} # set default Kubernetes version
+    local worker_additional_security_group_ids=$6
     worker_additional_security_group_ids=$(to_tf_list "$worker_additional_security_group_ids")
 
     cd "$PRJ_ROOT"/terraform/aws/eks/ || ERROR "Path not found"

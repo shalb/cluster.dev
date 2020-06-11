@@ -79,7 +79,6 @@ function aws::destroy_s3_bucket {
 
 #######################################
 # Create a DNS domains/records if required
-# TODO: implement switch for domain. https://github.com/shalb/cluster.dev/issues/2
 # Globals:
 #   S3_BACKEND_BUCKET
 # Arguments:
@@ -314,12 +313,11 @@ function aws::destroy {
         if aws::eks::pull_kubeconfig_once; then
             aws::destroy_addons "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
         fi
-        aws::eks::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain"
+        aws::eks::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
         ;;
     esac
 
     # Destroy all cluster components
-    # TODO: Remove kubeconfig after successful cluster destroy
     aws::destroy_vpc "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
     aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
     aws::destroy_s3_bucket "$cluster_cloud_region"

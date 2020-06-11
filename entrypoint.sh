@@ -93,7 +93,7 @@ DEBUG "Manifests: $MANIFESTS"
         eks)
             DEBUG "Cloud Provider: AWS. Provisioner: EKS"
             # Deploy Minikube cluster via Terraform
-            aws::eks::deploy_cluster    "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_domain" "$cluster_cloud_vpc" "$cluster_version"
+            aws::eks::deploy_cluster    "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_vpc" "$cluster_version"
 
             # Pull a kubeconfig to instance via kubectl
             aws::eks::pull_kubeconfig
