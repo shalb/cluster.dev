@@ -12,7 +12,6 @@ source "$PRJ_ROOT"/bin/logging.sh
 #   cluster_name
 #   cluster_cloud_region
 #   cluster_cloud_availability_zones
-#   cluster_cloud_domain
 #   cluster_cloud_vpc_id
 #   cluster_cloud_provisioner_version
 #   worker_additional_security_group_ids
@@ -100,7 +99,6 @@ function aws::eks::deploy_cluster {
 #   cluster_name
 #   cluster_cloud_region
 #   cluster_cloud_availability_zones
-#   cluster_cloud_domain
 #   cluster_cloud_vpc_id
 #   cluster_cloud_provisioner_version
 #   worker_additional_security_group_ids
