@@ -8,16 +8,6 @@ source ../bin/common.sh
 
 if [ $cluster_cloud_vpc == "default" ]; then vpc_id="default"; fi
 
-function add_tfvars {
-    local tf_var_name=$1
-    local yaml_var="$2"
-    local filename=${3:-"additional.tfvars"}
-    # Sometimes we need to add brackets to input variable, so thats why we have a second condition in check
-    if [[ ! -z "${yaml_var}" ]] && [[ "$yaml_var" != \"\" ]] && [[ $yaml_var != "[]" ]] ; then
-        echo $tf_var_name =  "$yaml_var" >> $filename
-    fi
-}
-
     # Generate additional.tfvars with worker_groups_launch_template to pass module and create workers
             echo "worker_groups_launch_template = [" > additional.tfvars
     for (( i=0; i<${cluster_cloud_provisioner_node_group_count}; i++ ));
