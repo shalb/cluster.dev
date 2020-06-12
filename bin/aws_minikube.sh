@@ -2,6 +2,7 @@
 
 # shellcheck source=logging.sh
 source "$PRJ_ROOT"/bin/logging.sh
+source "$PRJ_ROOT"/bin/common.sh
 
 #######################################
 # Pull a kubeconfig to instance via kubectl
@@ -54,23 +55,20 @@ function aws::minikube::pull_kubeconfig_once {
 # Deploy Minikube cluster via Terraform
 # Globals:
 #   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
-#   cluster_cloud_provisioner_instanceType
 #   cluster_cloud_domain
-#   cluster_cloud_vpc_id
+#   cluster_cloud_provisioner_instanceType
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::minikube::deploy_cluster {
     DEBUG "Deploy Minikube cluster via Terraform"
     local cluster_name=$1
-    local cluster_cloud_region=$2
-    local cluster_cloud_provisioner_instanceType=$3
-    local cluster_cloud_domain=$4
-    local cluster_cloud_vpc_id=$5
+    local region=$2
+    local cluster_cloud_domain=$3
+    local aws_instance_type=$4
 
     cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
 
@@ -78,16 +76,15 @@ function aws::minikube::deploy_cluster {
     INFO "Minikube cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform.state' \
+                -backend-config='key=states/terraform-k8s.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
 
     run_cmd "terraform plan \
-                -var='region=$cluster_cloud_region' \
-                -var='cluster_name=$CLUSTER_FULLNAME' \
-                -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
-                -var='hosted_zone=$CLUSTER_FULLNAME.$cluster_cloud_domain' \
-                -var='vpc_id=$cluster_cloud_vpc_id' \
+                -var='cluster_name=$cluster_name' \
+                -var='region=$region' \
+                -var='hosted_zone=$cluster_name.$cluster_cloud_domain' \
+                -var='aws_instance_type=$aws_instance_type' \
                 -input=false \
                 -out=tfplan"
 
@@ -101,21 +98,20 @@ function aws::minikube::deploy_cluster {
 # Destroy Minikube cluster via Terraform
 # Globals:
 #   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
-#   cluster_cloud_provisioner_instanceType
 #   cluster_cloud_domain
+#   cluster_cloud_provisioner_instanceType
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::minikube::destroy_cluster {
     DEBUG "Destroy Minikube cluster via Terraform"
     local cluster_name=$1
-    local cluster_cloud_region=$2
-    local cluster_cloud_provisioner_instanceType=$3
-    local cluster_cloud_domain=$4
+    local region=$2
+    local cluster_cloud_domain=$3
+    local aws_instance_type=$4
 
     cd "$PRJ_ROOT"/terraform/aws/minikube/ || ERROR "Path not found"
 
@@ -123,16 +119,16 @@ function aws::minikube::destroy_cluster {
     INFO "Minikube cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform.state' \
+                -backend-config='key=states/terraform-k8s.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
 
     INFO "Minikube cluster: Destroying "
     run_cmd "terraform destroy -auto-approve -compact-warnings \
-                -var='region=$cluster_cloud_region' \
-                -var='cluster_name=$CLUSTER_FULLNAME' \
-                -var='aws_instance_type=$cluster_cloud_provisioner_instanceType' \
-                -var='hosted_zone=$CLUSTER_FULLNAME.$cluster_cloud_domain'"
+                -var='cluster_name=$cluster_name' \
+                -var='region=$region' \
+                -var='hosted_zone=$cluster_name.$cluster_cloud_domain' \
+                -var='aws_instance_type=$aws_instance_type'"
 
     cd - >/dev/null || ERROR "Path not found"
 }

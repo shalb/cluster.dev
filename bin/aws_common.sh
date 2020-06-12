@@ -50,8 +50,7 @@ function aws::is_s3_bucket_exists {
 
     # Create and init backend.
     run_cmd "terraform init"
-
-    terraform import -var="region=$cluster_cloud_region" -var="s3_backend_bucket=$S3_BACKEND_BUCKET" aws_s3_bucket.terraform_state "$S3_BACKEND_BUCKET" >/dev/null 2>&1
+    terraform import -var=region=$cluster_cloud_region -var=s3_backend_bucket=$S3_BACKEND_BUCKET aws_s3_bucket.terraform_state $S3_BACKEND_BUCKET >/dev/null 2>&1
     return $?
 }
 
@@ -80,25 +79,24 @@ function aws::destroy_s3_bucket {
 
 #######################################
 # Create a DNS domains/records if required
-# TODO: implement switch for domain. https://github.com/shalb/cluster.dev/issues/2
 # Globals:
 #   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_cloud_region
+#   cluster_name
 #   cluster_cloud_domain
 #######################################
 function aws::init_route53 {
     DEBUG "Create a DNS domains/records if required"
     local default_domain="cluster.dev"
     local cluster_cloud_region=$1
-    local cluster_fullname=$2
+    local cluster_name=$2
     local cluster_cloud_domain=${3:-$default_domain}
 
     # Init terraform state for DNS
     cd "$PRJ_ROOT"/terraform/aws/route53/ || ERROR "Path not found"
     terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-        -backend-config="key=$cluster_name/terraform-dns.state" \
+        -backend-config="key=states/terraform-dns.state" \
         -backend-config="region=$cluster_cloud_region"
 
     # Create or update zone
@@ -112,13 +110,13 @@ function aws::init_route53 {
     # Execute terraform
     run_cmd "terraform plan -compact-warnings \
             -var='region=$cluster_cloud_region' \
-            -var='cluster_fullname=$cluster_fullname' \
+            -var='cluster_name=$cluster_name' \
             -var='cluster_domain=$cluster_cloud_domain' \
             -var='zone_delegation=$zone_delegation' \
             -input=false \
             -out=tfplan"
     run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
-    INFO "DNS Zone: $cluster_fullname.$cluster_cloud_domain has been created."
+    INFO "DNS Zone: $cluster_name.$cluster_cloud_domain has been created."
 
     cd - >/dev/null || ERROR "Path not found"
 }
@@ -127,23 +125,23 @@ function aws::init_route53 {
 # Destroy a DNS domains/records if required
 # Globals:
 #   S3_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_cloud_region
+#   cluster_name
 #   cluster_cloud_domain
 #######################################
 function aws::destroy_route53 {
     local default_domain="cluster.dev"
     local cluster_cloud_region=$1
-    local cluster_fullname=$2
+    local cluster_name=$2
     local cluster_cloud_domain=${3:-$default_domain}
 
     # Init terraform state for DNS
     cd "$PRJ_ROOT"/terraform/aws/route53/ || ERROR "Path not found"
     terraform init -backend-config="bucket=$S3_BACKEND_BUCKET" \
-        -backend-config="key=$cluster_name/terraform-dns.state" \
+        -backend-config="key=states/terraform-dns.state" \
         -backend-config="region=$cluster_cloud_region"
-        
+
     # Create or update zone
     if [ "$cluster_cloud_domain" = "$default_domain" ]; then
         INFO "The cluster domain is unset. DNS sub-zone would be created in $default_domain"
@@ -152,16 +150,16 @@ function aws::destroy_route53 {
         INFO "The cluster domain defined. DNS sub-zone would be created in $cluster_cloud_domain"
         zone_delegation=false
     fi
-    
+
     # Execute terraform
-    INFO "Destroying a DNS zone $cluster_fullname.$cluster_cloud_domain"
+    INFO "Destroying a DNS zone $cluster_name.$cluster_cloud_domain"
     run_cmd "terraform  destroy -auto-approve  \
             -var='region=$cluster_cloud_region' \
             -var='cluster_domain=$cluster_cloud_domain' \
             -var='zone_delegation=$zone_delegation' \
-            -var='cluster_fullname=$cluster_fullname'"
+            -var='cluster_name=$cluster_name'"
 
-    INFO "DNS Zone: $cluster_fullname.$cluster_cloud_domain has been deleted."
+    INFO "DNS Zone: $cluster_name.$cluster_cloud_domain has been deleted."
 
     cd - >/dev/null || ERROR "Path not found"
 }
@@ -176,6 +174,8 @@ function aws::destroy_route53 {
 #   cluster_cloud_vpc
 #   cluster_name
 #   cluster_cloud_region
+#   cluster_cloud_availability_zones
+#   cluster_cloud_vpc_cidr
 # Outputs:
 #   Writes progress status
 # KEY: vpc (cluster_cloud_vpc)
@@ -187,42 +187,32 @@ function aws::destroy_route53 {
 function aws::init_vpc {
     DEBUG "Create a VPC or use existing defined"
     local cluster_cloud_vpc=$1
-    local cluster_cloud_vpc_id=""
+    local cluster_name=$2
+    local cluster_cloud_region=$3
+    local availability_zones=$4
+    availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
+    local vpc_cidr=${5:-"10.8.0.0/18"} # set default VPC cidr
 
     cd "$PRJ_ROOT"/terraform/aws/vpc/ || ERROR "Path not found"
 
-    case ${cluster_cloud_vpc} in
-        default|"")
-            INFO "Use default VPC"
-            ;;
-        create)
-            # Create new VPC and get ID.
-            NOTICE "Creating new VPC"
+            # Create/Init VPC and get ID.
             INFO "VPC: Initializing Terraform configuration"
             run_cmd "terraform init \
                         -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                        -backend-config='key=$cluster_name/terraform-vpc.state' \
+                        -backend-config='key=states/terraform-vpc.state' \
                         -backend-config='region=$cluster_cloud_region'"
 
             run_cmd "terraform plan \
+                        -var='vpc_id=$cluster_cloud_vpc' \
+                        -var='cluster_name=$cluster_name' \
                         -var='region=$cluster_cloud_region' \
-                        -var='cluster_name=$CLUSTER_FULLNAME' \
+                        -var='availability_zones=$availability_zones' \
+                        -var='vpc_cidr=$vpc_cidr' \
                         -input=false \
                         -out=tfplan"
 
-            INFO "VPC: Creating infrastructure"
+            INFO "VPC: Apply infrastructure changes"
             run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
-            # Get VPC ID for later use.
-            cluster_cloud_vpc_id=$(terraform output vpc_id)
-            ;;
-        *)
-            # Use client VPC ID.
-            INFO "VPC ID in use: ${cluster_cloud_vpc}"
-            cluster_cloud_vpc_id=${cluster_cloud_vpc}
-            ;;
-    esac
-    # shellcheck disable=SC2034
-    FUNC_RESULT="${cluster_cloud_vpc_id}"
 
     cd - >/dev/null || ERROR "Path not found"
 }
@@ -236,36 +226,32 @@ function aws::init_vpc {
 #   cluster_cloud_vpc
 #   cluster_name
 #   cluster_cloud_region
+#   availability_zones
 # Outputs:
 #   Writes progress status
 #######################################
 function aws::destroy_vpc {
     local cluster_cloud_vpc=$1
+    local cluster_name=$2
+    local cluster_cloud_region=$3
+    local availability_zones=$4
+    availability_zones=$(to_tf_list "$availability_zones") # convert to terraform list format
+
     DEBUG "Destroy created VPC keep default unchanged"
     cd "$PRJ_ROOT"/terraform/aws/vpc/ || ERROR "Path not found"
 
-    case ${cluster_cloud_vpc} in
-        default|"")
-            INFO "Default VPC, no need to destroy."
-            ;;
-        create)
-            # Create new VPC and get ID.
             INFO "VPC: Initializing Terraform configuration"
             run_cmd "terraform init \
                         -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                        -backend-config='key=$cluster_name/terraform-vpc.state' \
+                        -backend-config='key=states/terraform-vpc.state' \
                         -backend-config='region=$cluster_cloud_region'"
 
             INFO "VPC: Destroying"
             run_cmd "terraform destroy -auto-approve -compact-warnings \
                         -var='region=$cluster_cloud_region' \
-                        -var='cluster_name=$CLUSTER_FULLNAME'"
-            ;;
-        *)
-            # Use client VPC ID.
-            INFO "Custom VPC, no need to destroy."
-            ;;
-    esac
+                        -var='availability_zones=$availability_zones' \
+                        -var='vpc_id=$cluster_cloud_vpc' \
+                        -var='cluster_name=$cluster_name'"
 
     cd - >/dev/null || ERROR "Path not found"
 }
@@ -291,41 +277,50 @@ aws s3 cp s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeco
 export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n\
 kubectl get ns \n
 "
-    SSH_ACCESS_MESSAGE="\
-Download your bastion ssh key using commands: \n\
-aws s3 cp s3://${CLUSTER_FULLNAME}/id_rsa_${CLUSTER_FULLNAME}.pem ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem && chmod 600 ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem \n\
-ssh -i ~/.ssh/id_rsa_${CLUSTER_FULLNAME}.pem ubuntu@$CLUSTER_FULLNAME.$cluster_cloud_domain \n
-"
-
     NOTICE "$KUBECONFIG_DOWNLOAD_MESSAGE"
-    NOTICE "$SSH_ACCESS_MESSAGE"
 
-    # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig|ssh)"
+    # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig)"
     echo "::set-output name=kubeconfig::${KUBECONFIG_DOWNLOAD_MESSAGE}"
-    echo "::set-output name=ssh::${SSH_ACCESS_MESSAGE}"
-
 }
 
-
-# Destroy all cluster.
+#######################################
+# Function to destroy all resources in cluster and cloud resources
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_cloud_vpc
+#   cluster_name
+#   cluster_cloud_region
+#   availability_zones
+# Outputs:
+#   Writes progress status
+#######################################
 function aws::destroy {
-        case $cluster_cloud_provisioner_type in
-        minikube)
-            DEBUG "Destroy: Provisioner: Minikube"
-            if aws::minikube::pull_kubeconfig_once; then
-                aws::destroy_addons "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
-            fi
-            aws::minikube::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain"
-            # TODO: Remove kubeconfig after successful cluster destroy
-            aws::destroy_vpc "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
-            aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
-            aws::destroy_s3_bucket "$cluster_cloud_region"
+
+    case $cluster_cloud_provisioner_type in
+    minikube)
+        DEBUG "Destroy: Provisioner: Minikube"
+        if aws::minikube::pull_kubeconfig_once; then
+            aws::destroy_addons "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
+        fi
+        aws::minikube::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$cluster_cloud_provisioner_instanceType"
+    ;;
+    # end of minikube
+    eks)
+        DEBUG "Destroy: Provisioner: EKS"
+        # Destroy Cluster
+        if aws::eks::pull_kubeconfig_once; then
+            aws::destroy_addons "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
+        fi
+        aws::eks::destroy_cluster "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
         ;;
-        # end of minikube
-        eks)
-            DEBUG "Destroy: Provisioner: EKS"
-            ;;
-        esac
+    esac
+
+    # Destroy all cluster components
+    aws::destroy_vpc "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones"
+    aws::destroy_route53 "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
+    aws::destroy_s3_bucket "$cluster_cloud_region"
 }
 
 #######################################
@@ -345,19 +340,22 @@ function aws::init_addons {
     local cluster_name=$1
     local cluster_cloud_region=$2
     local cluster_cloud_domain=$3
+    local config_path=${4:-"~/.kube/config"}
 
     cd "$PRJ_ROOT"/terraform/aws/addons/ || ERROR "Path not found"
 
     INFO "Kubernetes Addons: Init Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform-addons.state' \
+                -backend-config='key=states/terraform-addons.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
     run_cmd "terraform plan \
-                -var='aws_region=$cluster_cloud_region' \
+                -var='region=$cluster_cloud_region' \
                 -var='cluster_cloud_domain=$cluster_cloud_domain' \
-                -var='cluster_fullname=$CLUSTER_FULLNAME' \
+                -var='cluster_name=$CLUSTER_FULLNAME' \
+                -var='config_path=$config_path' \
+                -var='eks=true' \
                 -input=false \
                 -out=tfplan-addons"
 
@@ -399,13 +397,14 @@ function aws::destroy_addons {
     INFO "Kubernetes Addons: Init Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$S3_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform-addons.state' \
+                -backend-config='key=states/terraform-addons.state' \
                 -backend-config='region=$cluster_cloud_region'"
 
     INFO "Kubernetes Addons: Destroying"
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='cluster_cloud_domain=$cluster_cloud_domain' \
-                -var='aws_region=$cluster_cloud_region'" "" "false"
+                -var='cluster_name=$cluster_name' \
+                -var='region=$cluster_cloud_region'" "" "false"
 
     cd - >/dev/null || ERROR "Path not found"
 }

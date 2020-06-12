@@ -1,5 +1,7 @@
 # Backend
 
+Module to create a S3 bucket to store state files and other assets.
+
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
 

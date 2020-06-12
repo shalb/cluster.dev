@@ -25,6 +25,7 @@
       "argoproj",
       "autoscaling",
       "awscli",
+      "cidr",
       "clusterdev",
       "clustername",
       "config",
@@ -49,9 +50,11 @@
       "kibana",
       "kubeconfig",
       "kubectl",
+      "kubelet",
       "kubernetes",
       "kustomize",
       "letsencrypt",
+      "lifecycle",
       "linebreak",
       "maintf",
       "minikube",
@@ -101,6 +104,7 @@
       "voatsap",
       "wordpress",
       "workdir",
+      "xlarge",
       "yaml's"
     ]
 }

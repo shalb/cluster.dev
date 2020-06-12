@@ -10,7 +10,7 @@ CTO @ [SHALB.com](https://www.shalb.com)
 
 Love: urban tourism, tech, football, electronic music.
 
-17 years of work experience in infrastructure management.   
+17 years of work experience in infrastructure management.  
 
 <br />
 <br />
@@ -45,7 +45,7 @@ Team - 15 happy SHALB'ers.
 
 We have built more than **100 production** infrastructures in last **11 years**.
 
-Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc.. 
+Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc.
 
 <br />
 <br />
@@ -73,8 +73,8 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 
 	- Architectural Consulting
 	- Infrastructure as a Code (IaC)
-	- CI/CD 
-	- Monitoring 
+	- CI/CD
+	- Monitoring
 	- Support 24x7
 	- Databases
 	- Security
@@ -111,10 +111,10 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
 - Workload executors:
   Instances, Docker, Kubernetes, Lambda's, Knative/DAGs
 
-- Databases and Queues: 
+- Databases and Queues:
   MySQL, PostgreSQL, MongoDB, ElasticSearch, Redis, Kafka, Rabbit
 
-- CI/CD: 
+- CI/CD:
   Jenkins/-X, Gitlab, GitHub, CircleCI, Argo/CD, FluxCD
 
 - Observability:
@@ -241,7 +241,7 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
     - Kubernetes cluster
     - Core Addons
   - Objects **declarations** stored in git repo
-  - Objects **states** stored in: 
+  - Objects **states** stored in:
     - Terraform state files
     - Kuberentes objects and CRD's
     - ArgoCD projects and applications
@@ -312,7 +312,7 @@ Customers in Ukraine: Ajax, Hotline, Concert.ua, Health24, Horoshop, Payop etc..
      -  ClusterAPI (tbd)
      -  Kops (tbd)
 
-   - Deploy Pre-configured Addons: 
+   - Deploy Pre-configured Addons:
      - ExternalDNS
      - Cert-Manager
      - Nginx-Ingress
@@ -481,5 +481,5 @@ Installer at [DockerHub](https://hub.docker.com/r/shalb/cluster.dev-cli-installe
 <br />
 <br />
 
-## Thanks you! 
+## Thanks you!
 ## STAR us https://cluster.dev

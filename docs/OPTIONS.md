@@ -1,7 +1,22 @@
 # Options List for Cluster Manifests
 
+   * [Options List for Cluster Manifests](#options-list-for-cluster-manifests)
+      * [Manifest Example](#manifest-example)
+      * [Global Options](#global-options)
+      * [Cluster Provisioners](#cluster-provisioners)
+         * [Amazon AWS Provisioners](#amazon-aws-provisioners)
+            * [AWS Minikube](#aws-minikube)
+            * [AWS EKS](#aws-eks)
+         * [DigitalOcean Provisioners](#digitalocean-provisioners)
+            * [DigitalOcean Managed Kubernetes](#digitalocean-managed-kubernetes)
+      * [Cluster Addons](#cluster-addons)
+   * [GIT Provider Support](#git-provider-support)
+      * [GitHub Actions Workflow Configuration](#github-actions-workflow-configuration)
+      * [GitLab CI/CD Pipeline Configuration](#gitlab-cicd-pipeline-configuration)
 
 ## Manifest Example
+*More examples could be found in [/.cluster.dev](../.cluster.dev/) directory.*
+
 ```yaml
 # .cluster.dev/staging.yaml
 cluster:
@@ -21,7 +36,6 @@ cluster:
   apps:
     - /kubernetes/apps/samples
 ```
-More examples could be found in [/.cluster.dev](../.cluster.dev/) directory.
 
 ## Global Options
 
@@ -30,9 +44,11 @@ More examples could be found in [/.cluster.dev](../.cluster.dev/) directory.
 |[name](#name)  | + | string | any     | | Cluster name to be used across all resources |
 |[installed](#installed) | - | bool| `false`, `true`| `true`| Defines if cluster should be deployed or deleted, `false` would delete existing cluster |
 |[cloud.provider](#cloud.provider)| + | string | `aws`, `digitalocean` | | Define cloud provider |
-|[cloud.region](#cloud.region)| + | string|  ex: `us-east-1`, `do-fra-1` | | Define cloud provider region to create cluster |
+|[cloud.region](#cloud.region)| + | string |  ex: `us-east-1`, `do-fra-1` | | Define cloud provider region to create cluster |
+|[cloud.availability_zones](#cloud.availability_zones)| - | string | ex:  `us-east-1b`, `us-east-1c`| `cloud.region'a'`,`cloud.region'b'`| Networks and nodes location inside single region. Minimum two zones should be defined. Cluster nodes could be spread across different datacenters. Used for High Availability, multiple zones could lead to cost increase.|
 |[cloud.domain](#cloud.domain)| - | string| FQDN ex: `cluster.dev`, `example.org` | `cluster.dev` | To expose cluster resources the DNS zone is required. If set to `cluster.dev` the installer would create a zone `cluster-name-organization.cluster.dev` and point it to your cloud service NS'es. Alternate you can set your own zone which already exist in target cloud.|
-|[cloud.vpc](#cloud.vpc)| - |string|`default`,`create`,`vpc_id`| `default`| Virtual Private Cloud. `default` - use default one, `create` - installer would create a new VPC, `vpc_id` - define already existent.|
+|[cloud.vpc](#cloud.vpc)| - |string|`default`, `create`, `vpc_id`| `default`| Virtual Private Cloud. `default` - use default one, `create` - installer would create a new VPC, `vpc_id` - define already existent and in that case networks should be manually tagged with "cluster.dev/subnet_type" = "private|public" tags to become usable.|
+|[cloud.vpc_cidr](#cloud.vpc)| - |string| ex:`10.2.0.0/16`, `192.168.0.0/20`| `10.8.0.0/18`| The CIDR block for the VPC. Cluster pods would use ip's from that pool. If you need peering between VPC's their cidrs should be unique.|
 
 
 ## Cluster Provisioners
@@ -43,12 +59,38 @@ Required Environment variables should be passed to container:
 
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
-| [provisioner.type](#provisioner.type) | + | string | `minikube` | | Provisioner to deploy cluster with.|
+| [provisioner.type](#provisioner.type) | + | string | `minikube`, `eks` | | Provisioner to deploy cluster with.|
 
-#### AWS `minikube`
+#### AWS Minikube
+
+*example yaml file: [.cluster.dev/aws-eks.yaml](../.cluster.dev/aws-eks.yaml)*
+
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.instanceType](#provisioner.instanceType) | + | string | ex:`m5.xlarge` | `m5.large` | Single node Kubernetes cluster AWS EC2 instance type. |
+
+#### AWS EKS
+
+*example yaml file: [.cluster.dev/aws-minikube.yaml](../.cluster.dev/aws-minikube.yaml)*
+
+|  Key |  Required | Type  | Values &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Default  |Description &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  |
+|------|-----------|--------|---------|----------|----------------------------------------------|
+| [provisioner.version](#provisioner.version) | + | string | ex:`1.15`, `1.16` | `1.16` | Kubernetes version. |
+| [provisioner.additional_security_group_ids](#provisioner.node_group.additional_security_group_ids) | - | list | ex:`sg-233ba1, sg-2221bb` |  |  A list of additional security group ids to include in worker launch config. |
+| [provisioner.node_group.name](#provisioner.node_group.name) | + | string | ex:`spot-group`, `on-demand-group` | `node-group` | Name for Kubernetes workers node group name. |
+| [provisioner.node_group.type](#provisioner.node_group.type) | - | string | ex:`spot`, `on-demand` | `on-demand` | Type for Kubernetes workers node group. |
+| [provisioner.node_group.instance_type](#provisioner.node_group.instance_type) | - | string | ex:`t3.medium`, `c5.xlarge` | `m5.large` | Kubernetes workers node size. |
+| [provisioner.node_group.asg_desired_capacity](#provisioner.node_group.asg_desired_capacity) | - | integer | `1`..<=`asg_max_size` | `1` | Desired worker capacity in the autoscaling group. |
+| [provisioner.node_group.asg_max_size](#provisioner.node_group.asg_max_size) | - | integer | `1`..`cloud limit` | `3` | Maximum worker capacity in the autoscaling group. |
+| [provisioner.node_group.asg_min_size](#provisioner.node_group.asg_min_size) | - | integer | `1`..<=`asg_max_size` | `1` | Minimum worker capacity in the autoscaling group. |
+| [provisioner.node_group.root_volume_size](#provisioner.node_group.root_volume_size) | - | integer | `20`..`cloud limit` | `40` | root volume size in GB in workers instances. |
+| [provisioner.node_group.kubelet_extra_args](#provisioner.node_group.kubelet_extra_args) | - | string | `--node-labels=kubernetes.io/lifecycle=spot` |  |  This string is passed directly to kubelet if set. Useful for adding labels or taints. |
+| [provisioner.node_group.override_instance_types](#provisioner.node_group.override_instance_types) | - | list | ex:`m5.large, m5a.large, c5.xlarge` |  | A list of override instance types for mixed instances policy. |
+| [provisioner.node_group.spot_allocation_strategy](#provisioner.node_group.spot_allocation_strategy) | - | string | `lowest-price`, `capacity-optimized` | `lowest-price` |  If 'lowest-price', the Auto Scaling group launches instances using the Spot pools with the lowest price, and evenly allocates your instances across the number of Spot pools.  If 'capacity-optimized', the Auto Scaling group launches instances using Spot pools that are optimally chosen based on the available Spot capacity. |
+| [provisioner.node_group.spot_instance_pools](#provisioner.node_group.spot_instance_pools) | - | integer | `1`..`cloud limit` | `10` | Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. |
+| [provisioner.node_group.spot_max_price](#provisioner.node_group.spot_max_price) | - | float | "" | "" | Maximum price per unit hour that the user is willing to pay for the Spot instances. Default is the on-demand price. |
+| [provisioner.node_group.on_demand_base_capacity](#provisioner.node_group.on_demand_base_capacity) | - | integer | `0`..`100` | `0` | Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. |
+| [provisioner.node_group.on_demand_percentage_above_base_capacity](#provisioner.node_group.on_demand_percentage_above_base_capacity) | - | integer | `0`..`100` | `0` | Percentage split between on-demand and Spot instances above the base on-demand capacity. |
 
 
 ### DigitalOcean Provisioners
@@ -66,8 +108,11 @@ Next environment variables should be set:
 | [cloud.project](#cloud.project) | - | string | ex: `staging` | `default` | DigitalOcean Project name.|
 
 
-#### DigitalOcean `managed-kubernetes`
-|  Key |  Required | Type  | Values  | Default  | Description |
+#### DigitalOcean Managed Kubernetes
+
+*example yaml file: [.cluster.dev/digitalocean-k8s.yaml](../.cluster.dev/digitalocean-k8s.yaml)*
+
+|  Key |  Required | Type  | Values&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  | Default  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [version](#version) | - | string | ex: `1.16` | | DigitalOcean managed Kubernetes [version](https://www.digitalocean.com/docs/kubernetes/changelog/). |
 | [nodeCount](#nodeCount) | + | integer | `1-512`  | `1` | Number of Droplets instances in cluster. |
@@ -89,13 +134,15 @@ Next environment variables should be set:
 
 ## GitHub Actions Workflow Configuration
 
+*More examples could be found in [/.github/workflows](../.github/workflows) directory.*
+
 ```yaml
 # sample .github/workflows/aws.yaml
 on:
   push:
 # This how you can define after what changes it should be triggered
     paths:
-      - '.cluster.dev/aws-minikube.yaml' 
+      - '.cluster.dev/aws-minikube.yaml'
     branches:
       - master
 jobs:
@@ -120,9 +167,11 @@ jobs:
     - name: Get the Cluster Credentials
       run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
 ```
-More examples could be found in [/.github/workflows](../.github/workflows) directory.
 
 ## GitLab CI/CD Pipeline Configuration
+
+*Full example could be found in [/install/.gitlab-ci-sample.yml](../install/.gitlab-ci-sample.yml)*
+
 
 ```yaml
 # Example for .gitlab-ci.yml pipeline with cluster.dev job
@@ -160,5 +209,3 @@ cluster-dev:
     - docker run --name cluster.dev --workdir /gitlab/workspace --rm -e CI_PROJECT_PATH -e CI_PROJECT_DIR -e VERBOSE_LVL=DEBUG -e DIGITALOCEAN_TOKEN -e SPACES_ACCESS_KEY_ID -e SPACES_SECRET_ACCESS_KEY -v "${CI_PROJECT_DIR}:/gitlab/workspace" cluster.dev
   stage: cluster-dev
 ```
-Full example could be found in [/install/.gitlab-ci-sample.yml](../install/.gitlab-ci-sample.yml)
-
