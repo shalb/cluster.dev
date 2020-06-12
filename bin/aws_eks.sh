@@ -2,6 +2,7 @@
 
 # shellcheck source=logging.sh
 source "$PRJ_ROOT"/bin/logging.sh
+source "$PRJ_ROOT"/bin/common.sh
 
 #######################################
 # Deploy  cluster via Terraform
