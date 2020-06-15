@@ -86,7 +86,7 @@ jobs:
           docker push "$REGISTRY/$IMAGE:$VERSION-${GITHUB_SHA}"
 
       - name: Push image for other branch
-        if: github.event_name == 'push' && github.ref != 'refs/heads/master'
+        if: github.event_name == 'push' && github.ref != 'refs/heads/master' && !contains(github.ref, 'tag')
         run: |
           #Get branch name
           VERSION=${GITHUB_REF#refs/heads/}
