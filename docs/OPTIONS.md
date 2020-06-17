@@ -155,8 +155,8 @@ jobs:
     - name: Reconcile Clusters
       id: reconcile
 # Here you can define what release version of action to use,
-# example: shalb/cluster.dev@master, shalb/cluster.dev@v0.1.8,  shalb/cluster.dev@test-branch
-      uses: shalb/cluster.dev@v0.1.8
+# example: shalb/cluster.dev@master, shalb/cluster.dev@v0.1.10,  shalb/cluster.dev@test-branch
+      uses: shalb/cluster.dev@v0.1.10
 # Here the required environment variables should be set depending on Cloud Provider
       env:
         AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
