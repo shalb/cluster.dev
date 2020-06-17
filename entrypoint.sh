@@ -99,7 +99,7 @@ DEBUG "Manifests: $MANIFESTS"
             aws::eks::pull_kubeconfig
 
             # Deploy Kubernetes Addons via Terraform
-            aws::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME"
+            aws::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME" "true"
 
             ;;
         esac

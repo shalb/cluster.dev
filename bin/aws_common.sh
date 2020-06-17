@@ -332,6 +332,8 @@ function aws::destroy {
 #   cluster_name
 #   cluster_cloud_region
 #   cluster_cloud_domain
+#   config_path
+#   eks
 # Outputs:
 #   Writes progress status
 #######################################
@@ -341,6 +343,7 @@ function aws::init_addons {
     local cluster_cloud_region=$2
     local cluster_cloud_domain=$3
     local config_path=${4:-"~/.kube/config"}
+    local eks=${5:-"false"}
 
     cd "$PRJ_ROOT"/terraform/aws/addons/ || ERROR "Path not found"
 
@@ -355,7 +358,7 @@ function aws::init_addons {
                 -var='cluster_cloud_domain=$cluster_cloud_domain' \
                 -var='cluster_name=$CLUSTER_FULLNAME' \
                 -var='config_path=$config_path' \
-                -var='eks=true' \
+                -var='eks=$eks' \
                 -input=false \
                 -out=tfplan-addons"
 
