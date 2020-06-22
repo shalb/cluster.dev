@@ -2,7 +2,7 @@
 locals {
   cluster_issuer = "letsencrypt-prod"
   keycloak_namespace = "keycloak-operator"
-  keycloak_domain = "keyckoak.${var.cluster_name}.${var.cluster_cloud_domain}"
+  keycloak_domain = "keycloak.${var.cluster_name}.${var.cluster_cloud_domain}"
 }
 
 # Deploy Keycloak Operator
