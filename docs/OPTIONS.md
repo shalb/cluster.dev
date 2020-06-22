@@ -128,6 +128,8 @@ Next environment variables should be set:
 | [cert-manager](#cert-manager) | - | boolean | `true`,`false` | `true` | Deploy [cert-manager](https://cert-manager.io/). |
 | [external-dns](#external-dns) | - | boolean | `true`,`false` | `true` | Deploy [external-dns](https://github.com/kubernetes-sigs/external-dns/). |
 | [argo-cd](#argo-cd) | - | boolean | `true`,`false` | `true` | Deploy [argo-cd](https://argoproj.github.io/argo-cd/). |
+| [olm](#olm) | - | boolean | `true`,`false` | `true` | Deploy [Operator Lifecycle Manager](https://github.com/operator-framework/operator-lifecycle-manager). |
+| [keycloak](#keycloak) | - | boolean | `true`,`false` | `true` | Deploy [Keycloak Operator](https://github.com/keycloak/keycloak-operator). |
 
 
 # GIT Provider Support
