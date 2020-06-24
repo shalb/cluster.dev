@@ -5,6 +5,12 @@ locals {
   olm-namespace   = "olm"
 }
 
+resource "kubernetes_namespace" "olm_namespace" {
+  metadata {
+    name = ${local.olm-namespace}
+  }
+}
+
 resource "null_resource" "olm_install" {
   provisioner "local-exec" {
     # Deploy CRD's, wait them become available and deploy olm
@@ -17,6 +23,7 @@ resource "null_resource" "olm_install" {
   }
   depends_on = [
     null_resource.kubeconfig_update,
+    kubernetes_namespace.olm_namespace
   ]
 }
 
