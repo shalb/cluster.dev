@@ -12,7 +12,8 @@ resource "null_resource" "olm_install" {
   }
   provisioner "local-exec" {
     when    = destroy
-    command = "kubectl delete -f ${local.url}/${local.olm-version}/olm.yaml >/dev/null 2&>1"
+    # No sense to delete it
+    command = "exit 0"
   }
   depends_on = [
     null_resource.kubeconfig_update,
