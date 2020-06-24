@@ -7,7 +7,7 @@ locals {
 
 resource "kubernetes_namespace" "olm_namespace" {
   metadata {
-    name = ${local.olm-namespace}
+    name = local.olm-namespace
   }
 }
 
