@@ -40,5 +40,9 @@ resource "null_resource" "keycloak_install" {
     when    = destroy
     command = "kubectl delete -f -<<EOF\n${data.template_file.keycloak.rendered}\nEOF >/dev/null 2&>1"
   }
+  depends_on = [
+    null_resource.kubeconfig_update,
+    null_resource.keycloak-operator_install
+  ]
 }
 
