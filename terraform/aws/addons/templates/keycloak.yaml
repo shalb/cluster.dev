@@ -1,5 +1,5 @@
 apiVersion: keycloak.org/v1alpha1
-kind: Keycloak
+kind: keycloak
 metadata:
   name: keycloak
   namespace: ${namespace}
