@@ -8,7 +8,7 @@ locals {
 # Deploy Keycloak Operator
 resource "null_resource" "keycloak-operator_install" {
   provisioner "local-exec" {
-    command = "kubectl create -f templates/keycloak-operator.yaml"
+    command = "kubectl apply -f templates/keycloak-operator.yaml"
   }
   provisioner "local-exec" {
     when    = destroy
