@@ -5,16 +5,10 @@ locals {
   olm-namespace   = "olm"
 }
 
-resource "kubernetes_namespace" "olm_namespace" {
-  metadata {
-    name = local.olm-namespace
-  }
-}
-/*
 resource "null_resource" "olm_install" {
   provisioner "local-exec" {
     # Deploy CRD's, wait them become available and deploy olm
-    command = "kubectl apply -f ${local.url}/${local.olm-version}/crds.yaml && for resource in catalog-operator olm-operator packageserver; do kubectl rollout status -n ${local.olm-namespace} -w deploy $resource; done && kubectl apply -f ${local.url}/${local.olm-version}/olm.yaml"
+    command = "kubectl apply -f ${local.url}/${local.olm-version}/crds.yaml && kubectl apply -f ${local.url}/${local.olm-version}/olm.yaml && for resource in catalog-operator olm-operator packageserver; do kubectl rollout status -n ${local.olm-namespace} -w deploy $resource; done"
   }
   provisioner "local-exec" {
     when    = destroy
@@ -26,4 +20,3 @@ resource "null_resource" "olm_install" {
     kubernetes_namespace.olm_namespace
   ]
 }
-*/
