@@ -10,7 +10,7 @@ resource "kubernetes_namespace" "olm_namespace" {
     name = local.olm-namespace
   }
 }
-
+/*
 resource "null_resource" "olm_install" {
   provisioner "local-exec" {
     # Deploy CRD's, wait them become available and deploy olm
@@ -26,4 +26,4 @@ resource "null_resource" "olm_install" {
     kubernetes_namespace.olm_namespace
   ]
 }
-
+*/

@@ -1,3 +1,4 @@
+/*
 # Deploy keycloak-operator and keycloak itself
 locals {
   cluster_issuer = "letsencrypt-prod"
@@ -41,3 +42,4 @@ resource "null_resource" "keycloak_install" {
     command = "kubectl delete -f -<<EOF\n${data.template_file.keycloak.rendered}\nEOF >/dev/null 2&>1"
   }
 }
+*/
