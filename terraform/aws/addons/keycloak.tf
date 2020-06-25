@@ -8,7 +8,7 @@ locals {
 # Deploy Keycloak Operator
 resource "null_resource" "keycloak-operator_install" {
   provisioner "local-exec" {
-    command = "kubectl apply -f templates/keycloak-operator.yaml"
+    command = "kubectl apply -f templates/keycloak-operator.yaml && kubectl -n keycloak-operator wait --for condition=established --timeout=60s crd/keycloaks.keycloak.org"
   }
   provisioner "local-exec" {
     when    = destroy
@@ -31,7 +31,6 @@ data "template_file" "keycloak" {
 }
 
 resource "null_resource" "keycloak_install" {
-  depends_on = [null_resource.keycloak-operator_install]
 
   provisioner "local-exec" {
     command = "kubectl apply -f -<<EOF\n${data.template_file.keycloak.rendered}\nEOF"
