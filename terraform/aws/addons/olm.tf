@@ -17,6 +17,5 @@ resource "null_resource" "olm_install" {
   }
   depends_on = [
     null_resource.kubeconfig_update,
-    kubernetes_namespace.olm_namespace
   ]
 }
