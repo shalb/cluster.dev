@@ -13,15 +13,13 @@ import logging
 import os
 import shutil
 import sys
-from configparser import ConfigParser
-from configparser import NoOptionError
 from contextlib import suppress
 from pathlib import Path
 from typing import Dict
-from typing import Literal
 from typing import TYPE_CHECKING
 from typing import Union
 
+import aws_config
 import boto3
 import github
 import validate
@@ -29,9 +27,7 @@ import wget
 from git import GitCommandError
 from git import InvalidGitRepositoryError
 from git import Repo
-from PyInquirer import prompt
-from PyInquirer import style_from_dict
-from PyInquirer import Token
+from validate import ask_user
 
 try:
     from typeguard import typechecked  # noqa: WPS433
@@ -69,159 +65,6 @@ def dir_is_git_repo(path: str) -> bool:
         return False
 
     return True
-
-
-@typechecked
-def ask_user(question_name: str, choices=None):
-    """Draw menu for user interactions.
-
-    Args:
-        question_name: (str) Name from `questions` that will processed.
-        choices: Used when choose params become know during execution.
-
-    Returns:
-        Depends on entered `question_name`:
-            create_repo: (bool) True or False.
-            git_provider (string): Provider name. See `GIT_PROVIDERS` for variants.
-            repo_name (string,int): Repo name. Have built-in validator,
-            so user can't enter invalid repository name.
-    """
-    prompt_style = style_from_dict({
-        Token.Separator: '#6C6C6C',
-        Token.QuestionMark: '#FF9D00 bold',
-        # Token.Selected: '',  # default
-        Token.Selected: '#5F819D',
-        Token.Pointer: '#FF9D00 bold',
-        Token.Instruction: '',  # default
-        Token.Answer: '#5F819D bold',
-        Token.Question: '',
-    })
-
-    # Interactive prompt questions
-    # See https://github.com/CITGuru/PyInquirer#examples for usage variants
-    #
-    # 'NAME' should be same.
-    # Example:
-    #    `'NAME': {
-    #        'name': 'NAME'
-    #    }`
-    #
-    questions = {
-        'create_repo': {
-            'type': 'list',
-            'name': 'create_repo',
-            'message': 'Create repo for you?',
-            'choices': [
-                {
-                    'name': 'No, I create or clone repo and then run tool there',
-                    'value': False,
-                }, {
-                    'name': 'Yes',
-                    'value': True,
-                    'disabled': 'Unavailable at this time',
-                },
-            ],
-        },
-        'choose_git_provider': {
-            'type': 'list',
-            'name': 'choose_git_provider',
-            'message': 'Select your Git Provider',
-            'choices': GIT_PROVIDERS,
-        },
-        'repo_name': {
-            'type': 'input',
-            'name': 'repo_name',
-            'message': 'Please enter the name of your infrastructure repository',
-            'default': 'infrastructure',
-            'validate': validate.RepoName,
-        },
-        'cleanup_repo': {
-            'type': 'confirm',
-            'name': 'cleanup_repo',
-            'message': 'This is not empty repo. Delete all existing configurations?',
-            'default': False,
-        },
-        'publish_repo_to_git_provider': {
-            'type': 'confirm',
-            'name': 'publish_repo_to_git_provider',
-            'message': 'Your repo not published to Git Provider yet. Publish it now?',
-            'default': True,
-        },
-        'git_user_name': {
-            'type': 'input',
-            'name': 'git_user_name',
-            'message': 'Please enter your git username',
-            'validate': validate.UserName,
-        },
-        'git_password': {
-            'type': 'password',
-            'name': 'git_password',
-            'message': 'Please enter your git password',
-        },
-        'choose_cloud': {
-            'type': 'list',
-            'name': 'choose_cloud',
-            'message': 'Select your Cloud',
-            'choices': CLOUDS,
-        },
-        'choose_cloud_provider': {
-            'type': 'list',
-            'name': 'choose_cloud_provider',
-            'message': 'Select your Cloud Provider',
-            'choices': choices,
-        },
-        'cloud_login': {  # TODO: Add validation (and for cli arg)
-            'type': 'input',
-            'name': 'cloud_login',
-            'message': 'Please enter your Cloud programatic key',
-        },
-        'cloud_password': {  # TODO: Add validation (and for cli arg)
-            'type': 'password',
-            'name': 'cloud_password',
-            'message': 'Please enter your Cloud programatic secret',
-        },
-        'cloud_token': {
-            'type': 'password',
-            'name': 'cloud_token',
-            'message': 'Please enter your Cloud token',
-        },
-        'choose_config_section': {
-            'type': 'list',
-            'name': 'choose_config_section',
-            'message': 'Select credentials section that will be used to deploy cluster.dev',
-            'choices': choices,
-        },
-        'aws_session_token': {
-            'type': 'password',
-            'name': 'aws_session_token',
-            'message': 'Please enter your AWS Session token',
-        },
-        'aws_cloud_user': {
-            'type': 'input',
-            'name': 'aws_cloud_user',
-            'message': 'Please enter username for cluster.dev user',
-            'validate': validate.AWSUserName,
-            'default': 'cluster.dev',
-        },
-        'aws_secret_key': {
-            'type': 'password',
-            'name': 'aws_secret_key',
-            'message': f'Please enter AWS Secret Key for {choices}',
-        },
-        'github_token': {
-            'type': 'password',
-            'name': 'github_token',
-            'message': 'Please enter GITHUB_TOKEN. '
-            + 'It can be generated at https://github.com/settings/tokens',
-        },
-    }
-
-    try:
-        answer = prompt(questions[question_name], style=prompt_style)[question_name]
-    except KeyError:
-        sys.exit(f"Sorry, it's program error. Can't found key '{question_name}'")
-
-    return answer
 
 
 @typechecked
@@ -412,7 +255,7 @@ def choose_git_provider(repo: Repo) -> str:
         git_provider string.
     """
     if not repo.remotes:  # Remotes not exist in locally init repos
-        return ask_user('choose_git_provider')
+        return ask_user('choose_git_provider', GIT_PROVIDERS)
 
     git = repo.git
     remote = git.remote('-v')
@@ -427,126 +270,6 @@ def choose_git_provider(repo: Repo) -> str:
         git_provider = ask_user('choose_git_provider')
 
     return git_provider
-
-
-@typechecked
-def get_data_from_aws_config(login: str, password: str) -> Union[ConfigParser, Literal[False]]:
-    """Get and parse config from file.
-
-    Args:
-        login: (str) CLI argument provided by user.
-        password: (str) CLI argument provided by user.
-
-    Returns:
-        config configparser.ConfigParser|False: config, if exists. Otherwise - False.
-    """
-    # Skip if CLI args provided
-    if login and password:
-        return False
-
-    path = f'{os.environ["HOME"]}/.aws/credentials'
-    try:  # Required mount: $HOME/.aws/:/home/cluster.dev/.aws/:ro
-        os.path.isfile(path)
-    except FileNotFoundError:
-        return False
-
-    config = ConfigParser()
-    config.read(path)
-
-    return config
-
-
-@typechecked
-def get_aws_config_section(config: Union[ConfigParser, Literal[False]]) -> str:
-    """Ask user which section in config should be use for extracting credentials.
-
-    Args:
-        config (configparser.ConfigParser|False): INI config.
-
-    Returns:
-        str: section name, if exists. Otherwise - empty string.
-    """
-    # Skip if CLI args provided or configs doesn't exist
-    if not config or not config.sections():
-        return ''
-
-    if len(config.sections()) == 1:
-        section = config.sections()[0]
-        logger.info(f'Use AWS creds from file, section "{section}"')
-    else:
-        # User can have multiply creds, ask him what should be used
-        # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#configuring-credentials
-        section = ask_user('choose_config_section', choices=config.sections())
-
-    return section
-
-
-@typechecked
-def get_aws_login(config: Union[ConfigParser, Literal[False]], config_section: str) -> str:
-    """Get cloud programatic login from settings or from user input.
-
-    Args:
-        config (configparser.ConfigParser|False): INI config.
-        config_section: (str) INI config section.
-
-    Returns:
-        cloud_login string.
-    """
-    if not config or not config_section:
-        return ask_user('cloud_login')
-
-    return config.get(config_section, 'aws_access_key_id')
-
-
-@typechecked
-def get_aws_password(config: Union[ConfigParser, Literal[False]], config_section: str) -> str:
-    """Get cloud programatic password from settings or from user input.
-
-    Args:
-        config: (configparser.ConfigParser|False) INI config.
-        config_section: (str) INI config section.
-
-    Returns:
-        cloud_password string.
-    """
-    if not config:
-        return ask_user('cloud_password')
-
-    return config.get(config_section, 'aws_secret_access_key')
-
-
-@typechecked
-def get_aws_session(
-    config: Union[ConfigParser, Literal[False]],
-    config_section: str,
-    mfa_disabled: str = '',
-) -> str:
-    """Get cloud session from settings or from user input.
-
-    Args:
-        config: (configparser.ConfigParser|False) INI config.
-        config_section: (str) INI config section.
-        mfa_disabled: (str) CLI argument provided by user.
-            If not provided - set to empty string.
-
-    Returns:
-        session_token string.
-    """
-    # If login provided but session - not, user may not have MFA enabled
-    if mfa_disabled:
-        logger.info('SESSION_TOKEN not found, try without MFA')
-        return ''
-
-    if not config:
-        return ask_user('aws_session_token')
-
-    try:
-        session_token = config.get(config_section, 'aws_session_token')
-    except NoOptionError:
-        logger.info('SESSION_TOKEN not found, try without MFA')
-        return ''
-
-    return session_token
 
 
 @typechecked
@@ -909,16 +632,19 @@ def main() -> None:
     user = cli.git_user_name or get_git_username(git)
     password = cli.git_password or get_git_password()
 
-    cloud = cli.cloud or ask_user('choose_cloud')
+    cloud = cli.cloud or ask_user('choose_cloud', CLOUDS)
     cloud_user = cli.cloud_user or ask_user('aws_cloud_user')
 
     if cloud == 'AWS':
-        config = get_data_from_aws_config(cli.cloud_login, cli.cloud_password)
-        config_section = get_aws_config_section(config)
+        config = aws_config.parse_file(cli.cloud_login, cli.cloud_password)
+        config_section = aws_config.choose_section(config)
 
-        access_key = cli.cloud_login or get_aws_login(config, config_section)
-        secret_key = cli.cloud_password or get_aws_password(config, config_section)
-        session_token = cli.cloud_token or get_aws_session(config, config_section, cli.cloud_login)
+        access_key = cli.cloud_login or aws_config.get_login(config, config_section)
+        secret_key = cli.cloud_password or aws_config.get_password(config, config_section)
+        session_token = (
+            cli.cloud_token
+            or aws_config.get_session(config, config_section, cli.cloud_login)
+        )
 
         release_version = cli.release_version or github.get_last_release()
 
