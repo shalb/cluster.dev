@@ -31,10 +31,17 @@ from git import Repo
 from PyInquirer import prompt
 from PyInquirer import style_from_dict
 from PyInquirer import Token
-from typeguard import typechecked
+
+try:
+    from typeguard import typechecked  # noqa: WPS433
+except ModuleNotFoundError:
+    def typechecked(func=None):  # noqa: WPS440
+        """Skip runtime type checking on the function arguments."""
+        return func
 
 if TYPE_CHECKING or typechecked:
     from git.cmd import Git  # noqa: WPS433
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

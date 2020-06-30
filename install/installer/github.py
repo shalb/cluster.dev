@@ -9,7 +9,13 @@ from typing import Union
 from agithub.GitHub import GitHub
 from nacl import encoding
 from nacl import public
-from typeguard import typechecked
+
+try:
+    from typeguard import typechecked  # noqa: WPS433
+except ModuleNotFoundError:
+    def typechecked(func=None):  # noqa: WPS440
+        """Skip runtime type checking on the function arguments."""
+        return func
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

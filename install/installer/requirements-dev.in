@@ -1,0 +1,1 @@
+typeguard==2.7.1 # dev dependency, function type-checker. Maybe good idea use http://mypy-lang.org/ than CPython

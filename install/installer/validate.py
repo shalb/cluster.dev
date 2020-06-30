@@ -5,7 +5,13 @@ import sys
 import regex
 from PyInquirer import ValidationError
 from PyInquirer import Validator
-from typeguard import typechecked
+
+try:
+    from typeguard import typechecked  # noqa: WPS433
+except ModuleNotFoundError:
+    def typechecked(func=None):  # noqa: WPS440
+        """Skip runtime type checking on the function arguments."""
+        return func
 
 
 @typechecked  # pylint: disable=too-few-public-methods

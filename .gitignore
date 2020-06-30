@@ -32,3 +32,4 @@ override.tf.json
 tests/config.sh
 
 .mypy_cache/
+.vscode/.ropeproject/config.py
