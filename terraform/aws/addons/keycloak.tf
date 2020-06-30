@@ -31,7 +31,6 @@ data "template_file" "keycloak" {
 }
 
 resource "null_resource" "keycloak_install" {
-
   provisioner "local-exec" {
     command = "kubectl apply -f -<<EOF\n${data.template_file.keycloak.rendered}\nEOF"
   }
@@ -45,3 +44,14 @@ resource "null_resource" "keycloak_install" {
   ]
 }
 
+# Get credentials from generated config map
+data "kubernetes_secret" "keycloak_credentials" {
+  metadata {
+    name = "credential-keycloak"
+    namespace = local.keycloak_namespace
+  }
+  depends_on = [
+    null_resource.keycloak_install,
+    null_resource.keycloak-operator_install
+  ]
+}
