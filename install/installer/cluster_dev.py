@@ -703,6 +703,9 @@ def get_git_token(provider: str) -> str:
         else:
             git_token = ask_user('github_token')
 
+    if not git_token:
+        sys.exit(f'ERROR: Provider "{provider}" not exist in function "get_git_token"')
+
     return git_token
 
 
