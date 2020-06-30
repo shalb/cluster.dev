@@ -37,6 +37,6 @@ data "terraform_remote_state" "dns" {
     region = var.region
   }
   defaults = {
-    zone_id                 = ""
+    zone_id = ""
   }
 }

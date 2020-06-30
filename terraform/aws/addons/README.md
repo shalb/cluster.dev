@@ -27,5 +27,7 @@ Keycloak Operator and Keycloak - using kubectl
 | argocd\_pass |  |
 | argocd\_url |  |
 | argocd\_user |  |
+| keycloak\_credentials |  |
+| keycloak\_url |  |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

@@ -17,4 +17,3 @@ output "keycloak_url" {
 output "keycloak_credentials" {
   value = data.kubernetes_secret.keycloak_credentials.data
 }
-

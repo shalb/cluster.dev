@@ -1,8 +1,8 @@
 # Deploy keycloak-operator and keycloak itself
 locals {
-  cluster_issuer = "letsencrypt-prod"
+  cluster_issuer     = "letsencrypt-prod"
   keycloak_namespace = "keycloak-operator"
-  keycloak_domain = "keycloak.${var.cluster_name}.${var.cluster_cloud_domain}"
+  keycloak_domain    = "keycloak.${var.cluster_name}.${var.cluster_cloud_domain}"
 }
 
 # Deploy Keycloak Operator
@@ -24,9 +24,9 @@ resource "null_resource" "keycloak-operator_install" {
 data "template_file" "keycloak" {
   template = file("templates/keycloak.yaml")
   vars = {
-    domain = local.keycloak_domain
+    domain         = local.keycloak_domain
     cluster-issuer = local.cluster_issuer
-    namespace = local.keycloak_namespace
+    namespace      = local.keycloak_namespace
   }
 }
 
@@ -47,7 +47,7 @@ resource "null_resource" "keycloak_install" {
 # Get credentials from generated config map
 data "kubernetes_secret" "keycloak_credentials" {
   metadata {
-    name = "credential-keycloak"
+    name      = "credential-keycloak"
     namespace = local.keycloak_namespace
   }
   depends_on = [
