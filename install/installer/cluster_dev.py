@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 """cluster.dev installation script.
 
 Example usage:
@@ -18,6 +18,7 @@ from configparser import NoOptionError
 from contextlib import suppress
 from pathlib import Path
 from typing import Dict
+from typing import Literal
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -429,7 +430,7 @@ def choose_git_provider(repo: Repo) -> str:
 
 
 @typechecked
-def get_data_from_aws_config(login: str, password: str) -> {bool, ConfigParser}:
+def get_data_from_aws_config(login: str, password: str) -> Union[ConfigParser, Literal[False]]:
     """Get and parse config from file.
 
     Args:
@@ -456,7 +457,7 @@ def get_data_from_aws_config(login: str, password: str) -> {bool, ConfigParser}:
 
 
 @typechecked
-def get_aws_config_section(config: {ConfigParser, bool}) -> str:
+def get_aws_config_section(config: Union[ConfigParser, Literal[False]]) -> str:
     """Ask user which section in config should be use for extracting credentials.
 
     Args:
@@ -481,7 +482,7 @@ def get_aws_config_section(config: {ConfigParser, bool}) -> str:
 
 
 @typechecked
-def get_aws_login(config: {ConfigParser, bool}, config_section: str) -> str:
+def get_aws_login(config: Union[ConfigParser, Literal[False]], config_section: str) -> str:
     """Get cloud programatic login from settings or from user input.
 
     Args:
@@ -498,7 +499,7 @@ def get_aws_login(config: {ConfigParser, bool}, config_section: str) -> str:
 
 
 @typechecked
-def get_aws_password(config: {ConfigParser, bool}, config_section: str) -> str:
+def get_aws_password(config: Union[ConfigParser, Literal[False]], config_section: str) -> str:
     """Get cloud programatic password from settings or from user input.
 
     Args:
@@ -516,7 +517,7 @@ def get_aws_password(config: {ConfigParser, bool}, config_section: str) -> str:
 
 @typechecked
 def get_aws_session(
-    config: {ConfigParser, bool},
+    config: Union[ConfigParser, Literal[False]],
     config_section: str,
     mfa_disabled: str = '',
 ) -> str:
