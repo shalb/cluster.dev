@@ -6,6 +6,8 @@ ExternalDNS - using Helm chart
 CertManager - using kubectl
 Nginx-Ingress - using kubectl
 ArgoCD - using Helm chart
+Operator Lifecycle Manager - with default bash script
+Keycloak Operator and Keycloak - using kubectl
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
@@ -25,5 +27,7 @@ ArgoCD - using Helm chart
 | argocd\_pass |  |
 | argocd\_url |  |
 | argocd\_user |  |
+| keycloak\_credentials |  |
+| keycloak\_url |  |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

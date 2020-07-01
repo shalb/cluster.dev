@@ -15,7 +15,7 @@ module "vpc" {
   # in case when vpc cidr block provided by user, we split it to blocks for each subnet
   # which is relative to number of availability zones. See details on cidrsubnet in terraform docs
   # https://www.terraform.io/docs/configuration/functions/cidrsubnet.html
-  public_subnets       = [for subnet_num, az in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, subnet_num)]
+  public_subnets = [for subnet_num, az in var.availability_zones : cidrsubnet(var.vpc_cidr, 4, subnet_num)]
   public_subnet_tags = {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
     "kubernetes.io/role/elb"                    = "1"
