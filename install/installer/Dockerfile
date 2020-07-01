@@ -27,6 +27,7 @@ RUN if [ "$ENV" != 'prod' ]; then \
 
 COPY entrypoint.sh \
     cluster_dev.py \
+    aws.py \
     aws_config.py \
     github.py \
     validate.py \

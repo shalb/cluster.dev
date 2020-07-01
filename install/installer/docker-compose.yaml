@@ -18,6 +18,7 @@ services:
 
     volumes:
       - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
+      - ./aws.py:/app/aws.py:ro # Reload code in fly
       - ./aws_config.py:/app/aws_config.py:ro # Reload code in fly
       - ./github.py:/app/github.py:ro # Reload code in fly
       - ./validate.py:/app/validate.py:ro # Reload code in fly

@@ -15,12 +15,10 @@ import shutil
 import sys
 from contextlib import suppress
 from pathlib import Path
-from typing import Dict
 from typing import TYPE_CHECKING
-from typing import Union
 
+import aws
 import aws_config
-import boto3
 import github
 import validate
 import wget
@@ -300,146 +298,6 @@ def choose_git_provider(repo: Repo) -> str:
         )
 
     return git_provider
-
-
-@typechecked
-def create_aws_user_and_permissions(
-    user: str,
-    login: str,
-    password: str,
-    session: str,
-    release: str,
-) -> Dict[str, Union[str, bool]]:
-    """Create cloud user and attach needed permissions.
-
-    Args:
-        user: (str) Cluster.dev user name.
-        login: (str) Cloud programatic login.
-        password: (str) Cloud programatic password.
-        session: (str) Cloud session token.
-        release: (str) cluster.dev release tag.
-
-    Returns:
-        Dict[str, Union[str, bool]]:
-        `{'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}`.
-    """
-    iam = boto3.client(
-        'iam',
-        aws_access_key_id=login,
-        aws_secret_access_key=password,
-        aws_session_token=session,
-    )
-    keys_created = False
-    link = (
-        f'https://github.com/shalb/cluster.dev/blob/{release}'
-        + '/install/installer_aws_install_req_permissions.json'
-    )
-
-    # If specified user exist, --cloud-programatic-login and
-    # --cloud-programatic-password will be try use as it
-
-    # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-    try:  # Required "iam:ListUsers"???, "iam:ListAccessKeys"
-        response = iam.list_access_keys(UserName=user)
-    except iam.exceptions.NoSuchEntityException:  # User not yet exist
-        logger.debug(f'User "{user}" does not exist yet')
-    except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
-    else:
-        try:
-            if response['AccessKeyMetadata'][0]['AccessKeyId'] == login:
-                logger.info(f'Specified creds belong to exist user "{user}", use it')
-
-                return {
-                    'key': login,
-                    'secret': password,
-                    'created': keys_created,
-                }
-        except IndexError:  # User have no programattic access keys
-            # Required "iam:CreateAccessKey"
-            response = iam.create_access_key(UserName=user)
-
-            return {
-                'key': response['AccessKey']['AccessKeyId'],
-                'secret': response['AccessKey']['SecretAccessKey'],
-                'created': True,
-            }
-
-    # Create/get policy_arn for user
-    with open('aws_policy.json', 'r') as policy_file:
-        policy = json.dumps(json.load(policy_file))
-
-    try:  # Required "iam:CreatePolicy"
-        response = iam.create_policy(
-            PolicyName='cluster.dev-policy',
-            Path='/cluster.dev/',
-            PolicyDocument=policy,
-            Description='Policy for https://cluster.dev propertly work. '
-            + 'Created by CLI instalator',
-        )
-    except iam.exceptions.EntityAlreadyExistsException:  # Policy already exist
-        try:  # Required "iam:ListPolicies"
-            response = iam.list_policies(
-                Scope='Local',
-                PathPrefix='/cluster.dev/',
-            )
-        except iam.exceptions.ClientError as error:  # noqa: WPS440
-            sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
-        else:
-            policy_arn = response['Policies'][0]['Arn']
-
-    except iam.exceptions.ClientError as error:  # noqa: WPS440
-        sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
-    else:
-        policy_arn = response['Policy']['Arn']
-        logger.info('Policy created')
-
-    try:  # Required "iam:GetUser"
-        # When cluster.dev user created, but provided creds for another user
-        iam.get_user(UserName=user)
-    except iam.exceptions.NoSuchEntityException:
-        # Create user and access keys
-        try:  # Required "iam:CreateUser"
-            iam.create_user(
-                Path='/cluster.dev/',
-                UserName=user,
-            )
-        except iam.exceptions.ClientError as error:  # noqa: WPS440
-            sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
-
-        try:  # Required "iam:AttachUserPolicy"
-            iam.attach_user_policy(
-                UserName=user,
-                PolicyArn=policy_arn,
-            )
-        except iam.exceptions.ClientError as error:  # noqa: WPS440
-            sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
-        else:
-            logger.info('User created')
-
-            response = iam.create_access_key(UserName=user)
-            key = response['AccessKey']['AccessKeyId']
-            secret = response['AccessKey']['SecretAccessKey']
-            keys_created = True
-
-    except iam.exceptions.ClientError as error:  # noqa: WPS440
-        sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
-
-    else:
-        response = iam.list_access_keys(UserName=user)
-        key = response['AccessKeyMetadata'][0]['AccessKeyId']
-
-        secret = ask_user(
-            name='aws_secret_key',
-            type='password',
-            message=f"Please enter AWS Secret Key for:\n  User: '{user}'\n  Public Key: '{key}'\n",
-        )
-
-    return {
-        'key': key,
-        'secret': secret,
-        'created': keys_created,
-    }
 
 
 @typechecked
@@ -732,7 +590,7 @@ def main() -> None:
 
         release_version = cli.release_version or github.get_last_release()
 
-        creds = create_aws_user_and_permissions(
+        creds = aws.create_user_and_permissions(
             cloud_user, access_key, secret_key, session_token, release_version,
         )
         if creds['created']:
