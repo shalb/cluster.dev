@@ -761,8 +761,8 @@ def main() -> None:
 #######################################################################
 #                         G L O B A L   A R G S                       #
 #######################################################################
-GIT_PROVIDERS = ('Github')  # , 'Bitbucket', 'Gitlab']
-CLOUDS = ('AWS', 'DigitalOcean')
+GIT_PROVIDERS = ('Github')  # , 'Bitbucket', 'Gitlab')
+CLOUDS = ('AWS')  # , 'DigitalOcean')
 
 CLOUD_PROVIDERS = {  # noqa: WPS407
     'AWS': (
