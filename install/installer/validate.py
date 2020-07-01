@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """User input validators."""
 import sys
+from typing import Any
 
 import regex
 from PyInquirer import prompt
@@ -146,19 +147,11 @@ class AWSUserName(Validator):  # pylint: disable=too-few-public-methods
 
 
 @typechecked
-def ask_user(question_name: str, choices=None):
-    """Draw menu for user interactions.
+def ask_user(**kwargs: Any) -> str:
+    """Draw menu for interactions with user.
 
-    Args:
-        question_name: (str) Name from `questions` that will processed.
-        choices: Used when choose params become know during execution.
-
-    Returns:
-        Depends on entered `question_name`:
-            create_repo: (bool) True or False.
-            git_provider (string): Provider name. See `GIT_PROVIDERS` for variants.
-            repo_name (string,int): Repo name. Have built-in validator,
-            so user can't enter invalid repository name.
+    See https://github.com/CITGuru/PyInquirer#examples for argument names and it types.
+    If you not specify 'name' field - it will be get from 'message'.
     """
     prompt_style = style_from_dict({
         Token.Separator: '#6C6C6C',
@@ -171,128 +164,17 @@ def ask_user(question_name: str, choices=None):
         Token.Question: '',
     })
 
-    # Interactive prompt questions
-    # See https://github.com/CITGuru/PyInquirer#examples for usage variants
-    #
-    # 'NAME' should be same.
-    # Example:
-    #    `'NAME': {
-    #        'name': 'NAME'
-    #    }`
-    #
-    questions = {
-        'create_repo': {
-            'type': 'list',
-            'name': 'create_repo',
-            'message': 'Create repo for you?',
-            'choices': [
-                {
-                    'name': 'No, I create or clone repo and then run tool there',
-                    'value': False,
-                }, {
-                    'name': 'Yes',
-                    'value': True,
-                    'disabled': 'Unavailable at this time',
-                },
-            ],
-        },
-        'choose_git_provider': {
-            'type': 'list',
-            'name': 'choose_git_provider',
-            'message': 'Select your Git Provider',
-            'choices': choices,
-        },
-        'repo_name': {
-            'type': 'input',
-            'name': 'repo_name',
-            'message': 'Please enter the name of your infrastructure repository',
-            'default': 'infrastructure',
-            'validate': RepoName,
-        },
-        'cleanup_repo': {
-            'type': 'confirm',
-            'name': 'cleanup_repo',
-            'message': 'This is not empty repo. Delete all existing configurations?',
-            'default': False,
-        },
-        'publish_repo_to_git_provider': {
-            'type': 'confirm',
-            'name': 'publish_repo_to_git_provider',
-            'message': 'Your repo not published to Git Provider yet. Publish it now?',
-            'default': True,
-        },
-        'git_user_name': {
-            'type': 'input',
-            'name': 'git_user_name',
-            'message': 'Please enter your git username',
-            'validate': UserName,
-        },
-        'git_password': {
-            'type': 'password',
-            'name': 'git_password',
-            'message': 'Please enter your git password',
-        },
-        'choose_cloud': {
-            'type': 'list',
-            'name': 'choose_cloud',
-            'message': 'Select your Cloud',
-            'choices': choices,
-        },
-        'choose_cloud_provider': {
-            'type': 'list',
-            'name': 'choose_cloud_provider',
-            'message': 'Select your Cloud Provider',
-            'choices': choices,
-        },
-        'cloud_login': {  # TODO: Add validation (and for cli arg)
-            'type': 'input',
-            'name': 'cloud_login',
-            'message': 'Please enter your Cloud programatic key',
-        },
-        'cloud_password': {  # TODO: Add validation (and for cli arg)
-            'type': 'password',
-            'name': 'cloud_password',
-            'message': 'Please enter your Cloud programatic secret',
-        },
-        'cloud_token': {
-            'type': 'password',
-            'name': 'cloud_token',
-            'message': 'Please enter your Cloud token',
-        },
-        'choose_config_section': {
-            'type': 'list',
-            'name': 'choose_config_section',
-            'message': 'Select credentials section that will be used to deploy cluster.dev',
-            'choices': choices,
-        },
-        'aws_session_token': {
-            'type': 'password',
-            'name': 'aws_session_token',
-            'message': 'Please enter your AWS Session token',
-        },
-        'aws_cloud_user': {
-            'type': 'input',
-            'name': 'aws_cloud_user',
-            'message': 'Please enter username for cluster.dev user',
-            'validate': AWSUserName,
-            'default': 'cluster.dev',
-        },
-        'aws_secret_key': {
-            'type': 'password',
-            'name': 'aws_secret_key',
-            'message': f'Please enter AWS Secret Key for {choices}',
-        },
-        'github_token': {
-            'type': 'password',
-            'name': 'github_token',
-            'message': 'Please enter GITHUB_TOKEN. '
-            + 'It can be generated at https://github.com/settings/tokens',
-        },
+    name = kwargs.get('name') or kwargs.get('message')
+    question = {
+        'name': name,
     }
 
+    for key, value in kwargs.items():  # noqa: WPS110
+        question[key] = value
+
     try:
-        answer = prompt(questions[question_name], style=prompt_style)[question_name]
+        answer = prompt(question, style=prompt_style)[name]
     except KeyError:
-        sys.exit(f"Sorry, it's program error. Can't found key '{question_name}'")
+        sys.exit(f"Sorry, it's program error. Can't execute '{question}'")
 
     return answer

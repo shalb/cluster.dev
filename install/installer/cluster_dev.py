@@ -194,7 +194,12 @@ def get_git_username(git: Git) -> str:
     try:  # Required mount: $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro
         user = git.config('--get', 'user.name')
     except GitCommandError:
-        user = ask_user('git_user_name')
+        user = ask_user(
+            name='git_user_name',
+            type='input',
+            message='Please enter your git username',
+            validate=validate.UserName,
+        )
     else:
         logger.info(f'Username: {user}')
 
@@ -216,7 +221,11 @@ def get_git_password() -> str:
         logger.info('Password type: ssh-key')
         return ''
 
-    return ask_user('git_password')
+    return ask_user(
+        name='git_password',
+        type='password',
+        message='Please enter your git password',
+    )
 
 
 @typechecked
@@ -255,7 +264,12 @@ def choose_git_provider(repo: Repo) -> str:
         git_provider string.
     """
     if not repo.remotes:  # Remotes not exist in locally init repos
-        return ask_user('choose_git_provider', GIT_PROVIDERS)
+        return ask_user(
+            name='choose_git_provider',
+            type='list',
+            message='Select your Git Provider',
+            choices=GIT_PROVIDERS,
+        )
 
     git = repo.git
     remote = git.remote('-v')
@@ -267,7 +281,12 @@ def choose_git_provider(repo: Repo) -> str:
     elif remote.find('gitlab'):
         git_provider = 'Gitlab'
     else:
-        git_provider = ask_user('choose_git_provider')
+        git_provider = ask_user(
+            name='choose_git_provider',
+            type='list',
+            message='Select your Git Provider',
+            choices=GIT_PROVIDERS,
+        )
 
     return git_provider
 
@@ -399,7 +418,11 @@ def create_aws_user_and_permissions(
         response = iam.list_access_keys(UserName=user)
         key = response['AccessKeyMetadata'][0]['AccessKeyId']
 
-        secret = ask_user('aws_secret_key', choices={'user': user, 'key': key})
+        secret = ask_user(
+            name='aws_secret_key',
+            type='password',
+            message=f"Please enter AWS Secret Key for:\n  User: '{user}'\n  Public Key: '{key}'\n",
+        )
 
     return {
         'key': key,
@@ -424,7 +447,12 @@ def get_git_token(provider: str) -> str:
         if git_token is not None:
             logger.info('Use GITHUB_TOKEN from env')
         else:
-            git_token = ask_user('github_token')
+            git_token = ask_user(
+                name='github_token',
+                type='password',
+                message='Please enter GITHUB_TOKEN. '
+                + 'It can be generated at https://github.com/settings/tokens',
+            )
 
     if not git_token:
         sys.exit(f'ERROR: Provider "{provider}" not exist in function "get_git_token"')
@@ -595,12 +623,30 @@ def main() -> None:
         create_repo = True
         if not cli.repo_name:
             logger.info('As this is a GitOps approach we need to start with the git repo.')
-            create_repo = ask_user('create_repo')
+            create_repo = ask_user(
+                type='list',
+                message='Create repo for you?',
+                choices=[
+                    {
+                        'name': 'No, I create or clone repo and then run tool there',
+                        'value': False,
+                    }, {
+                        'name': 'Yes',
+                        'value': True,
+                        'disabled': 'Unavailable at this time',
+                    },
+                ],
+            )
 
         if not create_repo:
             sys.exit('OK. See you soon!')
 
-        repo_name = cli.repo_name or ask_user('repo_name')
+        repo_name = cli.repo_name or ask_user(
+            type='input',
+            message='Please enter the name of your infrastructure repository',
+            default='infrastructure',
+            validate=validate.RepoName,
+        )
 
         # TODO: setup remote origin and so on. Can be useful:
         # user = cli.git_user_name or get_git_username(git)  # noqa: E800
@@ -613,7 +659,11 @@ def main() -> None:
     git = repo.git
 
     if repo.heads:  # Heads exist only after first commit
-        cleanup_repo = ask_user('cleanup_repo')
+        cleanup_repo = ask_user(
+            type='confirm',
+            message='This is not empty repo. Delete all existing configurations?',
+            default=False,
+        )
 
         if cleanup_repo:
             remove_all_except_git(dir_path)
@@ -624,7 +674,12 @@ def main() -> None:
     git_token = cli.git_token or get_git_token(git_provider)
 
     if not repo.remotes:
-        publish_repo = ask_user('publish_repo_to_git_provider')
+        publish_repo = ask_user(
+            name='publish_repo_to_git_provider',
+            type='confirm',
+            message='Your repo not published to Git Provider yet. Publish it now?',
+            default=True,
+        )
         if publish_repo:
             # TODO: push repo to Git Provider
             sys.exit('TODO')
@@ -632,8 +687,14 @@ def main() -> None:
     user = cli.git_user_name or get_git_username(git)
     password = cli.git_password or get_git_password()
 
-    cloud = cli.cloud or ask_user('choose_cloud', CLOUDS)
-    cloud_user = cli.cloud_user or ask_user('aws_cloud_user')
+    cloud = cli.cloud or ask_user(type='list', message='Select your Cloud', choices=CLOUDS)
+    cloud_user = cli.cloud_user or ask_user(
+        name='aws_cloud_user',
+        type='input',
+        message='Please enter username for cluster.dev user',
+        validate=validate.AWSUserName,
+        default='cluster.dev',
+    )
 
     if cloud == 'AWS':
         config = aws_config.parse_file(cli.cloud_login, cli.cloud_password)
@@ -662,11 +723,18 @@ def main() -> None:
         # https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/
         # cloud_login = cli.cloud_login or get_do_login()  # noqa: E800
         # cloud_password = cli.cloud_password or get_do_password()  # noqa: E800
-        # cloud_token = cli.cloud_token or ask_user('cloud_token')  # noqa: E800
+        # cloud_token = cli.cloud_token or ask_user(  # noqa: E800
+        #     type='password',  # noqa: E800
+        #     message='Please enter your Cloud token',  # noqa: E800
+        # )  # noqa: E800
 
     cloud_provider = (
         cli.cloud_provider
-        or ask_user('choose_cloud_provider', choices=CLOUD_PROVIDERS[cloud])
+        or ask_user(
+            type='list',
+            message='Select your Cloud Provider',
+            choices=CLOUD_PROVIDERS[cloud],
+        )
     )
 
     remote = repo.remotes.origin.url

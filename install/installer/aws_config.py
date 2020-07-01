@@ -71,7 +71,12 @@ def choose_section(config: Union[ConfigParser, Literal[False]]) -> str:
     else:
         # User can have multiply creds, ask him what should be used
         # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#configuring-credentials
-        section = ask_user('choose_config_section', choices=config.sections())
+        section = ask_user(
+            name='choose_config_section',
+            type='list',
+            message='Select credentials section that will be used to deploy cluster.dev',
+            choices=config.sections(),
+        )
 
     return section
 
@@ -88,7 +93,12 @@ def get_login(config: Union[ConfigParser, Literal[False]], config_section: str) 
         cloud_login string.
     """
     if not config or not config_section:
-        return ask_user('cloud_login')
+        # TODO: Add validation (and for cli arg)
+        return ask_user(
+            name='cloud_login',
+            type='input',
+            message='Please enter your Cloud programatic key',
+        )
 
     return config.get(config_section, 'aws_access_key_id')
 
@@ -105,7 +115,12 @@ def get_password(config: Union[ConfigParser, Literal[False]], config_section: st
         cloud_password string.
     """
     if not config:
-        return ask_user('cloud_password')
+        # TODO: Add validation (and for cli arg)
+        return ask_user(
+            name='cloud_password',
+            type='password',
+            message='Please enter your Cloud programatic secret',
+        )
 
     return config.get(config_section, 'aws_secret_access_key')
 
@@ -133,7 +148,11 @@ def get_session(  # noqa: WPS212
         return ''
 
     if not config:
-        return ask_user('aws_session_token')
+        return ask_user(
+            name='aws_session_token',
+            type='password',
+            message='Please enter your AWS Session token',
+        )
 
     try:
         session_token = config.get(config_section, 'aws_session_token')
