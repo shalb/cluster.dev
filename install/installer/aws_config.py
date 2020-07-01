@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""AWS interaction functions."""
+"""Interaction functions with local user AWS config."""
 import logging
 import os
 import sys

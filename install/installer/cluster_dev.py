@@ -285,7 +285,18 @@ def choose_git_provider(repo: Repo) -> str:
             name='choose_git_provider',
             type='list',
             message='Select your Git Provider',
-            choices=GIT_PROVIDERS,
+            # choices=GIT_PROVIDERS,  # noqa: E800 #? Should be use after implementation
+            choices=[
+                {
+                    'name': 'Github',
+                }, {
+                    'name': 'Bitbucket',
+                    'disabled': 'Unavailable at this time',
+                }, {
+                    'name': 'Gitlab',
+                    'disabled': 'Unavailable at this time',
+                },
+            ],
         )
 
     return git_provider
@@ -687,7 +698,19 @@ def main() -> None:
     user = cli.git_user_name or get_git_username(git)
     password = cli.git_password or get_git_password()
 
-    cloud = cli.cloud or ask_user(type='list', message='Select your Cloud', choices=CLOUDS)
+    cloud = cli.cloud or ask_user(
+        type='list',
+        message='Select your Cloud',
+        # choices=CLOUDS  # noqa: E800 #? Should be use after implementation
+        choices=[
+            {
+                'name': 'AWS',
+            }, {
+                'name': 'DigitalOcean',
+                'disabled': 'Unavailable at this time',
+            },
+        ],
+    )
     cloud_user = cli.cloud_user or ask_user(
         name='aws_cloud_user',
         type='input',

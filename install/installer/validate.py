@@ -2,6 +2,7 @@
 """User input validators."""
 import sys
 from typing import Any
+from typing import Union
 
 import regex
 from PyInquirer import prompt
@@ -147,7 +148,7 @@ class AWSUserName(Validator):  # pylint: disable=too-few-public-methods
 
 
 @typechecked
-def ask_user(**kwargs: Any) -> str:
+def ask_user(**kwargs: Any) -> Union[str, bool]:
     """Draw menu for interactions with user.
 
     See https://github.com/CITGuru/PyInquirer#examples for argument names and it types.
