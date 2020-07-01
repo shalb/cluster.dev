@@ -23,6 +23,128 @@ logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 @typechecked
+def user_exist(iam: boto3.client, user: str, rights_msg: str) -> bool:
+    """Check is specified AWS user exist.
+
+    Required "iam:GetUser"
+
+    Args:
+        iam: (boto3.client.IAM) A low-level client representing AWS IAM.
+        user: (str) Cluster.dev user name.
+        rights_msg: (str) Notification message of lack of rights.
+
+    Returns:
+        bool - True if user exist and False if not.
+    """
+    try:
+        iam.get_user(UserName=user)
+    except iam.exceptions.NoSuchEntityException:
+        logger.debug(f'User "{user}" does not exist yet')
+        return False
+
+    except iam.exceptions.ClientError as error:
+        sys.exit(f'\nERROR: {error}{rights_msg}')
+
+    logger.debug(f'User "{user}" exist')
+    return True
+
+
+@typechecked
+def list_user_access_keys(
+    iam: boto3.client,
+    user: str,
+    rights_msg: str,
+) -> list:
+    """Get exist access keys for exist user.
+
+    Required "iam:ListUsers"???, "iam:ListAccessKeys"
+
+    Args:
+        iam: (boto3.client.IAM) A low-level client representing AWS IAM.
+        user: (str) Cluster.dev user name.
+        rights_msg: (str) Notification message of lack of rights.
+
+    Returns:
+        list - AWS_ACCESS_KEY_ID's.
+    """
+    try:
+        response = iam.list_access_keys(UserName=user)
+
+    except iam.exceptions.ClientError as error:
+        sys.exit(f'\nERROR: {error}{rights_msg}')
+
+    keys = []
+    for key in response['AccessKeyMetadata']:
+        keys.append(key['AccessKeyId'])
+
+    logger.debug(f'User access keys: {keys}')
+    return keys
+
+
+@typechecked
+def check_affiliation_user_and_creds(
+    user: str,
+    login: str,
+    password: str,
+    keys: list,
+) -> Dict[str, Union[str, bool]]:
+    """Check that provided keys affiliate to provided username of exist user.
+
+    If specified user exist, --cloud-programatic-login and
+    --cloud-programatic-password will be try use as it.
+
+    Args:
+        user: (str) Cluster.dev user name.
+        login: (str) Cloud programatic login.
+        password: (str) Cloud programatic password.
+        keys: (list) AWS_ACCESS_KEY_ID's
+    Returns:
+        Dict[str, Union[str, bool]]:
+        - `{'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}`
+        - `{}` - if keys not affiliate to user.
+    """
+    for key in keys:
+        if key == login:
+            logger.info(f'Specified creds belong to user "{user}", use it')
+
+            return {
+                'key': login,
+                'secret': password,
+                'created': False,
+            }
+
+    logger.debug(f'Specified keys not belong to user "{user}"')
+    return {}
+
+
+@typechecked
+def create_access_key(
+    iam: boto3.client,
+    user: str,
+) -> Dict[str, Union[str, bool]]:
+    """Create Access Key for exist user.
+
+    Required "iam:CreateAccessKey".
+
+    Args:
+        iam: (boto3.client.IAM) A low-level client representing AWS IAM.
+        user: (str) Cluster.dev user name.
+
+    Returns:
+        Dict[str, Union[str, bool]]:
+        `{'key': 'AWS_ACCESS_KEY_ID', 'secret': 'AWS_SECRET_ACCESS_KEY', 'created': bool}`
+    """
+    response = iam.create_access_key(UserName=user)
+
+    logger.debug('Access keys created')
+    return {
+        'key': response['AccessKey']['AccessKeyId'],
+        'secret': response['AccessKey']['SecretAccessKey'],
+        'created': True,
+    }
+
+
+@typechecked
 def create_user_and_permissions(
     user: str,
     login: str,
@@ -49,41 +171,29 @@ def create_user_and_permissions(
         aws_secret_access_key=password,
         aws_session_token=session,
     )
+
+    # cli_rights_needed_msg
+    msg = (
+        '\n\nRights what you need described here: \n'
+        + f'https://github.com/shalb/cluster.dev/blob/{release}'
+        + '/install/installer_aws_install_req_permissions.json'
+    )
+
+    if user_exist(iam, user, msg):
+        keys = list_user_access_keys(iam, user, msg)
+
+        if not keys:
+            return create_access_key(iam, user)
+
+        creds = check_affiliation_user_and_creds(user, login, password, keys)
+        if creds:
+            return creds
+
     keys_created = False
     link = (
         f'https://github.com/shalb/cluster.dev/blob/{release}'
         + '/install/installer_aws_install_req_permissions.json'
     )
-
-    # If specified user exist, --cloud-programatic-login and
-    # --cloud-programatic-password will be try use as it
-
-    # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-    try:  # Required "iam:ListUsers"???, "iam:ListAccessKeys"
-        response = iam.list_access_keys(UserName=user)
-    except iam.exceptions.NoSuchEntityException:  # User not yet exist
-        logger.debug(f'User "{user}" does not exist yet')
-    except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}\n\nRights what you need described here: \n{link}')
-    else:
-        try:
-            if response['AccessKeyMetadata'][0]['AccessKeyId'] == login:
-                logger.info(f'Specified creds belong to exist user "{user}", use it')
-
-                return {
-                    'key': login,
-                    'secret': password,
-                    'created': keys_created,
-                }
-        except IndexError:  # User have no programattic access keys
-            # Required "iam:CreateAccessKey"
-            response = iam.create_access_key(UserName=user)
-
-            return {
-                'key': response['AccessKey']['AccessKeyId'],
-                'secret': response['AccessKey']['SecretAccessKey'],
-                'created': True,
-            }
 
     # Create/get policy_arn for user
     with open('aws_policy.json', 'r') as policy_file:
