@@ -1,0 +1,97 @@
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakRealm
+metadata:
+  name: kubernetes
+  labels:
+    app: keycloak
+spec:
+  realm:
+    id: kubernetes
+    realm: kubernetes
+    enabled: True
+    displayName: "Kubernetes Realm"
+    eventsListeners:
+      - "metrics-listener"
+    users:
+      - username: "realm_admin"
+        firstName: "Cluster"
+        lastName: "Admin"
+        email: "voa@shalb.com"
+        enabled: True
+        emailVerified: False
+        credentials:
+        - type: "password"
+          value: "12345"
+        realmRoles:
+          - "offline_access"
+          - "uma_authorization"
+        clientRoles:
+          account:
+            - "manage-account"
+            - "view-profile"
+          realm-management:
+            - "manage-users"
+            - "view-users"
+            - "query-users"
+            - "create-client"
+  instanceSelector:
+    matchLabels:
+      app: keycloak
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: credsuser
+  labels:
+    app: keycloak
+spec:
+  user:
+    username: "creds_user"
+    firstName: "Creds"
+    lastName: "User"
+    email: "creds_user@cluster.dev"
+    enabled: True
+    emailVerified: False
+    credentials:
+      - type: "password"
+        value: "12345"
+    realmRoles:
+      - "offline_access"
+    clientRoles:
+      account:
+        - "manage-account"
+      realm-management:
+        - "manage-users"
+  realmSelector:
+    matchLabels:
+      app: keycloak
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: argocd-secret
+  labels:
+    app: keycloak
+spec:
+  realmSelector:
+    matchLabels:
+      app: keycloak
+  client:
+    clientId: argocd
+    secret: argocd-secret
+    clientAuthenticatorType: argocd-secret
+    protocol: openid-connect
+---
+apiVersion: v1
+data:
+  application.instanceLabelKey: argocd.argoproj.io/instance
+  url: https://argocd.olm-voatsap.cluster.dev
+  oidc.config: |
+    name: keycloak
+    issuer: https://keycloak.olm-voatsap.cluster.dev/auth/realms/user_realm
+    clientID: argocd
+    clientSecret: argocd-secret
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
