@@ -391,18 +391,18 @@ def create_user_and_permissions(  # noqa: WPS211
     if user_exist(iam, user, msg):
         keys = get_user_access_keys(iam, user, msg)
 
-        if not keys:
+        if not keys:  # noqa: WPS504
             creds = create_access_key(iam, user, msg)
         else:
-            # Check is provided creds belong to user.
+            # Check is provided keys belong to user.
             # Return creds if affiliation confirmed.
             creds = check_affiliation_user_and_creds(user, login, password, keys)
             if not creds:
-                if len(keys) != 2:
+                if len(keys) < 2:
                     creds = create_access_key(iam, user, msg)
                 else:
                     # Give user chance to specify right keys without program restart.
-                    ask_user_for_provide_keys(user, login, keys)
+                    creds = ask_user_for_provide_keys(user, login, keys)
 
     else:
         create_user(iam, user, msg)
