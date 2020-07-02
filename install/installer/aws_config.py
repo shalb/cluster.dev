@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Interaction functions with local user AWS config."""
-import logging
 import os
-import sys
 from configparser import ConfigParser
 from configparser import NoOptionError
 from typing import Literal
 from typing import Union
 
+from logger import logger
 from validate import ask_user
 
 
@@ -17,11 +16,6 @@ except ModuleNotFoundError:
     def typechecked(func=None):  # noqa: WPS440
         """Skip runtime type checking on the function arguments."""
         return func
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 @typechecked

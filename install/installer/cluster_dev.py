@@ -9,7 +9,6 @@ Example usage:
 import argparse
 import glob
 import json
-import logging
 import os
 import shutil
 import sys
@@ -17,14 +16,15 @@ from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import aws
 import aws_config
 import github
 import validate
 import wget
+from aws import create_user_and_permissions as aws_create_user_and_permissions
 from git import GitCommandError
 from git import InvalidGitRepositoryError
 from git import Repo
+from logger import logger
 from validate import ask_user
 
 try:
@@ -37,10 +37,6 @@ except ModuleNotFoundError:
 if TYPE_CHECKING or typechecked:
     from git.cmd import Git  # noqa: WPS433
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler(sys.stdout))
 
 #######################################################################
 #                          F U N C T I O N S                          #
@@ -590,7 +586,7 @@ def main() -> None:
 
         release_version = cli.release_version or github.get_last_release()
 
-        creds = aws.create_user_and_permissions(
+        creds = aws_create_user_and_permissions(
             cloud_user, access_key, secret_key, session_token, release_version,
         )
         if creds['created']:

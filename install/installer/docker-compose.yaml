@@ -21,6 +21,7 @@ services:
       - ./aws.py:/app/aws.py:ro # Reload code in fly
       - ./aws_config.py:/app/aws_config.py:ro # Reload code in fly
       - ./github.py:/app/github.py:ro # Reload code in fly
+      - ./logger.py:/app/logger.py:ro # Reload code in fly
       - ./validate.py:/app/validate.py:ro # Reload code in fly
 
       - ./mount_folder:/app/current_dir:rw # Folder where run docker-container

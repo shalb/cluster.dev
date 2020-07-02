@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Github interaction functions."""
-import logging
 import sys
 from base64 import b64encode
 from typing import Dict
 from typing import Union
 
 from agithub.GitHub import GitHub
+from logger import logger
 from nacl import encoding
 from nacl import public
 
@@ -16,10 +16,6 @@ except ModuleNotFoundError:
     def typechecked(func=None):  # noqa: WPS440
         """Skip runtime type checking on the function arguments."""
         return func
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 @typechecked
@@ -78,8 +74,14 @@ def get_repo_public_key(gh_api: GitHub, owner: str, repo_name: str) -> Dict[str,
     return public_key
 
 
-@typechecked  # noqa: WPS211
-def add_secret(gh_api: GitHub, owner: str, repo_name: str, key: str, body: Dict[str, str]):
+@typechecked
+def add_secret(  # noqa: WPS211
+    gh_api: GitHub,
+    owner: str,
+    repo_name: str,
+    key: str,
+    body: Dict[str, str],
+):
     """Add/update Github encrypted KeyValue storage - Github repo Secrets.
 
     Details: https://developer.github.com/v3/actions/secrets/#create-or-update-a-repository-secret
@@ -113,8 +115,8 @@ def add_secret(gh_api: GitHub, owner: str, repo_name: str, key: str, body: Dict[
         sys.exit(f'ERROR ocurred when try populate access_key to repo. {response}')
 
 
-@typechecked  # noqa: WPS211
-def create_secrets(
+@typechecked
+def create_secrets(  # noqa: WPS211
     creds: Dict[str, Union[str, bool]],
     cloud: str,
     owner: str,

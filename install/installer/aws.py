@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """AWS interaction functions."""
 import json
-import logging
 import sys
 from typing import Dict
 from typing import Literal
 from typing import Union
 
 import boto3
+from logger import logger
 from validate import ask_user
 
 
@@ -18,9 +18,6 @@ except ModuleNotFoundError:
         """Skip runtime type checking on the function arguments."""
         return func
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler(sys.stdout))
 
 FalseL = Literal[False]
 TrueL = Literal[True]
@@ -47,7 +44,8 @@ def user_exist(iam: boto3.client, user: str, rights_msg: str) -> bool:
         return False
 
     except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}{rights_msg}')
+        logger.error(f'{error}{rights_msg}')
+        sys.exit()
 
     logger.debug(f'User "{user}" exist')
     return True
@@ -75,7 +73,8 @@ def get_user_access_keys(
         response = iam.list_access_keys(UserName=user)
 
     except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}{rights_msg}')
+        logger.error(f'{error}{rights_msg}')
+        sys.exit()
 
     keys = []
     for key in response['AccessKeyMetadata']:
@@ -144,13 +143,16 @@ def create_access_key(  # noqa: WPS234
     try:
         response = iam.create_access_key(UserName=user)
     except iam.exceptions.LimitExceededException:
-        sys.exit(
-            f"\nERROR: User '{user}' already have 2 programmatic keys.\n"
+        logger.error(
+            f"User '{user}' already have 2 programmatic keys.\n"
             + 'If you have access to one of it - provide it credentials. Or remove unused key.\n'
             + f'https://console.aws.amazon.com/iam/home#/users/{user}?section=security_credentials',
         )
+        sys.exit()
+
     except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}{rights_msg}')
+        logger.error(f'{error}{rights_msg}')
+        sys.exit()
 
     logger.debug('Access keys created')
     return {
@@ -183,7 +185,8 @@ def create_user(
             UserName=username,
         )
     except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}{rights_msg}')
+        logger.error(f'{error}{rights_msg}')
+        sys.exit()
 
     logger.debug(f"User '{path}{username}' created")
 
@@ -215,7 +218,8 @@ def get_policy_arn(
             PathPrefix=prefix,
         )
     except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}{rights_msg}')
+        logger.error(f'{error}{rights_msg}')
+        sys.exit()
 
     for policy in response['Policies']:
         if policy_name == policy['PolicyName']:
@@ -260,7 +264,8 @@ def create_policy(
             + 'Created by CLI instalator',
         )
     except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}{rights_msg}')
+        logger.error(f'{error}{rights_msg}')
+        sys.exit()
 
     logger.info('Policy created')
     logger.debug(
@@ -288,7 +293,8 @@ def attach_policy_to_user(iam: boto3.client, username: str, policy_arn: str, rig
             PolicyArn=policy_arn,
         )
     except iam.exceptions.ClientError as error:
-        sys.exit(f'\nERROR: {error}{rights_msg}')
+        logger.error(f'{error}{rights_msg}')
+        sys.exit()
 
     logger.debug(f"Attached policy '{policy_arn}' to user '{username}'")
 

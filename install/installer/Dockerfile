@@ -30,6 +30,7 @@ COPY entrypoint.sh \
     aws.py \
     aws_config.py \
     github.py \
+    logger.py \
     validate.py \
     aws_policy.json \
         ./
