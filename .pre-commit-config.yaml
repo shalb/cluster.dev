@@ -106,6 +106,7 @@ repos:
     - --max-arguments=4 # Default settings
     - --max-string-usages=6 # Project specific. Default - 3
     - --max-local-variables=6 # Project specific. Default - 5
+    - --max-module-members=10 # Project specific. Default - 7
     # https://www.flake8rules.com/
     # https://wemake-python-stylegui.de/en/latest/pages/usage/violations/index.html
     - --extend-ignore=
