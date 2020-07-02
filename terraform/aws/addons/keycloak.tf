@@ -32,7 +32,10 @@ data "template_file" "keycloak" {
 
 resource "null_resource" "keycloak_install" {
   provisioner "local-exec" {
-    command = "kubectl apply -f -<<EOF\n${data.template_file.keycloak.rendered}\nEOF && until kubectl -n ${local.keycloak_namespace} get secrets/credential-keycloak >/dev/null 2>&1; do sleep 1; echo Waiting for secrets/credential-keycloak become available; done"
+    command = "kubectl apply -f -<<EOF\n${data.template_file.keycloak.rendered}\nEOF"
+  }
+  provisioner "local-exec" {
+    command = "until kubectl -n ${local.keycloak_namespace} get secrets/credential-keycloak >/dev/null 2>&1; do sleep 1; echo 'Waiting for secrets/credential-keycloak become available'; done"
   }
   provisioner "local-exec" {
     when    = destroy
