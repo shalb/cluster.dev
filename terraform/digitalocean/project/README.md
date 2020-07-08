@@ -4,12 +4,12 @@
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| description | A description for this project | `string` | `""` | no |
-| environment | (optional) Edit values below for every environment name that you want | `map` | <pre>{<br>  "dev": "Development",<br>  "prd": "Production",<br>  "stg": "Staging"<br>}</pre> | no |
-| name | (Required) Name for your project at Digital Ocean | `string` | n/a | yes |
-| purpose | The purpose for your project. (for example: k8s or any), default - Web Application | `string` | `"Web Application"` | no |
-| resources | (Optional) List with all resources to be part of this project | `list` | `[]` | no |
+|------|-------------|:----:|:-----:|:-----:|
+| description | A description for this project | string | `""` | no |
+| environment | (optional) Edit values below for every environment name that you want | map | `{ "dev": "Development", "prod": "Production", "stage": "Staging" }` | no |
+| name | (Required) Name for your project at Digital Ocean | string | n/a | yes |
+| purpose | The purpose for your project. (for example: k8s or any), default - Web Application | string | `"Web Application"` | no |
+| resources | (Optional) List with all resources to be part of this project | list | `[]` | no |
 
 ## Outputs
 

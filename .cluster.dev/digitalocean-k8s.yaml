@@ -3,9 +3,11 @@ cluster:
   name: do-dev
   cloud:
     provider: digitalocean
-    region: fra1
+    region: ams3
+    vpc: create
+    vpc_cidr: 10.8.0.0/20
     project: default
-    domain: do.cluster.dev
+    domain: do.shalb.org
     provisioner:
       type: managed-kubernetes
       version: 1.17

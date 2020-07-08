@@ -119,8 +119,8 @@ DEBUG "Manifests: $MANIFESTS"
         # TODO: Check that DIGITALOCEAN_TOKEN SPACES_ACCESS_KEY_ID SPACES_SECRET_ACCESS_KEY are set
 
         # s3cmd DO remove bucket ENV VARIABLES
-        AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
-        AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
+        export AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
+        export AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
         DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
 
         # Define full cluster name
@@ -144,7 +144,7 @@ DEBUG "Manifests: $MANIFESTS"
         # Create and init backend.
         # Check if bucket already exist by trying to import it
         digitalocean::init_do_spaces_bucket  "$cluster_cloud_region"
-
+exit
         case $cluster_cloud_provisioner_type in
         managed-kubernetes)
             DEBUG "Provisioner: managed-kubernetes"

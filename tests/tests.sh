@@ -41,6 +41,9 @@ echo docker run  -d --rm \
             -e GIT_REPO_ROOT="/tests/workspace" \
             -e "AWS_ACCESS_KEY_ID" \
             -e "AWS_SECRET_ACCESS_KEY" \
+            -e "DIGITALOCEAN_TOKEN" \
+            -e "SPACES_ACCESS_KEY_ID" \
+            -e "SPACES_SECRET_ACCESS_KEY" \
             -e "CLUSTER_CONFIG_PATH" \
             "${DOCKER_IMAGE_NAME}"
 
@@ -52,6 +55,9 @@ docker run  -d --rm \
             -e GIT_REPO_NAME="test-run" \
             -e "AWS_ACCESS_KEY_ID" \
             -e "AWS_SECRET_ACCESS_KEY" \
+            -e "DIGITALOCEAN_TOKEN" \
+            -e "SPACES_ACCESS_KEY_ID" \
+            -e "SPACES_SECRET_ACCESS_KEY" \
             -e "CLUSTER_CONFIG_PATH" \
             "${DOCKER_IMAGE_NAME}"
 
