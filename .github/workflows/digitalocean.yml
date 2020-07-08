@@ -1,24 +1,24 @@
 on:
   push:
+    paths:
+      - '.cluster.dev/digitalocean-k8s.yaml'
     branches:
-      - feature/GH-59
+      - master
 jobs:
   deploy_cluster_job:
     runs-on: ubuntu-latest
-    name: Deploy and Update K8s Clusters
+    name: Cluster.dev
     steps:
     - name: Checkout Repo
       uses: actions/checkout@v2
-      with:
-        ref: 'feature/GH-59'
     - name: Reconcile Clusters
       id: reconcile
-      uses: shalb/cluster.dev@feature/GH-59
+      uses: shalb/cluster.dev@v0.1.10
       env:
         DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
         SPACES_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY_ID }}
         SPACES_SECRET_ACCESS_KEY: "${{ secrets.SPACES_SECRET_ACCESS_KEY }}"
         CLUSTER_CONFIG_PATH: "./.cluster.dev/digitalocean-k8s.yaml"
-        VERBOSE_LVL: "DEBUG"
+        VERBOSE_LVL: "INFO"
     - name: Get the Cluster Credentials
-      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}"
+      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
