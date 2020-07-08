@@ -15,8 +15,8 @@ jobs:
       id: reconcile
       uses: shalb/cluster.dev@v0.1.10
       env:
-        DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
-        SPACES_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY_ID }}
+        DIGITALOCEAN_TOKEN: "${{ secrets.DIGITALOCEAN_TOKEN }}"
+        SPACES_ACCESS_KEY_ID: "${{ secrets.SPACES_ACCESS_KEY_ID }}"
         SPACES_SECRET_ACCESS_KEY: "${{ secrets.SPACES_SECRET_ACCESS_KEY }}"
         CLUSTER_CONFIG_PATH: "./.cluster.dev/digitalocean-k8s.yaml"
         VERBOSE_LVL: "INFO"
