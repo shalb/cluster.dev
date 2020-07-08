@@ -80,7 +80,13 @@ function digitalocean::destroy {
         case $cluster_cloud_provisioner_type in
         managed-kubernetes)
             DEBUG "Destroy: Provisioner: DigitalOcean Kubernetes"
-            digitalocean::managed-kubernetes::destroy_cluster "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_version" "$cluster_cloud_provisioner_nodeSize" "$cluster_cloud_provisioner_minNodes" "$cluster_cloud_provisioner_maxNodes"
+            digitalocean::managed-kubernetes::destroy_cluster \
+                "$cluster_name" \
+                "$cluster_cloud_region" \
+                "$cluster_cloud_provisioner_version" \
+                "$cluster_cloud_provisioner_nodeSize" \
+                "$cluster_cloud_provisioner_minNodes" \
+                "$cluster_cloud_provisioner_maxNodes"
             digitalocean::destroy_do_spaces_bucket "$cluster_cloud_region"
         ;;
         # end of digitalocean kubernetes
