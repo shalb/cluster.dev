@@ -7,6 +7,7 @@ source "$PRJ_ROOT"/bin/logging.sh # PSR-3 compliant logging
 source "$PRJ_ROOT"/bin/common.sh
 source "$PRJ_ROOT"/bin/aws_common.sh
 source "$PRJ_ROOT"/bin/digitalocean_common.sh
+source "$PRJ_ROOT"/bin/digitalocean_managed-kubernetes.sh
 source "$PRJ_ROOT"/bin/aws_minikube.sh
 source "$PRJ_ROOT"/bin/aws_eks.sh
 source "$PRJ_ROOT"/bin/argocd.sh
@@ -120,24 +121,25 @@ DEBUG "Manifests: $MANIFESTS"
         # s3cmd DO remove bucket ENV VARIABLES
         AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
         AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
+        DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
 
         # Define full cluster name
         FUNC_RESULT="";
         set_cluster_fullname "$cluster_name" "$GIT_REPO_NAME"
         CLUSTER_FULLNAME=${FUNC_RESULT}
 
+        # Define name for S3 bucket that would be user for terraform state
+        DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
+
         # Destroy if installed: false
         if [ "$cluster_installed" = "false" ]; then
             if (digitalocean::is_do_spaces_bucket_exists "$cluster_cloud_region"); then
                 digitalocean::destroy
             else
-                DEBUG "S3 Spaces bucket ${S3_BACKEND_BUCKET} not exists. Nothing to destroy."
+                DEBUG "S3 Spaces bucket ${DO_SPACES_BACKEND_BUCKET} not exists. Nothing to destroy."
             fi
             continue
         fi
-
-        # Define name for S3 bucket that would be user for terraform state
-        DO_SPACES_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
         # Create and init backend.
         # Check if bucket already exist by trying to import it
@@ -145,8 +147,17 @@ DEBUG "Manifests: $MANIFESTS"
 
         case $cluster_cloud_provisioner_type in
         managed-kubernetes)
-            DEBUG "Provisioner: digitalocean-kubernetes"
-
+            DEBUG "Provisioner: managed-kubernetes"
+            # Deploy DO k8s cluster via Terraform
+            digitalocean::managed-kubernetes::deploy_cluster \
+                "$cluster_name" \
+                "$cluster_cloud_region" \
+                "$cluster_cloud_provisioner_version" \
+                "$cluster_cloud_provisioner_nodeSize" \
+                "$cluster_cloud_provisioner_minNodes" \
+                "$cluster_cloud_provisioner_maxNodes"
+            # Writes commands for user for get access to cluster
+            digitalocean::output_access_keys
         ;;
         esac
 

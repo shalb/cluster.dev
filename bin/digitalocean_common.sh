@@ -50,8 +50,8 @@ function digitalocean::is_do_spaces_bucket_exists {
 
     # Create and init backend.
     run_cmd "terraform init"
-
-    terraform import -var="region=$cluster_cloud_region" -var="do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET" digitalocean_spaces_bucket.terraform_state "$cluster_cloud_region","$DO_SPACES_BACKEND_BUCKET" >/dev/null 2>&1
+    INFO "Importing DO Spaces bucket for Terraform states."
+    terraform import -var="region=$cluster_cloud_region" -var="do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET" digitalocean_spaces_bucket.terraform_state "$cluster_cloud_region","$DO_SPACES_BACKEND_BUCKET"
     return $?
 }
 
@@ -68,14 +68,25 @@ function digitalocean::destroy_do_spaces_bucket {
     DEBUG "Destroy existing DO Spaces bucket for Terraform states. Bucket name: '${DO_SPACES_BACKEND_BUCKET}'"
     INFO "Destroying DO Spaces bucket for Terraform states."
     local cluster_cloud_region=$1
-    run_cmd "s3cmd rb \"s3://${DO_SPACES_BACKEND_BUCKET}\" --force"
+    run_cmd "s3cmd rb s3://${DO_SPACES_BACKEND_BUCKET} \
+        --host='$cluster_cloud_region.digitaloceanspaces.com' \
+        --host-bucket='%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com' \
+        --recursive \
+        --force"
 }
 
 # Destroy all cluster.
 function digitalocean::destroy {
         case $cluster_cloud_provisioner_type in
-        digitalocean-kubernetes)
+        managed-kubernetes)
             DEBUG "Destroy: Provisioner: DigitalOcean Kubernetes"
+            digitalocean::managed-kubernetes::destroy_cluster \
+                "$cluster_name" \
+                "$cluster_cloud_region" \
+                "$cluster_cloud_provisioner_version" \
+                "$cluster_cloud_provisioner_nodeSize" \
+                "$cluster_cloud_provisioner_minNodes" \
+                "$cluster_cloud_provisioner_maxNodes"
             digitalocean::destroy_do_spaces_bucket "$cluster_cloud_region"
         ;;
         # end of digitalocean kubernetes

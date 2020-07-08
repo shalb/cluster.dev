@@ -1,5 +1,6 @@
 # Project
 
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -19,3 +20,5 @@
 | owner\_id | The id of the project owner |
 | owner\_uuid | The unique universal identifier of the project owner |
 | updated\_at | The date and time when the project was last updated, (ISO8601) |
+
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

@@ -8,9 +8,10 @@ cluster:
     domain: do.cluster.dev
     provisioner:
       type: managed-kubernetes
-      version: 1.16
-      nodeCount: 1
+      version: 1.17
       nodeSize: s-1vcpu-2gb
+      minNodes: 1
+      maxNodes: 2
   addons:
     nginx-ingress: true
     cert-manager: true

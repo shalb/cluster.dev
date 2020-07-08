@@ -1,5 +1,6 @@
 ## Backend
 
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
 
 | Name | Description | Type | Default | Required |
@@ -12,3 +13,5 @@
 | Name | Description |
 |------|-------------|
 | spaces\_bucket\_name | Digital Ocean Spaces bucket name |
+
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
