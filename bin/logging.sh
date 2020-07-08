@@ -230,7 +230,7 @@ function LOG_HANDLER_LOGFILE {
 #   Writes progress status
 #######################################
 function run_cmd {
-    local command="$1"
+    local command=$1
     local bash_opts="${2-""}"
     local fail_on_err="${3-true}"
     local enable_log_timeout="${4-300}" # By default - 300 seconds (5 min)

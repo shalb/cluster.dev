@@ -1,6 +1,6 @@
 cluster:
   installed: false
-  name: dev
+  name: do-dev
   cloud:
     provider: digitalocean
     region: fra1

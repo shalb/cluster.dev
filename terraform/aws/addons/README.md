@@ -6,16 +6,19 @@ ExternalDNS - using Helm chart
 CertManager - using kubectl
 Nginx-Ingress - using kubectl
 ArgoCD - using Helm chart
+Operator Lifecycle Manager - with default bash script
+Keycloak Operator and Keycloak - using kubectl
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
-| aws\_region | AWS Region to apply for Addons configuration | string | n/a | yes |
 | cluster\_cloud\_domain | Route 53 zone used as a domain restrictions for cert-manager and external-dns | string | `""` | no |
-| cluster\_fullname | Full cluster name including user/organization | string | `""` | no |
+| cluster\_name | Full cluster name including user/organization | string | `""` | no |
 | config\_path | path to a kubernetes config file | string | `"~/.kube/config"` | no |
+| eks | Define if addons would be deployed to EKS cluster | bool | `"false"` | no |
+| region | AWS Region to apply for Addons configuration | string | n/a | yes |
 
 ## Outputs
 
@@ -24,5 +27,7 @@ ArgoCD - using Helm chart
 | argocd\_pass |  |
 | argocd\_url |  |
 | argocd\_user |  |
+| keycloak\_credentials |  |
+| keycloak\_url |  |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

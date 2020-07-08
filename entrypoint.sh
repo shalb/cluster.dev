@@ -9,6 +9,7 @@ source "$PRJ_ROOT"/bin/aws_common.sh
 source "$PRJ_ROOT"/bin/digitalocean_common.sh
 source "$PRJ_ROOT"/bin/digitalocean_managed-kubernetes.sh
 source "$PRJ_ROOT"/bin/aws_minikube.sh
+source "$PRJ_ROOT"/bin/aws_eks.sh
 source "$PRJ_ROOT"/bin/argocd.sh
 
 
@@ -31,13 +32,20 @@ output_software_info
 MANIFESTS=$(find "$CLUSTER_CONFIG_PATH" -type f) || ERROR "Manifest file/folder can't be found"
 DEBUG "Manifests: $MANIFESTS"
 
-for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
-    NOTICE "Now run: $CLUSTER_MANIFEST_FILE"
-    DEBUG "Path where start new cycle: $PWD"
+    for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
+        NOTICE "Now run: $CLUSTER_MANIFEST_FILE"
 
-    yaml::parse "$CLUSTER_MANIFEST_FILE"
-    yaml::create_variables "$CLUSTER_MANIFEST_FILE"
+    # Unset all env variables by `cluster_` that could be kept from previous run
+    while read var; do unset $var; done < <(env | grep cluster_ | awk -F "=" '{print$1}')
+    # Parse Yaml Manifest and export variables with https://github.com/shalb/yamltoenv
+    source <(/bin/yamltoenv -f "$CLUSTER_MANIFEST_FILE")
+    # Check required variables are set
     yaml::check_that_required_variables_exist "$CLUSTER_MANIFEST_FILE"
+
+    # Define full cluster name
+    FUNC_RESULT="";
+    set_cluster_fullname "$cluster_name" "$GIT_REPO_NAME"
+    CLUSTER_FULLNAME=${FUNC_RESULT}
 
     # Cloud selection. Declared via yaml::create_variables()
     # shellcheck disable=SC2154
@@ -45,15 +53,8 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
     aws)
 
         DEBUG "Cloud Provider: AWS. Initializing access variables"
-        # Define AWS credentials from ENV VARIABLES passed to container
-        # TODO: Check that AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY are set
 
-        # Define full cluster name
-        FUNC_RESULT="";
-        set_cluster_fullname "$cluster_name" "$GIT_REPO_NAME"
-        CLUSTER_FULLNAME=${FUNC_RESULT}
-
-        # Define name for S3 bucket that would be user for terraform state
+        # Define name for S3 bucket that would be user for terraform state.
         S3_BACKEND_BUCKET=$CLUSTER_FULLNAME
 
         # Destroy if installed: false
@@ -66,44 +67,49 @@ for CLUSTER_MANIFEST_FILE in $MANIFESTS; do
             continue
         fi
 
-        # Create and init backend.
-        # Check if bucket already exist by trying to import it
+        # Create and init backend. Check if bucket already exist by trying to import it.
         aws::init_s3_bucket   "$cluster_cloud_region"
 
-        # Create a DNS zone if required
+        # Create a DNS zone if required.
         aws::init_route53   "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
 
-        # Create a VPC or use existing defined
-        FUNC_RESULT=""
-        aws::init_vpc   "$cluster_cloud_vpc" "$cluster_name" "$cluster_cloud_region"
-        readonly CLUSTER_VPC_ID=${FUNC_RESULT}
+        # Create a VPC or use existing defined.
+        aws::init_vpc   "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_vpc_cidr"
 
-        # Provisioner selection
+        # Provisioner selection.
         #
         case $cluster_cloud_provisioner_type in
         minikube)
             DEBUG "Provisioner: Minikube"
-
             # Deploy Minikube cluster via Terraform
-            aws::minikube::deploy_cluster   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_provisioner_instanceType" "$cluster_cloud_domain" "$CLUSTER_VPC_ID"
+            aws::minikube::deploy_cluster   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$cluster_cloud_provisioner_instanceType"
 
             # Pull a kubeconfig to instance via kubectl
             aws::minikube::pull_kubeconfig
 
             # Deploy Kubernetes Addons via Terraform
-            aws::init_addons   "$cluster_name" "$cluster_cloud_region" "$cluster_cloud_domain"
-
-            # Deploy ArgoCD apps via kubectl
-            argocd::deploy_apps   "$cluster_apps"
-
-            # Writes commands for user for get access to cluster
-            aws::output_access_keys   "$cluster_cloud_domain"
+            aws::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
         ;;
         # end of minikube
         eks)
             DEBUG "Cloud Provider: AWS. Provisioner: EKS"
+            # Deploy Minikube cluster via Terraform
+            aws::eks::deploy_cluster    "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_availability_zones" "$cluster_cloud_vpc" "$cluster_version"
+
+            # Pull a kubeconfig to instance via kubectl
+            aws::eks::pull_kubeconfig
+
+            # Deploy Kubernetes Addons via Terraform
+            aws::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME" "true"
+
             ;;
         esac
+
+            # Deploy ArgoCD apps via kubectl
+            argocd::deploy_apps
+
+            # Writes commands for user for get access to cluster
+            aws::output_access_keys   "$cluster_cloud_domain"
         ;;
 
     digitalocean)

@@ -1,0 +1,40 @@
+---
+apiVersion: keycloak.org/v1alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: ${namespace}
+  labels:
+    app: keycloak
+spec:
+  instances: 1
+  extensions:
+    - https://github.com/aerogear/keycloak-metrics-spi/releases/download/1.0.4/keycloak-metrics-spi-1.0.4.jar
+  externalAccess:
+    enabled: false
+  podDisruptionBudget:
+    enabled: True
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    cert-manager.io/cluster-issuer: ${cluster-issuer}
+  labels:
+    app: keycloak
+  name: keycloak-external
+  namespace: ${namespace}
+spec:
+  rules:
+  - host: ${domain}
+    http:
+      paths:
+      - backend:
+          serviceName: keycloak
+          servicePort: 8443
+        path: /
+  tls:
+  - hosts:
+    - ${domain}
+    secretName: keycloak-ext-secret

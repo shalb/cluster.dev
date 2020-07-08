@@ -14,6 +14,5 @@ spec:
           - "${dns_zones}"
       dns01:
         route53:
-          region: ${aws_region}
-          #hostedZoneID: DIKER8JEXAMPLE # optional, see policy above
-          #role: arn:aws:iam::XXXXXXXXXXXX:role/dns-manager
+          region: ${region}
+          role: ${role}
