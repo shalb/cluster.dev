@@ -10,8 +10,8 @@ variable "region" {
 
 variable "k8s_version" {
   type        = string
-  description = "Provide DigitalOcean Kubernetes minor version (e.g. '1.16' or '1.15')"
-  default     = "1.16"
+  description = "Provide DigitalOcean Kubernetes minor version (e.g. '1.15' or higher)"
+  default     = "1.17"
 }
 
 variable "node_type" {
