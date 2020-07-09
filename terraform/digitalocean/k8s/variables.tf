@@ -1,4 +1,4 @@
-variable "name" {
+variable "cluster_name" {
   type        = string
   description = "(Required) Provide DigitalOcean cluster name"
 }

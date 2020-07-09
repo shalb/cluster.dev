@@ -144,13 +144,19 @@ DEBUG "Manifests: $MANIFESTS"
         # Create and init backend.
         # Check if bucket already exist by trying to import it
         digitalocean::init_do_spaces_bucket  "$cluster_cloud_region"
-exit
+
+        # Create a DNS zone if required.
+        digitalocean::init_domain   "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
+
+        # Create a VPC or use existing defined.
+        digitalocean::init_vpc   "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_vpc_cidr"
+
         case $cluster_cloud_provisioner_type in
         managed-kubernetes)
             DEBUG "Provisioner: managed-kubernetes"
             # Deploy DO k8s cluster via Terraform
             digitalocean::managed-kubernetes::deploy_cluster \
-                "$cluster_name" \
+                "$CLUSTER_FULLNAME" \
                 "$cluster_cloud_region" \
                 "$cluster_cloud_provisioner_version" \
                 "$cluster_cloud_provisioner_nodeSize" \
