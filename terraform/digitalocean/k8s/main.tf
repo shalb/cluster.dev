@@ -16,3 +16,11 @@ resource "digitalocean_kubernetes_cluster" "k8s" {
     max_nodes  = var.max_node_count
   }
 }
+
+resource "local_file" "kubeconfig" {
+  count                = var.write_kubeconfig ? 1 : 0
+  content              = digitalocean_kubernetes_cluster.k8s.kube_config.0.raw_config
+  filename             = substr(var.config_output_path, -1, 1) == "/" ? "${var.config_output_path}kubeconfig_${var.cluster_name}" : var.config_output_path
+  file_permission      = "0644"
+  directory_permission = "0755"
+}

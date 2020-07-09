@@ -31,3 +31,15 @@ variable "max_node_count" {
   type        = number
   default     = 2
 }
+
+variable "write_kubeconfig" {
+  description = "Whether to write a Kubectl config file containing the cluster configuration. Saved to `config_output_path`."
+  type        = bool
+  default     = true
+}
+
+variable "config_output_path" {
+  description = "Where to save the Kubectl config file (if `write_kubeconfig = true`). Assumed to be a directory if the value ends with a forward slash `/`."
+  type        = string
+  default     = "./"
+}

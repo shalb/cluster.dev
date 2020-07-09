@@ -271,3 +271,27 @@ function digitalocean::destroy {
         # end of digitalocean kubernetes
         esac
 }
+
+#######################################
+# Writes commands for user for get access to cluster
+# Globals:
+#   CLUSTER_FULLNAME
+# Outputs:
+#   Writes commands to get cluster's kubeconfig and ssh key
+#######################################
+function digitalocean::output_access_keys {
+    DEBUG "Writes commands for user for get access to cluster"
+
+    # TODO: Add output as part of output status. Add commit-back hook with instructions to .cluster.dev/README.md
+
+    KUBECONFIG_DOWNLOAD_MESSAGE="\
+Download and apply your kubeconfig using commands: \n\
+s3cmd get s3://${CLUSTER_FULLNAME}/kubeconfig_${CLUSTER_FULLNAME} ~/.kube/kubeconfig_${CLUSTER_FULLNAME} --host-bucket='%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com' --host='$cluster_cloud_region.digitaloceanspaces.com' \n\
+export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME} \n\
+kubectl get ns \n
+"
+    NOTICE "$KUBECONFIG_DOWNLOAD_MESSAGE"
+
+    # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig)"
+    echo "::set-output name=kubeconfig::${KUBECONFIG_DOWNLOAD_MESSAGE}"
+}

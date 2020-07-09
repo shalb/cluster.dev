@@ -162,12 +162,14 @@ DEBUG "Manifests: $MANIFESTS"
                 "$cluster_cloud_provisioner_nodeSize" \
                 "$cluster_cloud_provisioner_minNodes" \
                 "$cluster_cloud_provisioner_maxNodes"
-            # Writes commands for user for get access to cluster
-            digitalocean::output_access_keys
         ;;
         esac
-
-
+        # Pull a kubeconfig to instance and s3 and test via kubectl
+        digitalocean::managed-kubernetes::pull_kubeconfig
+        # Test kubeconfig once
+        digitalocean::managed-kubernetes::pull_kubeconfig_once
+        # Writes commands for user for get access to cluster
+        digitalocean::output_access_keys
         ;;
 
     gcp)
