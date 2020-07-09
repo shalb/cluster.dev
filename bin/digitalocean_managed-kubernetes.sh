@@ -33,20 +33,18 @@ function digitalocean::managed-kubernetes::deploy_cluster {
     INFO "DO k8s cluster with autoscaling enabled feature: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform.state' \
-                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com' \
-                -backend-config='access_key=$SPACES_ACCESS_KEY_ID' \
-                -backend-config='secret_key=$SPACES_SECRET_ACCESS_KEY'"
+                -backend-config='key=states/terraform-k8s.state' \
+                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com'"
 
     run_cmd "terraform plan \
-                  -var='region=$cluster_cloud_region' \
-                  -var='k8s_version=$cluster_cloud_provisioner_version' \
-                  -var='name=$CLUSTER_FULLNAME' \
-                  -var='node_type=$cluster_cloud_provisioner_nodeSize' \
-                  -var='min_node_count=$cluster_cloud_provisioner_minNodes' \
-                  -var='max_node_count=$cluster_cloud_provisioner_maxNodes' \
-                  -input=false \
-                  -out=tfplan"
+                -var='region=$cluster_cloud_region' \
+                -var='k8s_version=$cluster_cloud_provisioner_version' \
+                -var='cluster_name=$cluster_name' \
+                -var='node_type=$cluster_cloud_provisioner_nodeSize' \
+                -var='min_node_count=$cluster_cloud_provisioner_minNodes' \
+                -var='max_node_count=$cluster_cloud_provisioner_maxNodes' \
+                -input=false \
+                -out=tfplan"
 
     INFO "DO k8s cluster with autoscaling feature: Creating infrastructure"
     run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
@@ -74,9 +72,6 @@ function digitalocean::managed-kubernetes::destroy_cluster {
     local cluster_name=$1
     local cluster_cloud_region=$2
     local cluster_cloud_provisioner_version=$3
-    local cluster_cloud_provisioner_nodeSize=$4
-    local cluster_cloud_provisioner_minNodes=$5
-    local cluster_cloud_provisioner_maxNodes=$6
 
     cd "$PRJ_ROOT"/terraform/digitalocean/k8s/ || ERROR "Path not found"
 
@@ -84,19 +79,14 @@ function digitalocean::managed-kubernetes::destroy_cluster {
     INFO "DO k8s cluster with autoscaling enabled feature: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform.state' \
-                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com' \
-                -backend-config='access_key=$SPACES_ACCESS_KEY_ID' \
-                -backend-config='secret_key=$SPACES_SECRET_ACCESS_KEY'"
+                -backend-config='key=states/terraform-k8s.state' \
+                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com'"
 
     INFO "DO k8s cluster with autoscaling enabled feature: Destroying "
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='region=$cluster_cloud_region' \
                 -var='k8s_version=$cluster_cloud_provisioner_version' \
-                -var='name=$CLUSTER_FULLNAME' \
-                -var='node_type=$cluster_cloud_provisioner_nodeSize' \
-                -var='min_node_count=$cluster_cloud_provisioner_minNodes' \
-                -var='max_node_count=$cluster_cloud_provisioner_maxNodes'"
+                -var='cluster_name=$cluster_name'"
 
     cd - >/dev/null || ERROR "Path not found"
 }
