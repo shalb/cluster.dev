@@ -260,7 +260,10 @@ function digitalocean::destroy {
         case $cluster_cloud_provisioner_type in
         managed-kubernetes)
             DEBUG "Destroy: Provisioner: DigitalOcean Kubernetes"
-            digitalocean::destroy_addons "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
+            if digitalocean::managed-kubernetes::pull_kubeconfig_once ; then
+                digitalocean::destroy_addons "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
+            fi
+
             digitalocean::managed-kubernetes::destroy_cluster \
                 "$CLUSTER_FULLNAME" \
                 "$cluster_cloud_region" \
