@@ -3,9 +3,9 @@ data "digitalocean_kubernetes_versions" "k8s" {
 }
 
 resource "digitalocean_kubernetes_cluster" "k8s" {
-  name    = var.cluster_name
-  region  = var.region
-  version = data.digitalocean_kubernetes_versions.k8s.latest_version
+  name     = var.cluster_name
+  region   = var.region
+  version  = data.digitalocean_kubernetes_versions.k8s.latest_version
   vpc_uuid = data.terraform_remote_state.vpc.outputs.vpc_id
 
   node_pool {

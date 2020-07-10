@@ -105,11 +105,9 @@ DEBUG "Manifests: $MANIFESTS"
             ;;
         esac
 
-            # Deploy ArgoCD apps via kubectl
-            argocd::deploy_apps
+        # Writes commands for user for get access to cluster
+        aws::output_access_keys   "$cluster_cloud_domain"
 
-            # Writes commands for user for get access to cluster
-            aws::output_access_keys   "$cluster_cloud_domain"
         ;;
 
     digitalocean)
@@ -121,7 +119,7 @@ DEBUG "Manifests: $MANIFESTS"
         # s3cmd DO remove bucket ENV VARIABLES
         export AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
         export AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
-        DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
+        export DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
 
         # Define full cluster name
         FUNC_RESULT="";
@@ -168,6 +166,10 @@ DEBUG "Manifests: $MANIFESTS"
         digitalocean::managed-kubernetes::pull_kubeconfig
         # Test kubeconfig once
         digitalocean::managed-kubernetes::pull_kubeconfig_once
+
+        # Install Kubernetes Addons
+        digitalocean::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
+
         # Writes commands for user for get access to cluster
         digitalocean::output_access_keys
         ;;
@@ -181,5 +183,8 @@ DEBUG "Manifests: $MANIFESTS"
         ;;
 
     esac
+
+    # Deploy ArgoCD apps via kubectl
+    argocd::deploy_apps
 
 done

@@ -6,31 +6,31 @@ data "digitalocean_domain" "provided" {
 }
 
 resource "digitalocean_domain" "sub" {
-  name          = "${var.cluster_name}.${var.cluster_domain}"
+  name = "${var.cluster_name}.${var.cluster_domain}"
 }
 
 resource "digitalocean_record" "sub-ns1" {
-  domain          = tobool(var.zone_delegation) ? digitalocean_domain.sub.name : data.digitalocean_domain.provided.0.name
-  name            = "${var.cluster_name}.${var.cluster_domain}"
-  type            = "NS"
-  ttl             = "300"
-  value           = "ns1.digitalocean.com."
+  domain = tobool(var.zone_delegation) ? digitalocean_domain.sub.name : data.digitalocean_domain.provided.0.name
+  name   = "${var.cluster_name}.${var.cluster_domain}"
+  type   = "NS"
+  ttl    = "300"
+  value  = "ns1.digitalocean.com."
 }
 
 resource "digitalocean_record" "sub-ns2" {
-  domain          = tobool(var.zone_delegation) ? digitalocean_domain.sub.name : data.digitalocean_domain.provided.0.name
-  name            = "${var.cluster_name}.${var.cluster_domain}"
-  type            = "NS"
-  ttl             = "300"
-  value           = "ns2.digitalocean.com."
+  domain = tobool(var.zone_delegation) ? digitalocean_domain.sub.name : data.digitalocean_domain.provided.0.name
+  name   = "${var.cluster_name}.${var.cluster_domain}"
+  type   = "NS"
+  ttl    = "300"
+  value  = "ns2.digitalocean.com."
 }
 
 resource "digitalocean_record" "sub-ns3" {
-  domain          = tobool(var.zone_delegation) ? digitalocean_domain.sub.name : data.digitalocean_domain.provided.0.name
-  name            = "${var.cluster_name}.${var.cluster_domain}"
-  type            = "NS"
-  ttl             = "300"
-  value           = "ns3.digitalocean.com."
+  domain = tobool(var.zone_delegation) ? digitalocean_domain.sub.name : data.digitalocean_domain.provided.0.name
+  name   = "${var.cluster_name}.${var.cluster_domain}"
+  type   = "NS"
+  ttl    = "300"
+  value  = "ns3.digitalocean.com."
 }
 
 # Delegate created zone via lambda
@@ -38,7 +38,7 @@ resource "null_resource" "zone_delegation" {
   count = tobool(var.zone_delegation) ? 1 : 0
   # Update zone when DNS records are updated
   triggers = {
-    domain_name    = digitalocean_domain.sub.name
+    domain_name = digitalocean_domain.sub.name
   }
   provisioner "local-exec" {
     command = <<EOF

@@ -1,12 +1,11 @@
 cluster:
   installed: false
-  name: do-dev
+  name: do-test
   cloud:
     provider: digitalocean
     region: ams3
-    vpc: create
+    vpc: default
     vpc_cidr: 10.8.0.0/20
-    project: default
     domain: do.shalb.org
     provisioner:
       type: managed-kubernetes

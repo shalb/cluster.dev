@@ -260,6 +260,7 @@ function digitalocean::destroy {
         case $cluster_cloud_provisioner_type in
         managed-kubernetes)
             DEBUG "Destroy: Provisioner: DigitalOcean Kubernetes"
+            digitalocean::destroy_addons
             digitalocean::managed-kubernetes::destroy_cluster \
                 "$CLUSTER_FULLNAME" \
                 "$cluster_cloud_region" \
@@ -294,4 +295,93 @@ kubectl get ns \n
 
     # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig)"
     echo "::set-output name=kubeconfig::${KUBECONFIG_DOWNLOAD_MESSAGE}"
+}
+
+
+#######################################
+# Deploy K8s Addons via Terraform
+# Globals:
+#   $DO_SPACES_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_name
+#   cluster_cloud_region
+#   cluster_cloud_domain
+#   config_path
+# Outputs:
+#   Writes progress status
+#######################################
+function digitalocean::init_addons {
+    DEBUG "Deploy Kubernetes Addons via Terraform"
+    local cluster_name=$1
+    local cluster_cloud_region=$2
+    local cluster_cloud_domain=$3
+    local config_path=${4:-"~/.kube/config"}
+    local do_token=$DIGITALOCEAN_TOKEN
+
+    cd "$PRJ_ROOT"/terraform/digitalocean/addons/ || ERROR "Path not found"
+
+    INFO "Kubernetes Addons: Init Terraform configuration"
+    run_cmd "terraform init \
+                -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
+                -backend-config='key=states/terraform-addons.state' \
+                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com'"
+
+    run_cmd "terraform plan \
+                -var='region=$cluster_cloud_region' \
+                -var='cluster_cloud_domain=$cluster_cloud_domain' \
+                -var='cluster_name=$CLUSTER_FULLNAME' \
+                -var='config_path=$config_path' \
+                -var='do_token=$do_token' \
+                -input=false \
+                -out=tfplan-addons"
+
+    INFO "Kubernetes Addons: Installing/Reconciling"
+    run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan-addons"
+
+    local output
+    output=$(terraform output)
+    ARGOCD_ACCESS="ArgoCD Credentials:\n\
+${output//$'\n'/'\n'}" # newline characters shielding
+
+    NOTICE "$ARGOCD_ACCESS"
+
+    echo "::set-output name=argocd::${ARGOCD_ACCESS}"
+
+    cd - >/dev/null || ERROR "Path not found"
+}
+
+#######################################
+# Destroy Kubernetes Addons via Terraform
+# Globals:
+#   S3_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_name
+#   cluster_cloud_region
+#   cluster_cloud_domain
+# Outputs:
+#   Writes progress status
+#######################################
+function digitalocean::destroy_addons {
+    DEBUG "Delete Kubernetes Addons via Terraform"
+    local cluster_name=$1
+    local cluster_cloud_region=$2
+    local cluster_cloud_domain=$3
+
+    cd "$PRJ_ROOT"/terraform/digitalocean/addons/ || ERROR "Path not found"
+
+    INFO "Kubernetes Addons: Init Terraform configuration"
+    run_cmd "terraform init \
+                -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
+                -backend-config='key=states/terraform-addons.state' \
+                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com'"
+
+    INFO "Kubernetes Addons: Destroying"
+    run_cmd "terraform destroy -auto-approve -compact-warnings \
+                -var='cluster_cloud_domain=$cluster_cloud_domain' \
+                -var='cluster_name=$cluster_name' \
+                -var='region=$cluster_cloud_region'" "" "false"
+
+    cd - >/dev/null || ERROR "Path not found"
 }
