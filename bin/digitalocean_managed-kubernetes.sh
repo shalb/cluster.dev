@@ -7,7 +7,6 @@ source "$PRJ_ROOT"/bin/logging.sh
 # Deploy DO Kubernetes cluster with autoscaling enabled feature via Terraform
 # Globals:
 #   DO_SPACES_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
@@ -56,7 +55,6 @@ function digitalocean::managed-kubernetes::deploy_cluster {
 # Destroy DO Kubernetes cluster with autoscaling enabled feature via Terraform
 # Globals:
 #   DO_SPACES_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
@@ -82,7 +80,7 @@ function digitalocean::managed-kubernetes::destroy_cluster {
                 -backend-config='key=states/terraform-k8s.state' \
                 -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com'"
 
-    INFO "DO Managed Kubernetes Cluster: Destroying "
+    INFO "DO Managed Kubernetes Cluster: Destroying"
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='region=$cluster_cloud_region' \
                 -var='k8s_version=$cluster_cloud_provisioner_version' \
@@ -136,7 +134,7 @@ function digitalocean::managed-kubernetes::pull_kubeconfig_once {
     DEBUG "Test available kubeconfig via kubectl"
 
     INFO "Copy kubeconfig to cluster.dev executor"
-    export KUBECONFIG=~/.kube/kubeconfig_${CLUSTER_FULLNAME}
+    export KUBECONFIG="$PRJ_ROOT/terraform/digitalocean/k8s/kubeconfig_$CLUSTER_FULLNAME"
 
     # Copy config to default location
     run_cmd "cp '$PRJ_ROOT/terraform/digitalocean/k8s/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null" "" false

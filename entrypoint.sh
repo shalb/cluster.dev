@@ -164,8 +164,6 @@ DEBUG "Manifests: $MANIFESTS"
         esac
         # Pull a kubeconfig to instance and s3 and test via kubectl
         digitalocean::managed-kubernetes::pull_kubeconfig
-        # Test kubeconfig once
-        digitalocean::managed-kubernetes::pull_kubeconfig_once
 
         # Install Kubernetes Addons
         digitalocean::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"

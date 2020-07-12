@@ -152,8 +152,6 @@ function digitalocean::destroy_domain {
 # Create a VPC or use existing defined
 # Globals:
 #   DO_SPACES_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
-#   FUNC_RESULT
 # Arguments:
 #   cluster_cloud_vpc
 #   cluster_name
@@ -169,7 +167,7 @@ function digitalocean::destroy_domain {
 #######################################
 function digitalocean::init_vpc {
     DEBUG "Create a VPC or use existing defined"
-    local cluster_cloud_vpc=${1:-"create"}
+    local cluster_cloud_vpc=$1
     local cluster_name=$2
     local cluster_cloud_region=$3
     local vpc_cidr=${4:-"10.8.0.0/18"} # set default VPC cidr
@@ -201,7 +199,6 @@ function digitalocean::init_vpc {
 # Destroy VPC
 # Globals:
 #   DO_SPACES_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_cloud_vpc
 #   cluster_name
@@ -211,7 +208,7 @@ function digitalocean::init_vpc {
 #######################################
 function digitalocean::destroy_vpc {
     DEBUG "Create a VPC or use existing defined"
-    local cluster_cloud_vpc=${1:-"create"}
+    local cluster_cloud_vpc=$1
     local cluster_name=$2
     local cluster_cloud_region=$3
 
@@ -255,7 +252,18 @@ function digitalocean::destroy_do_spaces_bucket {
         --force"
 }
 
-# Destroy all cluster.
+#######################################
+# Destroy all resources in cluster
+# Globals:
+#   DO_SPACES_BACKEND_BUCKET
+#   CLUSTER_FULLNAME
+# Arguments:
+#   cluster_cloud_region
+#   cluster_cloud_domain
+#   cluster_cloud_provisioner_version
+# Outputs:
+#   Writes progress status
+#######################################
 function digitalocean::destroy {
         case $cluster_cloud_provisioner_type in
         managed-kubernetes)
@@ -357,8 +365,8 @@ ${output//$'\n'/'\n'}" # newline characters shielding
 #######################################
 # Destroy Kubernetes Addons via Terraform
 # Globals:
-#   S3_BACKEND_BUCKET
 #   CLUSTER_FULLNAME
+#   DO_SPACES_BACKEND_BUCKET
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
