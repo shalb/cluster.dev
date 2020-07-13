@@ -64,7 +64,7 @@ cluster:
     - /kubernetes/apps/samples
 ```
 
-`cluster.dev` turns it into powerful infrastructure captured as code!
+`cluster.dev` turns it into powerful infrastructure as a code!
 
 ![cluster.dev diagram](docs/images/cluster-dev-diagram.png)
 
