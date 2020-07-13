@@ -3,7 +3,7 @@ cluster:
   name: do-dev
   cloud:
     provider: digitalocean
-    region: ams3
+    region: sgp1
     project: default
     domain: do.cluster.dev
     provisioner:
