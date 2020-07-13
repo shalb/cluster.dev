@@ -165,7 +165,7 @@ DEBUG "Manifests: $MANIFESTS"
         digitalocean::managed-kubernetes::pull_kubeconfig
 
         # Install Kubernetes Addons
-        digitalocean::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME"
+        digitalocean::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/digitalocean/k8s/kubeconfig_$CLUSTER_FULLNAME"
         ;;
         esac
 
