@@ -160,13 +160,14 @@ DEBUG "Manifests: $MANIFESTS"
                 "$cluster_cloud_provisioner_nodeSize" \
                 "$cluster_cloud_provisioner_minNodes" \
                 "$cluster_cloud_provisioner_maxNodes"
-        ;;
-        esac
+
         # Pull a kubeconfig to instance and s3 and test via kubectl
         digitalocean::managed-kubernetes::pull_kubeconfig
 
         # Install Kubernetes Addons
-        digitalocean::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain"
+        digitalocean::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/aws/eks/kubeconfig_$CLUSTER_FULLNAME"
+        ;;
+        esac
 
         # Writes commands for user for get access to cluster
         digitalocean::output_access_keys
