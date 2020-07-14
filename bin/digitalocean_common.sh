@@ -16,6 +16,9 @@ function digitalocean::init_do_spaces_bucket {
     DEBUG "Create or use exiting DO spaces bucket for Terraform states"
     local cluster_cloud_region=$1
 
+    DEBUG "Echo env variables requied to deploy"
+    DEBUG "DIGITALOCEAN_TOKEN: $DIGITALOCEAN_TOKEN SPACES_ACCESS_KEY_ID: $SPACES_ACCESS_KEY_ID SPACES_SECRET_ACCESS_KEY: $SPACES_SECRET_ACCESS_KEY AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY"
+
     cd "$PRJ_ROOT"/terraform/digitalocean/backend/ || ERROR "Path not found"
 
     # Check if bucket already exist by trying to import it
