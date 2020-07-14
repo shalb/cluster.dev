@@ -3,6 +3,10 @@ resource "digitalocean_spaces_bucket" "terraform_state" {
   region = var.region
   acl    = "private"
 
+  token             = var.do_token
+  spaces_access_id  = var.access_id
+  spaces_secret_key = var.secret_key
+
   lifecycle {
     prevent_destroy = true
   }
