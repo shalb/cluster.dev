@@ -31,7 +31,7 @@ function digitalocean::init_do_spaces_bucket {
                     -var='do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET' \
                     -var='do_token=$DIGITALOCEAN_TOKEN' \
                     -var='access_id=$SPACES_ACCESS_KEY_ID' \
-                    -var='spaces_secret_key=$SPACES_SECRET_ACCESS_KEY'"
+                    -var='secret_key=$SPACES_SECRET_ACCESS_KEY'"
     fi
     run_cmd "rm -rf *.tfstate"
 
