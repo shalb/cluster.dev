@@ -27,7 +27,7 @@ function digitalocean::init_do_spaces_bucket {
     else
         NOTICE "Terraform DO_SPACES_BACKEND_BUCKET: $DO_SPACES_BACKEND_BUCKET not exist. It is going to be created"
         run_cmd "terraform apply -auto-approve \
-                    -var='region=$cluster_cloud_region' \
+                    -var='region=us-east-1' \
                     -var='do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET'"
     fi
     run_cmd "rm -rf *.tfstate"
