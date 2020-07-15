@@ -54,7 +54,7 @@ function digitalocean::is_do_spaces_bucket_exists {
     # Create and init backend.
     run_cmd "terraform init"
     INFO "List bucket to check if it available"
-    s3cmd lb s3://$DO_SPACES_BACKEND_BUCKET \
+    s3cmd ls s3://$DO_SPACES_BACKEND_BUCKET \
     --host="$cluster_cloud_region.digitaloceanspaces.com" \
     --host-bucket="%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com"
     return $?
