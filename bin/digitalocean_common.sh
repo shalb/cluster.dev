@@ -16,9 +16,6 @@ function digitalocean::init_do_spaces_bucket {
     DEBUG "Create or use exiting DO spaces bucket for Terraform states"
     local cluster_cloud_region=$1
 
-    DEBUG "Echo env variables requied to deploy"
-    DEBUG "DIGITALOCEAN_TOKEN: $DIGITALOCEAN_TOKEN SPACES_ACCESS_KEY_ID: $SPACES_ACCESS_KEY_ID SPACES_SECRET_ACCESS_KEY: $SPACES_SECRET_ACCESS_KEY AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY"
-
     cd "$PRJ_ROOT"/terraform/digitalocean/backend/ || ERROR "Path not found"
 
     # Check if bucket already exist by trying to import it
@@ -26,9 +23,9 @@ function digitalocean::init_do_spaces_bucket {
         INFO "Terraform DO_SPACES_BACKEND_BUCKET: $DO_SPACES_BACKEND_BUCKET already exist"
     else
         NOTICE "Terraform DO_SPACES_BACKEND_BUCKET: $DO_SPACES_BACKEND_BUCKET not exist. It is going to be created"
-        run_cmd "s3cmd --signature-v2 mb \"s3://${DO_SPACES_BACKEND_BUCKET}\" \
-            --host='$cluster_cloud_region.digitaloceanspaces.com' \
-            --host-bucket='%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com' -d"
+        run_cmd "terraform apply -auto-approve \
+                    -var='region=$cluster_cloud_region' \
+                    -var='do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET'"
     fi
     run_cmd "rm -rf *.tfstate"
 
@@ -53,10 +50,8 @@ function digitalocean::is_do_spaces_bucket_exists {
 
     # Create and init backend.
     run_cmd "terraform init"
-    INFO "List bucket to check if it available"
-    s3cmd -d  ls s3://$DO_SPACES_BACKEND_BUCKET \
-    --host="$cluster_cloud_region.digitaloceanspaces.com" \
-    --host-bucket="%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com" --signature-v2
+    INFO "Importing DO Spaces bucket for Terraform states."
+    terraform import -var="region=$cluster_cloud_region" -var="do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET" digitalocean_spaces_bucket.terraform_state "$cluster_cloud_region","$DO_SPACES_BACKEND_BUCKET" >/dev/null 2>&1
     return $?
 }
 
