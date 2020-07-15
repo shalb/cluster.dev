@@ -28,7 +28,7 @@ function digitalocean::init_do_spaces_bucket {
         NOTICE "Terraform DO_SPACES_BACKEND_BUCKET: $DO_SPACES_BACKEND_BUCKET not exist. It is going to be created"
         run_cmd "s3cmd mb \"s3://${DO_SPACES_BACKEND_BUCKET}\" \
             --host='$cluster_cloud_region.digitaloceanspaces.com' \
-            --host-bucket='%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com' --signature-v2"
+            --host-bucket='%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com' --signature-v2 -d"
     fi
     run_cmd "rm -rf *.tfstate"
 
@@ -54,7 +54,7 @@ function digitalocean::is_do_spaces_bucket_exists {
     # Create and init backend.
     run_cmd "terraform init"
     INFO "List bucket to check if it available"
-    s3cmd  ls s3://$DO_SPACES_BACKEND_BUCKET \
+    s3cmd -d  ls s3://$DO_SPACES_BACKEND_BUCKET \
     --host="$cluster_cloud_region.digitaloceanspaces.com" \
     --host-bucket="%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com" --signature-v2
     return $?
