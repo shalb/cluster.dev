@@ -26,10 +26,9 @@ function digitalocean::init_do_spaces_bucket {
         INFO "Terraform DO_SPACES_BACKEND_BUCKET: $DO_SPACES_BACKEND_BUCKET already exist"
     else
         NOTICE "Terraform DO_SPACES_BACKEND_BUCKET: $DO_SPACES_BACKEND_BUCKET not exist. It is going to be created"
-        export AWS_SIGNATURE_VERSION=2
-        run_cmd "terraform apply -auto-approve \
-                    -var='region=$cluster_cloud_region' \
-                    -var='do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET'"
+        run_cmd "s3cmd mb \"s3://${DO_SPACES_BACKEND_BUCKET}\" \
+            --host='$cluster_cloud_region.digitaloceanspaces.com' \
+            --host-bucket='%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com' "
     fi
     run_cmd "rm -rf *.tfstate"
 
@@ -54,8 +53,10 @@ function digitalocean::is_do_spaces_bucket_exists {
 
     # Create and init backend.
     run_cmd "terraform init"
-    INFO "Importing DO Spaces bucket for Terraform states."
-    terraform import -var="region=$cluster_cloud_region" -var="do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET" digitalocean_spaces_bucket.terraform_state "$cluster_cloud_region","$DO_SPACES_BACKEND_BUCKET" >/dev/null 2>&1
+    INFO "List bucket to check if it available"
+    s3cmd lb s3://$DO_SPACES_BACKEND_BUCKET \
+    --host="$cluster_cloud_region.digitaloceanspaces.com" \
+    --host-bucket="%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com"
     return $?
 }
 
