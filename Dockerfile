@@ -6,10 +6,10 @@ FROM hashicorp/terraform:light as terraform
 
 FROM ubuntu:18.04
 ARG YAMLTOENV_VERSION=v0.0.3
-
+ARG DEBIAN_FRONTEND=noninteractive
 COPY --from=terraform /bin/terraform /bin/terraform
 
-### Install soft
+### Install so
 RUN apt-get -y update && apt-get -y install curl s3cmd git awscli \
     && curl -L  https://github.com/shalb/yamltoenv/releases/download/${YAMLTOENV_VERSION}/yamltoenv_${YAMLTOENV_VERSION}_linux_amd64.tgz |  tar -xvz \
     && rm -f yamltoenv_${YAMLTOENV_VERSION}_linux_amd64.tgz && mv yamltoenv /bin/ \
