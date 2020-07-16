@@ -8,6 +8,7 @@ FROM hashicorp/terraform:light as terraform
 
 FROM chatwork/helmfile:$HELMFILE_VERSION
 ARG YAMLTOENV_VERSION=v0.0.3
+ARG GLIBC_VER=2.31-r0
 
 COPY --from=terraform /bin/terraform /bin/terraform
 RUN apk --no-cache add \
