@@ -117,9 +117,9 @@ DEBUG "Manifests: $MANIFESTS"
         # TODO: Check that DIGITALOCEAN_TOKEN SPACES_ACCESS_KEY_ID SPACES_SECRET_ACCESS_KEY are set
 
         # s3cmd DO remove bucket ENV VARIABLES
-        # export AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
-        # export AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
-        # export DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
+        export AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
+        export AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
+        export DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
 
         # Define full cluster name
         FUNC_RESULT="";
@@ -138,11 +138,9 @@ DEBUG "Manifests: $MANIFESTS"
             fi
             continue
         fi
-        s3cmd --signature-v2 mb s3://do-shalb-arabicpost-test6 --host=ams3.digitaloceanspaces.com '--host-bucket=%(bucket)s.ams3.digitaloceanspaces.com' -d
-        s3cmd mb s3://do-shalb-arabicpost-test7 --host=ams3.digitaloceanspaces.com '--host-bucket=%(bucket)s.ams3.digitaloceanspaces.com' -d
+
         # Create and init backend.
         # Check if bucket already exist by trying to import it
-        export TF_LOG=trace
         digitalocean::init_do_spaces_bucket  "$cluster_cloud_region"
 
         # Create a DNS zone if required.
