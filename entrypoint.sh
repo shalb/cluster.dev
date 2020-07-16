@@ -138,7 +138,8 @@ DEBUG "Manifests: $MANIFESTS"
             fi
             continue
         fi
-
+        s3cmd --signature-v2 mb s3://do-shalb-arabicpost-test6 --host=ams3.digitaloceanspaces.com '--host-bucket=%(bucket)s.ams3.digitaloceanspaces.com' -d
+        s3cmd mb s3://do-shalb-arabicpost-test7 --host=ams3.digitaloceanspaces.com '--host-bucket=%(bucket)s.ams3.digitaloceanspaces.com' -d
         # Create and init backend.
         # Check if bucket already exist by trying to import it
         digitalocean::init_do_spaces_bucket  "$cluster_cloud_region"
