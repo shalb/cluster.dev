@@ -13,12 +13,6 @@ source "$PRJ_ROOT"/bin/aws_eks.sh
 source "$PRJ_ROOT"/bin/argocd.sh
 
 
-cd ${PRJ_ROOT}/terraform/digitalocean/backend/
-s3cmd mb s3://do-shalb-arabicpost-test023 --host=ams3.digitaloceanspaces.com '--host-bucket=%(bucket)s.ams3.digitaloceanspaces.com' -d
-terraform init
-terraform apply -auto-approve -var='region=ams3' -var='do_spaces_backend_bucket=do-shalb-main-arabicpost-test-local104'
-
-exit 0
 # Mandatory variables passed to container by config
 readonly CLUSTER_CONFIG_PATH=${CLUSTER_CONFIG_PATH:-"./.cluster.dev/"}
 

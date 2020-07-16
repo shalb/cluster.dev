@@ -23,7 +23,7 @@ function digitalocean::init_do_spaces_bucket {
         INFO "Terraform DO_SPACES_BACKEND_BUCKET: $DO_SPACES_BACKEND_BUCKET already exist"
     else
         NOTICE "Terraform DO_SPACES_BACKEND_BUCKET: $DO_SPACES_BACKEND_BUCKET not exist. It is going to be created"
-        run_cmd "s3cmd mb s3://do-shalb-arabicpost-test01 --host=ams3.digitaloceanspaces.com '--host-bucket=%(bucket)s.ams3.digitaloceanspaces.com' -d && terraform apply -auto-approve \
+        run_cmd "terraform apply -auto-approve \
                     -var='region=$cluster_cloud_region' \
                     -var='do_spaces_backend_bucket=$DO_SPACES_BACKEND_BUCKET'"
     fi
