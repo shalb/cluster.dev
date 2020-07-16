@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  destination:
+    namespace: monitoring
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: kubernetes/charts/prometheus-operator-customized/
+    repoURL: 'https://github.com/gelo22/cluster-dev-gelo-test'
+    targetRevision: master
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
