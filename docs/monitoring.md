@@ -10,6 +10,11 @@ See application here `kubernetes/apps/monitoring.yaml`
 
 Create a proxy connection to your machine
 
+Default credentials:  
+User: `admin`  
+Password: `prom-operator`
+
+
 ```
 export POD_NAME=$(kubectl get pods -n monitoring -l "app=prometheus" -o jsonpath="{.items[0].metadata.name}")
 kubectl -n monitoring port-forward --address 127.0.0.1 $POD_NAME 19090:9090
