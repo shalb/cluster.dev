@@ -5,7 +5,3 @@ terraform {
     digitalocean = "~> 1.18.0"
   }
 }
-
-provider "digitalocean" {
-  spaces_endpoint = "https://ams3.digitaloceanspaces.com"
-}
