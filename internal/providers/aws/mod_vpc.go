@@ -13,7 +13,7 @@ type vpcVarsSpec struct {
 	Region            string   `json:"region"`
 	ClusterName       string   `json:"cluster_name"`
 	VpcCIDR           string   `json:"vpc_cidr"`
-	AvailabilityZones []string `json:"availability_zones,omitempty"`
+	AvailabilityZones []string `json:"availability_zones"`
 }
 
 // Vpc type for vpc module instance.
