@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/executor"
@@ -19,22 +20,22 @@ type S3Backend struct {
 	backendConf executor.BackendSpec
 	terraform   *executor.TerraformRunner
 	bash        *executor.BashRunner
+	moduleDir   string
 }
-
-const backendModulePath = "terraform/aws/backend"
 
 // NewS3Backend create new s3 backend instance.
 func NewS3Backend(providerConf providerConfSpec) (*S3Backend, error) {
 	var s3 S3Backend
+	s3.moduleDir = filepath.Join(terraformRoot, "terraform/aws/backend")
 	s3.backendConf = executor.BackendSpec{}
 	s3.config.Bucket = providerConf.ClusterName
 	s3.config.Region = providerConf.Region
 	var err error
-	s3.terraform, err = executor.NewTerraformRunner(backendModulePath)
+	s3.terraform, err = executor.NewTerraformRunner(s3.moduleDir)
 	if err != nil {
 		return nil, err
 	}
-	s3.bash, err = executor.NewBashRunner(backendModulePath)
+	s3.bash, err = executor.NewBashRunner(s3.moduleDir)
 	if err != nil {
 		return nil, err
 	}

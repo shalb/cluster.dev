@@ -31,7 +31,6 @@ func globalConfigInit() {
 	flag.StringVar(&globalConfig.LogLevel, "log-level", getEnv("VERBOSE_LVL", "info"), "Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")")
 
 	curPath, err := os.Getwd()
-	globalConfig.ClusterConfigsPath, err = os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current directory: %s", err.Error())
 	}

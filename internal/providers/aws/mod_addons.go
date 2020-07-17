@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/executor"
@@ -29,7 +30,7 @@ type Addons struct {
 func NewAddons(providerConf providerConfSpec) (*Addons, error) {
 	var addons Addons
 	// Module dir.
-	addons.moduleDir = "terraform/aws/addons"
+	addons.moduleDir = filepath.Join(terraformRoot, "terraform/aws/addons")
 	// Module state name.
 	addons.backendKey = "states/terraform-addons.state"
 	// Set backend config.

@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"path/filepath"
+
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/executor"
 )
@@ -25,7 +27,7 @@ type Route53 struct {
 // NewRoute53 create new route53 instance.
 func NewRoute53(providerConf providerConfSpec) (*Route53, error) {
 	var route53 Route53
-	route53.moduleDir = "terraform/aws/route53"
+	route53.moduleDir = filepath.Join(terraformRoot, "terraform/aws/route53")
 	route53.backendConf = executor.BackendSpec{
 		Bucket: providerConf.ClusterName,
 		Key:    "states/terraform-dns.state",

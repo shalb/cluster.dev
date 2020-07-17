@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/executor"
@@ -27,7 +28,7 @@ type Minikube struct {
 // NewMinikube create new minikube instance.
 func NewMinikube(providerConf providerConfSpec) (*Minikube, error) {
 	var miniKube Minikube
-	miniKube.moduleDir = "terraform/aws/minikube"
+	miniKube.moduleDir = filepath.Join(terraformRoot, "terraform/aws/minikube")
 	miniKube.backendKey = "states/terraform-k8s.state"
 	miniKube.backendConf = executor.BackendSpec{
 		Bucket: providerConf.ClusterName,

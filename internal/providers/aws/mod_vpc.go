@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"path/filepath"
+
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/executor"
 )
@@ -19,20 +21,20 @@ type Vpc struct {
 	config      vpcVarsSpec
 	backendConf executor.BackendSpec
 	terraform   *executor.TerraformRunner
+	backendKey  string
+	moduleDir   string
 }
-
-const vpcModulePath = "terraform/aws/vpc"
-const vpcModuleBackendKey = "states/terraform-vpc.state"
 
 // NewVpc create new vpc instance.
 func NewVpc(providerConf providerConfSpec) (*Vpc, error) {
-	var bk Vpc
-	bk.backendConf = executor.BackendSpec{
+	var vpc Vpc
+	vpc.moduleDir = filepath.Join(terraformRoot, "terraform/aws/vpc")
+	vpc.backendConf = executor.BackendSpec{
 		Bucket: providerConf.ClusterName,
-		Key:    vpcModuleBackendKey,
+		Key:    "states/terraform-vpc.state",
 		Region: providerConf.Region,
 	}
-	bk.config = vpcVarsSpec{
+	vpc.config = vpcVarsSpec{
 		VpcID:             providerConf.Vpc,
 		Region:            providerConf.Region,
 		ClusterName:       providerConf.ClusterName,
@@ -40,11 +42,11 @@ func NewVpc(providerConf providerConfSpec) (*Vpc, error) {
 		AvailabilityZones: providerConf.AvailabilityZones,
 	}
 	var err error
-	bk.terraform, err = executor.NewTerraformRunner(vpcModulePath)
+	vpc.terraform, err = executor.NewTerraformRunner(vpc.moduleDir)
 	if err != nil {
 		return nil, err
 	}
-	return &bk, nil
+	return &vpc, nil
 }
 
 // Deploy - create vpc.

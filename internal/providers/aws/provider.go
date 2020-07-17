@@ -3,6 +3,7 @@
 package aws
 
 import (
+	"os"
 	"time"
 
 	"github.com/apex/log"
@@ -11,6 +12,8 @@ import (
 
 // Ident - string key for identify provider in the providers map.
 const Ident = "aws"
+
+var terraformRoot string
 
 // aws provider sub-config.
 type providerConfSpec struct {
@@ -45,6 +48,14 @@ func (p *Provider) Init(yamlSpec []byte, clusterName string) error {
 	if err != nil {
 		return err
 	}
+	var ok bool
+	if terraformRoot, ok = os.LookupEnv("PRJ_ROOT"); !ok {
+		terraformRoot, err = os.Getwd()
+		if err != nil {
+			return err
+		}
+	}
+	log.Debugf("terraform root dir is set to dir is '%s'", terraformRoot)
 	p.Config = spec
 	p.Config.ClusterName = clusterName
 	return nil
