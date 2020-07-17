@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apex/log"
-	"github.com/romanprog/c-dev/executor"
+	"github.com/shalb/cluster.dev/internal/executor"
 )
 
 // Type for module tfVars JSON.

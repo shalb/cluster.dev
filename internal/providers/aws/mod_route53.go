@@ -2,7 +2,7 @@ package aws
 
 import (
 	"github.com/apex/log"
-	"github.com/romanprog/c-dev/executor"
+	"github.com/shalb/cluster.dev/internal/executor"
 )
 
 // Variables set for route53 module tfvars.

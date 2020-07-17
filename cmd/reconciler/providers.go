@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/shalb/cluster-dev/internal/providers/aws"
+	"github.com/shalb/cluster.dev/internal/providers/aws"
 
 	"github.com/apex/log"
 	"gopkg.in/yaml.v2"
