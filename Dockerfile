@@ -1,5 +1,12 @@
 ARG HELMFILE_VERSION=0.113.0
 
+FROM golang:1.14.2-alpine3.11 as builder
+
+RUN apk add --no-cache make git bash
+WORKDIR /workspace/cluster-dev
+COPY . /workspace/cluster-dev
+RUN make
+
 FROM hashicorp/terraform:light as terraform
 
 ### Install Helmfile
@@ -10,6 +17,7 @@ FROM chatwork/helmfile:$HELMFILE_VERSION
 ARG YAMLTOENV_VERSION=v0.0.3
 
 COPY --from=terraform /bin/terraform /bin/terraform
+COPY --from=builder /workspace/cluster-dev/bin/reconciler /bin/reconciler
 
 ### Install s3cmd
 RUN python3 -m pip install --upgrade pip && \
@@ -23,4 +31,4 @@ WORKDIR $PRJ_ROOT
 # Look on .dockerignore file to check what included
 COPY . .
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/bin/reconciler"]

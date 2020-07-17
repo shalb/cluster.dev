@@ -5,4 +5,7 @@
 !terraform/
 !cmd/
 !internal/
+!Makefile
+!go.mod
+!go.sum
 
