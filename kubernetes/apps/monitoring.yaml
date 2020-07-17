@@ -9,7 +9,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     path: kubernetes/charts/prometheus-operator-customized/
-    repoURL: 'https://github.com/gelo22/cluster-dev-gelo-test'
+    repoURL: 'https://github.com/MY_USER/MY_REPO'
     targetRevision: master
   project: default
   syncPolicy:

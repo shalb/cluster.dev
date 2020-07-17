@@ -2,7 +2,8 @@
 
 Monitoring stack based on [chart](https://github.com/helm/charts/tree/master/stable/prometheus-operator)
 
-See application here `kubernetes/apps/monitoring.yaml`
+See application here `kubernetes/apps/monitoring.yaml`  
+Replace value for key `repoURL` by your repo.
 
 # Access
 
