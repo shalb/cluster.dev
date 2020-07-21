@@ -30,7 +30,7 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 * [Principle diagram](#principle-diagram)
 * [How it works](#how-it-works)
 * [Installation](#installation)
-  * [Quick Start on AWS and DO](#quick-start-on-aws)
+  * [Quick Start](#quick-start)
   * [Cleanup](#cleanup)
 * [Technical diagram](#technical-diagram)
 * [Roadmap](#roadmap)
