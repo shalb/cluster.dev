@@ -116,7 +116,7 @@ DEBUG "Manifests: $MANIFESTS"
         # Define DO credentials from ENV VARIABLES passed to container
         # TODO: Check that DIGITALOCEAN_TOKEN SPACES_ACCESS_KEY_ID SPACES_SECRET_ACCESS_KEY are set
 
-        # s3cmd DO remove bucket ENV VARIABLES
+        # Exports for s3cmd for DO to manipulate buckets
         export AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
         export AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
         export DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
