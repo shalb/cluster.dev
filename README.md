@@ -32,6 +32,7 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 * [Installation](#installation)
   * [Quick Start](#quick-start)
   * [Cleanup](#cleanup)
+* [Configuration Options](./docs/OPTIONS.md)
 * [Technical diagram](#technical-diagram)
 * [Roadmap](#roadmap)
 * [Contributing](#contributing)
