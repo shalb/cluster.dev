@@ -25,23 +25,23 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 
 ----
 
-## MENU
+## MENU <!-- omit in toc -->
 
-* [Principle diagram](#principle-diagram-)
-* [How it works](#how-it-works-)
-* [Configuration options](/docs/OPTIONS.md)
-* [Installation](#installation-)
-  * [Quick Start on AWS](#quick-start-on-aws-)
-  * [Cleanup](#cleanup-)
-* [Technical diagram](#technical-diagram-)
-* [Roadmap](#roadmap-)
-* [Contributing](#contributing-)
-* [FAQ](#faq-)
+* [Principle diagram](#principle-diagram)
+* [How it works](#how-it-works)
+* [Installation](#installation)
+  * [Quick Start on AWS](#quick-start-on-aws)
+  * [Cleanup](#cleanup)
+* [Technical diagram](#technical-diagram)
+* [Roadmap](#roadmap)
+* [Contributing](#contributing)
+* [FAQ](#faq)
+* [Code of Conduct and License](#code-of-conduct-and-license)
 
 ----
 
 
-## Principle diagram [`↑`](#menu)
+## Principle diagram
 
 Small and understandable yaml definition:
 
@@ -68,7 +68,7 @@ cluster:
 
 ![cluster.dev diagram](docs/images/cluster-dev-diagram.png)
 
-## How it works [`↑`](#menu)
+## How it works
 
 In the background:
 
@@ -83,9 +83,9 @@ You receive:
 * Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)
 
 
-## Installation [`↑`](#menu)
+## Installation
 
-### Quick Start on AWS [`↑`](#menu)
+### Quick Start on AWS
 
 _normally it takes 15 minutes_
 
@@ -165,7 +165,7 @@ In the GitHub action output you'll receive access instructions to your cluster a
 
 10. Voilà! You receive GitOps managed infrastructure in code. So now you can deploy applications, create more clusters, integrate with CI systems, experiment with the new features and everything else from Git without leaving your IDE.
 
-### Cleanup [`↑`](#menu)
+### Cleanup
 
 To shutdown the cluster and remove all associated resources:
 
@@ -177,18 +177,24 @@ To shutdown the cluster and remove all associated resources:
 After successful removal, you can safely delete cluster manifest file from `.cluster.dev/` directory.
 
 
-## Technical diagram [`↑`](#menu)
+## Technical diagram
 
 ![cluster.dev technical diagram](docs/images/cluster-dev-technical-diagram.png)
 
-## Roadmap [`↑`](#menu)
+## Roadmap
 
 The project is in Alpha Stage. Roadmap details: [docs/ROADMAP.md](docs/ROADMAP.md)
 
-## Contributing [`↑`](#menu)
+## Contributing
 
 If you want to spread the project with your own code, you could start contributing with this quick guide: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
 
-## FAQ [`↑`](#menu)
+## FAQ
 
 * [Available log levels and how it change](https://github.com/shalb/cluster.dev/blob/master/docs/bash-logging.md#logging-levels)
+
+## Code of Conduct and License
+
+Code of Conduct described in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+
+Product licensed under [Apache 2.0](./LICENSE).
