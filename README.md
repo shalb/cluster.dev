@@ -30,7 +30,7 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 * [Principle diagram](#principle-diagram)
 * [How it works](#how-it-works)
 * [Installation](#installation)
-  * [Quick Start on AWS](#quick-start-on-aws)
+  * [Quick Start on AWS and DO](#quick-start-on-aws)
   * [Cleanup](#cleanup)
 * [Technical diagram](#technical-diagram)
 * [Roadmap](#roadmap)
@@ -85,7 +85,7 @@ You receive:
 
 ## Installation
 
-### Quick Start on AWS
+### Quick Start
 
 _normally it takes 15 minutes_
 
@@ -99,6 +99,9 @@ Clone the repo locally:
     ```
 
 **Next steps** should be done inside that repo.
+
+<details>
+  <summary>Expand steps for specific for Amazon AWS</summary>
 
 2. Create a new AWS user with limited access in IAM.  
 Watch [video example](https://www.youtube.com/watch?v=ALF1Ku2lYys) to create the user and apply [policy](install/aws_policy.json).  
@@ -130,6 +133,45 @@ If you need more information about AWS users - please check [aws documentation](
     ```
 
 5. In the cluster manifest (.cluster.dev/aws-minikube.yaml) you can set your own Route53 DNS zone. If you don't have any hosted public zone you can set just `domain: cluster.dev` and we will create it for you. Or you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).
+</details>
+
+<details>
+  <summary>Expand steps for specific for DigitalOcean</summary>
+
+2. Login to your DO account.
+   You can create a default VPC inside your account if you wish: `Manage->Networking->VPC-Create VPC Network`.
+
+3. You need to generate DO API Token and DO Spaces keys.  
+To generate API Token please consult [DO document](
+https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). It should like:
+    ```yaml
+    DIGITALOCEAN_TOKEN: "83e209a810b6c1da8919fe7265b9493992929b9221444449"
+    ```
+    To generate DO Spaces secrets please consult [DO document](
+    https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key#creating-an-access-key)
+    Resulting Key and Secret should look like:
+    ```yaml
+    SPACES_ACCESS_KEY_ID: "L2Z3UN2I4R322XX56LPM"
+    SPACES_SECRET_ACCESS_KEY: "njVtezJ7t2ce1nlohIFwoPHHF333mmcc2"
+    ```
+    Add TOKEN and SPACES keys to your repo secrets or env variables. In GitHub: `Settings → Secrets`, the path should look like: `https://github.com/MY_USER/MY_REPO_NAME/settings/secrets`:  
+
+
+4. In your repo, create a Github workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and  
+ cluster.dev example manifest: [.cluster.dev/digitalocean-k8s.yaml](.cluster.dev/digitalocean-k8s.yaml) with the cluster definition.
+
+    _Or download example files to your local repo clone using the next commands:_
+
+
+    ```bash
+    # Sample with DO Managed Kubernetes Cluster
+    export RELEASE=v0.1.10
+    mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/digitalocean.yml"
+    mkdir -p .cluster.dev/ && wget -O .cluster.dev/digitalocean-k8s.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/digitalocean-k8s.yaml"
+    ```
+
+5. In the cluster manifest (.cluster.dev/digitalocean-k8s.yaml) you can set your own Domain Zone. If you don't have any hosted public zone you can set just `domain: cluster.dev` and we will create it for you. Or you can create it manually and add to your account with [instructions from DO website](https://www.digitalocean.com/docs/networking/dns/how-to/add-domains/).
+</details>
 
 6. You can change all other parameters or leave default values in the cluster manifest.  
 Leave the Github workflow file [.github/workflows/main.yml](.github/workflows/main.yml) as is.
