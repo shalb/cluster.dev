@@ -1,8 +1,11 @@
 installed: false
-name: dev
+name: artigo
 provider:
   type: aws
   region: eu-central-1
+  availability_zones:
+    - eu-central-1b
+    - eu-central-1c
   vpc: default
   domain: cluster.dev
   provisioner:

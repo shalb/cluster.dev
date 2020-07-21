@@ -145,6 +145,7 @@ func (p *Provider) Destroy() error {
 	if err != nil {
 		return err
 	}
+	log.Info("Checking backend...")
 	exists, err := backend.Check()
 	if err != nil {
 		return err
@@ -162,22 +163,24 @@ func (p *Provider) Destroy() error {
 	}
 	// Pull kubernetes config from s3 to ~/.kube/.
 	err = provisioner.PullKubeConfig()
-	if err != nil {
-		return err
+	if err == nil {
+		// Create new addons instance.
+		addons, err := NewAddons(p.Config)
+		if err != nil {
+			return err
+		}
+		// Deploy addons.
+		log.Info("Destroying addons...")
+		err = addons.Destroy()
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Info("KubeConfig is not found in bucket, ignore addons destroying.")
 	}
 
-	// Create new addons instance.
-	addons, err := NewAddons(p.Config)
-	if err != nil {
-		return err
-	}
-	// Deploy addons.
-	err = addons.Destroy()
-	if err != nil {
-		return err
-	}
-
-	provisioner.Destroy()
+	log.Info("Destroying provisioner...")
+	err = provisioner.Destroy()
 	if err != nil {
 		return err
 	}
@@ -187,6 +190,7 @@ func (p *Provider) Destroy() error {
 	if err != nil {
 		return err
 	}
+	log.Info("Destroying VPC...")
 	err = vpc.Destroy()
 	if err != nil {
 		return err
@@ -196,11 +200,12 @@ func (p *Provider) Destroy() error {
 	if err != nil {
 		return err
 	}
+	log.Info("Destroying Route53...")
 	err = route53.Destroy()
 	if err != nil {
 		return err
 	}
-
+	log.Info("Destroying backend...")
 	// Remove bucket and dynamodb table.
 	err = backend.Destroy()
 	if err != nil {

@@ -13,6 +13,9 @@ provider "aws" {
   region = var.region
 }
 provider "helm" {
+  kubernetes {
+    config_path = var.config_path
+  }
 }
 
 ## Get remote states to use in roles

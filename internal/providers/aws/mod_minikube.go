@@ -74,7 +74,6 @@ func (s *Minikube) Deploy() error {
 	// Apply. Create DNS.
 	err = s.terraform.ApplyPlan("tfplan", "-compact-warnings")
 	if err != nil {
-		log.Error("ERROR fuck")
 		return err
 	}
 	return nil
