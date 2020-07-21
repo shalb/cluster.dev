@@ -1,4 +1,4 @@
-variable "name" {
+variable "cluster_name" {
   type        = string
   description = "(Required) Provide DigitalOcean cluster name"
 }
@@ -30,4 +30,16 @@ variable "max_node_count" {
   description = "Digital Ocean Kubernetes max nodes with autoscale feature (e.g. `2`)"
   type        = number
   default     = 2
+}
+
+variable "write_kubeconfig" {
+  description = "Whether to write a Kubectl config file containing the cluster configuration. Saved to `config_output_path`."
+  type        = bool
+  default     = true
+}
+
+variable "config_output_path" {
+  description = "Where to save the Kubectl config file (if `write_kubeconfig = true`). Assumed to be a directory if the value ends with a forward slash `/`."
+  type        = string
+  default     = "./"
 }

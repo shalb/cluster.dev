@@ -105,11 +105,9 @@ DEBUG "Manifests: $MANIFESTS"
             ;;
         esac
 
-            # Deploy ArgoCD apps via kubectl
-            argocd::deploy_apps
+        # Writes commands for user for get access to cluster
+        aws::output_access_keys   "$cluster_cloud_domain"
 
-            # Writes commands for user for get access to cluster
-            aws::output_access_keys   "$cluster_cloud_domain"
         ;;
 
     digitalocean)
@@ -118,10 +116,10 @@ DEBUG "Manifests: $MANIFESTS"
         # Define DO credentials from ENV VARIABLES passed to container
         # TODO: Check that DIGITALOCEAN_TOKEN SPACES_ACCESS_KEY_ID SPACES_SECRET_ACCESS_KEY are set
 
-        # s3cmd DO remove bucket ENV VARIABLES
-        AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
-        AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
-        DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
+        # Exports for s3cmd for DO to manipulate buckets
+        export AWS_ACCESS_KEY_ID=${SPACES_ACCESS_KEY_ID}
+        export AWS_SECRET_ACCESS_KEY=${SPACES_SECRET_ACCESS_KEY}
+        export DIGITALOCEAN_TOKEN=${DIGITALOCEAN_TOKEN}
 
         # Define full cluster name
         FUNC_RESULT="";
@@ -145,23 +143,34 @@ DEBUG "Manifests: $MANIFESTS"
         # Check if bucket already exist by trying to import it
         digitalocean::init_do_spaces_bucket  "$cluster_cloud_region"
 
+        # Create a DNS zone if required.
+        digitalocean::init_domain   "$cluster_cloud_region" "$CLUSTER_FULLNAME" "$cluster_cloud_domain"
+
+        # Create a VPC or use existing defined.
+        digitalocean::init_vpc   "$cluster_cloud_vpc" "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_vpc_cidr"
+
         case $cluster_cloud_provisioner_type in
         managed-kubernetes)
             DEBUG "Provisioner: managed-kubernetes"
             # Deploy DO k8s cluster via Terraform
             digitalocean::managed-kubernetes::deploy_cluster \
-                "$cluster_name" \
+                "$CLUSTER_FULLNAME" \
                 "$cluster_cloud_region" \
                 "$cluster_cloud_provisioner_version" \
                 "$cluster_cloud_provisioner_nodeSize" \
                 "$cluster_cloud_provisioner_minNodes" \
                 "$cluster_cloud_provisioner_maxNodes"
-            # Writes commands for user for get access to cluster
-            digitalocean::output_access_keys
+
+        # Pull a kubeconfig to instance and s3 and test via kubectl
+        digitalocean::managed-kubernetes::pull_kubeconfig
+
+        # Install Kubernetes Addons
+        digitalocean::init_addons   "$CLUSTER_FULLNAME" "$cluster_cloud_region" "$cluster_cloud_domain" "$PRJ_ROOT/terraform/digitalocean/k8s/kubeconfig_$CLUSTER_FULLNAME"
         ;;
         esac
 
-
+        # Writes commands for user for get access to cluster
+        digitalocean::output_access_keys
         ;;
 
     gcp)
@@ -173,5 +182,8 @@ DEBUG "Manifests: $MANIFESTS"
         ;;
 
     esac
+
+    # Deploy ArgoCD apps via kubectl
+    argocd::deploy_apps
 
 done

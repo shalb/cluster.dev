@@ -2,12 +2,12 @@
 
 Module creates or re-use existing VPC.
 
-If vpc_id =
+If vpc_id equal to:
   "create" - creates VPC by terraform-aws-vpc module
   "default" - use default VPC in provided region
-  "vpc_id"  - it would use provided id for existing VPC but networks should be tagged  
+  "vpc_id"  - it would use provided id for existing VPC but networks should be tagged
   with "cluster.dev/subnet_type" = "private|public" tags to become visible for module.
-}
+
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs

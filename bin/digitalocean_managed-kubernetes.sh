@@ -7,7 +7,6 @@ source "$PRJ_ROOT"/bin/logging.sh
 # Deploy DO Kubernetes cluster with autoscaling enabled feature via Terraform
 # Globals:
 #   DO_SPACES_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
@@ -30,25 +29,23 @@ function digitalocean::managed-kubernetes::deploy_cluster {
     cd "$PRJ_ROOT"/terraform/digitalocean/k8s/ || ERROR "Path not found"
 
     # Deploy main Terraform code
-    INFO "DO k8s cluster with autoscaling enabled feature: Initializing Terraform configuration"
+    INFO "DO Managed Kubernetes Cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform.state' \
-                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com' \
-                -backend-config='access_key=$SPACES_ACCESS_KEY_ID' \
-                -backend-config='secret_key=$SPACES_SECRET_ACCESS_KEY'"
+                -backend-config='key=states/terraform-k8s.state' \
+                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com'"
 
     run_cmd "terraform plan \
-                  -var='region=$cluster_cloud_region' \
-                  -var='k8s_version=$cluster_cloud_provisioner_version' \
-                  -var='name=$CLUSTER_FULLNAME' \
-                  -var='node_type=$cluster_cloud_provisioner_nodeSize' \
-                  -var='min_node_count=$cluster_cloud_provisioner_minNodes' \
-                  -var='max_node_count=$cluster_cloud_provisioner_maxNodes' \
-                  -input=false \
-                  -out=tfplan"
+                -var='region=$cluster_cloud_region' \
+                -var='k8s_version=$cluster_cloud_provisioner_version' \
+                -var='cluster_name=$cluster_name' \
+                -var='node_type=$cluster_cloud_provisioner_nodeSize' \
+                -var='min_node_count=$cluster_cloud_provisioner_minNodes' \
+                -var='max_node_count=$cluster_cloud_provisioner_maxNodes' \
+                -input=false \
+                -out=tfplan"
 
-    INFO "DO k8s cluster with autoscaling feature: Creating infrastructure"
+    INFO "DO Managed Kubernetes Cluster: Creating..."
     run_cmd "terraform apply -auto-approve -compact-warnings -input=false tfplan"
 
     cd - >/dev/null || ERROR "Path not found"
@@ -58,7 +55,6 @@ function digitalocean::managed-kubernetes::deploy_cluster {
 # Destroy DO Kubernetes cluster with autoscaling enabled feature via Terraform
 # Globals:
 #   DO_SPACES_BACKEND_BUCKET
-#   CLUSTER_FULLNAME
 # Arguments:
 #   cluster_name
 #   cluster_cloud_region
@@ -74,54 +70,74 @@ function digitalocean::managed-kubernetes::destroy_cluster {
     local cluster_name=$1
     local cluster_cloud_region=$2
     local cluster_cloud_provisioner_version=$3
-    local cluster_cloud_provisioner_nodeSize=$4
-    local cluster_cloud_provisioner_minNodes=$5
-    local cluster_cloud_provisioner_maxNodes=$6
 
     cd "$PRJ_ROOT"/terraform/digitalocean/k8s/ || ERROR "Path not found"
 
     # Deploy main Terraform code
-    INFO "DO k8s cluster with autoscaling enabled feature: Initializing Terraform configuration"
+    INFO "DO Managed Kubernetes Cluster: Initializing Terraform configuration"
     run_cmd "terraform init \
                 -backend-config='bucket=$DO_SPACES_BACKEND_BUCKET' \
-                -backend-config='key=$cluster_name/terraform.state' \
-                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com' \
-                -backend-config='access_key=$SPACES_ACCESS_KEY_ID' \
-                -backend-config='secret_key=$SPACES_SECRET_ACCESS_KEY'"
+                -backend-config='key=states/terraform-k8s.state' \
+                -backend-config='endpoint=$cluster_cloud_region.digitaloceanspaces.com'"
 
-    INFO "DO k8s cluster with autoscaling enabled feature: Destroying "
+    INFO "DO Managed Kubernetes Cluster: Destroying"
     run_cmd "terraform destroy -auto-approve -compact-warnings \
                 -var='region=$cluster_cloud_region' \
                 -var='k8s_version=$cluster_cloud_provisioner_version' \
-                -var='name=$CLUSTER_FULLNAME' \
-                -var='node_type=$cluster_cloud_provisioner_nodeSize' \
-                -var='min_node_count=$cluster_cloud_provisioner_minNodes' \
-                -var='max_node_count=$cluster_cloud_provisioner_maxNodes'"
+                -var='cluster_name=$cluster_name'"
 
     cd - >/dev/null || ERROR "Path not found"
 }
 
 #######################################
-# Writes commands for user for get access to cluster
+# Pull a kubeconfig to instance and DO spaces and test via kubectl
 # Globals:
 #   CLUSTER_FULLNAME
+# Arguments:
+#   None
 # Outputs:
-#   Writes commands to get cluster's kubeconfig
+#   Writes progress status
 #######################################
-function digitalocean::output_access_keys {
-    DEBUG "Writes commands for user for get access to cluster"
+function digitalocean::managed-kubernetes::pull_kubeconfig {
+    DEBUG "Place a kubeconfig to executor instance and DO Spaces and test it via kubectl"
+    local WAIT_TIMEOUT=5
 
-    KUBECONFIG_DOWNLOAD_MESSAGE="\
-Please, download doctl official utility on page https://github.com/digitalocean/doctl/releases \
-and get your kubeconfig using command: \n\
-doctl kubernetes cluster kubeconfig save ${CLUSTER_FULLNAME} \n\
-Check that cluster is running \n\
-kubectl cluster-info \n
-"
+    # Export to env variables
+    export KUBECONFIG="$PRJ_ROOT/terraform/digitalocean/k8s/kubeconfig_$CLUSTER_FULLNAME"
+    # Copy config to DO spaces (s3)
+    run_cmd "s3cmd put '$PRJ_ROOT/terraform/digitalocean/k8s/kubeconfig_$CLUSTER_FULLNAME' \
+            's3://${CLUSTER_FULLNAME}/kubeconfig_$CLUSTER_FULLNAME' \
+            --host='$cluster_cloud_region.digitaloceanspaces.com' \
+            --host-bucket='%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com'" "" false
 
-    NOTICE "$KUBECONFIG_DOWNLOAD_MESSAGE"
+    # Copy config to default location
+    run_cmd "cp '$PRJ_ROOT/terraform/digitalocean/k8s/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null" "" false
 
-    # Add output to GitHub Action Step "steps.reconcile.outputs.(kubeconfig)"
-    echo "::set-output name=kubeconfig::${KUBECONFIG_DOWNLOAD_MESSAGE}"
+    INFO "DO Managed Kubernetes Cluster: Waiting for the Kubernetes Cluster to get ready"
+    until kubectl version --request-timeout=5s >/dev/null 2>&1; do
+        DEBUG "Waiting ${WAIT_TIMEOUT}s"
+        sleep $WAIT_TIMEOUT
+    done
+    INFO "DO Managed Kubernetes Cluster: Ready to use!"
+}
 
+#######################################
+# Try get kubeconfig to instance via kubectl
+# Globals:
+#   CLUSTER_FULLNAME
+# Arguments:
+#   None
+# Outputs:
+#   Writes progress status
+#######################################
+function digitalocean::managed-kubernetes::pull_kubeconfig_once {
+    DEBUG "Test available kubeconfig via kubectl"
+
+    INFO "Copy kubeconfig to cluster.dev executor"
+    export KUBECONFIG="$PRJ_ROOT/terraform/digitalocean/k8s/kubeconfig_$CLUSTER_FULLNAME"
+
+    # Copy config to default location
+    run_cmd "cp '$PRJ_ROOT/terraform/digitalocean/k8s/kubeconfig_$CLUSTER_FULLNAME' '$HOME/.kube/config' 2>/dev/null" "" false
+    kubectl version --request-timeout=5s >/dev/null 2>&1
+    return $?
 }

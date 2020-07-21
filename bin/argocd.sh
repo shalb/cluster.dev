@@ -14,6 +14,7 @@ source "$PRJ_ROOT"/bin/logging.sh
 #######################################
 function argocd::deploy_apps {
     INFO "Deploy Apps from ./kubernetes/apps/<folder> into ArgoCD"
+
     for (( i=0; i<${cluster_apps_count}; i++ ));
         do
             local cluster_app_folder="";
