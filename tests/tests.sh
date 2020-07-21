@@ -18,7 +18,7 @@ docker run --rm --workdir /github/workspace --rm -v "${SRC_PATH}:/github/workspa
 docker run --rm --workdir /github/workspace --rm -v "${SRC_PATH}:/github/workspace" alpine find ./ -name terraform.tfstate -type f -exec rm -rf {} +
 
 # Build with image --no-cache (always build new).
-docker build --no-cache -t "${DOCKER_IMAGE_NAME}" .
+docker build -t "${DOCKER_IMAGE_NAME}" .
 
 # Trap ctrl+c to remove docker container and kill timeout script.
 trap ctrl_c INT
@@ -31,28 +31,13 @@ function ctrl_c {
 ${SRC_PATH}/tests/timeout.sh "${ACTION_TIMEOUT}" "clusterdev-test-${GIT_SHORT_COMMIT}" &
 timer_pid=$!
 
-# Run docker in localhost
-echo docker run  -d --rm \
-            --name "clusterdev-test-${GIT_SHORT_COMMIT}" \
-            --workdir /tests/workspace \
-            -v "${SRC_PATH}:/tests/workspace" \
-            -e GIT_PROVIDER="test-run" \
-            -e GIT_REPO_NAME="test-run" \
-            -e GIT_REPO_ROOT="/tests/workspace" \
-            -e "AWS_ACCESS_KEY_ID" \
-            -e "AWS_SECRET_ACCESS_KEY" \
-            -e "DIGITALOCEAN_TOKEN" \
-            -e "SPACES_ACCESS_KEY_ID" \
-            -e "SPACES_SECRET_ACCESS_KEY" \
-            -e "CLUSTER_CONFIG_PATH" \
-            "${DOCKER_IMAGE_NAME}"
-
 docker run  -d --rm \
             --name "clusterdev-test-${GIT_SHORT_COMMIT}" \
             --workdir /tests/workspace \
             -v "${SRC_PATH}:/tests/workspace" \
             -e GIT_PROVIDER="test-run" \
             -e GIT_REPO_NAME="test-run" \
+            -e VERBOSE_LVL="debug" \
             -e "AWS_ACCESS_KEY_ID" \
             -e "AWS_SECRET_ACCESS_KEY" \
             -e "DIGITALOCEAN_TOKEN" \
