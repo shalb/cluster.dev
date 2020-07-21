@@ -1,12 +1,14 @@
 ## Backend
 
+Module creates a state storage bucket in DigitalOcean Spaces.
+
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| do_spaces_backend_bucket | (Required) Name for Spaces DO terraform backend | `string` | n/a | yes |
-| region | (Required) Region for Spaces DO terraform backend | `string` | n/a | yes |
+|------|-------------|:----:|:-----:|:-----:|
+| do\_spaces\_backend\_bucket | (Required) Name for Spaces DO terraform backend | string | n/a | yes |
+| region | (Required) Region for Spaces DO terraform backend | string | n/a | yes |
 
 ## Outputs
 

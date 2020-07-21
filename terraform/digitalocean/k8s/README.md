@@ -4,19 +4,22 @@
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| max\_node\_count | Digital Ocean Kubernetes max nodes with autoscale feature (e.g. `2`) | `number` | `3` | no |
-| min\_node\_count | Digital Ocean Kubernetes min nodes with autoscale feature (e.g. `1`) | `number` | `1` | no |
-| name | (Required) Provide DigitalOcean cluster name | `string` | n/a | yes |
-| node\_type | Digital Ocean Kubernetes default node pool type (e.g. `s-1vcpu-2gb` => 1vCPU, 2GB RAM) | `string` | `"s-1vcpu-2gb"` | no |
-| region | (Required) Provide DigitalOcean region | `string` | n/a | yes |
-| k8s_version | Provide DigitalOcean Kubernetes minor version (e.g. '1.16' or '1.15') | `string` | `"1.16"` | no |
+|------|-------------|:----:|:-----:|:-----:|
+| cluster\_name | (Required) Provide DigitalOcean cluster name | string | n/a | yes |
+| config\_output\_path | Where to save the Kubectl config file (if `write_kubeconfig = true`). Assumed to be a directory if the value ends with a forward slash `/`. | string | `"./"` | no |
+| k8s\_version | Provide DigitalOcean Kubernetes minor version (e.g. '1.15' or higher) | string | `"1.17"` | no |
+| max\_node\_count | Digital Ocean Kubernetes max nodes with autoscale feature (e.g. `2`) | number | `"2"` | no |
+| min\_node\_count | Digital Ocean Kubernetes min nodes with autoscale feature (e.g. `1`) | number | `"1"` | no |
+| node\_type | Digital Ocean Kubernetes default node pool type (e.g. `s-1vcpu-2gb` => 1vCPU, 2GB RAM) | string | `"s-1vcpu-2gb"` | no |
+| region | (Required) Provide DigitalOcean region | string | n/a | yes |
+| write\_kubeconfig | Whether to write a Kubectl config file containing the cluster configuration. Saved to `config_output_path`. | bool | `"true"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| cluster\_status | A string indicating the current status of the cluster. Potential values include running, provisioning, and errored. |
-| cluster\_endpoint | The base URL of the API server on the Kubernetes master node. |
+| cluster\_endpoint |  |
+| cluster\_status |  |
+| kubernetes\_config |  |
 
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

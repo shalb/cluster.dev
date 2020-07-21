@@ -18,6 +18,7 @@ function output_software_info {
     DEBUG "kubectl: $(kubectl version --client)"
     DEBUG "git: $(git --version)"
     DEBUG "AWS CLI: $(aws --version) "
+    DEBUG "Terraform version: $(terraform version) "
     DEBUG "YAMLTOENV: $(yamltoenv)"
 }
 

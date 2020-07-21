@@ -12,6 +12,9 @@ runs:
   env:
     AWS_ACCESS_KEY_ID: ""
     AWS_SECRET_ACCESS_KEY: ""
+    DIGITALOCEAN_TOKEN: ""
+    SPACES_ACCESS_KEY_ID: ""
+    SPACES_SECRET_ACCESS_KEY: ""
 branding:
     icon: 'upload-cloud'
     color: 'purple'
