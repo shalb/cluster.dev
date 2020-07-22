@@ -7,7 +7,6 @@ readonly SRC_PATH=$(realpath $(dirname $(readlink -f $0))/../)
 
 . config.sh
 cd "${SRC_PATH}"
-source "${SRC_PATH}/bin/logging.sh"
 export VERBOSE_LVL=DEBUG
 
 readonly GIT_SHORT_COMMIT="$(git rev-parse --short HEAD)"

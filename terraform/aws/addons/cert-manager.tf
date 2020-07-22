@@ -9,7 +9,7 @@ locals {
 
 resource "null_resource" "cert_manager_crds" {
   provisioner "local-exec" {
-    command = "kubectl apply -n cert-manager --validate=false -f ${local.crd-path}/${local.cert-manager-version}/cert-manager.crds.yaml"
+    command = "kubectl apply --kubeconfig ${var.config_path} -n cert-manager --validate=false -f ${local.crd-path}/${local.cert-manager-version}/cert-manager.crds.yaml"
   }
   provisioner "local-exec" {
     when    = destroy
@@ -38,6 +38,7 @@ resource "helm_release" "cert_manager" {
   })]
   depends_on = [
     null_resource.cert_manager_crds,
+    kubernetes_namespace.cert-manager,
   ]
 }
 
@@ -99,12 +100,12 @@ resource "null_resource" "cert_manager_issuers" {
   depends_on = [helm_release.cert_manager]
 
   provisioner "local-exec" {
-    command = "kubectl apply -n cert-manager -f -<<EOF\n${data.template_file.clusterissuers_production.rendered}\nEOF"
+    command = "kubectl apply --kubeconfig ${var.config_path} -n cert-manager -f -<<EOF\n${data.template_file.clusterissuers_production.rendered}\nEOF"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "kubectl delete -n cert-manager -f -<<EOF\n${data.template_file.clusterissuers_production.rendered}\nEOF"
+    command = "kubectl delete --kubeconfig ${var.config_path} -n cert-manager -f -<<EOF\n${data.template_file.clusterissuers_production.rendered}\nEOF"
   }
 
   triggers = {

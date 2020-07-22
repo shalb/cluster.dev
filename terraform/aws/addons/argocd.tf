@@ -41,6 +41,7 @@ resource "helm_release" "argo-cd" {
   depends_on = [
     null_resource.kubeconfig_update,
     helm_release.cert_manager,
+    kubernetes_namespace.argocd,
   ]
   set {
     name  = "server.certificate.domain"

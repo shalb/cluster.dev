@@ -17,6 +17,9 @@ provider "helm" {
     config_path = var.config_path
   }
 }
+provider "kubernetes" {
+  config_path = var.config_path
+}
 
 ## Get remote states to use in roles
 data "terraform_remote_state" "k8s" {
