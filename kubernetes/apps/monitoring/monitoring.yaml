@@ -8,8 +8,8 @@ spec:
     namespace: monitoring
     server: 'https://kubernetes.default.svc'
   source:
-    path: kubernetes/charts/prometheus-operator-customized/
-    repoURL: 'https://github.com/MY_USER/MY_REPO'
+    path: /
+    repoURL: 'https://github.com/shalb/cluster.dev-monitoring'
     targetRevision: master
   project: default
   syncPolicy:

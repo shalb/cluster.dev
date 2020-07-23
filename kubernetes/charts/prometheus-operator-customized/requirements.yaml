@@ -1,4 +1,0 @@
-dependencies:
-- name: prometheus-operator
-  version: 8.13.7
-  repository: https://kubernetes-charts.storage.googleapis.com

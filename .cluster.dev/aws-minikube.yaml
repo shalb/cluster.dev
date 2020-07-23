@@ -14,3 +14,4 @@ cluster:
     cert-manager: true
   apps:
     - /kubernetes/apps/samples
+    - /kubernetes/apps/monitoring
