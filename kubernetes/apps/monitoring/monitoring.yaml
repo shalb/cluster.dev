@@ -8,7 +8,7 @@ spec:
     namespace: monitoring
     server: 'https://kubernetes.default.svc'
   source:
-    path: /
+    path: ./
     repoURL: 'https://github.com/shalb/cluster.dev-monitoring'
     targetRevision: master
   project: default
