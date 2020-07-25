@@ -14,6 +14,7 @@ type ProviderCommon interface {
 	Init(providerSpec []byte, clusterName string) error
 	Deploy() error
 	Destroy() error
+	GetKubeConfig() string
 }
 
 var providers map[string]ProviderCommon

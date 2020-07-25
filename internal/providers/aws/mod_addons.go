@@ -2,9 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
 )
 
@@ -22,15 +25,16 @@ type Addons struct {
 	config      addonsVarsSpec
 	backendConf executor.BackendSpec
 	terraform   *executor.TerraformRunner
+	kubeConfig  string
 	backendKey  string
 	moduleDir   string
 }
 
 // NewAddons create new addons instance.
-func NewAddons(providerConf providerConfSpec) (*Addons, error) {
+func NewAddons(providerConf providerConfSpec, kubeConfig string) (*Addons, error) {
 	var addons Addons
 	// Module dir.
-	addons.moduleDir = filepath.Join(terraformRoot, "terraform/aws/addons")
+	addons.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/addons")
 	// Module state name.
 	addons.backendKey = "states/terraform-addons.state"
 	// Set backend config.
@@ -44,6 +48,13 @@ func NewAddons(providerConf providerConfSpec) (*Addons, error) {
 	addons.config.Region = providerConf.Region
 	addons.config.ClusterCloudDomain = providerConf.Domain
 	addons.config.ConfigPath = fmt.Sprintf("/tmp/kubeconfig_%s", providerConf.ClusterName)
+	addons.kubeConfig = kubeConfig
+
+	// Write kube config to file.
+	err := ioutil.WriteFile(addons.config.ConfigPath, []byte(kubeConfig), os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
 
 	// Detect provisioner type for module var 'eks=(true|false)'
 	provisionerType, ok := providerConf.Provisioner["type"].(string)
@@ -55,7 +66,7 @@ func NewAddons(providerConf providerConfSpec) (*Addons, error) {
 	} else {
 		addons.config.Eks = "false"
 	}
-	var err error
+
 	// Init terraform runner in module directory.
 	addons.terraform, err = executor.NewTerraformRunner(addons.moduleDir)
 	if err != nil {

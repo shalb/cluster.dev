@@ -9,7 +9,7 @@ import (
 type ProvisionerCommon interface {
 	Deploy(time.Duration) error
 	Destroy() error
-	GetKubeConfig() (string, error)
+	GetKubeConfig() string
 	PullKubeConfig() error
 }
 

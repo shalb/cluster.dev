@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 )
 
 // utilStartTime time.
@@ -86,9 +87,9 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 // loggingInit - initial function for logging subsystem.
 func loggingInit() {
 	log.SetHandler(NewLogHandler())
-	lvl, err := log.ParseLevel(globalConfig.LogLevel)
+	lvl, err := log.ParseLevel(config.Global.LogLevel)
 	if err != nil {
-		log.Fatalf("Can't parse logging level '%s': %s", globalConfig.LogLevel, err.Error())
+		log.Fatalf("Can't parse logging level '%s': %s", config.Global.LogLevel, err.Error())
 	}
 	log.SetLevel(lvl)
 }

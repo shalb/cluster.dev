@@ -21,10 +21,7 @@ COPY --from=builder /workspace/cluster-dev/bin/reconciler /bin/reconciler
 
 ### Install s3cmd
 RUN python3 -m pip install --upgrade pip && \
-    pip3 install --no-cache-dir --upgrade s3cmd && \
-    curl -L  https://github.com/shalb/yamltoenv/releases/download/${YAMLTOENV_VERSION}/yamltoenv_${YAMLTOENV_VERSION}_linux_amd64.tgz |  tar -xvz \
-    && rm -f yamltoenv_${YAMLTOENV_VERSION}_linux_amd64.tgz && mv yamltoenv /bin/
-
+    pip3 install --no-cache-dir --upgrade s3cmd
 ENV PRJ_ROOT /app
 WORKDIR $PRJ_ROOT
 

@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
 )
 
@@ -28,7 +29,7 @@ type Vpc struct {
 // NewVpc create new vpc instance.
 func NewVpc(providerConf providerConfSpec) (*Vpc, error) {
 	var vpc Vpc
-	vpc.moduleDir = filepath.Join(terraformRoot, "terraform/aws/vpc")
+	vpc.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/vpc")
 	vpc.backendConf = executor.BackendSpec{
 		Bucket: providerConf.ClusterName,
 		Key:    "states/terraform-vpc.state",

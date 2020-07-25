@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
 )
 
@@ -32,7 +33,7 @@ type Eks struct {
 // NewEks create new eks module instance (go instance).
 func NewEks(providerConf providerConfSpec) (*Eks, error) {
 	var eks Eks
-	eks.moduleDir = filepath.Join(terraformRoot, "terraform/aws/eks")
+	eks.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/eks")
 	eks.backendKey = "states/terraform-k8s.state"
 	eks.backendConf = executor.BackendSpec{
 		Bucket: providerConf.ClusterName,

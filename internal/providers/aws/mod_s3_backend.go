@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
 )
 
@@ -26,7 +27,7 @@ type S3Backend struct {
 // NewS3Backend create new s3 backend instance.
 func NewS3Backend(providerConf providerConfSpec) (*S3Backend, error) {
 	var s3 S3Backend
-	s3.moduleDir = filepath.Join(terraformRoot, "terraform/aws/backend")
+	s3.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/backend")
 	s3.backendConf = executor.BackendSpec{}
 	s3.config.Bucket = providerConf.ClusterName
 	s3.config.Region = providerConf.Region

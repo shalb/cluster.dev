@@ -96,11 +96,8 @@ func (p *ProvisionerEks) Destroy() error {
 }
 
 // GetKubeConfig return 'kubeConfig' or error if config is empty.
-func (p *ProvisionerEks) GetKubeConfig() (string, error) {
-	if p.kubeConfig == "" {
-		return "", fmt.Errorf("eks kube config is empty")
-	}
-	return p.kubeConfig, nil
+func (p *ProvisionerEks) GetKubeConfig() string {
+	return p.kubeConfig
 }
 
 // PullKubeConfig download kubeconfig from s3 and save it to this.kubeConfig variable.

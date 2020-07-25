@@ -18,24 +18,6 @@ type ClusterSpec struct {
 	ClusterFullName string
 }
 
-func detectGitProvider(config *ConfSpec) {
-	if config.GitRepoName = getEnv("GITHUB_REPOSITORY", ""); config.GitRepoName != "" {
-		config.GitProvider = "github"
-		config.GitRepoRoot = getEnv("GIT_REPO_ROOT", "")
-	} else if config.GitRepoName = getEnv("CI_PROJECT_PATH", ""); config.GitRepoName != "" {
-		config.GitProvider = "github"
-		config.GitRepoRoot = getEnv("CI_PROJECT_DIR", "")
-	} else if config.GitRepoName = getEnv("BITBUCKET_GIT_HTTP_ORIGIN", ""); config.GitRepoName != "" {
-		config.GitProvider = "github"
-		config.GitRepoRoot = getEnv("BITBUCKET_CLONE_DIR", "")
-		config.GitRepoName = strings.ReplaceAll(config.GitRepoName, "http://bitbucket.org/", "")
-	} else {
-		config.GitProvider = "none"
-		config.GitRepoRoot = "./"
-		config.GitRepoName = "local/local"
-	}
-}
-
 func truncateString(src string, maxLen int) string {
 
 	if len(src) <= maxLen {

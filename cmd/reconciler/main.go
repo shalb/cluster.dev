@@ -1,21 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/apps"
+	"github.com/shalb/cluster.dev/internal/config"
 	"gopkg.in/yaml.v2"
 )
 
 func main() {
 	// Init config (args)
 
-	globalConfigInit()
-	loggingInit()
+	config.InitGlobal()
 
-	// Read config ./.test-local/aws.conf.yaml and set global environment variables for aws access.
-	// Only for local tests.
-	setGlobalBashEnv()
+	loggingInit()
 
 	err := providersLoad()
 	if err != nil {
@@ -23,7 +25,7 @@ func main() {
 	}
 
 	// Get manifests list.
-	mList, err := getManifestsList(globalConfig.ClusterConfigsPath)
+	mList, err := getManifestsList(config.Global.ClusterConfigsPath)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -56,7 +58,7 @@ func reconcileCluster(clusterManifest string) error {
 	}
 
 	// Generate a unique name for particular cluster domains, state buckets, etc..
-	clusterSpec.ClusterFullName, err = getClusterFullName(clusterSpec.Name, globalConfig.GitRepoName)
+	clusterSpec.ClusterFullName, err = getClusterFullName(clusterSpec.Name, config.Global.GitRepoName)
 	if err != nil {
 		return err
 	}
@@ -77,6 +79,28 @@ func reconcileCluster(clusterManifest string) error {
 	// Deploy or destroy cluster.
 	if clusterSpec.Installed {
 		err = prov.Deploy()
+		kubeConf := prov.GetKubeConfig()
+		if kubeConf == "" {
+			return fmt.Errorf("provider return empty kube config, can't deploy applications")
+		}
+		// Save kube config to file.
+		kubeConfigPath := filepath.Join("/tmp/", "kubeconfig_"+clusterSpec.ClusterFullName)
+		err = ioutil.WriteFile(kubeConfigPath, []byte(kubeConf), os.ModePerm)
+		if err != nil {
+			return err
+		}
+		for _, appSubDir := range clusterSpec.Apps {
+			appDir := filepath.Join(config.Global.ProjectRoot, appSubDir)
+			log.Debugf("Deploying app '%s'...", appDir)
+			app, err := apps.New(appDir, kubeConfigPath)
+			if err != nil {
+				return err
+			}
+			err = app.Deploy()
+			if err != nil {
+				return nil
+			}
+		}
 	} else {
 		err = prov.Destroy()
 	}

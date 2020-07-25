@@ -3,17 +3,16 @@
 package aws
 
 import (
-	"os"
+	"fmt"
 	"time"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 	"gopkg.in/yaml.v2"
 )
 
 // Ident - string key for identify provider in the providers map.
 const Ident = "aws"
-
-var terraformRoot string
 
 // aws provider sub-config.
 type providerConfSpec struct {
@@ -38,7 +37,8 @@ type ModuleCommon interface {
 
 // Provider - main provider object.
 type Provider struct {
-	Config providerConfSpec
+	Config     providerConfSpec
+	kubeConfig string
 }
 
 // Init provider, check config.
@@ -48,14 +48,8 @@ func (p *Provider) Init(yamlSpec []byte, clusterName string) error {
 	if err != nil {
 		return err
 	}
-	var ok bool
-	if terraformRoot, ok = os.LookupEnv("PRJ_ROOT"); !ok {
-		terraformRoot, err = os.Getwd()
-		if err != nil {
-			return err
-		}
-	}
-	log.Debugf("terraform root dir is set to dir is '%s'", terraformRoot)
+
+	log.Debugf("terraform root dir is set to dir is '%s'", config.Global.ProjectRoot)
 	p.Config = spec
 	p.Config.ClusterName = clusterName
 	return nil
@@ -114,17 +108,16 @@ func (p *Provider) Deploy() error {
 	if err != nil {
 		return err
 	}
-	kubeConfig, err := provisioner.GetKubeConfig()
-	log.Debugf("Kubernetes config: \n %s", kubeConfig)
-	// Save kubeconfig to file.
-	// kubeConfigFileName := filepath.Join("~/.kube", "~/.kube/kubeconfig_"+p.Config.ClusterName)
-	// err = ioutil.WriteFile(kubeConfigFileName, []byte(kubeConfig), os.ModePerm)
-	// if err != nil {
-	// 	return err
-	// }
+	p.kubeConfig = provisioner.GetKubeConfig()
+	if p.kubeConfig == "" {
+		return fmt.Errorf("provisioner kube config is empty, can't deploy addons")
+	}
+
+	log.Debugf("Kubernetes config: \n %s", p.kubeConfig)
+
 	log.Info("Deploying addons...")
 	// Create addons instance.
-	addons, err := NewAddons(p.Config)
+	addons, err := NewAddons(p.Config, p.kubeConfig)
 	if err != nil {
 		return err
 	}
@@ -164,8 +157,9 @@ func (p *Provider) Destroy() error {
 	// Pull kubernetes config from s3 to ~/.kube/.
 	err = provisioner.PullKubeConfig()
 	if err == nil {
+		p.kubeConfig = provisioner.GetKubeConfig()
 		// Create new addons instance.
-		addons, err := NewAddons(p.Config)
+		addons, err := NewAddons(p.Config, p.kubeConfig)
 		if err != nil {
 			return err
 		}
@@ -213,4 +207,9 @@ func (p *Provider) Destroy() error {
 	}
 
 	return nil
+}
+
+// GetKubeConfig return kube config as string.
+func (p *Provider) GetKubeConfig() string {
+	return p.kubeConfig
 }

@@ -97,11 +97,8 @@ func (p *ProvisionerMinikube) Destroy() error {
 }
 
 // GetKubeConfig return 'kubeConfig' or error if config is empty.
-func (p *ProvisionerMinikube) GetKubeConfig() (string, error) {
-	if p.kubeConfig == "" {
-		return "", fmt.Errorf("minikube kube config is empty")
-	}
-	return p.kubeConfig, nil
+func (p *ProvisionerMinikube) GetKubeConfig() string {
+	return p.kubeConfig
 }
 
 // PullKubeConfig download kubeconfig from s3 and save it to this.kubeConfig variable.
