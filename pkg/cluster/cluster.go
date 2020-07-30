@@ -2,7 +2,7 @@ package cluster
 
 import (
 	"fmt"
-	"gopkg.in/go-playground/validator.v10"
+	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v3"
 )
 
