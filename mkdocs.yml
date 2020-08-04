@@ -1,0 +1,41 @@
+site_name: cluster.dev
+# Page tree
+repo_name: 'shalb/cluster.dev'
+repo_url: 'https://github.com/shalb/cluster.dev'
+site_url: 'https://cluster.dev'
+
+
+nav:
+  - Home: index.md
+  - Configuration Options: OPTIONS.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.inlinehilite
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.superfences
+  - pymdownx.tilde
+  - toc:
+      permalink: ' ¶'
+theme:
+  name: 'material'
+  # Don't include MkDocs' JavaScript
+  include_search_page: false
+  search_index_only: true
+
+  # Default values, taken from mkdocs_theme.yml
+  language: en
+  features:
+    - tabs
+    - instant
+  palette:
+    scheme: default
+    primary: indigo
+    accent: indigo
+  font:
+    text: Roboto
+    code: Roboto Mono
+  logo: '/images/cluster-dev-logo-small-white.png'
+  favicon: 'images/favicon.png'
