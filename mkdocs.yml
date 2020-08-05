@@ -12,9 +12,6 @@ nav:
     - Global Options: "OPTIONS/#global-options"
     - Amazon AWS Provisioners: "OPTIONS/#amazon-aws-provisioners"
     - DigitalOcean Provisioners: "OPTIONS/#digitalocean-provisioners"
-  - Git Providers Support:
-    - GitHub: "OPTIONS/#github-actions-workflow-configuration"
-    - GitLab: "OPTIONS/#gitlab-cicd-pipeline-configuration"
 
 markdown_extensions:
   - admonition
