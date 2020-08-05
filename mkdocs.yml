@@ -6,8 +6,15 @@ site_url: 'https://cluster.dev'
 
 
 nav:
-  - Home: index.md
-  - Configuration Options: OPTIONS.md
+  - Home:
+    - Home: index.md
+  - Configuration Options:
+    - Global Options: "OPTIONS/#global-options"
+    - Amazon AWS Provisioners: "OPTIONS/#amazon-aws-provisioners"
+    - DigitalOcean Provisioners: "OPTIONS/#digitalocean-provisioners"
+  - Git Providers Support:
+    - GitHub: "OPTIONS/#github-actions-workflow-configuration"
+    - GitLab: "OPTIONS/#gitlab-cicd-pipeline-configuration"
 
 markdown_extensions:
   - admonition
@@ -24,12 +31,9 @@ theme:
   # Don't include MkDocs' JavaScript
   include_search_page: false
   search_index_only: true
-
-  # Default values, taken from mkdocs_theme.yml
   language: en
   features:
     - tabs
-    - instant
   palette:
     scheme: default
     primary: indigo
