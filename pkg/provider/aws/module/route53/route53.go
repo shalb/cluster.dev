@@ -1,4 +1,4 @@
-package aws
+package route53
 
 import (
 	"path/filepath"
@@ -6,6 +6,8 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
+	"github.com/shalb/cluster.dev/pkg/cluster"
+	"github.com/shalb/cluster.dev/pkg/provider/aws"
 )
 
 // Variables set for route53 module tfvars.
@@ -25,9 +27,19 @@ type Route53 struct {
 	moduleDir   string
 }
 
-// NewRoute53 create new route53 instance.
-func NewRoute53(providerConf providerConfSpec) (*Route53, error) {
-	var route53 Route53
+func init() {
+	err := aws.RegisterModuleFactory("route53", &Factory{})
+	if err != nil {
+		log.Fatalf("can't register aws route53 module")
+	}
+}
+
+// Factory create new route53 module.
+type Factory struct{}
+
+// New create new eks instance.
+func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (aws.Operation, error) {
+	route53 := &Route53{}
 	route53.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/route53")
 	route53.backendConf = executor.BackendSpec{
 		Bucket: providerConf.ClusterName,
@@ -49,7 +61,7 @@ func NewRoute53(providerConf providerConfSpec) (*Route53, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &route53, nil
+	return route53, nil
 }
 
 // Deploy - create route53.
@@ -94,7 +106,12 @@ func (r *Route53) Check() (bool, error) {
 	return true, nil
 }
 
-// ModulePath - return module path.
-func (r *Route53) ModulePath() string {
+// Path - return module path.
+func (r *Route53) Path() string {
 	return r.moduleDir
+}
+
+// Clear - remove tmp and cache files.
+func (r *Route53) Clear() error {
+	return r.terraform.Clear()
 }

@@ -22,14 +22,12 @@ type ConfSpec struct {
 // Global config for executor.
 var Global ConfSpec
 
-// InitGlobal - set global config values.
-func InitGlobal() {
+// set global config values.
+func init() {
 
-	var err error
 	// Read flags.
 	// Read debug option ( --debug )
 	flag.StringVar(&Global.LogLevel, "log-level", getEnv("VERBOSE_LVL", "info"), "Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")")
-
 	curPath, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current directory: %s", err.Error())
@@ -49,8 +47,6 @@ func InitGlobal() {
 			log.Fatalf("Can't detect project root dir: %s", err.Error())
 		}
 	}
-
-	log.Debugf("Config: %+v\n", Global)
 }
 
 // getEnv Helper for args parse.

@@ -14,7 +14,6 @@ FROM hashicorp/terraform:light as terraform
 # TODO create own image with terraform and helmfile versioning
 
 FROM chatwork/helmfile:$HELMFILE_VERSION
-ARG YAMLTOENV_VERSION=v0.0.3
 
 COPY --from=terraform /bin/terraform /bin/terraform
 COPY --from=builder /workspace/cluster-dev/bin/reconciler /bin/reconciler

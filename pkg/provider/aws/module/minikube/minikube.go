@@ -1,4 +1,4 @@
-package aws
+package minikube
 
 import (
 	"fmt"
@@ -7,10 +7,12 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
+	"github.com/shalb/cluster.dev/pkg/cluster"
+	"github.com/shalb/cluster.dev/pkg/provider/aws"
 )
 
 // Variables set for minikube module tfvars.
-type minikubeVarsSpec struct {
+type tfVars struct {
 	HostedZone      string `json:"hosted_zone"`
 	Region          string `json:"region"`
 	ClusterName     string `json:"cluster_name"`
@@ -19,16 +21,26 @@ type minikubeVarsSpec struct {
 
 // Minikube type for minikube module instance.
 type Minikube struct {
-	config      minikubeVarsSpec
+	config      tfVars
 	backendConf executor.BackendSpec
 	terraform   *executor.TerraformRunner
 	backendKey  string
 	moduleDir   string
 }
 
-// NewMinikube create new minikube instance.
-func NewMinikube(providerConf providerConfSpec) (*Minikube, error) {
-	var miniKube Minikube
+func init() {
+	err := aws.RegisterModuleFactory("minikube", &Factory{})
+	if err != nil {
+		log.Fatalf("can't register aws minikube module")
+	}
+}
+
+// Factory create new minikube module.
+type Factory struct{}
+
+// New create new eks instance.
+func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (aws.Operation, error) {
+	miniKube := &Minikube{}
 	miniKube.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/minikube")
 	miniKube.backendKey = "states/terraform-k8s.state"
 	miniKube.backendConf = executor.BackendSpec{
@@ -40,7 +52,7 @@ func NewMinikube(providerConf providerConfSpec) (*Minikube, error) {
 	if !ok {
 		return nil, fmt.Errorf("can't determinate instance type for minikube")
 	}
-	miniKube.config = minikubeVarsSpec{
+	miniKube.config = tfVars{
 		HostedZone:      fmt.Sprintf("%s.%s", providerConf.ClusterName, providerConf.Domain),
 		Region:          providerConf.Region,
 		ClusterName:     providerConf.ClusterName,
@@ -51,7 +63,7 @@ func NewMinikube(providerConf providerConfSpec) (*Minikube, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &miniKube, nil
+	return miniKube, nil
 }
 
 // Deploy - create minikube.
@@ -96,7 +108,12 @@ func (s *Minikube) Check() (bool, error) {
 	return true, nil
 }
 
-// ModulePath - return module path.
-func (s *Minikube) ModulePath() string {
+// Path - return module path.
+func (s *Minikube) Path() string {
 	return s.moduleDir
+}
+
+// Clear - remove tmp and cache files.
+func (s *Minikube) Clear() error {
+	return s.terraform.Clear()
 }

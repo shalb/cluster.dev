@@ -1,4 +1,4 @@
-package main
+package logging
 
 import (
 	"fmt"
@@ -85,7 +85,7 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 }
 
 // loggingInit - initial function for logging subsystem.
-func loggingInit() {
+func init() {
 	log.SetHandler(NewLogHandler())
 	lvl, err := log.ParseLevel(config.Global.LogLevel)
 	if err != nil {

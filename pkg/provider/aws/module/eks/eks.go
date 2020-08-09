@@ -1,4 +1,4 @@
-package aws
+package eks
 
 import (
 	"fmt"
@@ -7,10 +7,12 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
+	"github.com/shalb/cluster.dev/pkg/cluster"
+	"github.com/shalb/cluster.dev/pkg/provider/aws"
 )
 
 // Variables set for eks module tfvars.
-type eksVarsSpec struct {
+type tfVars struct {
 	AvailabilityZones          []string    `json:"availability_zones"`
 	Region                     string      `json:"region"`
 	ClusterName                string      `json:"cluster_name"`
@@ -23,16 +25,26 @@ type eksVarsSpec struct {
 
 // Eks - type for eks module.
 type Eks struct {
-	config      eksVarsSpec
+	config      tfVars
 	backendConf executor.BackendSpec
 	terraform   *executor.TerraformRunner
 	backendKey  string
 	moduleDir   string
 }
 
-// NewEks create new eks module instance (go instance).
-func NewEks(providerConf providerConfSpec) (*Eks, error) {
-	var eks Eks
+func init() {
+	err := aws.RegisterModuleFactory("eks", &Factory{})
+	if err != nil {
+		log.Fatalf("can't register aws eks module")
+	}
+}
+
+// Factory create new eks module.
+type Factory struct{}
+
+// New create new eks instance.
+func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (aws.Operation, error) {
+	eks := &Eks{}
 	eks.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/eks")
 	eks.backendKey = "states/terraform-k8s.state"
 	eks.backendConf = executor.BackendSpec{
@@ -68,7 +80,7 @@ func NewEks(providerConf providerConfSpec) (*Eks, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &eks, nil
+	return eks, nil
 }
 
 // Deploy eks.
@@ -113,7 +125,12 @@ func (s *Eks) Check() (bool, error) {
 	return true, nil
 }
 
-// ModulePath - return terraform module path.
-func (s *Eks) ModulePath() string {
+// Path - return terraform module path.
+func (s *Eks) Path() string {
 	return s.moduleDir
+}
+
+// Clear - remove tmp and cache files.
+func (s *Eks) Clear() error {
+	return s.terraform.Clear()
 }

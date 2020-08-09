@@ -1,4 +1,4 @@
-package aws
+package backend
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
+	"github.com/shalb/cluster.dev/pkg/cluster"
+	"github.com/shalb/cluster.dev/pkg/provider/aws"
 )
 
 // Type for module tfVars JSON.
@@ -15,20 +17,30 @@ type backendVarsSpec struct {
 	Bucket string `json:"s3_backend_bucket"`
 }
 
-// S3Backend type for s3 backend module.
-type S3Backend struct {
-	config      backendVarsSpec
-	backendConf executor.BackendSpec
-	terraform   *executor.TerraformRunner
-	bash        *executor.BashRunner
-	moduleDir   string
+// Backend type for s3 backend module.
+type Backend struct {
+	config    backendVarsSpec
+	terraform *executor.TerraformRunner
+	bash      *executor.BashRunner
+	moduleDir string
 }
 
-// NewS3Backend create new s3 backend instance.
-func NewS3Backend(providerConf providerConfSpec) (*S3Backend, error) {
-	var s3 S3Backend
+func init() {
+	err := aws.RegisterModuleFactory("backend", &Factory{})
+	if err != nil {
+		log.Fatalf("can't register aws backend module")
+	}
+}
+
+// Factory create new backend module.
+type Factory struct{}
+
+// New create new eks instance.
+func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (aws.Operation, error) {
+
+	log.Debugf("Init backend module wit provider config: %+v", providerConf)
+	s3 := &Backend{}
 	s3.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/backend")
-	s3.backendConf = executor.BackendSpec{}
 	s3.config.Bucket = providerConf.ClusterName
 	s3.config.Region = providerConf.Region
 	var err error
@@ -40,19 +52,29 @@ func NewS3Backend(providerConf providerConfSpec) (*S3Backend, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &s3, nil
+	return s3, nil
 }
 
 // Deploy - create s3 bucket.
-func (s *S3Backend) Deploy() error {
-	// sss
+func (s *Backend) Deploy() error {
+	// Check if bucket exists - no need redeploy.
+	if exists, err := s.Check(); err == nil {
+		if exists {
+			log.Debugf("Bucket '%v' exists. Nothing to deploy.", s.config.Bucket)
+			return nil
+		}
+		log.Debugf("Deploying s3 bucket '%v'", s.config.Bucket)
+	} else {
+		return err
+	}
+
 	log.Debug("Terraform init/plan.")
 	err := s.terraform.Clear()
 	if err != nil {
 		return err
 	}
-	// Init terraform without backend speck.
-	err = s.terraform.Init(s.backendConf)
+	// Init terraform without backend spec (empty spec).
+	err = s.terraform.Init(executor.BackendSpec{})
 	if err != nil {
 		return err
 	}
@@ -65,7 +87,7 @@ func (s *S3Backend) Deploy() error {
 }
 
 // Destroy - remove s3 bucket.
-func (s *S3Backend) Destroy() error {
+func (s *Backend) Destroy() error {
 	// sss
 	log.Debug("Delete s3 bucket.")
 	// Set variables.
@@ -93,19 +115,29 @@ func (s *S3Backend) Destroy() error {
 }
 
 // Check - if s3 bucket exists.
-func (s *S3Backend) Check() (bool, error) {
+func (s *Backend) Check() (bool, error) {
 
 	log.Debug("Terraform init/plan.")
 	err := s.terraform.Clear()
 	if err != nil {
 		return false, err
 	}
-	// Init terraform without backend speck.
-	err = s.terraform.Init(s.backendConf)
+	// Init terraform without backend spec.
+	err = s.terraform.Init(executor.BackendSpec{})
 	err = s.terraform.Import(s.config, "aws_s3_bucket.terraform_state", s.config.Bucket)
 	if err != nil {
 		log.Debugf("Bucket is not exists, %s", err.Error())
 		return false, nil
 	}
 	return true, nil
+}
+
+// Path - return module path.
+func (s *Backend) Path() string {
+	return s.moduleDir
+}
+
+// Clear - remove tmp and cache files.
+func (s *Backend) Clear() error {
+	return s.terraform.Clear()
 }

@@ -1,4 +1,4 @@
-package aws
+package addons
 
 import (
 	"fmt"
@@ -9,10 +9,12 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
+	"github.com/shalb/cluster.dev/pkg/cluster"
+	"github.com/shalb/cluster.dev/pkg/provider/aws"
 )
 
 // Variables set for module tfvars.
-type addonsVarsSpec struct {
+type tfVars struct {
 	Region             string `json:"region"`
 	ClusterName        string `json:"cluster_name"`
 	ConfigPath         string `json:"config_path"`
@@ -22,17 +24,29 @@ type addonsVarsSpec struct {
 
 // Addons - type for module instance.
 type Addons struct {
-	config      addonsVarsSpec
+	config      tfVars
 	backendConf executor.BackendSpec
 	terraform   *executor.TerraformRunner
-	kubeConfig  string
+	state       *cluster.State
+	kubeConfig  []byte
 	backendKey  string
 	moduleDir   string
+	tmpDir      string
 }
 
-// NewAddons create new addons instance.
-func NewAddons(providerConf providerConfSpec, kubeConfig string) (*Addons, error) {
-	var addons Addons
+func init() {
+	err := aws.RegisterModuleFactory("addons", &Factory{})
+	if err != nil {
+		log.Fatalf("can't register aws addons module")
+	}
+}
+
+// Factory create new addons module.
+type Factory struct{}
+
+// New create new addons instance.
+func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (aws.Operation, error) {
+	addons := &Addons{}
 	// Module dir.
 	addons.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/addons")
 	// Module state name.
@@ -48,10 +62,18 @@ func NewAddons(providerConf providerConfSpec, kubeConfig string) (*Addons, error
 	addons.config.Region = providerConf.Region
 	addons.config.ClusterCloudDomain = providerConf.Domain
 	addons.config.ConfigPath = fmt.Sprintf("/tmp/kubeconfig_%s", providerConf.ClusterName)
-	addons.kubeConfig = kubeConfig
+	addons.kubeConfig = clusterState.KubeConfig
+	addons.state = clusterState
+	var err error
+	addons.tmpDir, err = ioutil.TempDir("", "cluster-dev-addons-*")
+	if err != nil {
+		return nil, fmt.Errorf("can't create tmp dir: %s", err.Error())
+	}
+	// Save cube config to tmp file.
+	addons.config.ConfigPath = filepath.Join(addons.tmpDir, "kube_config")
 
 	// Write kube config to file.
-	err := ioutil.WriteFile(addons.config.ConfigPath, []byte(kubeConfig), os.ModePerm)
+	err = ioutil.WriteFile(addons.config.ConfigPath, clusterState.KubeConfig, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +94,7 @@ func NewAddons(providerConf providerConfSpec, kubeConfig string) (*Addons, error
 	if err != nil {
 		return nil, err
 	}
-	return &addons, nil
+	return addons, nil
 }
 
 // Deploy addons.
@@ -117,7 +139,16 @@ func (s *Addons) Check() (bool, error) {
 	return true, nil
 }
 
-// ModulePath - return terraform module path.
-func (s *Addons) ModulePath() string {
+// Path - return terraform module path.
+func (s *Addons) Path() string {
 	return s.moduleDir
+}
+
+// Clear - remove tmp and cache files.
+func (s *Addons) Clear() error {
+	err := os.RemoveAll(s.tmpDir)
+	if err != nil {
+		log.Debugf("Addons clear error (igniring): %s", err.Error())
+	}
+	return s.terraform.Clear()
 }
