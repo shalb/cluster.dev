@@ -8,6 +8,7 @@ import (
 	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
 	"github.com/shalb/cluster.dev/pkg/cluster"
+	"github.com/shalb/cluster.dev/pkg/provider"
 	"github.com/shalb/cluster.dev/pkg/provider/aws"
 )
 
@@ -29,7 +30,7 @@ type Minikube struct {
 }
 
 func init() {
-	err := aws.RegisterModuleFactory("minikube", &Factory{})
+	err := aws.RegisterActivityFactory("modules", "minikube", &Factory{})
 	if err != nil {
 		log.Fatalf("can't register aws minikube module")
 	}
@@ -39,7 +40,7 @@ func init() {
 type Factory struct{}
 
 // New create new eks instance.
-func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (aws.Operation, error) {
+func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (provider.Activity, error) {
 	miniKube := &Minikube{}
 	miniKube.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/minikube")
 	miniKube.backendKey = "states/terraform-k8s.state"

@@ -8,6 +8,7 @@ import (
 	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/executor"
 	"github.com/shalb/cluster.dev/pkg/cluster"
+	"github.com/shalb/cluster.dev/pkg/provider"
 	"github.com/shalb/cluster.dev/pkg/provider/aws"
 )
 
@@ -33,7 +34,7 @@ type Eks struct {
 }
 
 func init() {
-	err := aws.RegisterModuleFactory("eks", &Factory{})
+	err := aws.RegisterActivityFactory("modules", "eks", &Factory{})
 	if err != nil {
 		log.Fatalf("can't register aws eks module")
 	}
@@ -43,7 +44,7 @@ func init() {
 type Factory struct{}
 
 // New create new eks instance.
-func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (aws.Operation, error) {
+func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (provider.Activity, error) {
 	eks := &Eks{}
 	eks.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/eks")
 	eks.backendKey = "states/terraform-k8s.state"

@@ -1,4 +1,4 @@
-package eks
+package managedk8s
 
 import (
 	"fmt"
@@ -8,32 +8,32 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
-	"github.com/shalb/cluster.dev/pkg/provider/aws"
-	"github.com/shalb/cluster.dev/pkg/provider/aws/provisioner"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean/provisioner"
 )
 
 // Eks class.
 type Eks struct {
-	providerConf aws.Config
+	providerConf digitalocean.Config
 	eksModule    provider.Activity
 	state        *cluster.State
 }
 
 func init() {
-	err := aws.RegisterActivityFactory("provisioners", "eks", &Factory{})
+	err := digitalocean.RegisterActivityFactory("provisioners", "managed-kubernetes", &Factory{})
 	if err != nil {
-		log.Fatalf("can't register aws eks provisioner")
+		log.Fatalf("can't register digitalocean eks provisioner")
 	}
 }
 
-// Factory create new aws eks provisioner.
+// Factory create new digitalocean eks provisioner.
 type Factory struct{}
 
 // New create new instance of EKS provisioner.
-func (f *Factory) New(providerConf aws.Config, state *cluster.State) (provider.Activity, error) {
+func (f *Factory) New(providerConf digitalocean.Config, state *cluster.State) (provider.Activity, error) {
 	provisioner := &Eks{}
 	provisioner.providerConf = providerConf
-	eksModuleFactory, exists := aws.GetModulesFactories()["eks"]
+	eksModuleFactory, exists := digitalocean.GetModulesFactories()["eks"]
 	if !exists {
 		return nil, fmt.Errorf("module 'eks', needed by provisioner is not found")
 	}

@@ -9,13 +9,15 @@ import (
 	"github.com/shalb/cluster.dev/internal/executor"
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
-	"github.com/shalb/cluster.dev/pkg/provider/aws"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean"
 )
+
+const myName = "backend"
 
 // Type for module tfVars JSON.
 type backendVarsSpec struct {
 	Region string `json:"region"`
-	Bucket string `json:"s3_backend_bucket"`
+	Bucket string `json:"do_spaces_backend_bucket"`
 }
 
 // Backend type for s3 backend module.
@@ -27,9 +29,9 @@ type Backend struct {
 }
 
 func init() {
-	err := aws.RegisterActivityFactory("modules", "backend", &Factory{})
+	err := digitalocean.RegisterActivityFactory("modules", myName, &Factory{})
 	if err != nil {
-		log.Fatalf("can't register aws backend module")
+		log.Fatalf("can't register digitalocean backend module")
 	}
 }
 
@@ -37,11 +39,11 @@ func init() {
 type Factory struct{}
 
 // New create new eks instance.
-func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (provider.Activity, error) {
+func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.State) (provider.Activity, error) {
 
 	log.Debugf("Init backend module wit provider config: %+v", providerConf)
 	s3 := &Backend{}
-	s3.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/backend")
+	s3.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+myName)
 	s3.config.Bucket = providerConf.ClusterName
 	s3.config.Region = providerConf.Region
 	var err error
@@ -70,18 +72,15 @@ func (s *Backend) Deploy() error {
 	}
 
 	log.Debug("Terraform init/plan.")
-	err := s.terraform.Clear()
-	if err != nil {
+	if err := s.terraform.Clear(); err != nil {
 		return err
 	}
 	// Init terraform without backend spec (empty spec).
-	err = s.terraform.Init(executor.BackendSpec{})
-	if err != nil {
+	if err := s.terraform.Init(executor.BackendSpec{}); err != nil {
 		return err
 	}
 	// Apply. Create backend.
-	err = s.terraform.Apply(s.config)
-	if err != nil {
+	if err := s.terraform.Apply(s.config); err != nil {
 		return err
 	}
 	return nil
@@ -89,28 +88,12 @@ func (s *Backend) Deploy() error {
 
 // Destroy - remove s3 bucket.
 func (s *Backend) Destroy() error {
-	// sss
 	log.Debug("Delete s3 bucket.")
 	// Set variables.
-	command := fmt.Sprintf("aws s3api delete-objects --bucket \"%[1]s\" --delete \"$(aws s3api list-object-versions --bucket %[1]s --output=json --query='{Objects: Versions[].{Key:Key,VersionId:VersionId}}')\"", s.config.Bucket)
+	command := fmt.Sprintf("s3cmd rb \"s3://%s\" --host='$cluster_cloud_region.digitaloceanspaces.com' --host-bucket='%%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com --recursive --force", s.config.Bucket)
 	err := s.bash.Run(command)
 	if err != nil {
 		log.Warnf("Can't mark bucket objects: %s", err.Error())
-	}
-	command = fmt.Sprintf("aws s3api delete-objects --bucket \"%[1]s\" --delete \"$(aws s3api list-object-versions --bucket %[1]s --output=json --query='{Objects: DeleteMarkers[].{Key:Key,VersionId:VersionId}}')\"", s.config.Bucket)
-	err = s.bash.Run(command)
-	if err != nil {
-		log.Warnf("Can't remove bucket objects: %s", err.Error())
-	}
-	command = fmt.Sprintf("aws s3 rb \"s3://%s\" --force", s.config.Bucket)
-	err = s.bash.Run(command)
-	if err != nil {
-		log.Warnf("Can't remove bucket: %s", err.Error())
-	}
-	command = fmt.Sprintf("aws --region \"%s\" dynamodb delete-table --table-name \"%s-state\"", s.config.Region, s.config.Bucket)
-	err = s.bash.Run(command)
-	if err != nil {
-		return fmt.Errorf("can't remove dynamodb table: %s", err.Error())
 	}
 	return nil
 }
@@ -125,7 +108,7 @@ func (s *Backend) Check() (bool, error) {
 	}
 	// Init terraform without backend spec.
 	err = s.terraform.Init(executor.BackendSpec{})
-	err = s.terraform.Import(s.config, "aws_s3_bucket.terraform_state", s.config.Bucket)
+	err = s.terraform.Import(s.config, "digitalocean_spaces_bucket.terraform_state", s.config.Region+","+s.config.Bucket)
 	if err != nil {
 		log.Debugf("Bucket is not exists, %s", err.Error())
 		return false, nil

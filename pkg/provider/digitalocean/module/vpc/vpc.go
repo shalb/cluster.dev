@@ -8,8 +8,10 @@ import (
 	"github.com/shalb/cluster.dev/internal/executor"
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
-	"github.com/shalb/cluster.dev/pkg/provider/aws"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean"
 )
+
+const myName = "vpc"
 
 // Variables set for vpc module tfvars.
 type tfVars struct {
@@ -30,9 +32,9 @@ type Vpc struct {
 }
 
 func init() {
-	err := aws.RegisterActivityFactory("modules", "vpc", &Factory{})
+	err := digitalocean.RegisterActivityFactory("modules", myName, &Factory{})
 	if err != nil {
-		log.Fatalf("can't register aws vpc module")
+		log.Fatalf("can't register digitalocean vpc module")
 	}
 }
 
@@ -40,12 +42,12 @@ func init() {
 type Factory struct{}
 
 // New create new eks instance.
-func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (provider.Activity, error) {
+func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.State) (provider.Activity, error) {
 	vpc := &Vpc{}
-	vpc.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/vpc")
+	vpc.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+myName)
 	vpc.backendConf = executor.BackendSpec{
 		Bucket: providerConf.ClusterName,
-		Key:    "states/terraform-vpc.state",
+		Key:    "states/terraform-" + myName + ".state",
 		Region: providerConf.Region,
 	}
 	vpc.config = tfVars{

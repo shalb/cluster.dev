@@ -1,6 +1,6 @@
-// Package aws - aws provider.
-// Common functions of aws provider.
-package aws
+// Package digitalocean - digitalocean provider.
+// Common functions of digitalocean provider.
+package digitalocean
 
 import (
 	"fmt"
@@ -9,11 +9,11 @@ import (
 
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
-	"github.com/shalb/cluster.dev/pkg/provider/aws/provisioner"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean/provisioner"
 	"gopkg.in/yaml.v2"
 )
 
-// Config - aws provider config.
+// Config - digitalocean provider config.
 type Config struct {
 	Region            string                 `yaml:"region"`
 	Vpc               string                 `yaml:"vpc"`
@@ -32,8 +32,8 @@ type Provider struct {
 
 // Register provider factory in cluster package.
 func init() {
-	if err := cluster.RegisterProviderFactory("aws", &Factory{}); err != nil {
-		log.Fatal("can't register aws provider")
+	if err := cluster.RegisterProviderFactory("digitalocean", &Factory{}); err != nil {
+		log.Fatal("can't register digitalocean provider")
 	}
 }
 
@@ -52,7 +52,7 @@ func (f *Factory) New(yamlSpec []byte, state *cluster.State, clusterName string)
 		config: spec,
 		state:  state,
 	}
-	log.Debugf("Provider aws: %+v", provider)
+	log.Debugf("Provider digitalocean: %+v", provider)
 	return provider, nil
 }
 
@@ -62,7 +62,7 @@ func (p *Provider) Deploy() error {
 	if !ok {
 		return fmt.Errorf("can't determinate provisioner type. Provisioner conf: %v", p.config.Provisioner)
 	}
-	awsDeploymentStrategy := []provider.ActivityDesc{
+	doDeploymentStrategy := []provider.ActivityDesc{
 		{Category: "modules", Name: "backend"},
 		{Category: "modules", Name: "route53"},
 		{Category: "modules", Name: "vpc"},
@@ -70,10 +70,10 @@ func (p *Provider) Deploy() error {
 		{Category: "modules", Name: "addons"},
 	}
 
-	for _, opDesc := range awsDeploymentStrategy {
+	for _, opDesc := range doDeploymentStrategy {
 		opFactory, exists := providerActivitiesFactories[opDesc.Category][opDesc.Name]
 		if !exists {
-			return fmt.Errorf("aws provider, unknown operation '%s.%s'", opDesc.Category, opDesc.Name)
+			return fmt.Errorf("digitalocean provider, unknown operation '%s.%s'", opDesc.Category, opDesc.Name)
 		}
 		log.Infof("Deploying %s.%s", opDesc.Category, opDesc.Name)
 		operation, err := opFactory.New(p.config, p.state)
@@ -90,7 +90,7 @@ func (p *Provider) Deploy() error {
 
 // Destroy function.
 func (p *Provider) Destroy() error {
-	log.Debugf("Provider 'aws', destroying... ")
+	log.Debugf("Provider 'digitalocean', destroying... ")
 	exists, err := p.checkBackendExists()
 	if err != nil {
 		return err
@@ -105,22 +105,22 @@ func (p *Provider) Destroy() error {
 	}
 	// If kubeConfig exists - destroy addons. Else - ignore addons destroying.
 	p.state.KubeConfig, err = provisioner.PullKubeConfigOnce(p.config.ClusterName)
-	var awsDestroyStrategy []provider.ActivityDesc
+	var doDestroyStrategy []provider.ActivityDesc
 	if err == nil {
-		awsDestroyStrategy = append(awsDestroyStrategy, provider.ActivityDesc{Category: "modules", Name: "addons"})
+		doDestroyStrategy = append(doDestroyStrategy, provider.ActivityDesc{Category: "modules", Name: "addons"})
 	}
 	// Add provisioner and modules.
-	awsDestroyStrategy = append(awsDestroyStrategy, []provider.ActivityDesc{
+	doDestroyStrategy = append(doDestroyStrategy, []provider.ActivityDesc{
 		{Category: "provisioners", Name: provisionerType},
 		{Category: "modules", Name: "vpc"},
 		{Category: "modules", Name: "route53"},
 		{Category: "modules", Name: "backend"},
 	}...)
 	errCount := 0
-	for _, opDesc := range awsDestroyStrategy {
+	for _, opDesc := range doDestroyStrategy {
 		opFactory, exists := providerActivitiesFactories[opDesc.Category][opDesc.Name]
 		if !exists {
-			return fmt.Errorf("aws provider, unknown operation '%s.%s'", opDesc.Category, opDesc.Name)
+			return fmt.Errorf("digitalocean provider, unknown operation '%s.%s'", opDesc.Category, opDesc.Name)
 		}
 		log.Infof("Destroying %s.%s", opDesc.Category, opDesc.Name)
 		operation, err := opFactory.New(p.config, p.state)
@@ -141,10 +141,10 @@ func (p *Provider) Destroy() error {
 }
 
 func (p *Provider) checkBackendExists() (bool, error) {
-	log.Debugf("Provider 'aws', destroying... ")
+	log.Debugf("Provider 'digitalocean', destroying... ")
 	backendFactory, exists := providerActivitiesFactories["modules"]["backend"]
 	if !exists {
-		return false, fmt.Errorf("backend module is not registered in aws provider")
+		return false, fmt.Errorf("backend module is not registered in digitalocean provider")
 	}
 	bk, err := backendFactory.New(p.config, p.state)
 	if err != nil {

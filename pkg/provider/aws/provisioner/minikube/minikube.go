@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/shalb/cluster.dev/pkg/cluster"
+	"github.com/shalb/cluster.dev/pkg/provider"
 	"github.com/shalb/cluster.dev/pkg/provider/aws"
 	"github.com/shalb/cluster.dev/pkg/provider/aws/provisioner"
 	awsProvisioner "github.com/shalb/cluster.dev/pkg/provider/aws/provisioner"
@@ -14,12 +15,12 @@ import (
 // Minikube class.
 type Minikube struct {
 	providerConf   aws.Config
-	minikubeModule aws.Operation
+	minikubeModule provider.Activity
 	state          *cluster.State
 }
 
 func init() {
-	err := aws.RegisterProvisionerFactory("minikube", &Factory{})
+	err := aws.RegisterActivityFactory("provisioners", "minikube", &Factory{})
 	if err != nil {
 		log.Fatalf("can't register aws minikube provisioner")
 	}
@@ -29,7 +30,7 @@ func init() {
 type Factory struct{}
 
 // New create new instance of EKS provisioner.
-func (f *Factory) New(providerConf aws.Config, state *cluster.State) (aws.Operation, error) {
+func (f *Factory) New(providerConf aws.Config, state *cluster.State) (provider.Activity, error) {
 	provisioner := &Minikube{}
 	provisioner.providerConf = providerConf
 	minikubeFactory, exists := aws.GetModulesFactories()["minikube"]
