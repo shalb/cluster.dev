@@ -18,13 +18,6 @@ type TerraformRunner struct {
 	bashRunner *BashRunner
 }
 
-// BackendSpec - terraform s3 bucket backend config.
-type BackendSpec struct {
-	Bucket string `json:"bucket,omitempty"`
-	Key    string `json:"key,omitempty"`
-	Region string `json:"region,omitempty"`
-}
-
 // NewTerraformRunner create terraform runner.
 func NewTerraformRunner(workingDir string) (*TerraformRunner, error) {
 	var tr TerraformRunner
@@ -94,7 +87,7 @@ func (tr *TerraformRunner) Version() (string, error) {
 }
 
 // Init - exec terraform init.
-func (tr *TerraformRunner) Init(backendConfig BackendSpec) error {
+func (tr *TerraformRunner) Init(backendConfig interface{}) error {
 	// Run command and return result.
 	return tr.commonRun("init", nil, backendConfig)
 }

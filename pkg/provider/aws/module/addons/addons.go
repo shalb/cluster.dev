@@ -26,7 +26,7 @@ type tfVars struct {
 // Addons - type for module instance.
 type Addons struct {
 	config      tfVars
-	backendConf executor.BackendSpec
+	backendConf aws.BackendSpec
 	terraform   *executor.TerraformRunner
 	state       *cluster.State
 	kubeConfig  []byte
@@ -53,7 +53,7 @@ func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (pro
 	// Module state name.
 	addons.backendKey = "states/terraform-addons.state"
 	// Set backend config.
-	addons.backendConf = executor.BackendSpec{
+	addons.backendConf = aws.BackendSpec{
 		Bucket: providerConf.ClusterName,
 		Key:    addons.backendKey,
 		Region: providerConf.Region,

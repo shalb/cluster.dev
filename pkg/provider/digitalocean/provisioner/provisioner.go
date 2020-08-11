@@ -12,14 +12,14 @@ import (
 )
 
 // PullKubeConfigOnce download kubeconfig from s3 and return it.
-func PullKubeConfigOnce(clusterName string) ([]byte, error) {
+func PullKubeConfigOnce(clusterName, doRegion string) ([]byte, error) {
 	bash, err := executor.NewBashRunner("")
 	if err != nil {
 		return nil, err
 	}
 	kubeConfigName := fmt.Sprintf("kubeconfig_%s", clusterName)
 	kubeConfigFilePath := filepath.Join("/tmp", kubeConfigName)
-	pullCommand := fmt.Sprintf("digitalocean s3 cp s3://%s/%s %s", clusterName, kubeConfigName, kubeConfigFilePath)
+	pullCommand := fmt.Sprintf("s3cmd get %s s3://%s/%s --host=%s.digitaloceanspaces.com --host-bucket=%%(bucket)s.%s.digitaloceanspaces.com", kubeConfigFilePath, clusterName, kubeConfigName, doRegion, doRegion)
 	stdout, stderr, err := bash.RunMutely(pullCommand)
 	if err != nil {
 		log.Debugf("digitalocean s3 cp output:\n%s\nError:\n%s", stdout, stderr)
@@ -35,7 +35,7 @@ func PullKubeConfigOnce(clusterName string) ([]byte, error) {
 }
 
 // PullKubeConfig retry pull kube config every 5 sec until timeout.
-func PullKubeConfig(clusterName string, timeout time.Duration) ([]byte, error) {
+func PullKubeConfig(clusterName, doRegion string, timeout time.Duration) ([]byte, error) {
 	tm := time.After(timeout)
 	var tick = make(<-chan time.Time)
 	tick = time.Tick(5 * time.Second)
@@ -46,18 +46,18 @@ func PullKubeConfig(clusterName string, timeout time.Duration) ([]byte, error) {
 			return nil, fmt.Errorf("kube config pull error: timeout")
 		// Wait for tick.
 		case <-tick:
-			kubeConfig, err := PullKubeConfigOnce(clusterName)
+			kubeConfig, err := PullKubeConfigOnce(clusterName, doRegion)
 			if err == nil {
 				return kubeConfig, nil
 			}
-			log.Info("Minikube cluster is not ready yet. Will retry after 5 seconds...")
+			log.Info("Kubernetes cluster is not ready yet. Will retry after 5 seconds...")
 		}
 	}
 }
 
 // PushKubeConfig upload kube config to s3.
-func PushKubeConfig(clusterName string, kubeConfig []byte) error {
-	bash, err := executor.NewBashRunner("")
+func PushKubeConfig(clusterName, doRegion string, kubeConfig []byte) error {
+	bash, err := executor.NewBashRunner("", GetAwsAuthEnv()...)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func PushKubeConfig(clusterName string, kubeConfig []byte) error {
 		return err
 	}
 	defer os.Remove(kubeConfigFilePath)
-	uploadCommand := fmt.Sprintf("digitalocean s3 cp %s s3://%s/%s", kubeConfigFilePath, clusterName, kubeConfigName)
+	uploadCommand := fmt.Sprintf("s3cmd put %s s3://%s/%s --host=%s.digitaloceanspaces.com --host-bucket=%%(bucket)s.%s.digitaloceanspaces.com", kubeConfigFilePath, clusterName, kubeConfigName, doRegion, doRegion)
 	return bash.Run(uploadCommand)
 }
 
@@ -83,4 +83,15 @@ func CheckKubeAccess(kubeConfig []byte) error {
 	}
 	defer kub.Clear()
 	return kub.Run("version")
+}
+
+// GetAwsAuthEnv return array with aws auth environments, get there fom do auth env. Needed for s3cmd.
+func GetAwsAuthEnv() []string {
+	spacesKey := os.Getenv("SPACES_ACCESS_KEY_ID")
+	spacesSecret := os.Getenv("SPACES_SECRET_ACCESS_KEY")
+	res := []string{
+		fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", spacesKey),
+		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", spacesSecret),
+	}
+	return res
 }

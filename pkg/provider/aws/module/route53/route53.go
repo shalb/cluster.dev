@@ -22,7 +22,7 @@ type route53VarsSpec struct {
 // Route53 type for route53 module instance.
 type Route53 struct {
 	config      route53VarsSpec
-	backendConf executor.BackendSpec
+	backendConf aws.BackendSpec
 	terraform   *executor.TerraformRunner
 	backendKey  string
 	moduleDir   string
@@ -42,7 +42,7 @@ type Factory struct{}
 func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (provider.Activity, error) {
 	route53 := &Route53{}
 	route53.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/route53")
-	route53.backendConf = executor.BackendSpec{
+	route53.backendConf = aws.BackendSpec{
 		Bucket: providerConf.ClusterName,
 		Key:    "states/terraform-dns.state",
 		Region: providerConf.Region,

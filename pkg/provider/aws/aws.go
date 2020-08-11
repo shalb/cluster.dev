@@ -30,6 +30,13 @@ type Provider struct {
 	state  *cluster.State
 }
 
+// BackendSpec - terraform s3 bucket backend config.
+type BackendSpec struct {
+	Bucket string `json:"bucket,omitempty"`
+	Key    string `json:"key,omitempty"`
+	Region string `json:"region,omitempty"`
+}
+
 // Register provider factory in cluster package.
 func init() {
 	if err := cluster.RegisterProviderFactory("aws", &Factory{}); err != nil {

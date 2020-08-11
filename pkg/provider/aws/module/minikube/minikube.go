@@ -23,7 +23,7 @@ type tfVars struct {
 // Minikube type for minikube module instance.
 type Minikube struct {
 	config      tfVars
-	backendConf executor.BackendSpec
+	backendConf aws.BackendSpec
 	terraform   *executor.TerraformRunner
 	backendKey  string
 	moduleDir   string
@@ -44,7 +44,7 @@ func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (pro
 	miniKube := &Minikube{}
 	miniKube.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/minikube")
 	miniKube.backendKey = "states/terraform-k8s.state"
-	miniKube.backendConf = executor.BackendSpec{
+	miniKube.backendConf = aws.BackendSpec{
 		Bucket: providerConf.ClusterName,
 		Key:    miniKube.backendKey,
 		Region: providerConf.Region,

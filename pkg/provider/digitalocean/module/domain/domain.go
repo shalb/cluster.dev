@@ -24,7 +24,7 @@ type domainVarsSpec struct {
 // Domain type for domain module instance.
 type Domain struct {
 	config      domainVarsSpec
-	backendConf executor.BackendSpec
+	backendConf digitalocean.BackendSpec
 	terraform   *executor.TerraformRunner
 	backendKey  string
 	moduleDir   string
@@ -44,10 +44,10 @@ type Factory struct{}
 func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.State) (provider.Activity, error) {
 	route53 := &Domain{}
 	route53.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+myName)
-	route53.backendConf = executor.BackendSpec{
-		Bucket: providerConf.ClusterName,
-		Key:    "states/terraform-dns.state",
-		Region: providerConf.Region,
+	route53.backendConf = digitalocean.BackendSpec{
+		Bucket:   providerConf.ClusterName,
+		Key:      "states/terraform-dns.state",
+		Endpoint: providerConf.Region + ".digitaloceanspaces.com",
 	}
 	zoneDelegation := "false"
 	if providerConf.Domain == "cluster.dev" {

@@ -14,4 +14,13 @@ import (
 	_ "github.com/shalb/cluster.dev/pkg/provider/aws/module/vpc"
 	_ "github.com/shalb/cluster.dev/pkg/provider/aws/provisioner/eks"
 	_ "github.com/shalb/cluster.dev/pkg/provider/aws/provisioner/minikube"
+
+	// Register DO provider, modules and provisioners.
+	_ "github.com/shalb/cluster.dev/pkg/provider/digitalocean"
+	_ "github.com/shalb/cluster.dev/pkg/provider/digitalocean/module/addons"
+	_ "github.com/shalb/cluster.dev/pkg/provider/digitalocean/module/backend"
+	_ "github.com/shalb/cluster.dev/pkg/provider/digitalocean/module/domain"
+	_ "github.com/shalb/cluster.dev/pkg/provider/digitalocean/module/k8s"
+	_ "github.com/shalb/cluster.dev/pkg/provider/digitalocean/module/vpc"
+	_ "github.com/shalb/cluster.dev/pkg/provider/digitalocean/provisioner/managedk8s"
 )

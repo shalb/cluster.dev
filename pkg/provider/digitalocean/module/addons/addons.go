@@ -11,8 +11,10 @@ import (
 	"github.com/shalb/cluster.dev/internal/executor"
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
-	"github.com/shalb/cluster.dev/pkg/provider/aws"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean"
 )
+
+const moduleName = "addons"
 
 // Variables set for module tfvars.
 type tfVars struct {
@@ -20,13 +22,13 @@ type tfVars struct {
 	ClusterName        string `json:"cluster_name"`
 	ConfigPath         string `json:"config_path"`
 	ClusterCloudDomain string `json:"cluster_cloud_domain"`
-	Eks                string `json:"eks"`
+	DoToken            string `json:"do_token"`
 }
 
 // Addons - type for module instance.
 type Addons struct {
 	config      tfVars
-	backendConf executor.BackendSpec
+	backendConf digitalocean.BackendSpec
 	terraform   *executor.TerraformRunner
 	state       *cluster.State
 	kubeConfig  []byte
@@ -36,9 +38,9 @@ type Addons struct {
 }
 
 func init() {
-	err := aws.RegisterActivityFactory("modules", "addons", &Factory{})
+	err := digitalocean.RegisterActivityFactory("modules", moduleName, &Factory{})
 	if err != nil {
-		log.Fatalf("can't register aws addons module")
+		log.Fatalf("can't register digitalocean addons module")
 	}
 }
 
@@ -46,25 +48,28 @@ func init() {
 type Factory struct{}
 
 // New create new addons instance.
-func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (provider.Activity, error) {
+func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.State) (provider.Activity, error) {
 	addons := &Addons{}
 	// Module dir.
-	addons.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/addons")
+	addons.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+moduleName)
 	// Module state name.
 	addons.backendKey = "states/terraform-addons.state"
 	// Set backend config.
-	addons.backendConf = executor.BackendSpec{
-		Bucket: providerConf.ClusterName,
-		Key:    addons.backendKey,
-		Region: providerConf.Region,
+	addons.backendConf = digitalocean.BackendSpec{
+		Bucket:   providerConf.ClusterName,
+		Key:      addons.backendKey,
+		Endpoint: providerConf.Region + ".digitaloceanspaces.com",
 	}
 	// Set tfVars.
 	addons.config.ClusterName = providerConf.ClusterName
 	addons.config.Region = providerConf.Region
 	addons.config.ClusterCloudDomain = providerConf.Domain
-	addons.config.ConfigPath = fmt.Sprintf("/tmp/kubeconfig_%s", providerConf.ClusterName)
 	addons.kubeConfig = clusterState.KubeConfig
 	addons.state = clusterState
+	addons.config.DoToken = os.Getenv("DIGITALOCEAN_TOKEN")
+	if addons.config.DoToken == "" {
+		return nil, fmt.Errorf("env variable DIGITALOCEAN_TOKEN is not set")
+	}
 	var err error
 	addons.tmpDir, err = ioutil.TempDir("", "cluster-dev-addons-*")
 	if err != nil {
@@ -77,17 +82,6 @@ func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (pro
 	err = ioutil.WriteFile(addons.config.ConfigPath, clusterState.KubeConfig, os.ModePerm)
 	if err != nil {
 		return nil, err
-	}
-
-	// Detect provisioner type for module var 'eks=(true|false)'
-	provisionerType, ok := providerConf.Provisioner["type"].(string)
-	if !ok {
-		return nil, fmt.Errorf("can't determinate provisioner type (for 'addons' module)")
-	}
-	if provisionerType == "eks" {
-		addons.config.Eks = "true"
-	} else {
-		addons.config.Eks = "false"
 	}
 
 	// Init terraform runner in module directory.

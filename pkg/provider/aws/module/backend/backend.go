@@ -75,7 +75,7 @@ func (s *Backend) Deploy() error {
 		return err
 	}
 	// Init terraform without backend spec (empty spec).
-	err = s.terraform.Init(executor.BackendSpec{})
+	err = s.terraform.Init(aws.BackendSpec{})
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func (s *Backend) Check() (bool, error) {
 		return false, err
 	}
 	// Init terraform without backend spec.
-	err = s.terraform.Init(executor.BackendSpec{})
+	err = s.terraform.Init(aws.BackendSpec{})
 	err = s.terraform.Import(s.config, "aws_s3_bucket.terraform_state", s.config.Bucket)
 	if err != nil {
 		log.Debugf("Bucket is not exists, %s", err.Error())

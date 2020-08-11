@@ -23,7 +23,7 @@ type tfVars struct {
 // Vpc type for vpc module instance.
 type Vpc struct {
 	config      tfVars
-	backendConf executor.BackendSpec
+	backendConf aws.BackendSpec
 	terraform   *executor.TerraformRunner
 	backendKey  string
 	moduleDir   string
@@ -43,7 +43,7 @@ type Factory struct{}
 func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (provider.Activity, error) {
 	vpc := &Vpc{}
 	vpc.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/vpc")
-	vpc.backendConf = executor.BackendSpec{
+	vpc.backendConf = aws.BackendSpec{
 		Bucket: providerConf.ClusterName,
 		Key:    "states/terraform-vpc.state",
 		Region: providerConf.Region,

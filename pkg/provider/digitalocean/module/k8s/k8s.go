@@ -25,10 +25,10 @@ type tfVars struct {
 
 const myName = "k8s"
 
-// Eks - type for k8s module.
-type Eks struct {
+// K8s - type for k8s module.
+type K8s struct {
 	config      tfVars
-	backendConf executor.BackendSpec
+	backendConf digitalocean.BackendSpec
 	terraform   *executor.TerraformRunner
 	backendKey  string
 	moduleDir   string
@@ -46,13 +46,13 @@ type Factory struct{}
 
 // New create new k8s instance.
 func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.State) (provider.Activity, error) {
-	k8s := &Eks{}
+	k8s := &K8s{}
 	k8s.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+myName)
 	k8s.backendKey = "states/terraform-" + myName + ".state"
-	k8s.backendConf = executor.BackendSpec{
-		Bucket: providerConf.ClusterName,
-		Key:    k8s.backendKey,
-		Region: providerConf.Region,
+	k8s.backendConf = digitalocean.BackendSpec{
+		Bucket:   providerConf.ClusterName,
+		Key:      k8s.backendKey,
+		Endpoint: providerConf.Region + ".digitaloceanspaces.com",
 	}
 	rawProvisionerData, err := yaml.Marshal(providerConf.Provisioner)
 	if err != nil {
@@ -73,7 +73,7 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 }
 
 // Deploy k8s.
-func (s *Eks) Deploy() error {
+func (s *K8s) Deploy() error {
 	// Clear terraform cache tmp dir.
 	log.Debug("Terraform init/plan.")
 	err := s.terraform.Clear()
@@ -99,7 +99,7 @@ func (s *Eks) Deploy() error {
 }
 
 // Destroy - remove k8s.
-func (s *Eks) Destroy() error {
+func (s *K8s) Destroy() error {
 	// Init terraform.
 	err := s.terraform.Init(s.backendConf)
 	if err != nil {
@@ -110,16 +110,16 @@ func (s *Eks) Destroy() error {
 }
 
 // Check - do nothing, not used yet.
-func (s *Eks) Check() (bool, error) {
+func (s *K8s) Check() (bool, error) {
 	return true, nil
 }
 
 // Path - return terraform module path.
-func (s *Eks) Path() string {
+func (s *K8s) Path() string {
 	return s.moduleDir
 }
 
 // Clear - remove tmp and cache files.
-func (s *Eks) Clear() error {
+func (s *K8s) Clear() error {
 	return s.terraform.Clear()
 }

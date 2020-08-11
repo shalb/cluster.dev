@@ -17,6 +17,7 @@ import (
 type Config struct {
 	Region            string                 `yaml:"region"`
 	Vpc               string                 `yaml:"vpc"`
+	VpcCIDR           string                 `yaml:"vpc_cidr"`
 	Domain            string                 `yaml:"domain"`
 	Provisioner       map[string]interface{} `yaml:"provisioner"`
 	ProviderType      string                 `yaml:"type"`
@@ -28,6 +29,13 @@ type Config struct {
 type Provider struct {
 	config Config
 	state  *cluster.State
+}
+
+// BackendSpec - terraform s3 bucket backend config.
+type BackendSpec struct {
+	Bucket   string `json:"bucket,omitempty"`
+	Key      string `json:"key,omitempty"`
+	Endpoint string `json:"endpoint,omitempty"`
 }
 
 // Register provider factory in cluster package.
@@ -64,7 +72,7 @@ func (p *Provider) Deploy() error {
 	}
 	doDeploymentStrategy := []provider.ActivityDesc{
 		{Category: "modules", Name: "backend"},
-		{Category: "modules", Name: "route53"},
+		{Category: "modules", Name: "domain"},
 		{Category: "modules", Name: "vpc"},
 		{Category: "provisioners", Name: provisionerType},
 		{Category: "modules", Name: "addons"},
@@ -104,7 +112,7 @@ func (p *Provider) Destroy() error {
 		return fmt.Errorf("can't determinate provisioner type. Provisioner conf: %v", p.config.Provisioner)
 	}
 	// If kubeConfig exists - destroy addons. Else - ignore addons destroying.
-	p.state.KubeConfig, err = provisioner.PullKubeConfigOnce(p.config.ClusterName)
+	p.state.KubeConfig, err = provisioner.PullKubeConfigOnce(p.config.ClusterName, p.config.Region)
 	var doDestroyStrategy []provider.ActivityDesc
 	if err == nil {
 		doDestroyStrategy = append(doDestroyStrategy, provider.ActivityDesc{Category: "modules", Name: "addons"})
@@ -113,7 +121,7 @@ func (p *Provider) Destroy() error {
 	doDestroyStrategy = append(doDestroyStrategy, []provider.ActivityDesc{
 		{Category: "provisioners", Name: provisionerType},
 		{Category: "modules", Name: "vpc"},
-		{Category: "modules", Name: "route53"},
+		{Category: "modules", Name: "domain"},
 		{Category: "modules", Name: "backend"},
 	}...)
 	errCount := 0

@@ -10,9 +10,10 @@ import (
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
 	"github.com/shalb/cluster.dev/pkg/provider/digitalocean"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean/provisioner"
 )
 
-const myName = "backend"
+const moduleName = "backend"
 
 // Type for module tfVars JSON.
 type backendVarsSpec struct {
@@ -29,7 +30,7 @@ type Backend struct {
 }
 
 func init() {
-	err := digitalocean.RegisterActivityFactory("modules", myName, &Factory{})
+	err := digitalocean.RegisterActivityFactory("modules", moduleName, &Factory{})
 	if err != nil {
 		log.Fatalf("can't register digitalocean backend module")
 	}
@@ -38,12 +39,12 @@ func init() {
 // Factory create new backend module.
 type Factory struct{}
 
-// New create new eks instance.
+// New create new backend instance.
 func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.State) (provider.Activity, error) {
 
 	log.Debugf("Init backend module wit provider config: %+v", providerConf)
 	s3 := &Backend{}
-	s3.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+myName)
+	s3.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+moduleName)
 	s3.config.Bucket = providerConf.ClusterName
 	s3.config.Region = providerConf.Region
 	var err error
@@ -51,7 +52,8 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 	if err != nil {
 		return nil, err
 	}
-	s3.bash, err = executor.NewBashRunner(s3.moduleDir)
+	// Create bash runner and add AWS env for s3cmd auth. See GetAwsAuthEnv().
+	s3.bash, err = executor.NewBashRunner(s3.moduleDir, provisioner.GetAwsAuthEnv()...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +78,7 @@ func (s *Backend) Deploy() error {
 		return err
 	}
 	// Init terraform without backend spec (empty spec).
-	if err := s.terraform.Init(executor.BackendSpec{}); err != nil {
+	if err := s.terraform.Init(digitalocean.BackendSpec{}); err != nil {
 		return err
 	}
 	// Apply. Create backend.
@@ -107,7 +109,7 @@ func (s *Backend) Check() (bool, error) {
 		return false, err
 	}
 	// Init terraform without backend spec.
-	err = s.terraform.Init(executor.BackendSpec{})
+	err = s.terraform.Init(digitalocean.BackendSpec{})
 	err = s.terraform.Import(s.config, "digitalocean_spaces_bucket.terraform_state", s.config.Region+","+s.config.Bucket)
 	if err != nil {
 		log.Debugf("Bucket is not exists, %s", err.Error())

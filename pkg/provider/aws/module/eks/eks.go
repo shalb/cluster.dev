@@ -27,7 +27,7 @@ type tfVars struct {
 // Eks - type for eks module.
 type Eks struct {
 	config      tfVars
-	backendConf executor.BackendSpec
+	backendConf aws.BackendSpec
 	terraform   *executor.TerraformRunner
 	backendKey  string
 	moduleDir   string
@@ -48,7 +48,7 @@ func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (pro
 	eks := &Eks{}
 	eks.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/eks")
 	eks.backendKey = "states/terraform-k8s.state"
-	eks.backendConf = executor.BackendSpec{
+	eks.backendConf = aws.BackendSpec{
 		Bucket: providerConf.ClusterName,
 		Key:    eks.backendKey,
 		Region: providerConf.Region,

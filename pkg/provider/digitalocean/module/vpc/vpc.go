@@ -25,7 +25,7 @@ type tfVars struct {
 // Vpc type for vpc module instance.
 type Vpc struct {
 	config      tfVars
-	backendConf executor.BackendSpec
+	backendConf digitalocean.BackendSpec
 	terraform   *executor.TerraformRunner
 	backendKey  string
 	moduleDir   string
@@ -41,20 +41,20 @@ func init() {
 // Factory create new vpc module.
 type Factory struct{}
 
-// New create new eks instance.
+// New create new vpc instance.
 func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.State) (provider.Activity, error) {
 	vpc := &Vpc{}
 	vpc.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+myName)
-	vpc.backendConf = executor.BackendSpec{
-		Bucket: providerConf.ClusterName,
-		Key:    "states/terraform-" + myName + ".state",
-		Region: providerConf.Region,
+	vpc.backendConf = digitalocean.BackendSpec{
+		Bucket:   providerConf.ClusterName,
+		Key:      "states/terraform-" + myName + ".state",
+		Endpoint: providerConf.Region + ".digitaloceanspaces.com",
 	}
 	vpc.config = tfVars{
 		VpcID:             providerConf.Vpc,
 		Region:            providerConf.Region,
 		ClusterName:       providerConf.ClusterName,
-		VpcCIDR:           "10.8.0.0/18",
+		VpcCIDR:           providerConf.VpcCIDR,
 		AvailabilityZones: providerConf.AvailabilityZones,
 	}
 	var err error

@@ -12,48 +12,48 @@ import (
 	"github.com/shalb/cluster.dev/pkg/provider/digitalocean/provisioner"
 )
 
-// Eks class.
-type Eks struct {
+// K8s class.
+type K8s struct {
 	providerConf digitalocean.Config
-	eksModule    provider.Activity
+	k8sModule    provider.Activity
 	state        *cluster.State
 }
 
 func init() {
 	err := digitalocean.RegisterActivityFactory("provisioners", "managed-kubernetes", &Factory{})
 	if err != nil {
-		log.Fatalf("can't register digitalocean eks provisioner")
+		log.Fatalf("can't register digitalocean managed-kubernetes provisioner")
 	}
 }
 
-// Factory create new digitalocean eks provisioner.
+// Factory create new digitalocean managed-kubernetes provisioner.
 type Factory struct{}
 
-// New create new instance of EKS provisioner.
+// New create new instance of managed-kubernetes provisioner.
 func (f *Factory) New(providerConf digitalocean.Config, state *cluster.State) (provider.Activity, error) {
-	provisioner := &Eks{}
+	provisioner := &K8s{}
 	provisioner.providerConf = providerConf
-	eksModuleFactory, exists := digitalocean.GetModulesFactories()["eks"]
+	k8sModuleFactory, exists := digitalocean.GetModulesFactories()["managed-kubernetes"]
 	if !exists {
-		return nil, fmt.Errorf("module 'eks', needed by provisioner is not found")
+		return nil, fmt.Errorf("module 'k8s', needed by provisioner is not found")
 	}
 	var err error
 	provisioner.state = state
-	provisioner.eksModule, err = eksModuleFactory.New(providerConf, state)
+	provisioner.k8sModule, err = k8sModuleFactory.New(providerConf, state)
 	if err != nil {
 		return nil, err
 	}
 	return provisioner, nil
 }
 
-// Deploy EKS provisioner modules, save kubernetes config to kubeConfig string.
+// Deploy managed-kubernetes provisioner modules, save kubernetes config to kubeConfig string.
 // Upload kube config to s3.
-func (p *Eks) Deploy() error {
-	err := p.eksModule.Deploy()
+func (p *K8s) Deploy() error {
+	err := p.k8sModule.Deploy()
 	if err != nil {
 		return err
 	}
-	kubeConfigName := filepath.Join(p.eksModule.Path(), "kubeconfig_"+p.providerConf.ClusterName)
+	kubeConfigName := filepath.Join(p.k8sModule.Path(), "kubeconfig_"+p.providerConf.ClusterName)
 	// Read kube confin from file to string.
 	conf, err := ioutil.ReadFile(kubeConfigName)
 	if err != nil {
@@ -64,15 +64,15 @@ func (p *Eks) Deploy() error {
 	}
 	p.state.KubeConfig = conf
 
-	if err = provisioner.PushKubeConfig(p.providerConf.ClusterName, conf); err != nil {
-		return fmt.Errorf("error occurred during uploading kubeconfig to s3 bucket: %s", err.Error())
+	if err = provisioner.PushKubeConfig(p.providerConf.ClusterName, p.providerConf.Region, conf); err != nil {
+		return fmt.Errorf("error occurred during uploading kubeconfig to spaces: %s", err.Error())
 	}
 	return nil
 }
 
-// Destroy EKS provisioner objects.
-func (p *Eks) Destroy() error {
-	err := p.eksModule.Destroy()
+// Destroy managed-kubernetes provisioner objects.
+func (p *K8s) Destroy() error {
+	err := p.k8sModule.Destroy()
 	if err != nil {
 		return err
 	}
@@ -81,16 +81,16 @@ func (p *Eks) Destroy() error {
 }
 
 // Check - if s3 bucket exists.
-func (p *Eks) Check() (bool, error) {
+func (p *K8s) Check() (bool, error) {
 	return true, nil
 }
 
 // Path - return module path.
-func (p *Eks) Path() string {
+func (p *K8s) Path() string {
 	return ""
 }
 
 // Clear - remove tmp and cache files.
-func (p *Eks) Clear() error {
-	return p.eksModule.Clear()
+func (p *K8s) Clear() error {
+	return p.k8sModule.Clear()
 }
