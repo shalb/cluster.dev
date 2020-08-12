@@ -48,7 +48,7 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 	s3.config.Bucket = providerConf.ClusterName
 	s3.config.Region = providerConf.Region
 	var err error
-	s3.terraform, err = executor.NewTerraformRunner(s3.moduleDir)
+	s3.terraform, err = executor.NewTerraformRunner(s3.moduleDir, provisioner.GetAwsAuthEnv()...)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (s *Backend) Deploy() error {
 func (s *Backend) Destroy() error {
 	log.Debug("Delete s3 bucket.")
 	// Set variables.
-	command := fmt.Sprintf("s3cmd rb \"s3://%s\" --host='$cluster_cloud_region.digitaloceanspaces.com' --host-bucket='%%(bucket)s.$cluster_cloud_region.digitaloceanspaces.com --recursive --force", s.config.Bucket)
+	command := fmt.Sprintf("s3cmd rb \"s3://%s\" --host='%s.digitaloceanspaces.com' --host-bucket='%%(bucket)s.%s.digitaloceanspaces.com' --recursive --force", s.config.Bucket, s.config.Region, s.config.Region)
 	err := s.bash.Run(command)
 	if err != nil {
 		log.Warnf("Can't mark bucket objects: %s", err.Error())

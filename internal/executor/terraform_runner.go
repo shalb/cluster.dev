@@ -19,10 +19,10 @@ type TerraformRunner struct {
 }
 
 // NewTerraformRunner create terraform runner.
-func NewTerraformRunner(workingDir string) (*TerraformRunner, error) {
+func NewTerraformRunner(workingDir string, envVariables ...string) (*TerraformRunner, error) {
 	var tr TerraformRunner
 	var err error
-	tr.bashRunner, err = NewBashRunner(workingDir)
+	tr.bashRunner, err = NewBashRunner(workingDir, envVariables...)
 	if err != nil {
 		return nil, err
 	}

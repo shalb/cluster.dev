@@ -12,6 +12,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
 	"github.com/shalb/cluster.dev/pkg/provider/digitalocean"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean/provisioner"
 )
 
 const moduleName = "addons"
@@ -85,7 +86,7 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 	}
 
 	// Init terraform runner in module directory.
-	addons.terraform, err = executor.NewTerraformRunner(addons.moduleDir)
+	addons.terraform, err = executor.NewTerraformRunner(addons.moduleDir, provisioner.GetAwsAuthEnv()...)
 	if err != nil {
 		return nil, err
 	}

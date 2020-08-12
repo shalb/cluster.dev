@@ -15,14 +15,13 @@ import (
 
 // Config - digitalocean provider config.
 type Config struct {
-	Region            string                 `yaml:"region"`
-	Vpc               string                 `yaml:"vpc"`
-	VpcCIDR           string                 `yaml:"vpc_cidr"`
-	Domain            string                 `yaml:"domain"`
-	Provisioner       map[string]interface{} `yaml:"provisioner"`
-	ProviderType      string                 `yaml:"type"`
-	AvailabilityZones []string               `yaml:"availability_zones"`
-	ClusterName       string                 `yaml:"cluster_name"`
+	Region       string                 `yaml:"region"`
+	Vpc          string                 `yaml:"vpc"`
+	VpcCIDR      string                 `yaml:"vpc_cidr"`
+	Domain       string                 `yaml:"domain"`
+	Provisioner  map[string]interface{} `yaml:"provisioner"`
+	ProviderType string                 `yaml:"type"`
+	ClusterName  string                 `yaml:"cluster_name"`
 }
 
 // Provider - main provider object.

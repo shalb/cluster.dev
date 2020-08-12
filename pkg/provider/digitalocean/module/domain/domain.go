@@ -9,6 +9,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
 	"github.com/shalb/cluster.dev/pkg/provider/digitalocean"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean/provisioner"
 )
 
 const myName = "domain"
@@ -60,7 +61,7 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 		ZoneDelegation: zoneDelegation,
 	}
 	var err error
-	route53.terraform, err = executor.NewTerraformRunner(route53.moduleDir)
+	route53.terraform, err = executor.NewTerraformRunner(route53.moduleDir, provisioner.GetAwsAuthEnv()...)
 	if err != nil {
 		return nil, err
 	}

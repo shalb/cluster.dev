@@ -69,7 +69,7 @@ func PushKubeConfig(clusterName, doRegion string, kubeConfig []byte) error {
 		return err
 	}
 	defer os.Remove(kubeConfigFilePath)
-	uploadCommand := fmt.Sprintf("s3cmd put %s s3://%s/%s --host=%s.digitaloceanspaces.com --host-bucket=%%(bucket)s.%s.digitaloceanspaces.com", kubeConfigFilePath, clusterName, kubeConfigName, doRegion, doRegion)
+	uploadCommand := fmt.Sprintf("s3cmd put %s s3://%s/%s --host=%s.digitaloceanspaces.com --host-bucket='%%(bucket)s.%s.digitaloceanspaces.com'", kubeConfigFilePath, clusterName, kubeConfigName, doRegion, doRegion)
 	return bash.Run(uploadCommand)
 }
 

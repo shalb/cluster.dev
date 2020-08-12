@@ -9,17 +9,17 @@ import (
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
 	"github.com/shalb/cluster.dev/pkg/provider/digitalocean"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean/provisioner"
 )
 
 const myName = "vpc"
 
 // Variables set for vpc module tfvars.
 type tfVars struct {
-	VpcID             string   `json:"vpc_id"`
-	Region            string   `json:"region"`
-	ClusterName       string   `json:"cluster_name"`
-	VpcCIDR           string   `json:"vpc_cidr"`
-	AvailabilityZones []string `json:"availability_zones"`
+	VpcID       string `json:"vpc_id"`
+	Region      string `json:"region"`
+	ClusterName string `json:"cluster_name"`
+	VpcCIDR     string `json:"ip_range"`
 }
 
 // Vpc type for vpc module instance.
@@ -51,14 +51,13 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 		Endpoint: providerConf.Region + ".digitaloceanspaces.com",
 	}
 	vpc.config = tfVars{
-		VpcID:             providerConf.Vpc,
-		Region:            providerConf.Region,
-		ClusterName:       providerConf.ClusterName,
-		VpcCIDR:           providerConf.VpcCIDR,
-		AvailabilityZones: providerConf.AvailabilityZones,
+		VpcID:       providerConf.Vpc,
+		Region:      providerConf.Region,
+		ClusterName: providerConf.ClusterName,
+		VpcCIDR:     providerConf.VpcCIDR,
 	}
 	var err error
-	vpc.terraform, err = executor.NewTerraformRunner(vpc.moduleDir)
+	vpc.terraform, err = executor.NewTerraformRunner(vpc.moduleDir, provisioner.GetAwsAuthEnv()...)
 	if err != nil {
 		return nil, err
 	}

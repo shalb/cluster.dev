@@ -10,6 +10,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/cluster"
 	"github.com/shalb/cluster.dev/pkg/provider"
 	"github.com/shalb/cluster.dev/pkg/provider/digitalocean"
+	"github.com/shalb/cluster.dev/pkg/provider/digitalocean/provisioner"
 	"gopkg.in/yaml.v2"
 )
 
@@ -17,8 +18,8 @@ import (
 type tfVars struct {
 	Region       string `json:"region"`
 	ClusterName  string `json:"cluster_name"`
-	NodeType     string `json:"node_type" yam:"nodeSize"`
-	K8sVersion   string `json:"k8s_version" yaml:"1.17"`
+	NodeType     string `json:"node_type" yaml:"nodeSize"`
+	K8sVersion   string `json:"k8s_version" yaml:"version"`
 	MinNodeCount int    `json:"min_node_count" yaml:"minNodes"`
 	MaxNodeCount int    `json:"max_node_count" yaml:"maxNodes"`
 }
@@ -58,14 +59,14 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 	if err != nil {
 		return nil, fmt.Errorf("error occurret while marshal provisioner config: %s", err.Error())
 	}
-	if err = yaml.Unmarshal(rawProvisionerData, k8s.config); err != nil {
+	if err = yaml.Unmarshal(rawProvisionerData, &k8s.config); err != nil {
 		return nil, fmt.Errorf("error occurret while parsing provisioner config: %s", err.Error())
 	}
 
 	k8s.config.ClusterName = providerConf.ClusterName
 	k8s.config.Region = providerConf.Region
 
-	k8s.terraform, err = executor.NewTerraformRunner(k8s.moduleDir)
+	k8s.terraform, err = executor.NewTerraformRunner(k8s.moduleDir, provisioner.GetAwsAuthEnv()...)
 	if err != nil {
 		return nil, err
 	}

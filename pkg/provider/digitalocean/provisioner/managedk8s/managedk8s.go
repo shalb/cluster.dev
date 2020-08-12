@@ -33,7 +33,7 @@ type Factory struct{}
 func (f *Factory) New(providerConf digitalocean.Config, state *cluster.State) (provider.Activity, error) {
 	provisioner := &K8s{}
 	provisioner.providerConf = providerConf
-	k8sModuleFactory, exists := digitalocean.GetModulesFactories()["managed-kubernetes"]
+	k8sModuleFactory, exists := digitalocean.GetModulesFactories()["k8s"]
 	if !exists {
 		return nil, fmt.Errorf("module 'k8s', needed by provisioner is not found")
 	}
