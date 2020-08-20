@@ -1,5 +1,5 @@
 cluster:
-  installed: true
+  installed: false
   name: dev
   cloud:
     provider: aws
