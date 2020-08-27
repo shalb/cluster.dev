@@ -7,7 +7,7 @@ WORKDIR /workspace/cluster-dev
 COPY . /workspace/cluster-dev
 RUN make
 
-FROM hashicorp/terraform:light as terraform
+FROM hashicorp/terraform:0.12.29 as terraform
 
 ### Install Helmfile
 # Image pulled from https://hub.docker.com/r/chatwork/helmfile/dockerfile
