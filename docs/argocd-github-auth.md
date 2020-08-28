@@ -1,13 +1,13 @@
-# Enable Github auth in ArgoCD
-
 ## Adding Auth Provider
-_details https://argoproj.github.io/argo-cd/operator-manual/user-management/#sso_
+
+For details please see the [Argo CD documentation](https://argoproj.github.io/argo-cd/operator-manual/user-management/#sso_).
 
 Edit ArgoCD configmap and set the `dex.config`:
 ```bash
 kubectl edit configmap argocd-cm -n argocd
 ```
-`clientID` and `clientSecret` should be obtained during creation of a Github Oauth App:
+`clientID` and `clientSecret` should be obtained while creating a Github Oauth App:
+
 ```yaml
   dex.config: |
     connectors:
@@ -22,9 +22,9 @@ kubectl edit configmap argocd-cm -n argocd
 ```
 
 ## Mapping Group Permissions
-_details: https://argoproj.github.io/argo-cd/operator-manual/rbac/_
+For details please see the [Argo CD documentation](https://argoproj.github.io/argo-cd/operator-manual/rbac/).
 
-After login you'll receive authentication with login ex: `voa@shalb.com`, with your Github group setting, ex:`shalb:dev`
+After login you'll receive authentication with login, ex: `voa@shalb.com`, with your GitHub group setting, ex:`shalb:dev`
 So you can define its permission in ArgoCD project manifest:
 ```yaml
 apiVersion: argoproj.io/v1alpha1

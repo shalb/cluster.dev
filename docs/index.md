@@ -1,58 +1,39 @@
-# Cluster.dev - Kubernetes-based Dev Environment in Minutes
+# Cluster.dev - Kubernetes-based environments in minutes
 
-Cluster.dev is an open-source system delivered as GitHub Action or Docker Image
-for creating and managing Kubernetes clusters with simple manifests by GitOps approach.  
+## What is it?
 
-Designed for developers that are bored to configure Kubernetes stuff
-and just need: kubeconfig, dashboard, logging and monitoring out-of-the-box.  
+Cluster.dev is the global cloud orchestration service for modern infrastructures. It is an open-source system delivered as GitHub Action or Docker Image
+for creating and managing Kubernetes clusters with simple manifests by GitOps approach.
 
-Based on DevOps and SRE best-practices. GitOps cluster management and application delivery.
-Simple CI/CD integration. Easily extendable by pre-configured applications and modules.
-Supports different Cloud Providers and Kubernetes versions.
+Deploy fully managed Kubernetes clusters across AWS, Azure, or GCP with a few clicks. Best-in-class automation and proven practices guarantee availability, scalability, and compliance with the most demanding data security and privacy standards.
 
-----
-## Principle diagram
-
-![cluster.dev diagram](images/cluster-dev-diagram.png)
-
+Designed for developers who are bored to configure Kubernetes stuff and just need: kubeconfig, dashboard, logging and monitoring out-of-the-box.
 
 ## How it works
 
-In background:
+In the background:
 
 - Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects will be stored. Typically it is defined on Cloud Object Storage like AWS S3.
 - Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
 - ArgoCD Continuous Deployment system is deployed inside Kubernetes cluster. It enables you to deploy your applications from raw manifests, helm charts or kustomize yaml's.
-- GitHub CI runner is deployed into your Kubernetes cluster and used for your apps building CI pipelines with GitHub Actions.
+- GitHub CI runner is deployed into your Kubernetes cluster and is used for building CI pipelines for your apps with GitHub Actions.
 
 You receive:
 
-- Automatically generated kubeconfig, ssh-access, and ArgoCD UI urls
-- Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging(ELK), Monitoring(Prometheus/Grafana)  
+- Automatically generated kubeconfig, SSH-access, and ArgoCD UI URLs.
+- Configured: Ingress Load Balancers, Kubernetes Dashboard, Logging (ELK), Monitoring (Prometheus/Grafana).
 
-## Quick Start
+## Principle diagram
 
-Sample manifest to create a cluster:
+![cluster.dev diagram](images/cluster-dev-diagram.png)
 
-```yaml
-cluster:
-  name: minikube-a
-  cloud:
-    provider: aws
-    region: eu-central-1
-    vpc: default
-    domain: shalb.net
-    provisioner:
-      type: minikube
-      instanceType: m5.large
-```
+## Features
 
-You can find the complete sample in our [GitHub Repo/Quick Start](https://github.com/shalb/cluster.dev#quick-start)
+- Based on DevOps and SRE best-practices.
+- Simple CI/CD integration.
+- GitOps cluster management and application delivery.
+- Automated provisioning of Kubernetes clusters in AWS, DO and GCE (in progress).
 
 ## Roadmap
 
-The project is in Alpha Stage. Roadmap details: [ROADMAP](./roadmap/)
-
-## Contributing
-
-If you want to spread the project with your own code, you can start contributing with this quick guide: [CONTRIBUTING](https://github.com/shalb/cluster.dev/blob/master/docs/CONTRIBUTING.md)
+The cluster.dev project is in Alpha Stage. You can check its progress and upcoming features on the [roadmap page](ROADMAP.md).

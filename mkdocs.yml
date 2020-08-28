@@ -7,11 +7,24 @@ site_url: 'https://cluster.dev'
 
 nav:
   - Home:
-    - Home: index.md
+    - Welcome: index.md
+  - Quick Start:
+    - Getting started on AWS: getting-started-aws.md
+    - Getting started on DigitalOcean: getting-started-digitalocean.md
+    - Cleanup: cleanup.md
   - Configuration Options:
-    - Global Options: "OPTIONS/#global-options"
-    - Amazon AWS Provisioners: "OPTIONS/#amazon-aws-provisioners"
-    - DigitalOcean Provisioners: "OPTIONS/#digitalocean-provisioners"
+    - Options List for Cluster Manifests: OPTIONS.md
+  - Operations:
+    - Git Provider Support: git-provider-support.md
+    - Adding a New Provider or Provisioner: add-provider-provisioner.md
+    - Enable GitHub auth in ArgoCD: argocd-github-auth.md
+    - Terraform modules' structure: terraform-code-structure.md
+  - Development:
+    - Contributing: CONTRIBUTING.md
+    - Style-guide: style-guide.md
+  - Releases:
+    - Roadmap: ROADMAP.md
+
 
 markdown_extensions:
   - admonition
