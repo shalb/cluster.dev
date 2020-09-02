@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -75,9 +76,13 @@ func (c *Cluster) Reconcile() error {
 
 func (c *Cluster) deployApps() {
 	for _, app := range c.Config.Apps {
-		appFullPath := filepath.Join(config.Global.ProjectRoot, app)
+		curPath, err := os.Getwd()
+		if err != nil {
+			log.Fatalf("Failed to get current directory: %s", err.Error())
+		}
+		appFullPath := filepath.Join(curPath, app)
 		log.Infof("Deploying app: %s", appFullPath)
-		err := apps.Deploy(appFullPath, c.state.KubeConfig)
+		err = apps.Deploy(appFullPath, c.state.KubeConfig)
 		if err != nil {
 			log.Errorf("App deploying error: %s", err.Error())
 		}

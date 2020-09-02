@@ -87,6 +87,7 @@ func (h *Handler) HandleLog(e *log.Entry) error {
 // loggingInit - initial function for logging subsystem.
 func init() {
 	log.SetHandler(NewLogHandler())
+
 	lvl, err := log.ParseLevel(config.Global.LogLevel)
 	if err != nil {
 		log.Fatalf("Can't parse logging level '%s': %s", config.Global.LogLevel, err.Error())

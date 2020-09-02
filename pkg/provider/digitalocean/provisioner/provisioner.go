@@ -36,16 +36,17 @@ func PullKubeConfigOnce(clusterName, doRegion string) ([]byte, error) {
 
 // PullKubeConfig retry pull kube config every 5 sec until timeout.
 func PullKubeConfig(clusterName, doRegion string, timeout time.Duration) ([]byte, error) {
-	tm := time.After(timeout)
-	var tick = make(<-chan time.Time)
-	tick = time.Tick(5 * time.Second)
+	tick := time.NewTicker(5 * time.Second)
+	tm := time.NewTimer(timeout)
+	defer tick.Stop()
+	defer tm.Stop()
 	for {
 		select {
-		case <-tm:
+		case <-tm.C:
 			// Timeout
 			return nil, fmt.Errorf("kube config pull error: timeout")
 		// Wait for tick.
-		case <-tick:
+		case <-tick.C:
 			kubeConfig, err := PullKubeConfigOnce(clusterName, doRegion)
 			if err == nil {
 				return kubeConfig, nil

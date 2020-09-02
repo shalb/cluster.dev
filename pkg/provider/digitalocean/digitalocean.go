@@ -138,7 +138,7 @@ func (p *Provider) Destroy() error {
 
 		if err = operation.Destroy(); err != nil {
 			errCount++
-			log.Errorf("Destroying '%s.%s' error (ignoring): %s")
+			log.Errorf("Destroying '%s.%s' error (ignoring): %s", opDesc.Category, opDesc.Name, err.Error())
 		}
 	}
 	if errCount > 0 {
