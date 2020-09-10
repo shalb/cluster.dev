@@ -1,114 +1,97 @@
-   * [Info](#info)
-   * [Requirements](#requirements)
-      * [Create admin account in aws with access key](#create-admin-account-in-aws-with-access-key)
-      * [Install aws cli](#install-aws-cli)
-      * [Configure aws cli](#configure-aws-cli)
-      * [Create S3 bucket](#create-s3-bucket)
-      * [Configure Cloud Trail](#configure-cloud-trail)
-   * [Collect logs](#collect-logs)
-      * [Run installation and destroy](#run-installation-and-destroy)
-      * [Copy logs](#copy-logs)
-   * [Parse logs](#parse-logs)
-      * [Copy logs parsing script](#copy-logs-parsing-script)
-      * [Get API calls with service](#get-api-calls-with-service)
-      * [Get API calls with service and request](#get-api-calls-with-service-and-request)
-   * [Create policy](#create-policy)
+# AWS IAM permissions
 
-# Info
+This document explains how to create or update [aws_policy.json](../install/aws_policy.json).
 
-This document explains how to create or update [aws_policy.json](../install/aws_policy.json)
+* [Requirements](#requirements)
+* [Collect logs](#collect-logs)
+  * [Run installation and destroy](#run-installation-and-destroy)
+  * [Copy logs](#copy-logs)
+* [Parse logs](#parse-logs)
+  * [Copy logs parsing script](#copy-logs-parsing-script)
+  * [Get API calls with service](#get-api-calls-with-service)
+  * [Get API calls with service and request](#get-api-calls-with-service-and-request)
+* [Create policy](#create-policy)
 
-# Requirements
+## Requirements
 
-## Create admin account in aws with access key
+1. Create admin account in AWS with `Access Key`. See the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
+2. Install `aws-cli`. See [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html).
+3. Configure `aws-cli`
 
-See [aws documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html)
+    ```bash
+    aws configure
+    ```
 
-## Install aws cli
+5. Create S3 bucket
 
-See [aws documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+    ```bash
+    aws s3 mb s3://my-cloud-logs
+    ```
 
-## Configure aws cli
+5. Configure Cloud Trail.
 
-~~~~
-aws configure
-~~~~
+    Any region is OK. See [AWS documentation](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-tutorial.html#tutorial-step2).
 
-## Create S3 bucket
+    Needed options:
 
-~~~~
-aws s3 mb s3://my-cloud-logs
-~~~~
+    ```bash
+    Name: any (example: my-cloud-logs)
+    Trail settings:
+        Apply trail to all regions: Yes
+    Management events:
+        Read/Write events All
+    Data events:
+        Select all S3 buckets in your account: Read, Write
+    Storage location:
+        S3 bucket: my-cloud-logs
+    ```
 
-## Configure Cloud Trail
+## Collect logs
 
-Any region is ok
+### Run installation and destroy
 
-See [aws documentation](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-tutorial.html#tutorial-step2)
+See [README.md](../README.md).
 
-Needed options:
+### Copy logs
 
-~~~~
-Name: any (example: my-cloud-logs)
-Trail settings:
-    Apply trail to all regions: Yes
-Management events:
-    Read/Write events All
-Data events:
-    Select all S3 buckets in your account: Read, Write
-Storage location:
-    S3 bucket: my-cloud-logs
-~~~~
+Replace `MY-...` by your account, region, date.
 
-# Collect logs
+Copy the logs from region `us-east-1`, because global API calls are logged in this region.
 
-## Run installation and destroy
-
-See [readme](../README.md)
-
-## Copy logs
-
-Replace 'MY-...' by your account, region, date
-
-Copy logs from region 'us-east-1', because global API calls logged in this region.
-
-~~~~
+```bash
 mkdir ./aws_logs/
 aws s3 sync s3://my-cloud-logs/AWSLogs/MY-ACCOUNT-ID/CloudTrail/MY-REGION/MY-YEAR/MY-MONTH/MY-DAY/ ./aws_logs/
 aws s3 sync s3://my-cloud-logs/AWSLogs/MY-ACCOUNT-ID/CloudTrail/us-east-1/MY-YEAR/MY-MONTH/MY-DAY/ ./aws_logs/
 gzip -d ./aws_logs/*.gz
-~~~~
+```
 
-# Parse logs
+## Parse logs
 
-## Copy logs parsing script
+### Copy logs parsing script
 
-~~~~
+```bash
 curl https://raw.githubusercontent.com/shalb/cluster.dev/master/install/aws_logs_parser.py > aws_logs_parser.py
-~~~~
+```
 
-## Get API calls with service
+### Get API calls with service
 
-Replace MY-IP by your IP address, which used to deploy cluster
+Replace `MY-IP` by your IP address, which is used to deploy the cluster.
 
-~~~~
+```bash
 ./aws_logs_parser.py --ip_address=MY-IP | awk -F "|" '{print $1 $2}' | sort -u | less -Ni
-~~~~
+```
 
-## Get API calls with service and request
+### Get API calls with service and request
 
-Replace MY-IP by your IP address, which used to deploy cluster
+Replace `MY-IP` by your IP address, which is used to deploy the cluster.
 
-~~~~
+```bash
 ./aws_logs_parser.py --ip_address=MY-IP | sort -u | less -Ni
-~~~~
+```
 
-# Create policy
+## Create policy
 
-Open visual [policy editor](https://console.aws.amazon.com/iam/home?#/policies$new?step=edit) and add needed permissions regarding to output of the [script](../install/aws_logs_parser.py)
-
-Save new policy time to time if it has many records, to prevent results loss.
-
-Check out its JSON version and save it to [aws_policy.json](../install/aws_policy.json)
-
-Push JSON version to repo.
+1. Open visual [policy editor](https://console.aws.amazon.com/iam/home?#/policies$new?step=edit) and add needed permissions regarding the output of the [script](../install/aws_logs_parser.py).
+2. Save new policy time to time if it has many records, to prevent results from being lost.
+3. Check out its JSON version and save it to [aws_policy.json](../install/aws_policy.json).
+4. Push JSON version to repo.
