@@ -14,7 +14,7 @@ This document explains how to create or update [aws_policy.json](../install/aws_
 
 ## Requirements
 
-1. Create admin account in AWS with `Access Key`. See [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
+1. Create admin account in AWS with `Access Key`. See the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
 2. Install `aws-cli`. See [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html).
 3. Configure `aws-cli`
 
@@ -56,7 +56,7 @@ See [README.md](../README.md).
 
 Replace `MY-...` by your account, region, date.
 
-Copy logs from region `us-east-1`, because global API calls logged in this region.
+Copy the logs from region `us-east-1`, because global API calls are logged in this region.
 
 ```bash
 mkdir ./aws_logs/
@@ -75,7 +75,7 @@ curl https://raw.githubusercontent.com/shalb/cluster.dev/master/install/aws_logs
 
 ### Get API calls with service
 
-Replace `MY-IP` by your IP address, which used to deploy cluster.
+Replace `MY-IP` by your IP address, which is used to deploy the cluster.
 
 ```bash
 ./aws_logs_parser.py --ip_address=MY-IP | awk -F "|" '{print $1 $2}' | sort -u | less -Ni
@@ -83,7 +83,7 @@ Replace `MY-IP` by your IP address, which used to deploy cluster.
 
 ### Get API calls with service and request
 
-Replace `MY-IP` by your IP address, which used to deploy cluster.
+Replace `MY-IP` by your IP address, which is used to deploy the cluster.
 
 ```bash
 ./aws_logs_parser.py --ip_address=MY-IP | sort -u | less -Ni
@@ -91,7 +91,7 @@ Replace `MY-IP` by your IP address, which used to deploy cluster.
 
 ## Create policy
 
-1. Open visual [policy editor](https://console.aws.amazon.com/iam/home?#/policies$new?step=edit) and add needed permissions regarding to output of the [script](../install/aws_logs_parser.py).
-2. Save new policy time to time if it has many records, to prevent results loss.
-3. Check out its JSON version and save it to [aws_policy.json](../install/aws_policy.json)
+1. Open visual [policy editor](https://console.aws.amazon.com/iam/home?#/policies$new?step=edit) and add needed permissions regarding the output of the [script](../install/aws_logs_parser.py).
+2. Save new policy time to time if it has many records, to prevent results from being lost.
+3. Check out its JSON version and save it to [aws_policy.json](../install/aws_policy.json).
 4. Push JSON version to repo.

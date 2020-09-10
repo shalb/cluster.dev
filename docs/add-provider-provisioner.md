@@ -19,7 +19,7 @@ permalink: /add-provider-provisioner/
 
 Create a sample yaml cluster manifest with declaration for possible options in yaml and its naming.  
 Naming for the options should be aligned with correspondent names in terraform provider or module.  
-List of options, should be set in [OPTIONS.md](OPTIONS.md).
+Set the list of options in [OPTIONS.md](OPTIONS.md).
 
 ### 2. Create Github Action and Gitlab pipeline
 
@@ -42,15 +42,15 @@ Define cloud related functions in a dedicated file, for ex: `/bin/digitalocean_c
 
 Required functions:
 
-| Function name       | What function should do                                                |
+| Function name       | What the function should do                                                |
 | ------------------- | ---------------------------------------------------------------------- |
-| `init_state_bucket` | check if exist and create a storage for terraform state                |
+| `init_state_bucket` | check if the bucket exists and create a storage for terraform state                |
 | `init_vpc`          | check and create required segmentation (this could be VPC, or Project) |
 | `init_dns_zone`     | create a dns sub-zone which will be used for cluster services exposing |
 
 ### 5. Create cleanup function
 
-Create a functions which deletes:
+Create a function that deletes:
 
 * kubernetes cluster
 * vpc/project
@@ -60,28 +60,28 @@ with dependent resources on yaml option `installed:false`
 
 ### 6. Set cloud provisioner type
 
-The options on provisioners could different even inside same cloud provider ex: Minikube, EKS, K3s.
+The options on provisioners could differ even inside the same cloud provider, ex: Minikube, EKS, K3s.
 
-The required set of functions are next:
+The required set of functions is as follows:
 
-| Function name        | What function should do                                                           |
+| Function name        | What the function should do                                                           |
 | -------------------- | --------------------------------------------------------------------------------- |
-| `deploy_cluster`     | Deploy kubernetes cluster itself - save result in separate tf-state               |
-| `pull_kubeconfig`    | Obtain kubeconfig from created cluster to use in next steps with tf/helm          |
-| `init_addons`        | Install mandatory kubernetes addons (see next step) - result as separate tf-state |
-| `deploy_apps`        | Deploy/reconcile other applications from user's repository from defined folder    |
+| `deploy_cluster`     | Deploy kubernetes cluster itself - save result in a separate tf-state               |
+| `pull_kubeconfig`    | Obtain kubeconfig from the created cluster to use in the next steps with tf/helm          |
+| `init_addons`        | Install mandatory kubernetes addons (see the next step) - write the result as a separate tf-state |
+| `deploy_apps`        | Deploy/reconcile other applications from user's repository, from the defined folder    |
 | `output_access_keys` | Add output with credentials URL's and other access parameters                     |
 
 ### 7. Deploy mandatory addons
 
-Deploy a mandatory addons for cluster (`deploy_apps`):
+Deploy mandatory addons for the cluster (`deploy_apps`):
 
 * Storage Class for creating a PVC/PV
-* Ingress Controller to serve traffic inside cluster
+* Ingress Controller to serve traffic inside the cluster
 * CertManager to create and manage certificates
 * ExternalDNS to create DNS records
-* ArgoCD to deploy an applications
+* ArgoCD to deploy an application
 
 ### 8. Test build
 
-To test successful build - deploy a sample applications from `/kubernetes/apps/samples/`
+To test whether the build is successful, deploy a sample application from `/kubernetes/apps/samples/`.
