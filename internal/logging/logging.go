@@ -2,32 +2,53 @@ package logging
 
 import (
 	"fmt"
-	"io"
-	"os"
-	"sync"
 	"time"
 
 	"github.com/apex/log"
+	"github.com/aybabtme/rgbterm"
 	"github.com/shalb/cluster.dev/internal/config"
 )
 
-// utilStartTime time.
-var utilStartTime = time.Now()
+// color function.
+type colorFunc func(string) string
 
-// colors.
-const (
-	none   = 0
-	red    = 31
-	green  = 32
-	yellow = 33
-	blue   = 34
-	purple = 35
-	cyan   = 36
-	gray   = 37
-)
+// purple string.
+func purple(s string) string {
+	return rgbterm.FgString(s, 186, 85, 211)
+}
+
+// gray string.
+func gray(s string) string {
+	return rgbterm.FgString(s, 150, 150, 150)
+}
+
+// blue string.
+func blue(s string) string {
+	return rgbterm.FgString(s, 77, 173, 247)
+}
+
+// cyan string.
+func cyan(s string) string {
+	return rgbterm.FgString(s, 34, 184, 207)
+}
+
+// green string.
+func green(s string) string {
+	return rgbterm.FgString(s, 0, 200, 255)
+}
+
+// red string.
+func red(s string) string {
+	return rgbterm.FgString(s, 194, 37, 92)
+}
+
+// yellow string.
+func yellow(s string) string {
+	return rgbterm.FgString(s, 252, 196, 25)
+}
 
 // Colors mapping.
-var Colors = [...]int{
+var Colors = [...]colorFunc{
 	log.DebugLevel: purple,
 	log.InfoLevel:  blue,
 	log.WarnLevel:  yellow,
@@ -37,60 +58,39 @@ var Colors = [...]int{
 
 // Strings mapping.
 var Strings = [...]string{
-	log.DebugLevel: "DEBUG",
+	log.DebugLevel: "DEBU",
 	log.InfoLevel:  "INFO",
 	log.WarnLevel:  "WARN",
-	log.ErrorLevel: "ERROR",
-	log.FatalLevel: "FATAL",
+	log.ErrorLevel: "ERRO",
+	log.FatalLevel: "FATA",
 }
 
-// Handler implementation.
-type Handler struct {
-	mu     sync.Mutex
-	Writer io.Writer
-}
-
-// NewLogHandler - new custom log handler for apex log lib.
-func NewLogHandler() *Handler {
-	return &Handler{}
-}
-
-// HandleLog implements log.Handler.
-func (h *Handler) HandleLog(e *log.Entry) error {
-	color := Colors[e.Level]
-	level := Strings[e.Level]
-	names := e.Fields.Names()
-
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	if e.Level >= log.ErrorLevel {
-		h.Writer = os.Stderr
-	} else {
-		h.Writer = os.Stdout
-	}
-
-	ts := time.Since(utilStartTime) / time.Second
-	tsR := time.Now().Format("15:04:05.000")
-
-	fmt.Fprintf(h.Writer, "%s\033[%dm%6s\033[0m[%04d] %-25s", tsR, color, level, ts, e.Message)
-
-	for _, name := range names {
-		fmt.Fprintf(h.Writer, " \033[%dm%s\033[0m=%v", color, name, e.Fields.Get(name))
-	}
-
-	fmt.Fprintln(h.Writer)
-
-	return nil
-}
+// utilStartTime time.
+var utilStartTime = time.Now()
 
 // loggingInit - initial function for logging subsystem.
 func init() {
-	log.SetHandler(NewLogHandler())
+	log.SetHandler(NewLogStdHandler())
 
 	lvl, err := log.ParseLevel(config.Global.LogLevel)
 	if err != nil {
 		log.Fatalf("Can't parse logging level '%s': %s", config.Global.LogLevel, err.Error())
 	}
 	log.SetLevel(lvl)
+}
+
+func logFormatter(e *log.Entry) string {
+	color := Colors[e.Level]
+	level := Strings[e.Level]
+	names := e.Fields.Names()
+
+	// ts := time.Since(utilStartTime) / time.Second
+	tsR := time.Now().Format("15:04:05.000")
+	output := fmt.Sprintf("%s %s %-25s", tsR, color(fmt.Sprintf("[%s]", level)), e.Message)
+
+	for _, name := range names {
+		output += fmt.Sprintf(" %s=%v", color(name), e.Fields.Get(name))
+	}
+
+	return fmt.Sprintln(output)
 }
