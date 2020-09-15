@@ -86,7 +86,7 @@ func logFormatter(e *log.Entry) string {
 
 	// ts := time.Since(utilStartTime) / time.Second
 	tsR := time.Now().Format("15:04:05.000")
-	output := fmt.Sprintf("%s %s %-25s", tsR, color(fmt.Sprintf("[%s]", level)), e.Message)
+	output := fmt.Sprintf("%s %s %-25s", rgbterm.FgString(tsR, 204, 204, 204), color(fmt.Sprintf("[%s]", level)), e.Message)
 
 	for _, name := range names {
 		output += fmt.Sprintf(" %s=%v", color(name), e.Fields.Get(name))

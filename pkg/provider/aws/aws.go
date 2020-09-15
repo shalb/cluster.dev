@@ -149,7 +149,6 @@ func (p *Provider) Destroy() error {
 }
 
 func (p *Provider) checkBackendExists() (bool, error) {
-	log.Debugf("Provider 'aws', destroying... ")
 	backendFactory, exists := providerActivitiesFactories["modules"]["backend"]
 	if !exists {
 		return false, fmt.Errorf("backend module is not registered in aws provider")

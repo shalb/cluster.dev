@@ -64,6 +64,10 @@ func (c *Cluster) Reconcile() error {
 		err = c.Provider.Deploy()
 	} else {
 		err = c.Provider.Destroy()
+		if err != nil {
+			log.Warnf("%v", err)
+			return nil
+		}
 	}
 	if err != nil {
 		return err

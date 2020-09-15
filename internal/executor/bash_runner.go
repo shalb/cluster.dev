@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -74,7 +75,6 @@ func (b *BashRunner) commandExecCommon(command string, outputBuff io.Writer, err
 	cmd.Env = append(envTmp, b.Env...)
 	// Run command.
 	err := cmd.Run()
-
 	if ctx.Err() == context.DeadlineExceeded {
 		return fmt.Errorf("command timeout '%s'", command)
 	}
@@ -93,7 +93,7 @@ func (b *BashRunner) Run(command string, secrets ...string) error {
 
 	// Create log writer.
 	var err error
-	logWriter, err = logging.NewLogWriter(log.DebugLevel, log.Fields{}, logging.NewLogStdHandler())
+	logWriter, err = logging.NewLogWriter(log.DebugLevel, log.Fields{})
 	if err != nil {
 		log.Fatalf("can't init logging: %v", err)
 	}
@@ -101,15 +101,25 @@ func (b *BashRunner) Run(command string, secrets ...string) error {
 	// errOutput - error text.
 	errOutput := &bytes.Buffer{}
 
-	var bannerStopChan chan struct{}
+	bannerStopChan := make(chan struct{})
 	if config.Global.LogLevel != "debug" {
-		go showBanner(fmt.Sprintf("Executing '%s' in progress...", command), bannerStopChan)
+		curpath, err := os.Getwd()
+		if err != nil {
+			curpath = "/"
+		}
+		dir, err := filepath.Rel(curpath, b.workingDir)
+		if err != nil {
+			dir = b.workingDir
+		}
+		go showBanner(fmt.Sprintf("[dir=%s] [cmd=%s] executing in progress...", "./"+dir, command), bannerStopChan)
+		defer func(stop chan struct{}) {
+			stop <- struct{}{}
+			close(stop)
+		}(bannerStopChan)
 	}
 	//defer lh.Close()
 	// Run command.
 	err = b.commandExecCommon(command, logWriter, errOutput)
-
-	bannerStopChan <- struct{}{}
 	if err != nil {
 		return fmt.Errorf("%s, output: \n%s", err.Error(), errOutput.String())
 	}

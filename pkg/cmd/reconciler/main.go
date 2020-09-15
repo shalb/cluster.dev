@@ -3,28 +3,15 @@ package reconciler
 import (
 	"io/ioutil"
 	"path/filepath"
-	"time"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
-	"github.com/shalb/cluster.dev/internal/executor"
 	"github.com/shalb/cluster.dev/pkg/cluster"
 )
 
 // Run main process.
 func Run() {
 
-	runner, err := executor.NewBashRunner("/tmp")
-	if err != nil {
-		log.Fatal("Can't create runner")
-
-	}
-	runner.Run("for i in {1..10}; do echo Number ${i} Log line; sleep 1; done")
-
-	time.Sleep(1 * time.Second)
-	if true {
-		return
-	}
 	manifests := getManifests(config.Global.ClusterConfigsPath)
 	for _, cManifest := range manifests {
 		cluster, err := cluster.New(cManifest)

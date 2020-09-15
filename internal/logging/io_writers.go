@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/apex/log"
-	"github.com/apex/log/handlers/multi"
 )
 
 // LogWriter io writer for logging driver.
@@ -19,10 +18,9 @@ type LogWriter struct {
 }
 
 // NewLogWriter create log io writer.
-func NewLogWriter(logLevel log.Level, fielder log.Fielder, handlers ...log.Handler) (*LogWriter, error) {
+func NewLogWriter(logLevel log.Level, fielder log.Fielder) (*LogWriter, error) {
 	ctx := log.WithFields(fielder)
 	//log.WithFields(fielder)
-	ctx.Logger.Handler = multi.New(handlers...)
 	var logFunctionsMap = map[log.Level]func(string){
 		log.DebugLevel: ctx.Debug,
 		log.InfoLevel:  ctx.Info,
@@ -35,9 +33,7 @@ func NewLogWriter(logLevel log.Level, fielder log.Fielder, handlers ...log.Handl
 	if !ok {
 		return nil, fmt.Errorf("failed log level '%s'", logLevel)
 	}
-	if len(handlers) < 1 {
-		return nil, fmt.Errorf("handlers is not set, must be at least one")
-	}
+
 	lw := LogWriter{
 		fn,
 		"",
