@@ -17,6 +17,7 @@ type ConfSpec struct {
 	ClusterConfigsPath string
 	LogLevel           string
 	ProjectRoot        string
+	ClusterConfig      string
 }
 
 // Global config for executor.
@@ -28,6 +29,7 @@ func init() {
 	// Read flags.
 	// Read debug option ( --debug )
 	flag.StringVar(&Global.LogLevel, "log-level", getEnv("VERBOSE_LVL", "info"), "Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")")
+	flag.StringVar(&Global.ClusterConfig, "config", "", "Define cluster config. If empty - reconciler will use all configs by mask ./cluster.dev/*.yaml .")
 	curPath, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current directory: %s", err.Error())

@@ -28,9 +28,16 @@ func Run() {
 }
 
 func getManifests(path string) [][]byte {
-	files, err := filepath.Glob(path + "/*.yaml")
-	if err != nil {
-		log.Fatalf("cannot read directory %v: %v", path, err)
+
+	var files []string
+	var err error
+	if config.Global.ClusterConfig != "" {
+		files = append(files, config.Global.ClusterConfig)
+	} else {
+		files, err = filepath.Glob(path + "/*.yaml")
+		if err != nil {
+			log.Fatalf("cannot read directory %v: %v", path, err)
+		}
 	}
 	if len(files) == 0 {
 		log.Fatalf("no manifest found in %v", path)
