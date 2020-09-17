@@ -1,6 +1,7 @@
 package vpc
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/apex/log"
@@ -61,6 +62,8 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 	if err != nil {
 		return nil, err
 	}
+	vpc.terraform.LogLabels = append(vpc.terraform.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
+
 	return vpc, nil
 }
 

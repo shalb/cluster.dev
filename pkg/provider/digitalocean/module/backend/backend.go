@@ -43,21 +43,23 @@ type Factory struct{}
 func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.State) (provider.Activity, error) {
 
 	log.Debugf("Init backend module wit provider config: %+v", providerConf)
-	s3 := &Backend{}
-	s3.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+moduleName)
-	s3.config.Bucket = providerConf.ClusterName
-	s3.config.Region = providerConf.Region
+	backend := &Backend{}
+	backend.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/digitalocean/"+moduleName)
+	backend.config.Bucket = providerConf.ClusterName
+	backend.config.Region = providerConf.Region
 	var err error
-	s3.terraform, err = executor.NewTerraformRunner(s3.moduleDir, provisioner.GetAwsAuthEnv()...)
+	backend.terraform, err = executor.NewTerraformRunner(backend.moduleDir, provisioner.GetAwsAuthEnv()...)
 	if err != nil {
 		return nil, err
 	}
 	// Create bash runner and add AWS env for s3cmd auth. See GetAwsAuthEnv().
-	s3.bash, err = executor.NewBashRunner(s3.moduleDir, provisioner.GetAwsAuthEnv()...)
+	backend.bash, err = executor.NewBashRunner(backend.moduleDir, provisioner.GetAwsAuthEnv()...)
 	if err != nil {
 		return nil, err
 	}
-	return s3, nil
+	backend.terraform.LogLabels = append(backend.terraform.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
+	backend.bash.LogLabels = append(backend.bash.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
+	return backend, nil
 }
 
 // Deploy - create s3 bucket.

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/apex/log"
@@ -65,6 +66,7 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 	if err != nil {
 		return nil, err
 	}
+	route53.terraform.LogLabels = append(route53.terraform.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
 	return route53, nil
 }
 

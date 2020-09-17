@@ -90,6 +90,7 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 	if err != nil {
 		return nil, err
 	}
+	addons.terraform.LogLabels = append(addons.terraform.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
 	return addons, nil
 }
 

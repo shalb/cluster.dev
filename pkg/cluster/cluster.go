@@ -61,8 +61,10 @@ func (c *Cluster) Reconcile() error {
 
 	var err error
 	if c.Config.Installed {
+		log.Infof("Deploying cluster '%s'", c.Config.ClusterFullName)
 		err = c.Provider.Deploy()
 	} else {
+		log.Infof("Destroying cluster '%s'", c.Config.ClusterFullName)
 		err = c.Provider.Destroy()
 		if err != nil {
 			log.Warnf("%v", err)

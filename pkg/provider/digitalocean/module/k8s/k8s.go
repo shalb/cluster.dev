@@ -70,6 +70,7 @@ func (f *Factory) New(providerConf digitalocean.Config, clusterState *cluster.St
 	if err != nil {
 		return nil, err
 	}
+	k8s.terraform.LogLabels = append(k8s.terraform.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
 	return k8s, nil
 }
 

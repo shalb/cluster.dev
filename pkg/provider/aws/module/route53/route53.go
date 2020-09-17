@@ -1,6 +1,7 @@
 package route53
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/apex/log"
@@ -62,6 +63,7 @@ func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (pro
 	if err != nil {
 		return nil, err
 	}
+	route53.terraform.LogLabels = append(route53.terraform.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
 	return route53, nil
 }
 

@@ -59,6 +59,7 @@ func PullKubeConfig(clusterName string, timeout time.Duration) ([]byte, error) {
 // PushKubeConfig upload kube config to s3.
 func PushKubeConfig(clusterName string, kubeConfig []byte) error {
 	bash, err := executor.NewBashRunner("")
+	bash.LogLabels = append(bash.LogLabels, fmt.Sprintf("cluster='%s'", clusterName))
 	if err != nil {
 		return err
 	}

@@ -21,6 +21,7 @@ type BashRunner struct {
 	workingDir string
 	Env        []string
 	Timeout    time.Duration
+	LogLabels  []string
 }
 
 // Env - global list of environment variables.
@@ -111,7 +112,14 @@ func (b *BashRunner) Run(command string, secrets ...string) error {
 		if err != nil {
 			dir = b.workingDir
 		}
-		go showBanner(fmt.Sprintf("[dir=%s] [cmd=%s] executing in progress...", "./"+dir, command), bannerStopChan)
+		var banner string
+		for _, str := range b.LogLabels {
+			banner = fmt.Sprintf("%s[%s]", banner, str)
+		}
+		banner = fmt.Sprintf("%s[dir='%s'][cmd='%s']", banner, "./"+dir, command)
+		banner = fmt.Sprintf("%s executing in progress...", banner)
+		go showBanner(banner, bannerStopChan)
+
 		defer func(stop chan struct{}) {
 			stop <- struct{}{}
 			close(stop)

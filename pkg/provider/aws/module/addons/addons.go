@@ -95,6 +95,7 @@ func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (pro
 	if err != nil {
 		return nil, err
 	}
+	addons.terraform.LogLabels = append(addons.terraform.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
 	return addons, nil
 }
 

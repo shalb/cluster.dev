@@ -64,6 +64,7 @@ func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (pro
 	if err != nil {
 		return nil, err
 	}
+	miniKube.terraform.LogLabels = append(miniKube.terraform.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
 	return miniKube, nil
 }
 

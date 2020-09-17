@@ -16,6 +16,7 @@ type TerraformRunner struct {
 	workingDir string
 	tfVarsJSON string
 	bashRunner *BashRunner
+	LogLabels  []string
 }
 
 // NewTerraformRunner create terraform runner.
@@ -30,9 +31,14 @@ func NewTerraformRunner(workingDir string, envVariables ...string) (*TerraformRu
 	return &tr, nil
 }
 
+// SetLogLabels add log labels to hiden log output.
+func (tr *TerraformRunner) SetLogLabels(logLabels []string) {
+	tr.LogLabels = logLabels
+}
+
 func (tr *TerraformRunner) commonRun(command string, tfVars interface{}, tfBackend interface{}, args ...string) error {
 	tfArgs := ""
-
+	tr.bashRunner.LogLabels = tr.LogLabels
 	// Create tfvars file in JSON forman from receiver tfVars interface{} struct.
 	if tfVars != nil {
 		// Convert struct to JSON.

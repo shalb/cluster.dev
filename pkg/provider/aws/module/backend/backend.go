@@ -20,10 +20,11 @@ type backendVarsSpec struct {
 
 // Backend type for s3 backend module.
 type Backend struct {
-	config    backendVarsSpec
-	terraform *executor.TerraformRunner
-	bash      *executor.BashRunner
-	moduleDir string
+	config        backendVarsSpec
+	terraform     *executor.TerraformRunner
+	bash          *executor.BashRunner
+	moduleDir     string
+	clusterConfig aws.Config
 }
 
 func init() {
@@ -40,20 +41,24 @@ type Factory struct{}
 func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (provider.Activity, error) {
 
 	log.Debugf("Init backend module wit provider config: %+v", providerConf)
-	s3 := &Backend{}
-	s3.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/backend")
-	s3.config.Bucket = providerConf.ClusterName
-	s3.config.Region = providerConf.Region
+	backend := &Backend{}
+	backend.moduleDir = filepath.Join(config.Global.ProjectRoot, "terraform/aws/backend")
+	backend.config.Bucket = providerConf.ClusterName
+	backend.config.Region = providerConf.Region
+	backend.clusterConfig = providerConf
 	var err error
-	s3.terraform, err = executor.NewTerraformRunner(s3.moduleDir)
+	backend.terraform, err = executor.NewTerraformRunner(backend.moduleDir)
 	if err != nil {
 		return nil, err
 	}
-	s3.bash, err = executor.NewBashRunner(s3.moduleDir)
+	backend.bash, err = executor.NewBashRunner(backend.moduleDir)
 	if err != nil {
 		return nil, err
 	}
-	return s3, nil
+	//s3.terraform.
+	backend.bash.LogLabels = append(backend.bash.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
+	backend.terraform.LogLabels = append(backend.terraform.LogLabels, fmt.Sprintf("cluster='%s'", providerConf.ClusterName))
+	return backend, nil
 }
 
 // Deploy - create s3 bucket.
@@ -124,6 +129,7 @@ func (s *Backend) Check() (bool, error) {
 		return false, err
 	}
 	// Init terraform without backend spec.
+
 	err = s.terraform.Init(aws.BackendSpec{})
 	err = s.terraform.Import(s.config, "aws_s3_bucket.terraform_state", s.config.Bucket)
 	if err != nil {
