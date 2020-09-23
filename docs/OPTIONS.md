@@ -158,7 +158,7 @@ jobs:
       id: reconcile
 # Here you can define what release version of action to use,
 # example: shalb/cluster.dev@master, shalb/cluster.dev@9,  shalb/cluster.dev@test-branch
-      uses: shalb/cluster.dev@v0.3.0-beta-9
+      uses: shalb/cluster.dev@v0.3.0-beta-10
 # Here the required environment variables should be set depending on Cloud Provider
       env:
         AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
