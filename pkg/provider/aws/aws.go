@@ -92,7 +92,6 @@ func (p *Provider) Deploy() error {
 			return err
 		}
 	}
-	log.Info(provisioner.GetKubeAccessInfo(p.config.ClusterName))
 	return nil
 }
 

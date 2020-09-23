@@ -122,6 +122,11 @@ func (s *Addons) Deploy() error {
 	if err != nil {
 		return err
 	}
+	infoTemplate := `
+Download auth info:
+aws s3 cp s3://%s/addons/auth.yaml ~/auth.yaml
+cat ~/auth.yaml`
+	s.state.AddonsAccessInfo = fmt.Sprintf(infoTemplate, s.config.ClusterName)
 	return nil
 }
 

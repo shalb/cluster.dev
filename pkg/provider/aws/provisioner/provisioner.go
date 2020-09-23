@@ -86,14 +86,3 @@ func CheckKubeAccess(kubeConfig []byte) error {
 	defer kub.Clear()
 	return kub.Run("version")
 }
-
-// GetKubeAccessInfo return commands for user for get access to k8s cluster.
-func GetKubeAccessInfo(clusterName string) string {
-	InfoTemplate := `
-Download and apply your kubeconfig using commands:
-aws s3 cp s3://%[1]s/kubeconfig_%[1]s ~/.kube/kubeconfig_%[1]s
-export KUBECONFIG=~/.kube/kubeconfig_%[1]s
-kubectl get ns
-`
-	return fmt.Sprintf(InfoTemplate, clusterName)
-}

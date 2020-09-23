@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/aybabtme/rgbterm"
 	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/utils"
 	"github.com/shalb/cluster.dev/pkg/apps"
@@ -32,7 +33,9 @@ type Cluster struct {
 
 // State - cluster state which is changed by module and provisioners.
 type State struct {
-	KubeConfig []byte
+	KubeConfig       []byte
+	KubeAccessInfo   string
+	AddonsAccessInfo string
 }
 
 // New cluster.
@@ -63,13 +66,14 @@ func (c *Cluster) Reconcile() error {
 	if c.Config.Installed {
 		log.Infof("Deploying cluster '%s'", c.Config.ClusterFullName)
 		err = c.Provider.Deploy()
+		if err == nil {
+			// Output access info in green color.
+			log.Info(rgbterm.FgString(c.state.KubeAccessInfo, 51, 255, 0))
+			log.Info(rgbterm.FgString(c.state.AddonsAccessInfo, 51, 255, 0))
+		}
 	} else {
 		log.Infof("Destroying cluster '%s'", c.Config.ClusterFullName)
 		err = c.Provider.Destroy()
-		if err != nil {
-			log.Warnf("%v", err)
-			return nil
-		}
 	}
 	if err != nil {
 		return err

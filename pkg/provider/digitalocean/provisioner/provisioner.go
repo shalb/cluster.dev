@@ -97,14 +97,3 @@ func GetAwsAuthEnv() []string {
 	}
 	return res
 }
-
-// GetKubeAccessInfo return commands for user for get access to k8s cluster.
-func GetKubeAccessInfo(clusterName string, doRegion string) string {
-	InfoTemplate := `
-Download and apply your kubeconfig using commands:
-s3cmd get s3://%[1]s/kubeconfig_%[1]s ~/.kube/kubeconfig_%[1]s --host-bucket='%(bucket)s.%[2]s.digitaloceanspaces.com' --host='%[2]s.digitaloceanspaces.com'
-export KUBECONFIG=~/.kube/kubeconfig_%[1]s
-kubectl get ns
-`
-	return fmt.Sprintf(InfoTemplate, clusterName, doRegion)
-}

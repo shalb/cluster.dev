@@ -1,5 +1,5 @@
 installed: false
-name: artigo
+name: dev-minikube
 provider:
   type: aws
   region: eu-central-1

@@ -67,6 +67,11 @@ func (p *K8s) Deploy() error {
 	if err = provisioner.PushKubeConfig(p.providerConf.ClusterName, p.providerConf.Region, conf); err != nil {
 		return fmt.Errorf("error occurred during uploading kubeconfig to spaces: %s", err.Error())
 	}
+	InfoTemplate := `Download and apply your kubeconfig using commands:
+s3cmd get  s3://%[1]s/kubeconfig_%[1]s ~/.kube/kubeconfig_%[1]s --host-bucket='%%(bucket)s.%[2]s.digitaloceanspaces.com' --host='%[2]s.digitaloceanspaces.com'
+export KUBECONFIG=~/.kube/kubeconfig_%[1]s
+kubectl get ns`
+	p.state.KubeAccessInfo = fmt.Sprintf(InfoTemplate, p.providerConf.ClusterName, p.providerConf.Region)
 	return nil
 }
 

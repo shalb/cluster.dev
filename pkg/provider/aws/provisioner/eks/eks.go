@@ -67,6 +67,13 @@ func (p *Eks) Deploy() error {
 	if err = provisioner.PushKubeConfig(p.providerConf.ClusterName, conf); err != nil {
 		return fmt.Errorf("error occurred during uploading kubeconfig to s3 bucket: %s", err.Error())
 	}
+
+	InfoTemplate := `
+Download and apply your kubeconfig using commands:
+aws s3 cp s3://%[1]s/kubeconfig_%[1]s ~/.kube/kubeconfig_%[1]s
+export KUBECONFIG=~/.kube/kubeconfig_%[1]s
+kubectl get ns`
+	p.state.KubeAccessInfo = fmt.Sprintf(InfoTemplate, p.providerConf.ClusterName)
 	return nil
 }
 

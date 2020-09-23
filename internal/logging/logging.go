@@ -58,11 +58,11 @@ var Colors = [...]colorFunc{
 
 // Strings mapping.
 var Strings = [...]string{
-	log.DebugLevel: "DEBU",
+	log.DebugLevel: "DEBUG",
 	log.InfoLevel:  "INFO",
 	log.WarnLevel:  "WARN",
-	log.ErrorLevel: "ERRO",
-	log.FatalLevel: "FATA",
+	log.ErrorLevel: "ERROR",
+	log.FatalLevel: "FATAL",
 }
 
 // utilStartTime time.

@@ -117,6 +117,10 @@ func (s *Addons) Deploy() error {
 	if err != nil {
 		return err
 	}
+	InfoTemplate := `Download and apply your kubeconfig using commands:
+s3cmd get s3://%[1]s/addons/auth.yaml ~/auth.yaml --host-bucket='%%(bucket)s.%[2]s.digitaloceanspaces.com' --host='%[2]s.digitaloceanspaces.com'
+cat ~/auth.yaml`
+	s.state.AddonsAccessInfo = fmt.Sprintf(InfoTemplate, s.config.ClusterName, s.config.Region)
 	return nil
 }
 

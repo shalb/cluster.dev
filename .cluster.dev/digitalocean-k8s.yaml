@@ -1,5 +1,5 @@
 installed: false
-name: do-test
+name: dev-k8s
 provider:
   type: digitalocean
   region: ams3
