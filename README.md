@@ -202,7 +202,7 @@ Leave the Github workflow file [.github/workflows/main.yml](.github/workflows/ma
 
 8. Commit and Push files to your repo.
 
-9. Set the cluster to `installed: true`, commit, push and follow the Github Action execution status, the path should look like `https://github.com/MY_USER/MY_REPO_NAME/actions`. 
+9. Set the cluster to `installed: true`, commit, push and follow the Github Action execution status, the path should look like `https://github.com/MY_USER/MY_REPO_NAME/actions`.
 In the GitHub action output you'll receive access instructions to your cluster and services:  
 ![GHA_GetCredentials](docs/images/gha_get_credentials.png)
 

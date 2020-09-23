@@ -1,6 +1,6 @@
 # Product Design
 
-## Infrastructure Concept 
+## Infrastructure Concept
 
   1. Single infrastructure should be described as one yaml manifest.
 
@@ -26,7 +26,7 @@
       Applications represented as a ArgoCD applications.
       Application definitions could be templated.
       Using ArgoCD application should be possible deploy any helm/kustomize/raw-manifest from external repos.
- 
+
   6. Each infrastructure should have single admin user with full privileges created.
 
   7. Keycloak is used for user/group management and adding external providers and SSO.
@@ -44,7 +44,7 @@
      - `kubernetes` Module for deploying Kubernetes cluster.  
      - `addons` Module for deploying additional applications inside Kubernetes cluster.  
 
-  2. Go-based reconcilator 
+  2. Go-based reconcilator
   3. Bash-based reconcilator (would be deprecated)
   4. Kubernetes Addons (cert-manager)
   5. Service for Creating custom Domains

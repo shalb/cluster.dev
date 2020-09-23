@@ -20,7 +20,7 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
     DIGITALOCEAN_TOKEN: "83e209a810b6c1da8919fe7265b9493992929b9221444449"
     ```
     To generate the DO Spaces secrets, see the [DO documentation](https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key#creating-an-access-key).
-    
+
     The resulting key and secret should look like:
 
     ```yaml
