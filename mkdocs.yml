@@ -23,6 +23,7 @@ nav:
   - Development:
     - Contributing: CONTRIBUTING.md
     - Style-guide: style-guide.md
+    - AWS IAM Permissions: aws-iam-permissions.md
   - Releases:
     - Roadmap: ROADMAP.md
 
