@@ -8,6 +8,7 @@ site_url: 'https://cluster.dev'
 nav:
   - Home:
     - Welcome: index.md
+    - Design: DESIGN.md
   - Quick Start:
     - Getting started on AWS: getting-started-aws.md
     - Getting started on DigitalOcean: getting-started-digitalocean.md

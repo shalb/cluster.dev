@@ -15,10 +15,11 @@
 
   3. Infrastructures are deployed and reconciled with application delivered as Docker container.
 
-  4. Reconcilation should follow GitOps approach - follow updates on target git repo.
+  4. Reconciliation should follow GitOps approach - follow updates on target git repo.
 
   5. Single infrastructure repo could contain:
-    - Multiple infrastructure declaration
+
+    - Multiple infrastructure declarations.
     - Common and infrastructure dependent customer defined Terraform modules.
       Modules could be sources from external repos.
       Module definitions could be templated with values from yaml manifest
@@ -31,8 +32,6 @@
 
   7. Keycloak is used for user/group management and adding external providers and SSO.
 
-  8. Users from single Keycloak installation could be shared across clusters.
-
 ## Project structure
 
   1. Terraform modules:
@@ -44,7 +43,8 @@
      - `kubernetes` Module for deploying Kubernetes cluster.  
      - `addons` Module for deploying additional applications inside Kubernetes cluster.  
 
-  2. Go-based reconcilator
-  3. Bash-based reconcilator (would be deprecated)
-  4. Kubernetes Addons (cert-manager)
+  2. Go-based reconciliator - that generates variables and performs ordered module invocation.
+  3. Bash-based reconciliator (would be deprecated)
+  4. Kubernetes Addons (ingress, cert-manager, external-dns, ArgoCD, Keycloak, etc..)
   5. Service for Creating custom Domains
+  6. SaaS for managing infrastructure using Web UI.
