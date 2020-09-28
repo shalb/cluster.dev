@@ -20,8 +20,8 @@ Designed for developers who are bored to configure Cloud Native stack and just n
 In the background:
 
 - Infrastructures are described as a simple [infrastructure manifests](https://github.com/shalb/cluster.dev/tree/master/.cluster.dev) and stored in a Git repository.
-- Infrastructure changes are watched by GitHub/GitLab/Bitbucket pipeline and triggers a launch of the reconciliator tool.
-- Reconciliator tool generates Terraform variables files and performs ordered invoking for the modules.
+- Infrastructure changes are watched by GitHub/GitLab/Bitbucket pipeline and triggers a launch of the reconciler tool.
+- reconciler tool generates Terraform variables files and performs ordered invoking for the modules.
 - Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects will be stored. Typically it is defined on Cloud Object Storage like AWS S3.
 - Terraform modules creates Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
 - Kubernetes addons module deploys: Ingress controller, Cert-Manager, External DNS, ArgoCD, Keycloak, etc..

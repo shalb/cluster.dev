@@ -43,8 +43,8 @@
      - `kubernetes` Module for deploying Kubernetes cluster.  
      - `addons` Module for deploying additional applications inside Kubernetes cluster.  
 
-  2. Go-based reconciliator - that generates variables and performs ordered module invocation.
-  3. Bash-based reconciliator (would be deprecated)
+  2. Go-based reconciler - that generates variables and performs ordered module invocation.
+  3. Bash-based reconciler (would be deprecated)
   4. Kubernetes Addons (ingress, cert-manager, external-dns, ArgoCD, Keycloak, etc..)
   5. Service for Creating custom Domains
   6. SaaS for managing infrastructure using Web UI.
