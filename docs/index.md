@@ -1,4 +1,4 @@
-# Cluster.dev - Kubernetes-based environments in minutes
+# Cluster.dev - Kubernetes infrastructures in minutes!
 
 ## What is it?
 
@@ -8,8 +8,8 @@ It is used for creating and managing Kubernetes clusters along with cloud resour
 The orchestration is performed with simple manifests by GitOps approach and is designed to run inside the GitHub/GitLab/BitBucket pipelines.  
 
 Resulting infrastructures have a "ready to use" Continuous Deployment systems that could deploy manifests, Helm charts and Kustomize using ArgoCD.  
-Best-in-class automation and proven practices guarantee availability, scalability, and compliance with the most demanding data security and privacy standards.
 
+Best-in-class automation and proven practices guarantee availability, scalability, and compliance with the most demanding data security and privacy standards.
 Designed for developers who are bored to configure cloud-native stack and just need infrastructure in code, kubeconfig, CD, dashboard, logging and monitoring out-of-the-box.
 
 ## Principle diagram
@@ -30,7 +30,7 @@ In the background:
 
 You receive:
 
-- Automatically generated kubeconfig, ArgoCD UI URL's
+- Automatically generated kubeconfig, ArgoCD UI URL's.
 - Pre-configured: VPC, Networks, Domains, Security groups, Users, etc..
 - Deployed inside Kubernetes: Ingress Load Balancers, Kubernetes Dashboard, Logging (ELK), Monitoring (Prometheus/Grafana).
 

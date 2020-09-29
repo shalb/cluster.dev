@@ -1,4 +1,4 @@
-site_name: cluster.dev
+site_name: Cluster.dev
 # Page tree
 repo_name: 'shalb/cluster.dev'
 repo_url: 'https://github.com/shalb/cluster.dev'
@@ -17,12 +17,12 @@ nav:
     - Options List for Cluster Manifests: OPTIONS.md
   - Operations:
     - Git Provider Support: git-provider-support.md
-    - Adding a New Provider or Provisioner: add-provider-provisioner.md
     - Enable GitHub auth in ArgoCD: argocd-github-auth.md
-    - Terraform modules' structure: terraform-code-structure.md
   - Development:
     - Contributing: CONTRIBUTING.md
     - Style-guide: style-guide.md
+    - Terraform modules structure: terraform-code-structure.md
+    - Adding a New Provider or Provisioner: add-provider-provisioner.md
     - AWS IAM Permissions: aws-iam-permissions.md
   - Releases:
     - Roadmap: ROADMAP.md
@@ -45,7 +45,7 @@ theme:
   search_index_only: true
   language: en
   features:
-    - tabs
+    - navigation.tabs
   palette:
     scheme: default
     primary: indigo
@@ -55,3 +55,14 @@ theme:
     code: Roboto Mono
   logo: '/images/cluster-dev-logo-small-white.png'
   favicon: 'images/favicon.png'
+google_analytics:
+  - UA-157259461-1
+  - auto
+extra:
+  social:
+    - icon: fontawesome/brands/slack
+      link: https://join.slack.com/t/cluster-dev/shared_invite/zt-eg4q6jae-v0~zgrBLYTTXt~CjnjmprA
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/shalbcom
+    - icon: fontawesome/brands/github
+      link: https://github.com/shalb/cluster.dev
