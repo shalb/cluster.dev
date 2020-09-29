@@ -1,5 +1,3 @@
-# Terraform modules' structure
-
 ## Filenames <!-- omit in toc -->
 
 * [`init.tf`](#inittf)
@@ -10,9 +8,9 @@
 
 Put the `.yaml`, `.sh` and other module-related files to subdir(s), `./templates` for instance.
 
-Also, look our [style-guide](style-guide.md) to check other best practices.
+Also, you can check our [style-guide](style-guide.md) for other best practices.
 
-## `init.tf`
+### `init.tf`
 
 Sort `terraform_remote_state` alphabetically.
 
@@ -41,8 +39,7 @@ data "terraform_remote_state" "" {}
 
 ```
 
-
-## `main.tf`
+### `main.tf`
 
 Sort in logic order. Sort alphabetically when possible.
 
@@ -70,7 +67,7 @@ module "_" {}
 
 ```
 
-## `outputs.tf`
+### `outputs.tf`
 
 Sort alphabetically.
 
@@ -82,7 +79,7 @@ output "_" {
 
 ```
 
-## `vars.tf`
+### `vars.tf`
 
 Sort alphabetically.
 
@@ -95,7 +92,7 @@ variable "_" {
 
 ```
 
-## `README.md`
+### `README.md`
 
 ```md
 # Module name

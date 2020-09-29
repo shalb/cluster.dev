@@ -14,7 +14,7 @@ And please install [pre-commit-terraform](https://github.com/antonbabenko/pre-co
 
 ## Bash
 
-Firstly, [install shellcheck](https://github.com/koalaman/shellcheck#installing) to have vscode-shellcheck extension working properly.
+Firstly, please [install shellcheck](https://github.com/koalaman/shellcheck#installing) to have vscode-shellcheck extension working properly.
 
 We use [Google Style Guide](https://google.github.io/styleguide/shellguide.html).
 
