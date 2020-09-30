@@ -1,0 +1,69 @@
+site_name: Cluster.dev
+# Page tree
+repo_name: 'shalb/cluster.dev'
+repo_url: 'https://github.com/shalb/cluster.dev'
+site_url: 'https://cluster.dev'
+
+
+nav:
+  - Home:
+    - Welcome: index.md
+    - Design: DESIGN.md
+  - Quick Start:
+    - Getting started on AWS: getting-started-aws.md
+    - Getting started on DigitalOcean: getting-started-digitalocean.md
+    - Cleanup: cleanup.md
+  - Configuration Options:
+    - Options List for Cluster Manifests: OPTIONS.md
+  - Operations:
+    - Git Provider Support: git-provider-support.md
+    - Enable GitHub auth in ArgoCD: argocd-github-auth.md
+  - Development:
+    - Contributing: CONTRIBUTING.md
+    - Style-guide: style-guide.md
+    - Terraform modules structure: terraform-code-structure.md
+    - Adding a New Provider or Provisioner: add-provider-provisioner.md
+    - AWS IAM Permissions: aws-iam-permissions.md
+  - Releases:
+    - Roadmap: ROADMAP.md
+
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.inlinehilite
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.superfences
+  - pymdownx.tilde
+  - toc:
+      permalink: ' ¶'
+theme:
+  name: 'material'
+  custom_dir: docs/theme-overrides
+  # Don't include MkDocs' JavaScript
+  include_search_page: false
+  search_index_only: true
+  language: en
+  features:
+    - navigation.tabs
+  palette:
+    scheme: default
+    primary: indigo
+    accent: indigo
+  font:
+    text: Roboto
+    code: Roboto Mono
+  logo: '/images/cluster-dev-logo-small-white.png'
+  favicon: 'images/favicon.png'
+google_analytics:
+  - UA-157259461-1
+  - auto
+extra:
+  social:
+    - icon: fontawesome/brands/slack
+      link: https://join.slack.com/t/cluster-dev/shared_invite/zt-eg4q6jae-v0~zgrBLYTTXt~CjnjmprA
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/shalbcom
+    - icon: fontawesome/brands/github
+      link: https://github.com/shalb/cluster.dev

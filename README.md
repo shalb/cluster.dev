@@ -27,17 +27,17 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 
 ## MENU <!-- omit in toc -->
 
-* [Principle diagram](#principle-diagram)
-* [How it works](#how-it-works)
-* [Installation](#installation)
-  * [Quick Start](#quick-start)
-  * [Cleanup](#cleanup)
-* [Configuration Options](./docs/OPTIONS.md)
-* [Technical diagram](#technical-diagram)
-* [Roadmap](#roadmap)
-* [Contributing](#contributing)
-* [FAQ](#faq)
-* [Code of Conduct and License](#code-of-conduct-and-license)
+- [Cluster.dev - Kubernetes-based Dev Environment in Minutes](#clusterdev---kubernetes-based-dev-environment-in-minutes)
+  - [Principle diagram](#principle-diagram)
+  - [How it works](#how-it-works)
+  - [Installation](#installation)
+    - [Quick Start](#quick-start)
+    - [Cleanup](#cleanup)
+  - [Technical diagram](#technical-diagram)
+  - [Roadmap](#roadmap)
+  - [Contributing](#contributing)
+  - [FAQ](#faq)
+  - [Code of Conduct and License](#code-of-conduct-and-license)
 
 ----
 

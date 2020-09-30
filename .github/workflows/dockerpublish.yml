@@ -1,7 +1,6 @@
 name: Docker
 
 on:
-
   # Publish releases as 'latest'.
   release:
     types: [published]
@@ -11,11 +10,19 @@ on:
     # Publish for any branch as well
     branches:
       - master
-      - '*'
-
+    #  - '*' - define branch preciously
     # Publish `v1.2.3` tags as releases.
     tags:
       - 'v*'
+    paths:
+      - 'entrypoint.sh'
+      - 'bin/**'
+      - 'terraform/**'
+      - 'kubernetes/apps/**'
+      - 'Dockerfile'
+      - '.github/workflows/**'
+      - '.cluster.dev/**'
+      - 'action.yaml'
 
   # Run tests for any PRs.
   pull_request:

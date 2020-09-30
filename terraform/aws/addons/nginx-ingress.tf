@@ -12,6 +12,6 @@ resource "null_resource" "nginx_ingress_install" {
   provisioner "local-exec" {
     when = destroy
     # destroy ingress object to remove created Load Balancer
-    command = "kubectl delete --kubeconfig ${var.config_path} -f 'https://raw.githubusercontent.com/shalb/terraform-aws-minikube/master/addons/ingress.yaml'"
+    command = "exit 0"
   }
 }
