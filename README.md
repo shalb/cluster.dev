@@ -222,7 +222,7 @@ After successful removal, you can safely delete cluster manifest file from `.clu
 
 ## Technical diagram
 
-![cluster.dev technical diagram](docs/images/cluster-dev-technical-diagram.png)
+![cluster.dev technical diagram](docs/images/cluster-dev-technical-diagram2.png)
 
 ## Roadmap
 
