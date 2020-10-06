@@ -21,9 +21,17 @@ resource "null_resource" "bcrypted_password" {
 }
 
 # Create ArgoCD namespace
-resource "kubernetes_namespace" "argocd" {
-  metadata {
-    name = "argocd"
+resource "null_resource" "argocd_namespace" {
+  depends_on = [
+    null_resource.kubeconfig_update,
+  ]
+  provisioner "local-exec" {
+    command = "kubectl --kubeconfig ${var.config_path} create namespace argocd"
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "exit 0"
   }
 }
 
@@ -39,7 +47,7 @@ resource "helm_release" "argo-cd" {
     file("templates/argocd-values.yaml")
   ]
   depends_on = [
-    null_resource.kubeconfig_update,
+    null_resource.argocd_namespace,
     helm_release.cert_manager,
   ]
   set {

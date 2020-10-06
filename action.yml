@@ -6,7 +6,7 @@ outputs:
     description: 'An status for the job'
 runs:
   using: 'docker'
-  image: 'docker://clusterdev/cluster.dev:0.2.0'
+  image: 'docker://clusterdev/cluster.dev:0.3.1'
   # If you need development runtime builds use commented setting
   # image: 'Dockerfile'
   env:

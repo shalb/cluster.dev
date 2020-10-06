@@ -8,7 +8,7 @@ locals {
 resource "null_resource" "olm_install" {
   provisioner "local-exec" {
     # Deploy CRD's, wait them become available and deploy olm
-    command = "kubectl apply -f ${local.url}/${local.olm-version}/crds.yaml && kubectl apply -f ${local.url}/${local.olm-version}/olm.yaml && for resource in catalog-operator olm-operator packageserver; do kubectl rollout status -n ${local.olm-namespace} -w deploy $resource; done"
+    command = "kubectl apply --kubeconfig ${var.config_path} -f ${local.url}/${local.olm-version}/crds.yaml && kubectl apply --kubeconfig ${var.config_path} -f ${local.url}/${local.olm-version}/olm.yaml && for resource in catalog-operator olm-operator packageserver; do kubectl --kubeconfig ${var.config_path} rollout status -n ${local.olm-namespace} -w deploy $resource; done"
   }
   provisioner "local-exec" {
     when = destroy

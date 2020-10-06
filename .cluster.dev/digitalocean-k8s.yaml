@@ -1,20 +1,19 @@
-cluster:
-  installed: false
-  name: do-test
-  cloud:
-    provider: digitalocean
-    region: ams3
-    vpc: default
-    vpc_cidr: 10.8.0.0/20
-    domain: do.shalb.org
-    provisioner:
-      type: managed-kubernetes
-      version: 1.17
-      nodeSize: s-1vcpu-2gb
-      minNodes: 1
-      maxNodes: 2
-  addons:
-    nginx-ingress: true
-    cert-manager: true
-  apps:
-    - /kubernetes/apps/samples
+installed: false
+name: dev-k8s
+provider:
+  type: digitalocean
+  region: ams3
+  vpc: default
+  vpc_cidr: 10.8.0.0/20
+  domain: do.shalb.org
+  provisioner:
+    type: managed-kubernetes
+    version: 1.17
+    nodeSize: s-1vcpu-2gb
+    minNodes: 1
+    maxNodes: 2
+addons:
+  nginx-ingress: true
+  cert-manager: true
+apps:
+  - /kubernetes/apps/samples

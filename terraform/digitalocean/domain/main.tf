@@ -42,13 +42,13 @@ resource "null_resource" "zone_delegation" {
   }
   provisioner "local-exec" {
     command = <<EOF
-        curl -H "Content-Type: application/json" -d '{"Action": "CREATE", "UserName": "${var.cluster_name}", "NameServers": "ns1.digitalocean.com., ns2.digitalocean.com., ns3.digitalocean.com.", "ZoneID": "${digitalocean_domain.sub.urn}", "DomainName": "${var.cluster_domain}", "Email": "${var.email}"}' ${var.dns_manager_url}
+        curl -H "Content-Type: application/json" -d '{"Action": "CREATE", "UserName": "${var.cluster_name}", "NameServers": "ns1.digitalocean.com.,ns2.digitalocean.com.,ns3.digitalocean.com.", "ZoneID": "${digitalocean_domain.sub.urn}", "DomainName": "${var.cluster_domain}", "Email": "${var.email}"}' ${var.dns_manager_url}
       EOF
   }
   provisioner "local-exec" {
     when    = destroy
     command = <<EOF
-        curl -H "Content-Type: application/json" -d '{"Action": "DELETE", "UserName": "${var.cluster_name}", "NameServers": "ns1.digitalocean.com., ns2.digitalocean.com., ns3.digitalocean.com.", "ZoneID": "${digitalocean_domain.sub.urn}", "DomainName": "${var.cluster_domain}", "Email": "${var.email}"}' ${var.dns_manager_url}
+        curl -H "Content-Type: application/json" -d '{"Action": "DELETE", "UserName": "${var.cluster_name}", "NameServers": "ns1.digitalocean.com.,ns2.digitalocean.com.,ns3.digitalocean.com.", "ZoneID": "${digitalocean_domain.sub.urn}", "DomainName": "${var.cluster_domain}", "Email": "${var.email}"}' ${var.dns_manager_url}
       EOF
   }
 }

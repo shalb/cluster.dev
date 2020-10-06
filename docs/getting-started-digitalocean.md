@@ -37,7 +37,7 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
 
     ```bash
     # Sample with DO Managed Kubernetes Cluster
-    export RELEASE=v0.1.10
+    export RELEASE=v0.3.1
     mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/digitalocean.yml"
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/digitalocean-k8s.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/digitalocean-k8s.yaml"
     ```

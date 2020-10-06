@@ -3,3 +3,10 @@
 !bin/
 !kubernetes/
 !terraform/
+!cmd/
+!pkg/
+!internal/
+!Makefile
+!go.mod
+!go.sum
+

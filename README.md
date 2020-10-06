@@ -27,17 +27,17 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 
 ## MENU <!-- omit in toc -->
 
-* [Principle diagram](#principle-diagram)
-* [How it works](#how-it-works)
-* [Installation](#installation)
-  * [Quick Start](#quick-start)
-  * [Cleanup](#cleanup)
-* [Configuration Options](./docs/OPTIONS.md)
-* [Technical diagram](#technical-diagram)
-* [Roadmap](#roadmap)
-* [Contributing](#contributing)
-* [FAQ](#faq)
-* [Code of Conduct and License](#code-of-conduct-and-license)
+- [Cluster.dev - Kubernetes-based Dev Environment in Minutes](#clusterdev---kubernetes-based-dev-environment-in-minutes)
+  - [Principle diagram](#principle-diagram)
+  - [How it works](#how-it-works)
+  - [Installation](#installation)
+    - [Quick Start](#quick-start)
+    - [Cleanup](#cleanup)
+  - [Technical diagram](#technical-diagram)
+  - [Roadmap](#roadmap)
+  - [Contributing](#contributing)
+  - [FAQ](#faq)
+  - [Code of Conduct and License](#code-of-conduct-and-license)
 
 ----
 
@@ -90,8 +90,8 @@ You receive:
 
 _normally it takes 15 minutes_
 
-1. Create a separate repository for the infrastructure code that will be managed by `cluster.dev`in GitHub.  
-This repo will host code for your clusters, deployments, applications and other resources.  
+1. Create a separate repository for the infrastructure code that will be managed by `cluster.dev`in GitHub.
+This repo will host code for your clusters, deployments, applications and other resources.
 Clone the repo locally:
 
     ```bash
@@ -104,9 +104,9 @@ Clone the repo locally:
 <details>
   <summary>Expand steps for specific for Amazon AWS</summary>
 
-2. Create a new AWS user with limited access in IAM.  
-Watch [video example](https://www.youtube.com/watch?v=ALF1Ku2lYys) to create the user and apply [policy](install/aws_policy.json).  
-If you need more information about AWS users - please check [aws documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console) for details.  
+2. Create a new AWS user with limited access in IAM.
+Watch [video example](https://www.youtube.com/watch?v=ALF1Ku2lYys) to create the user and apply [policy](install/aws_policy.json).
+If you need more information about AWS users - please check [aws documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html#id_users_create_console) for details.
 
     Resulting access pair should look like:
 
@@ -116,11 +116,11 @@ If you need more information about AWS users - please check [aws documentation](
     ```
 
 
-3. Add credentials to you repo Secrets under GitHub's repo setting `Settings → Secrets`, the path should look like `https://github.com/MY_USER/MY_REPO_NAME/settings/secrets`:  
+3. Add credentials to you repo Secrets under GitHub's repo setting `Settings → Secrets`, the path should look like `https://github.com/MY_USER/MY_REPO_NAME/settings/secrets`:
 
     ![GitHub Secrets](docs/images/gh-secrets.png)
 
-4. In your repo, create a Github workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and  
+4. In your repo, create a Github workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and
  cluster.dev example manifest: [.cluster.dev/aws-minikube.yaml](.cluster.dev/aws-minikube.yaml) with the cluster definition.
 
     _Or download example files to your local repo clone using the next commands:_
@@ -128,7 +128,7 @@ If you need more information about AWS users - please check [aws documentation](
 
     ```bash
     # Sample with Minikube cluster
-    export RELEASE=v0.2.0
+    export RELEASE=v0.3.1
     mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/aws.yml"
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/aws-minikube.yaml"
     ```
@@ -142,7 +142,7 @@ If you need more information about AWS users - please check [aws documentation](
 2. Login to your DO account.
    You can create a default VPC inside your account if you wish: `Manage->Networking->VPC-Create VPC Network`.
 
-3. You need to generate DO API Token and DO Spaces keys.  
+3. You need to generate DO API Token and DO Spaces keys.
 To generate API Token please consult [DO document](
 https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). It should like:
     ```yaml
@@ -155,10 +155,10 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
     SPACES_ACCESS_KEY_ID: "L2Z3UN2I4R322XX56LPM"
     SPACES_SECRET_ACCESS_KEY: "njVtezJ7t2ce1nlohIFwoPHHF333mmcc2"
     ```
-    Add TOKEN and SPACES keys to your repo secrets or env variables. In GitHub: `Settings → Secrets`, the path should look like: `https://github.com/MY_USER/MY_REPO_NAME/settings/secrets`:  
+    Add TOKEN and SPACES keys to your repo secrets or env variables. In GitHub: `Settings → Secrets`, the path should look like: `https://github.com/MY_USER/MY_REPO_NAME/settings/secrets`:
 
 
-4. In your repo, create a Github workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and  
+4. In your repo, create a Github workflow file: [.github/workflows/main.yml](.github/workflows/main.yml) and
  cluster.dev example manifest: [.cluster.dev/digitalocean-k8s.yaml](.cluster.dev/digitalocean-k8s.yaml) with the cluster definition.
 
     _Or download example files to your local repo clone using the next commands:_
@@ -166,7 +166,7 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
 
     ```bash
     # Sample with DO Managed Kubernetes Cluster
-    export RELEASE=v0.1.10
+    export RELEASE=v0.3.1
     mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/digitalocean.yml"
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/digitalocean-k8s.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/digitalocean-k8s.yaml"
     ```
@@ -174,7 +174,7 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
 5. In the cluster manifest (.cluster.dev/digitalocean-k8s.yaml) you can set your own Domain Zone. If you don't have any hosted public zone you can set just `domain: cluster.dev` and we will create it for you. Or you can create it manually and add to your account with [instructions from DO website](https://www.digitalocean.com/docs/networking/dns/how-to/add-domains/).
 </details>
 
-6. You can change all other parameters or leave default values in the cluster manifest.  
+6. You can change all other parameters or leave default values in the cluster manifest.
 Leave the Github workflow file [.github/workflows/main.yml](.github/workflows/main.yml) as is.
 
 7. Copy sample [ArgoCD Applications](https://argoproj.github.io/argo-cd/operator-manual/declarative-setup/#applications) from [/kubernetes/apps/samples](https://github.com/shalb/cluster.dev/tree/master/kubernetes/apps/samples) and [Helm chart](https://helm.sh/docs/topics/charts/) samples from [/kubernetes/charts/wordpress](https://github.com/shalb/cluster.dev/tree/master/kubernetes/charts/wordpress) to the same paths into your repo.
@@ -203,7 +203,7 @@ Leave the Github workflow file [.github/workflows/main.yml](.github/workflows/ma
 8. Commit and Push files to your repo.
 
 9. Set the cluster to `installed: true`, commit, push and follow the Github Action execution status, the path should look like `https://github.com/MY_USER/MY_REPO_NAME/actions`.
-In the GitHub action output you'll receive access instructions to your cluster and services:  
+In the GitHub action output you'll receive access instructions to your cluster and services:
 ![GHA_GetCredentials](docs/images/gha_get_credentials.png)
 
 10. Voilà! You receive GitOps managed infrastructure in code. So now you can deploy applications, create more clusters, integrate with CI systems, experiment with the new features and everything else from Git without leaving your IDE.

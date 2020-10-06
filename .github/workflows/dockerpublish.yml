@@ -59,7 +59,6 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USER }}" --password "${{ secrets.DOCKER_PASS }}"
 
-
       - name: Push image for release
         if: github.event_name == 'release'
         run: |
@@ -103,3 +102,25 @@ jobs:
 
           docker tag "$IMAGE" "$REGISTRY/$IMAGE:$VERSION-${GITHUB_SHA}"
           docker push "$REGISTRY/$IMAGE:$VERSION-${GITHUB_SHA}"
+
+      - name: Push image for non release tags other branches
+        if: github.event_name != 'release' && contains(github.ref, 'tag') && github.event_name == 'push' && github.ref != 'refs/heads/master'
+        run: |
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo "$VERSION" | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+
+          echo IMAGE=$IMAGE
+          echo VERSION=$VERSION
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:$VERSION"
+          docker push "$REGISTRY/$IMAGE:$VERSION"
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:latest"
+          docker push "$REGISTRY/$IMAGE:latest"
+
