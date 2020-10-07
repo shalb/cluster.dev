@@ -20,5 +20,3 @@ jobs:
         SPACES_SECRET_ACCESS_KEY: "${{ secrets.SPACES_SECRET_ACCESS_KEY }}"
         CLUSTER_CONFIG_PATH: "./.cluster.dev/digitalocean-k8s.yaml"
         VERBOSE_LVL: "INFO"
-    - name: Get the Cluster Credentials
-      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
