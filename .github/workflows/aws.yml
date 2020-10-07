@@ -19,5 +19,3 @@ jobs:
         AWS_SECRET_ACCESS_KEY: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
         CLUSTER_CONFIG_PATH: "./.cluster.dev/"
         VERBOSE_LVL: DEBUG
-    - name: Get the Cluster Credentials
-      run: echo -e "\n\033[1;32m${{ steps.reconcile.outputs.ssh }}\n\033[1;32m${{ steps.reconcile.outputs.kubeconfig }}\n\033[1;32m${{ steps.reconcile.outputs.argocd }}"
