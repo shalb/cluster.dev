@@ -114,7 +114,7 @@ func getClusterFullName(clusterName, gitRepoName string) (string, error) {
 	splitted := strings.Split(gitRepoName, "/")
 	var strTmp string
 	if len(splitted) > 1 {
-		strTmp = splitted[1]
+		strTmp = splitted[0]
 	}
 	if strTmp == "" {
 		return "", fmt.Errorf("can't set cluster fullname from git repo name. GitRepoName is '%s'", gitRepoName)
