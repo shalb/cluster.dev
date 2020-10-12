@@ -19,6 +19,7 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
     ```yaml
     DIGITALOCEAN_TOKEN: "83e209a810b6c1da8919fe7265b9493992929b9221444449"
     ```
+
     To generate the DO Spaces secrets, see the [DO documentation](https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key#creating-an-access-key).
 
     The resulting key and secret should look like:
@@ -27,6 +28,7 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
     SPACES_ACCESS_KEY_ID: "L2Z3UN2I4R322XX56LPM"
     SPACES_SECRET_ACCESS_KEY: "njVtezJ7t2ce1nlohIFwoPHHF333mmcc2"
     ```
+
     Add the token and Spaces keys to your repo secrets or env variables. In GitHub: `Settings → Secrets`, the path should look like: `https://github.com/MY_USER/MY_REPO_NAME/settings/secrets`:
 
 
@@ -37,7 +39,7 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
 
     ```bash
     # Sample with DO Managed Kubernetes Cluster
-    export RELEASE=v0.3.1
+    export RELEASE=v0.3.3
     mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/digitalocean.yml"
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/digitalocean-k8s.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/digitalocean-k8s.yaml"
     ```
@@ -51,7 +53,7 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
     _Or download application samples directly to local repo clone with the commands:_
 
     ```bash
-    export RELEASE=v0.2.0
+    export RELEASE=v0.3.3
     # Create directory and place ArgoCD applications inside
     mkdir -p kubernetes/apps/samples && wget -O kubernetes/apps/samples/helm-all-in-app.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-all-in-app.yaml"
     wget -O kubernetes/apps/samples/helm-dependency.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-dependency.yaml"

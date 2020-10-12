@@ -1,5 +1,6 @@
 # Cluster.dev - Kubernetes-based Dev Environment in Minutes
 
+<!-- markdownlint-disable no-inline-html-->
 <p align="center">
     <img src="https://raw.githubusercontent.com/shalb/cluster.dev/master/docs/images/cluster-dev-logo-site.png?sanitize=true"
         width="540">
@@ -13,8 +14,6 @@
     <a href="https://www.facebook.com/shalb/">
         <img src="https://img.shields.io/static/v1?label=FACEBOOK&message=FOLLOW&color=1877F2&style=for-the-badge&logo=facebook"
             alt="follow on Facebook"></a>
-
-
 </p>
 
 Cluster.dev is an open-source system delivered as GitHub Action or Docker Image for creating and managing Kubernetes clusters with simple manifests by GitOps approach.
@@ -27,17 +26,16 @@ GitOps infrastructure management with Terraform and continuous deployment with A
 
 ## MENU <!-- omit in toc -->
 
-- [Cluster.dev - Kubernetes-based Dev Environment in Minutes](#clusterdev---kubernetes-based-dev-environment-in-minutes)
-  - [Principle diagram](#principle-diagram)
-  - [How it works](#how-it-works)
-  - [Installation](#installation)
-    - [Quick Start](#quick-start)
-    - [Cleanup](#cleanup)
-  - [Technical diagram](#technical-diagram)
-  - [Roadmap](#roadmap)
-  - [Contributing](#contributing)
-  - [FAQ](#faq)
-  - [Code of Conduct and License](#code-of-conduct-and-license)
+* [Principle diagram](#principle-diagram)
+* [How it works](#how-it-works)
+* [Installation](#installation)
+  * [Quick Start](#quick-start)
+  * [Cleanup](#cleanup)
+* [Technical diagram](#technical-diagram)
+* [Roadmap](#roadmap)
+* [Contributing](#contributing)
+* [FAQ](#faq)
+* [Code of Conduct and License](#code-of-conduct-and-license)
 
 ----
 
@@ -87,16 +85,17 @@ You receive:
 ## Installation
 
 ### Quick Start
-
+<!-- markdownlint-disable no-emphasis-as-header -->
 _normally it takes 15 minutes_
+<!-- markdownlint-enable no-emphasis-as-header -->
 
 1. Create a separate repository for the infrastructure code that will be managed by `cluster.dev`in GitHub.
 This repo will host code for your clusters, deployments, applications and other resources.
 Clone the repo locally:
 
     ```bash
-    $ git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
-    $ cd YOUR-REPOSITORY
+    git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
+    cd YOUR-REPOSITORY
     ```
 
 **Next steps** should be done inside that repo.
@@ -128,33 +127,38 @@ If you need more information about AWS users - please check [aws documentation](
 
     ```bash
     # Sample with Minikube cluster
-    export RELEASE=v0.3.1
+    export RELEASE=v0.3.3
     mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/aws.yml"
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/aws-minikube.yaml"
     ```
 
 5. In the cluster manifest (.cluster.dev/aws-minikube.yaml) you can set your own Route53 DNS zone. If you don't have any hosted public zone you can set just `domain: cluster.dev` and we will create it for you. Or you can create it manually with [instructions from AWS Website](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html).
+
 </details>
 
 <details>
   <summary>Expand steps for specific for DigitalOcean</summary>
 
-2. Login to your DO account.
+1. Login to your DO account.
    You can create a default VPC inside your account if you wish: `Manage->Networking->VPC-Create VPC Network`.
 
-3. You need to generate DO API Token and DO Spaces keys.
+2. You need to generate DO API Token and DO Spaces keys.
 To generate API Token please consult [DO document](
 https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). It should like:
+
     ```yaml
     DIGITALOCEAN_TOKEN: "83e209a810b6c1da8919fe7265b9493992929b9221444449"
     ```
+
     To generate DO Spaces secrets please consult [DO document](
     https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key#creating-an-access-key)
     Resulting Key and Secret should look like:
+
     ```yaml
     SPACES_ACCESS_KEY_ID: "L2Z3UN2I4R322XX56LPM"
     SPACES_SECRET_ACCESS_KEY: "njVtezJ7t2ce1nlohIFwoPHHF333mmcc2"
     ```
+
     Add TOKEN and SPACES keys to your repo secrets or env variables. In GitHub: `Settings → Secrets`, the path should look like: `https://github.com/MY_USER/MY_REPO_NAME/settings/secrets`:
 
 
@@ -163,15 +167,15 @@ https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
 
     _Or download example files to your local repo clone using the next commands:_
 
-
     ```bash
     # Sample with DO Managed Kubernetes Cluster
-    export RELEASE=v0.3.1
+    export RELEASE=v0.3.3
     mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/digitalocean.yml"
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/digitalocean-k8s.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/digitalocean-k8s.yaml"
     ```
 
 5. In the cluster manifest (.cluster.dev/digitalocean-k8s.yaml) you can set your own Domain Zone. If you don't have any hosted public zone you can set just `domain: cluster.dev` and we will create it for you. Or you can create it manually and add to your account with [instructions from DO website](https://www.digitalocean.com/docs/networking/dns/how-to/add-domains/).
+
 </details>
 
 6. You can change all other parameters or leave default values in the cluster manifest.
@@ -182,7 +186,7 @@ Leave the Github workflow file [.github/workflows/main.yml](.github/workflows/ma
     _Or download application samples directly to local repo clone with commands:_
 
     ```bash
-    export RELEASE=v0.2.0
+    export RELEASE=v0.3.3
     # Create directory and place ArgoCD applications inside
     mkdir -p kubernetes/apps/samples && wget -O kubernetes/apps/samples/helm-all-in-app.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-all-in-app.yaml"
     wget -O kubernetes/apps/samples/helm-dependency.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-dependency.yaml"
