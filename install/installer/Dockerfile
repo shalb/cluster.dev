@@ -8,16 +8,32 @@ RUN apk add --no-cache \
         gcc \
         musl-dev \
         # GPG for sign commits
-        gnupg
-
-# .ssh dir mounts with 1000:1000 rights. And can't be accessible with other rights.
-RUN addgroup -g 1000 cluster.dev && \
-    adduser -u 1000 -D -G cluster.dev cluster.dev
-USER cluster.dev
+        gnupg \
+        # For PyNaCl
+        libffi-dev \
+        make \
+        # Editor
+        neovim && \
+        ln -s /usr/bin/nvim /usr/bin/editor
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip --no-cache-dir install -r requirements.txt
 
-COPY cluster_dev.py .
-ENTRYPOINT ["python", "cluster_dev.py"]
-CMD ["-h"]
+COPY requirements-dev.txt .
+ARG ENV="${ENV:-prod}"
+RUN if [ "$ENV" != 'prod' ]; then \
+        pip3 --no-cache-dir install -r requirements-dev.txt; \
+    fi
+
+COPY entrypoint.sh \
+    cluster_dev.py \
+    aws.py \
+    aws_config.py \
+    github.py \
+    logger.py \
+    validate.py \
+    aws_policy.json \
+        ./
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD [ "-h" ]

@@ -1,0 +1,9 @@
+# https://github.com/apps/dependabot-preview can autoupdate in/txt lockfile pair.
+# TODO: Add it after CLI installer will be mostly done
+
+gitpython==3.1.0 # Get info from git
+PyInquirer==1.0.3 # CLI questions
+boto3==1.13.3 # AWS API
+agithub==2.2.2 # Github API
+PyNaCl==1.3.0 # Encryption for Github Secrets
+wget==3.2 # Download sample cluster.dev files

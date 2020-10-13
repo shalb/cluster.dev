@@ -1,6 +1,6 @@
 # AWS IAM permissions
 
-This document explains how to create or update [aws_policy.json](../install/aws_policy.json).
+This document explains how to create or update [aws_policy.json](../install/installer/aws_policy.json).
 
 * [Requirements](#requirements)
 * [Collect logs](#collect-logs)
@@ -93,5 +93,5 @@ Replace `MY-IP` by your IP address, which is used to deploy the cluster.
 
 1. Open visual [policy editor](https://console.aws.amazon.com/iam/home?#/policies$new?step=edit) and add needed permissions regarding the output of the [script](../install/aws_logs_parser.py).
 2. Save new policy time to time if it has many records, to prevent results from being lost.
-3. Check out its JSON version and save it to [aws_policy.json](../install/aws_policy.json).
+3. Check out its JSON version and save it to [aws_policy.json](../install/installer/aws_policy.json).
 4. Push JSON version to repo.

@@ -68,11 +68,50 @@ repos:
 
 # Usage: http://pylint.pycqa.org/en/latest/user_guide/message-control.html
 - repo: https://github.com/PyCQA/pylint
-  rev: pylint-2.5.0
+  rev: pylint-2.5.2
   hooks:
     - id: pylint
       language_version: python3.8
+      # Think about this: https://github.com/shalb/cluster.dev/pull/70#discussion_r431190998
+      args:
+      - --disable=import-error # E0401. Locally you could not have all imports.
+      - --disable=fixme # W0511. 'TODO' notations.
+      - --disable=bad-continuation # Will be removed in pylint-2.6.0. Use wemake-python-styleguide.
+      - --disable=logging-fstring-interpolation # Conflict with "use a single formatting" WPS323
+      - --disable=ungrouped-imports # ignore `if TYPE_CHECKING` case. Other do reorder-python-imports
+      - --min-similarity-lines=8 # ignore stubs of dev dependencies
+
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v0.770
+  hooks:
+    - id: mypy
+      language_version: python3.8
       args: [
-        '--disable=import-error', # E0401. Locally you could not have all imports.
-        '--disable=fixme', # W0511. 'TODO' notations.
+        --ignore-missing-imports,
+        --disallow-untyped-calls,
+        --warn-redundant-casts,
       ]
+
+- repo: https://gitlab.com/pycqa/flake8.git
+  rev: 3.8.2
+  hooks:
+  - id: flake8
+    language_version: python3.8
+    additional_dependencies:
+    - flake8-2020
+    - flake8-docstrings
+    - flake8-pytest-style
+    - wemake-python-styleguide
+    args:
+    - --max-returns=2 # Default settings
+    - --max-arguments=4 # Default settings
+    - --max-string-usages=6 # Project specific. Default - 3
+    - --max-local-variables=6 # Project specific. Default - 5
+    - --max-module-members=10 # Project specific. Default - 7
+    # https://www.flake8rules.com/
+    # https://wemake-python-stylegui.de/en/latest/pages/usage/violations/index.html
+    - --extend-ignore=
+              WPS305, <!-- Found `f` string -->
+              E501,   <!-- line too long (> 79 characters). Use 100 -->
+              I,      <!-- opt out of using isort in favor of reorder-python-imports -->
+              RST,    <!-- Conflict with DAR -->

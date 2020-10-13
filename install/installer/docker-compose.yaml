@@ -6,14 +6,28 @@ version: "2.4"
 
 services:
   app: &app
-    build: .
+    build:
+      context: .
+      args:
+        ENV: dev
     image: cli-installer:latest
+    environment:
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      UID: ${UID:-1000}
+      GID: ${GID:-1000}
+
     volumes:
       - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
+      - ./aws.py:/app/aws.py:ro # Reload code in fly
+      - ./aws_config.py:/app/aws_config.py:ro # Reload code in fly
+      - ./github.py:/app/github.py:ro # Reload code in fly
+      - ./logger.py:/app/logger.py:ro # Reload code in fly
+      - ./validate.py:/app/validate.py:ro # Reload code in fly
 
       - ./mount_folder:/app/current_dir:rw # Folder where run docker-container
       - $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro # For get git username
-      - $HOME/.ssh:/home/cluster.dev/.ssh:ro # For get ssh key as git password
+      - $HOME/.ssh/:/home/cluster.dev/.ssh/:ro # For get ssh key as git password
+      - $HOME/.aws/:/home/cluster.dev/.aws/:ro # For create user and attach permissions in AWS
 
       # When we commit something
       - $HOME/.gnupg/:/home/cluster.dev/.gnupg/:rw # For gpg sign used
@@ -64,6 +78,12 @@ services:
       - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
       - $HOME/.gnupg/:/home/cluster.dev/.gnupg/:rw # For gpg sign used
 
+  test_base_aws: &test_base_aws
+    <<: *test_base_empty
+    volumes:
+      - ./cluster_dev.py:/app/cluster_dev.py:ro # Reload code in fly
+      - $HOME/.aws/:/home/cluster.dev/.aws/:ro # For create user and attach permissions in AWS
+
   test_base_full: &test_base_full
     <<: *test_base_empty
     volumes:
@@ -71,6 +91,7 @@ services:
       - $HOME/.gitconfig:/home/cluster.dev/.gitconfig:ro # For get git username
       - $HOME/.ssh:/home/cluster.dev/.ssh:ro # For get ssh key as git password
       - $HOME/.gnupg/:/home/cluster.dev/.gnupg/:rw # For gpg sign used
+      - $HOME/.aws/:/home/cluster.dev/.aws/:ro # For create user and attach permissions in AWS
 
 
 # TODO: Create case with empty git config (username)
