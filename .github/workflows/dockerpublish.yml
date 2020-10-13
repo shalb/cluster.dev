@@ -123,4 +123,3 @@ jobs:
 
           docker tag "$IMAGE" "$REGISTRY/$IMAGE:latest"
           docker push "$REGISTRY/$IMAGE:latest"
-

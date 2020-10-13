@@ -37,7 +37,7 @@ permalink: /roadmap/
 - [ ] OIDC integration with GitHub, GitLab, Google Auth, Okta
 
 
-### v0.4.x 
+### v0.4.x
 
 - [ ] CLI Installer [54](https://github.com/shalb/cluster.dev/issues/54)
 - [ ] Add GitHub runner and test GitHub Action Continuous Integration workflow
