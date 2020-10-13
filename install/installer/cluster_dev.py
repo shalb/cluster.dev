@@ -1,4 +1,5 @@
 #!/usr/bin/env python3.8
+# flake8: noqa  # FIXME - this disable all checks for file!
 """cluster.dev installation script.
 
 Example usage:
@@ -62,7 +63,7 @@ def dir_is_git_repo(path: str) -> bool:
 
 
 @typechecked
-def parse_cli_args() -> argparse.Namespace:
+def parse_cli_args() -> argparse.Namespace:  # noqa: WPS213 # TODO
     """Parse CLI arguments, validate it.
 
     Returns:
@@ -167,6 +168,7 @@ def parse_cli_args() -> argparse.Namespace:
 
     if cli.cloud and cli.cloud_provider:
         if cli.cloud_provider not in CLOUD_PROVIDERS[cli.cloud]:
+            # TODO: refactor https://github.com/shalb/cluster.dev/pull/70#discussion_r431407132
             sys.exit(
                 f'Cloud provider can be: {CLOUD_PROVIDERS[cli.cloud_provider]}, '
                 + f'but provided: {cli.cloud_provider}',
@@ -223,7 +225,7 @@ def get_git_password() -> str:
 
 
 @typechecked
-def remove_all_except_git(dir_path: str):
+def remove_all_except_git(dir_path: str):  # noqa: WPS231 # FIXME
     """Remove all in directory except `.git/`.
 
     Args:
@@ -335,6 +337,7 @@ def get_repo_name_from_url(url: str) -> str:
     Returns:
         str: git repository name.
     """
+    # TODO: Refactor https://github.com/shalb/cluster.dev/pull/70#discussion_r427309906
     last_slash_index = url.rfind('/')
     last_suffix_index = url.rfind('.git')
 
@@ -369,7 +372,7 @@ def get_repo_owner_from_url(url: str) -> str:
 
 
 @typechecked
-def add_sample_cluster_dev_files(
+def add_sample_cluster_dev_files(  # noqa: WPS210, WPS211 # FIXME
     cloud: str,
     cloud_provider: str,
     git_provider: str,
@@ -476,8 +479,8 @@ def set_cluster_installed(config_path: str, installed: bool):
         cfn.write(new_conf)
 
 
-@typechecked  # noqa: WPS231, WPS213, WPS210
-def main() -> None:
+@typechecked
+def main() -> None:  # pylint: disable=too-many-statements,R0914 # noqa: WPS231, WPS213, WPS210
     """Logic."""
     cli = parse_cli_args()
     dir_path = os.path.relpath('current_dir')
@@ -549,8 +552,8 @@ def main() -> None:
             # TODO: push repo to Git Provider
             sys.exit('TODO')
 
-    user = cli.git_user_name or get_git_username(git)
-    password = cli.git_password or get_git_password()
+    user = cli.git_user_name or get_git_username(git)  # pylint: disable=W0612 # noqa: F841 # TODO
+    password = cli.git_password or get_git_password()  # pylint: disable=W0612 # noqa: F841 # TODO
 
     cloud = cli.cloud or ask_user(
         type='list',

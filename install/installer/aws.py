@@ -252,6 +252,7 @@ def create_policy(
     Returns:
         string - Created policy ARN.
     """
+    # TODO Refactor: https://github.com/shalb/cluster.dev/pull/70#discussion_r449274402
     with open('aws_policy.json', 'r') as policy_file:
         policy = json.dumps(json.load(policy_file))
 

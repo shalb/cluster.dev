@@ -1,3 +1,6 @@
+# https://github.com/apps/dependabot-preview can autoupdate in/txt lockfile pair.
+# TODO: Add it after CLI installer will be mostly done
+
 gitpython==3.1.0 # Get info from git
 PyInquirer==1.0.3 # CLI questions
 boto3==1.13.3 # AWS API
