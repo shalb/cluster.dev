@@ -4,10 +4,10 @@
 
 Create a separate repository for the infrastructure code that will be managed by `cluster.dev` in GitHub. This repo will host code for your clusters, deployments, applications and other resources. Clone the repo locally:
 
-
-    $ git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
-    $ cd YOUR-REPOSITORY
-
+    ```bash
+    git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
+    cd YOUR-REPOSITORY
+    ```
 
 **Next steps** should be done inside that repo.
 
@@ -28,9 +28,9 @@ Create a separate repository for the infrastructure code that will be managed by
 
     _Or download example files to your local repo clone using the next commands:_
 
-    ```
+    ```bash
     # Sample with Minikube cluster
-    export RELEASE=v0.2.0
+    export RELEASE=v0.3.3
     mkdir -p .github/workflows/ && wget -O .github/workflows/main.yml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.github/workflows/aws.yml"
     mkdir -p .cluster.dev/ && wget -O .cluster.dev/aws-minikube.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/.cluster.dev/aws-minikube.yaml"
     ```
@@ -44,7 +44,7 @@ Create a separate repository for the infrastructure code that will be managed by
     _Or download application samples directly to local repo clone with the commands:_
 
     ```bash
-    export RELEASE=v0.2.0
+    export RELEASE=v0.3.3
     # Create directory and place ArgoCD applications inside
     mkdir -p kubernetes/apps/samples && wget -O kubernetes/apps/samples/helm-all-in-app.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-all-in-app.yaml"
     wget -O kubernetes/apps/samples/helm-dependency.yaml "https://raw.githubusercontent.com/shalb/cluster.dev/${RELEASE}/kubernetes/apps/samples/helm-dependency.yaml"
