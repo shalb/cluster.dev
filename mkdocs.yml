@@ -24,6 +24,7 @@ nav:
     - Terraform modules structure: terraform-code-structure.md
     - Adding a New Provider or Provisioner: add-provider-provisioner.md
     - AWS IAM Permissions: aws-iam-permissions.md
+    - Create a new Release: release-new-version.md
   - Releases:
     - Roadmap: ROADMAP.md
 
