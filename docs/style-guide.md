@@ -1,9 +1,3 @@
----
-layout: default
-title: "Style guide"
-permalink: /style-guide/
----
-
 # Style guide
 
 For better experience, we recommend using [VS Code](https://code.visualstudio.com/download) - we have a list of recommended extensions to prevent many common errors, improve code and save time.
@@ -14,7 +8,7 @@ And please install [pre-commit-terraform](https://github.com/antonbabenko/pre-co
 
 ## Bash
 
-Firstly, [install shellcheck](https://github.com/koalaman/shellcheck#installing) to have vscode-shellcheck extension working properly.
+Firstly, please [install shellcheck](https://github.com/koalaman/shellcheck#installing) to have vscode-shellcheck extension working properly.
 
 We use [Google Style Guide](https://google.github.io/styleguide/shellguide.html).
 
@@ -35,3 +29,7 @@ For the successful module documentation initialization, you need to create `READ
 It is needed for [terraform-docs](https://github.com/antonbabenko/pre-commit-terraform#notes-about-terraform_docs-hooks) hooks. The hook rewrites all the things inside with every `.tf` file change.
 
 Then run `pre-commit run --all-files` or make some changes in any `.tf` file in the same dir (for ex. `variable "name" {` -> `variable "name"{`).
+
+### Terraform code structure
+
+If you'd like to know how we prefer to structure the tf-code, please see [this article](terraform-code-structure.md).

@@ -1,0 +1,125 @@
+name: Docker
+
+on:
+  # Publish releases as 'latest'.
+  release:
+    types: [published]
+
+  push:
+    # Publish `master` as Docker `master-latest` image
+    # Publish for any branch as well
+    branches:
+      - master
+    #  - '*' - define branch preciously
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - 'v*'
+    paths:
+      - 'entrypoint.sh'
+      - 'bin/**'
+      - 'terraform/**'
+      - 'kubernetes/apps/**'
+      - 'Dockerfile'
+      - '.github/workflows/**'
+      - '.cluster.dev/**'
+      - 'action.yaml'
+
+  # Run tests for any PRs.
+  pull_request:
+
+
+env:
+  IMAGE: cluster.dev
+  REGISTRY: docker.io/clusterdev
+
+jobs:
+  # Run tests
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run tests
+        run: docker build .
+
+  # Push image to Docker Hub
+  push:
+    # Ensure test job passes before pushing image.
+    needs: test
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build image
+        run: docker build -t $IMAGE .
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USER }}" --password "${{ secrets.DOCKER_PASS }}"
+
+      - name: Push image for release
+        if: github.event_name == 'release'
+        run: |
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo "$VERSION" | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+
+          echo IMAGE=$IMAGE
+          echo VERSION=$VERSION
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:$VERSION"
+          docker push "$REGISTRY/$IMAGE:$VERSION"
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:latest"
+          docker push "$REGISTRY/$IMAGE:latest"
+
+      - name: Push image for master branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          VERSION="master-latest"
+
+          echo IMAGE=$IMAGE
+          echo VERSION=$VERSION
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:$VERSION-${GITHUB_SHA}"
+          docker push "$REGISTRY/$IMAGE:$VERSION-${GITHUB_SHA}"
+
+      - name: Push image for other branch
+        if: github.event_name == 'push' && github.ref != 'refs/heads/master' && !contains(github.ref, 'tag')
+        run: |
+          #Get branch name
+          VERSION=${GITHUB_REF#refs/heads/}
+
+          echo IMAGE_ID=$IMAGE
+          echo VERSION=$VERSION
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:$VERSION-${GITHUB_SHA}"
+          docker push "$REGISTRY/$IMAGE:$VERSION-${GITHUB_SHA}"
+
+      - name: Push image for non release tags other branches
+        if: github.event_name != 'release' && contains(github.ref, 'tag') && github.event_name == 'push' && github.ref != 'refs/heads/master'
+        run: |
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo "$VERSION" | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+
+          echo IMAGE=$IMAGE
+          echo VERSION=$VERSION
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:$VERSION"
+          docker push "$REGISTRY/$IMAGE:$VERSION"
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:latest"
+          docker push "$REGISTRY/$IMAGE:latest"

@@ -21,7 +21,7 @@
 
     // Terraform
     "wholroyd.hcl",
-    "mauve.terraform",
+    "hashicorp.terraform",
     "erd0s.terraform-autocomplete",
 
     // YAML
