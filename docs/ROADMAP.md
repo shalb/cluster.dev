@@ -1,8 +1,3 @@
----
-layout: default
-title: "Roadmap for features in Cluster.dev"
-permalink: /roadmap/
----
 # Project Roadmap
 
 ### v.0.1.x - Basic Scenario
@@ -12,7 +7,6 @@ permalink: /roadmap/
 - [x] Provision Kubernetes with addons: Ingress-Nginx, Load Balancer, Cert-Manager, ExtDNS, ArgoCD
 - [x] Deploy a sample "WordPress" application to Kubernetes cluster using ArgoCD
 - [x] Delivered as GitHub Actions and Docker Image
-
 
 ### v0.2.x - Bash-based PoC
 
@@ -37,7 +31,7 @@ permalink: /roadmap/
 - [ ] OIDC integration with GitHub, GitLab, Google Auth, Okta
 
 
-### v0.4.x 
+### v0.4.x
 
 - [ ] CLI Installer [54](https://github.com/shalb/cluster.dev/issues/54)
 - [ ] Add GitHub runner and test GitHub Action Continuous Integration workflow

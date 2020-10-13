@@ -1,9 +1,3 @@
----
-layout: default
-title: "Contributing code to Cluster.dev"
-permalink: /contributing/
----
-
 # Contributing
 
 If you plan to make some changes, please have a look at our [style guide requirements](style-guide.md) first.

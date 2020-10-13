@@ -1,9 +1,3 @@
----
-layout: default
-title: "Style guide"
-permalink: /style-guide/
----
-
 # Style guide
 
 For better experience, we recommend using [VS Code](https://code.visualstudio.com/download) - we have a list of recommended extensions to prevent many common errors, improve code and save time.
