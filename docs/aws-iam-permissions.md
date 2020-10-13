@@ -1,6 +1,6 @@
 # AWS IAM permissions
 
-This document explains how to create or update [aws_policy.json](../install/aws_policy.json).
+This document explains how to create or update [aws_policy.json](../install/installer/aws_policy.json).
 
 * [Requirements](#requirements)
 * [Collect logs](#collect-logs)

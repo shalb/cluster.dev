@@ -11,7 +11,7 @@ Create a separate repository for the infrastructure code that will be managed by
 
 **Next steps** should be done inside that repo.
 
-2. Create a new AWS user with limited access in IAM and apply the policy [aws_policy.json](https://github.com/shalb/cluster.dev/blob/master/install/aws_policy.json). For details on how to gather required permissions see the [AWS IAM permissions](#aws-iam-permissions).
+2. Create a new AWS user with limited access in IAM and apply the policy [aws_policy.json](https://github.com/shalb/cluster.dev/blob/master/install/installer/aws_policy.json). For details on how to gather required permissions see the [AWS IAM permissions](#aws-iam-permissions).
 
     The resulting pair of access keys should look like:
 
