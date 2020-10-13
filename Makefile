@@ -24,4 +24,3 @@ install:
 .PHONY: clean
 clean:
 	rm $(BINDIR)/$(BINNAME)
-

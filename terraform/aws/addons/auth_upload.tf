@@ -8,8 +8,8 @@ data "template_file" "auth_info" {
 }
 
 resource "local_file" "auth_file" {
-    content     = data.template_file.auth_info.rendered
-    filename = "${path.module}/auth.yaml"
+  content  = data.template_file.auth_info.rendered
+  filename = "${path.module}/auth.yaml"
 }
 
 resource "aws_s3_bucket_object" "auth_upload" {

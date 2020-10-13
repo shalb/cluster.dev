@@ -8,8 +8,8 @@ data "template_file" "auth_info" {
 }
 
 resource "digitalocean_spaces_bucket_object" "auth_file" {
-  region       = var.region
-  bucket       = var.cluster_name
-  key          = "addons/auth.yaml"
-  content      = data.template_file.auth_info.rendered
+  region  = var.region
+  bucket  = var.cluster_name
+  key     = "addons/auth.yaml"
+  content = data.template_file.auth_info.rendered
 }
