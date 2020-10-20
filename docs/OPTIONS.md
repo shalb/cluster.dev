@@ -3,6 +3,7 @@
 The section contains a list of options that are set in cluster manifests (yaml files) to configure the clusters.
 
 ## Manifest Example
+
 *For more examples please see the [/.cluster.dev](https://github.com/shalb/cluster.dev/tree/master/.cluster.dev) directory.*
 
 ```yaml
@@ -31,12 +32,12 @@ cluster:
 |------|-----------|--------|---------|----------|----------------------------------------------|
 |[name](#name)  | + | string | any     | | Cluster name to be used across all resources. |
 |[installed](#installed) | - | bool| `false`, `true`| `true`| Defines if the cluster should be deployed or deleted, `false` would delete the existing cluster. |
-|[cloud.provider](#cloud.provider)| + | string | `aws`, `digitalocean` | | Defines a cloud provider. |
-|[cloud.region](#cloud.region)| + | string |  ex: `us-east-1`, `ams3` | | Defines a cloud provider region, in which to create the cluster. |
-|[cloud.availability_zones](#cloud.availability_zones)| - | string | ex:  `us-east-1b`, `us-east-1c`| `cloud.region'a'`,`cloud.region'b'`| Define networks and nodes location inside a single region. Minimum two zones should be defined. Cluster nodes could be spread across different datacenters. Multiple zones provide high availability, however, can lead to cost increase. |
-|[cloud.domain](#cloud.domain)| - | string| FQDN ex: `cluster.dev`, `example.org` | `cluster.dev` | To expose cluster resources, the DNS zone is required. If set to `cluster.dev`, the installer would create a zone `cluster-name-organization.cluster.dev` and point it to your cloud service NS'es. Alternate, you can set your own zone, which already exists in the target cloud. |
-|[cloud.vpc](#cloud.vpc)| - |string|`default`, `create`, `vpc_id`| `default`| Virtual Private Cloud. `default` - use default one, `create` - installer creates a new VPC, `vpc_id` - define an already existent (in AWS tag the networks manually with the "cluster.dev/subnet_type" = "private/public" tags to make them usable). |
-|[cloud.vpc_cidr](#cloud.vpc)| - |string| ex:`10.2.0.0/16`, `192.168.0.0/20`| `10.8.0.0/18`| The CIDR block for the VPC. Cluster pods will use IPs from that pool. If you need peering between VPCs, their CIDRs should be unique. |
+|[provider.type](#provider.type)| + | string | `aws`, `digitalocean` | | Defines a cloud provider. |
+|[provider.region](#provider.region)| + | string |  ex: `us-east-1`, `ams3` | | Defines a cloud provider region, in which to create the cluster. |
+|[provider.availability_zones](#provider.availability_zones)| - | string | ex:  `us-east-1b`, `us-east-1c`| `cloud.region'a'`,`cloud.region'b'`| Define networks and nodes location inside a single region. Minimum two zones should be defined. Cluster nodes could be spread across different datacenters. Multiple zones provide high availability, however, can lead to cost increase. |
+|[provider.domain](#provider.domain)| - | string| FQDN ex: `cluster.dev`, `example.org` | `cluster.dev` | To expose cluster resources, the DNS zone is required. If set to `cluster.dev`, the installer would create a zone `cluster-name-organization.cluster.dev` and point it to your cloud service NS'es. Alternate, you can set your own zone, which already exists in the target cloud. |
+|[provider.vpc](#provider.vpc)| - |string|`default`, `create`, `vpc_id`| `default`| Virtual Private Cloud. `default` - use default one, `create` - installer creates a new VPC, `vpc_id` - define an already existent (in AWS tag the networks manually with the "cluster.dev/subnet_type" = "private/public" tags to make them usable). |
+|[provider.vpc_cidr](#provider.vpc_cidr)| - |string| ex:`10.2.0.0/16`, `192.168.0.0/20`| `10.8.0.0/18`| The CIDR block for the VPC. Cluster pods will use IPs from that pool. If you need peering between VPCs, their CIDRs should be unique. |
 
 
 ## Cluster Provisioners
@@ -45,7 +46,7 @@ cluster:
 
 Required environment variables to be passed to the container:
 
- - `AWS_ACCESS_KEY_ID` - the access key ID required for user programmatic access, see the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
+- `AWS_ACCESS_KEY_ID` - the access key ID required for user programmatic access, see the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
 
 - `AWS_SECRET_ACCESS_KEY` - the secret access key required for user programmatic access.
 
@@ -69,7 +70,7 @@ Required environment variables to be passed to the container:
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.version](#provisioner.version) | + | string | ex:`1.15`, `1.16` | `1.16` | Kubernetes version. |
 | [provisioner.additional_security_group_ids](#provisioner.node_group.additional_security_group_ids) | - | list | ex:`sg-233ba1, sg-2221bb` |  |  A list of additional security group IDs to include in worker launch config. |
-| [provisioner.node_group.name](#provisioner.node_group.name) | + | string | ex:`spot-group`, `on-demand-group` | `node-group` | Name for Kubernetes group of worker nodes. |
+| [provisioner.node_group.name](#provisioner.node_group.name) | - | string | ex:`spot-group`, `on-demand-group` | `node-group` | Name for Kubernetes group of worker nodes. |
 | [provisioner.node_group.type](#provisioner.node_group.type) | - | string | ex:`spot`, `on-demand` | `on-demand` | Type for Kubernetes group of worker nodes. |
 | [provisioner.node_group.instance_type](#provisioner.node_group.instance_type) | - | string | ex:`t3.medium`, `c5.xlarge` | `m5.large` | Size of a Kubernetes worker node. |
 | [provisioner.node_group.asg_desired_capacity](#provisioner.node_group.asg_desired_capacity) | - | integer | `1`..<=`asg_max_size` | `1` | Desired worker capacity in the autoscaling group. |
@@ -84,6 +85,7 @@ Required environment variables to be passed to the container:
 | [provisioner.node_group.on_demand_base_capacity](#provisioner.node_group.on_demand_base_capacity) | - | integer | `0`..`100` | `0` | Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. |
 | [provisioner.node_group.on_demand_percentage_above_base_capacity](#provisioner.node_group.on_demand_percentage_above_base_capacity) | - | integer | `0`..`100` | `0` | Percentage split between on-demand and Spot instances above the base on-demand capacity. |
 
+Advanced parameters can be found [here](https://github.com/terraform-aws-modules/terraform-aws-eks/blob/v12.0.0/local.tf#L34-L95).
 
 ### DigitalOcean Provisioners
 
@@ -97,7 +99,7 @@ The DigitalOcean (DO) provider is used to interact with the resources supported 
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [provisioner.type](#provisioner.type) | + | string | `managed-kubernetes` | | Provisioner to deploy cluster with.|
-| [cloud.project](#cloud.project) | - | string | ex: `staging` | `default` | DigitalOcean Project name.|
+| [provider.project](#provider.project) | - | string | ex: `staging` | `default` | DigitalOcean Project name.|
 
 
 #### DigitalOcean Managed Kubernetes
@@ -114,6 +116,7 @@ The DigitalOcean (DO) provider is used to interact with the resources supported 
 | [maxNodes](#maxNodes) | - | boolean |`1-512` | `1` | If `autoScale` is enabled, defines a maximum number of Droplet instances in the cluster. |
 
 ## Cluster Addons
+
 |  Key |  Required | Type  | Values  | Default  | Description |
 |------|-----------|--------|---------|----------|----------------------------------------------|
 | [nginx-ingress](#nginx-ingress) | - | boolean | `true`,`false` | `true` | Deploy [nginx-ingress](https://github.com/kubernetes/ingress-nginx). |
