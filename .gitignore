@@ -33,3 +33,9 @@ tests/config.sh
 
 .mypy_cache/
 .vscode/.ropeproject/config.py
+
+# Local reconciler run artifacts
+terraform/aws/addons/auth.yaml
+.gitignore
+bin/reconciler
+**/vars-tmp.tfvars.json

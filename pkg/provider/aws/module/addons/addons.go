@@ -70,7 +70,7 @@ func (f *Factory) New(providerConf aws.Config, clusterState *cluster.State) (pro
 	if err != nil {
 		return nil, fmt.Errorf("can't create tmp dir: %s", err.Error())
 	}
-	// Save cube config to tmp file.
+	// Save kube config to tmp file.
 	addons.config.ConfigPath = filepath.Join(addons.tmpDir, "kube_config")
 
 	// Write kube config to file.

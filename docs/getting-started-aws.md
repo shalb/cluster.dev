@@ -2,7 +2,7 @@
 
 ## Deploying to AWS
 
-Create a separate repository for the infrastructure code that will be managed by `cluster.dev` in GitHub. This repo will host code for your clusters, deployments, applications and other resources. Clone the repo locally:
+1. Create a separate repository for the infrastructure code that will be managed by `cluster.dev` in GitHub. This repo will host code for your clusters, deployments, applications and other resources. Clone the repo locally:
 
     ```bash
     git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY

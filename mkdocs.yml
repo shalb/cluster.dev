@@ -22,10 +22,11 @@ nav:
     - Contributing: CONTRIBUTING.md
     - Style-guide: style-guide.md
     - Terraform modules structure: terraform-code-structure.md
-    - Adding a New Provider or Provisioner: add-provider-provisioner.md
     - AWS IAM Permissions: aws-iam-permissions.md
-    - Create a new Release: release-new-version.md
-    - Adding a new docs: add-new-docs.md
+    - How to add a new Provider or Provisioner: add-provider-provisioner.md
+    - How to add a new docs: add-new-docs.md
+    - How to create a new Release: release-new-version.md
+    - How to run reconciler locally: run-reconciler-locally.md
   - Releases:
     - Roadmap: ROADMAP.md
 
