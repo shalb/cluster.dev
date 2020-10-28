@@ -1,6 +1,9 @@
 # How to install:
 # pre-commit install --install-hooks && pre-commit install --install-hooks -t commit-msg
 
+default_language_version:
+  python: python3
+
 # How temporary skip one of hooks: https://pre-commit.com/#temporarily-disabling-hooks
 
 repos:

@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ~0.12
     - uses: lablabs/setup-terraform-docs@v1
       name: Setup Terraform docs
       with:
