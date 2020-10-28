@@ -12,7 +12,7 @@ jobs:
     - uses: lablabs/setup-terraform-docs@v1
       name: Setup Terraform docs
       with:
-        terraform_docs_version: v0.9.1
+        terraform_docs_version: v0.10.1
     - uses: actions/setup-python@v2
       with:
         python-version: '3.8'
