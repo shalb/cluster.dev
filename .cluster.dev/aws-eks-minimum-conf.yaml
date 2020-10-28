@@ -1,0 +1,27 @@
+installed: false
+
+name: dev-eks-minimum-conf
+
+provider:
+  type: aws
+  region: eu-central-1
+
+  provisioner:
+    type: eks
+    version: 1.16
+
+    node_group:
+      - name: spot-group
+        type: spot
+        asg_max_size: 1
+        root_volume_size: 50
+        kubelet_extra_args: --node-labels=node.kubernetes.io/lifecycle=spot
+
+      - name: on-demand-group
+        instance_type: t3.medium
+        asg_max_size: 1
+        root_volume_size: 20
+        kubelet_extra_args: --node-labels=node.kubernetes.io/lifecycle=on-demand
+
+apps:
+  - /kubernetes/apps/samples

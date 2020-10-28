@@ -1,0 +1,20 @@
+installed: false
+
+name: dev-k8s-minimum-conf
+
+provider:
+  type: digitalocean
+  region: ams3
+  vpc_cidr: 10.8.0.0/20
+  domain: do.shalb.org
+
+  provisioner:
+    type: managed-kubernetes
+    version: 1.17
+    maxNodes: 2
+
+#
+# Path to apps that will be managed in GitOps way with ArgoCD.
+#
+apps:
+  - /kubernetes/apps/samples
