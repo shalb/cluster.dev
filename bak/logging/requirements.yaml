@@ -1,4 +1,0 @@
-dependencies:
-- name: graylog
-  version: 1.6.9
-  repository: https://kubernetes-charts.storage.googleapis.com
