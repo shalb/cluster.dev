@@ -1,0 +1,13 @@
+name: "aws"
+kind: backend
+spec:
+  provider: s3
+  bucket: cdev-states
+  region: us-east1
+---
+name: "aws2"
+kind: backend
+spec:
+  provider: s3
+  bucket: cdev-states2
+  region: us-east2

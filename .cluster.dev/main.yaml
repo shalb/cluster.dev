@@ -1,0 +1,46 @@
+name: infra-dev
+template: "templates/infra.tmpl"
+kind: infrastructure
+backend: aws
+variables:
+  region: eu-central-1
+  organization: "shalb"
+  domain: shalb.com
+  env: "dev"
+  vpc_cidr: "10.8.0.0/18"
+  vpc: {{ remoteState "infra-dev.vpc.id" }}
+  dep53: {{ remoteState "common.gcr.registry_url" }}
+  azs:
+    - "eu-central-1a"
+    - "eu-central-1b"
+  node_group:
+    - name: dsdsd
+      type: sadasd
+      asg_max_size: 1
+  registry: {{ remoteState "common.gcr.registry_url" }}
+---
+name: infra-prod
+template: "templates/infra.tmpl"
+kind: infrastructure
+backend: aws
+variables:
+  region: us-east-1
+  organization: "shalb"
+  domain: shalb.com
+  env: "stage"
+  vpc_cidr: "10.8.0.0/18"
+  vpc: default
+  dep53: {{ remoteState "common.gcr.registry_url" }}
+  azs:
+    - "us-east-1a"
+    - "us-east-1b"
+  node_group:
+    - name: spot-group
+      type: spot
+      asg_max_size: 1
+    - name: on-demand-group
+      instance_type: {{ remoteState "infra-dev.vpc.id" }}
+      asg_max_size: 1
+      root_volume_size: 20
+  registry: {{ remoteState "common.gcr.registry_url" }}
+

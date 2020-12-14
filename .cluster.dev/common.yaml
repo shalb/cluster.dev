@@ -1,0 +1,10 @@
+name: common
+kind: infrastructure
+template: "templates/gcr.tmpl"
+backend: aws
+variables:
+  region: eu-central-1
+  organization: "bedrock"
+  domain: example.com
+  env: ops
+  dep: dd
