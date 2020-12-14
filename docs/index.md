@@ -2,7 +2,7 @@
 
 ## What is it?
 
-Cluster.dev is the cloud-native infrastructure orchestration framework. It is an open-source system delivered as a runtime inside Docker container.  
+Cluster.dev is the cloud native infrastructure orchestration framework. It is an open source system delivered as a runtime inside Docker container.  
 
 It is used for creating and managing Kubernetes clusters along with cloud resources like networks, domains and users with pre-defined Terraform modules.
 The orchestration is performed with simple manifests by GitOps approach and is designed to run inside the GitHub/GitLab/BitBucket pipelines.  
