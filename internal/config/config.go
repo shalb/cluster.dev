@@ -26,6 +26,7 @@ type ConfSpec struct {
 	ClusterConfig      string
 	Version            string
 	Build              string
+	OnlyPrintVersion   bool
 }
 
 // Global config for executor.
@@ -38,6 +39,8 @@ func init() {
 	// Read debug option ( --debug )
 	flag.StringVar(&Global.LogLevel, "log-level", getEnv("VERBOSE_LVL", "info"), "Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")")
 	flag.StringVar(&Global.ClusterConfig, "config", "", "Define cluster config. If empty - reconciler will use all configs by mask ./cluster.dev/*.yaml .")
+	flag.BoolVar(&Global.OnlyPrintVersion, "version", false, "Print binary version tag.")
+
 	curPath, err := os.Getwd()
 	Global.Version = Version
 	Global.Build = Build
