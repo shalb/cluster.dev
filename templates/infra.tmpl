@@ -22,6 +22,7 @@ modules:
     source: github.com/shalb/cluster.dev/terraform/aws/instance?ref={{ ReconcilerVersionTag }}
     inputs:
       registry: {{ .variables.registry }}
+      reg2: {{ .variables.registry }}
   - name: sdasd
     type: terraform
     source: github.com/shalb/cluster.dev/terraform/aws/eks?ref={{ ReconcilerVersionTag }}

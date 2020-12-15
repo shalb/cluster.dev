@@ -72,7 +72,13 @@ func (m *Module) GenBackendCodeBlockHCL() ([]byte, error) {
 
 func (m *Module) GetDepsRemoteStatesHCL() ([]byte, error) {
 	var res []byte
+	depsUniq := map[*Module]bool{}
+
 	for _, dep := range m.Dependencies {
+		if _, ok := depsUniq[dep.Module]; ok {
+			continue
+		}
+		depsUniq[dep.Module] = true
 		rs, err := dep.Module.GetRemoteStateToSelfHCL()
 		if err != nil {
 			return nil, err
