@@ -70,12 +70,6 @@ func (m *Module) GenBackendCodeBlockHCL() ([]byte, error) {
 	return res, nil
 }
 
-type backendConfigSpec struct {
-	Bucket string `hcl:"bucket"`
-	Key    string `hcl:"key"`
-	Region string `hcl:"region"`
-}
-
 func (m *Module) GetDepsRemoteStatesHCL() ([]byte, error) {
 	var res []byte
 	for _, dep := range m.Dependencies {

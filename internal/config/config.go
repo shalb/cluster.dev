@@ -9,6 +9,12 @@ import (
 	"github.com/apex/log"
 )
 
+// Version - git tag from compiller
+var Version string
+
+// Build - build date from compiller
+var Build string
+
 // ConfSpec type for global config.
 type ConfSpec struct {
 	GitProvider        string
@@ -18,6 +24,8 @@ type ConfSpec struct {
 	LogLevel           string
 	ProjectRoot        string
 	ClusterConfig      string
+	Version            string
+	Build              string
 }
 
 // Global config for executor.
@@ -31,6 +39,8 @@ func init() {
 	flag.StringVar(&Global.LogLevel, "log-level", getEnv("VERBOSE_LVL", "info"), "Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")")
 	flag.StringVar(&Global.ClusterConfig, "config", "", "Define cluster config. If empty - reconciler will use all configs by mask ./cluster.dev/*.yaml .")
 	curPath, err := os.Getwd()
+	Global.Version = Version
+	Global.Build = Build
 	if err != nil {
 		log.Fatalf("Failed to get current directory: %s", err.Error())
 	}

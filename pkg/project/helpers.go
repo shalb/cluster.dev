@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+
+	"github.com/shalb/cluster.dev/internal/config"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -24,7 +26,7 @@ func createMarker(t string) string {
 }
 
 func printVersion() string {
-	return "master"
+	return config.Global.Version
 }
 
 func removeDirContent(dir string) error {
