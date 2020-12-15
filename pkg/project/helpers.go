@@ -1,4 +1,4 @@
-package reconciler
+package project
 
 import (
 	"fmt"
@@ -44,4 +44,13 @@ func removeDirContent(dir string) error {
 		}
 	}
 	return nil
+}
+
+func findModule(infra, name string, modsList map[string]*Module) *Module {
+	mod, exists := modsList[fmt.Sprintf("%s.%s", infra, name)]
+	// log.Printf("Check Mod: %s, exists: %v, list %v", name, exists, modsList)
+	if !exists {
+		return nil
+	}
+	return mod
 }

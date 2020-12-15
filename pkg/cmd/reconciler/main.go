@@ -7,15 +7,14 @@ import (
 	"github.com/apex/log"
 
 	"github.com/shalb/cluster.dev/internal/config"
+	"github.com/shalb/cluster.dev/pkg/project"
 )
 
 // Run main process.
 func Run() {
 	manifests := getManifests(config.Global.ClusterConfigsPath)
-	// for _, cManifest := range manifests {
-	// 	log.Info(string(cManifest))
-	// }
-	project, err := NewProject(manifests)
+
+	project, err := project.NewProject(manifests)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

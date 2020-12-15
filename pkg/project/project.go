@@ -1,4 +1,4 @@
-package reconciler
+package project
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ type Project struct {
 	InsertYAMLMarkers map[string]interface{}
 	Infrastructures   map[string]*Infrastructure
 	TmplFunctionsMap  template.FuncMap
-	Backends          map[string]*Backend
+	Backends          map[string]Backend
 }
 
 type DependencyMarker struct {
@@ -38,7 +38,7 @@ func NewProject(configs [][]byte) (*Project, error) {
 		InsertYAMLMarkers: map[string]interface{}{},
 		Infrastructures:   map[string]*Infrastructure{},
 		Modules:           map[string]*Module{},
-		Backends:          map[string]*Backend{},
+		Backends:          map[string]Backend{},
 	}
 
 	fMap := template.FuncMap{
@@ -211,9 +211,15 @@ func (p *Project) appendModules() error {
 			if !ok {
 				return fmt.Errorf("Incorrect module inputs")
 			}
+
+			bPtr, exists := p.Backends[infra.BackendName]
+			if !exists {
+				return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
+			}
 			mod := Module{
 				InfraPtr:     infra,
 				ProjectPtr:   p,
+				BackendPtr:   bPtr,
 				Name:         mName.(string),
 				Type:         mType.(string),
 				Source:       mSource.(string),
@@ -260,6 +266,7 @@ func (p *Project) GenCode(codeStructName string) error {
 		}
 	}
 	codeDir := filepath.Join(baseOutDir, codeStructName)
+	log.Debugf("Creates code directory: '%v'", codeDir)
 	if _, err := os.Stat(codeDir); os.IsNotExist(err) {
 		err := os.Mkdir(codeDir, 0755)
 		if err != nil {
@@ -273,33 +280,37 @@ func (p *Project) GenCode(codeStructName string) error {
 	}
 	for mName, module := range p.Modules {
 		modDir := filepath.Join(codeDir, mName)
+		log.Debugf("Processing module '%v' directory: '%v'", mName, modDir)
 		err := os.Mkdir(modDir, 0755)
 		if err != nil {
 			return err
 		}
 
+		tfFile := filepath.Join(modDir, "main.tf")
+
+		log.Debugf(" file: '%v'", tfFile)
 		codeBlock, err := module.GenMainCodeBlockHCL()
 		if err != nil {
 			log.Fatal(err.Error())
 			return err
 		}
-
-		tfFile := filepath.Join(modDir, "main.tf")
 		ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
 
-		codeBlock, err = module.GenBackendCodeBlockHCL(codeStructName)
+		tfFile = filepath.Join(modDir, "init.tf")
+		log.Debugf(" file: '%v'", tfFile)
+		codeBlock, err = module.GenBackendCodeBlockHCL()
 		if err != nil {
 			return err
 		}
 
-		tfFile = filepath.Join(modDir, "init.tf")
 		ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
-		codeBlock, err = module.GenRemoteStateCodeBlockHCL(codeStructName)
+		codeBlock, err = module.GetDepsRemoteStatesHCL()
 		if err != nil {
 			return err
 		}
 		if len(codeBlock) > 1 {
 			tfFile = filepath.Join(modDir, "remote_state.tf")
+			log.Debugf(" file: '%v'", tfFile)
 			ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
 		}
 	}

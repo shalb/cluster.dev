@@ -1,4 +1,4 @@
-package reconciler
+package project
 
 import (
 	"fmt"
@@ -14,6 +14,7 @@ import (
 type Module struct {
 	InfraPtr     *Infrastructure
 	ProjectPtr   *Project
+	BackendPtr   Backend
 	Name         string
 	Type         string
 	Source       string
@@ -60,95 +61,35 @@ func (m *Module) GenMainCodeBlockHCL() ([]byte, error) {
 
 }
 
-func (m *Module) GenBackendCodeBlockHCL(name string) ([]byte, error) {
-	type BackendSpec struct {
-		Bucket string `hcl:"bucket"`
-		Key    string `hcl:"key"`
-		Region string `hcl:"region"`
-	}
+func (m *Module) GenBackendCodeBlockHCL() ([]byte, error) {
 
-	type BackendConfig struct {
-		BlockKey    string `hcl:",key"`
-		BackendSpec `hcl:",squash"`
+	res, err := m.BackendPtr.GetBackendHCL(*m)
+	if err != nil {
+		return nil, err
 	}
-
-	type Terraform struct {
-		Backend BackendConfig `hcl:"backend"`
-		ReqVer  string        `hcl:"required_version"`
-	}
-
-	type Config struct {
-		TfBlock Terraform `hcl:"terraform"`
-	}
-
-	bSpeck := BackendSpec{
-		Bucket: name,
-		Key:    fmt.Sprintf("%s/%s", m.InfraPtr.Name, m.Name),
-		Region: "us-east1",
-	}
-
-	tf := Terraform{
-		Backend: BackendConfig{
-			BlockKey:    "s3",
-			BackendSpec: bSpeck,
-		},
-		ReqVer: "~> 0.13",
-	}
-
-	input := Config{
-		TfBlock: tf,
-	}
-	return hclencoder.Encode(input)
-
+	return res, nil
 }
 
-func (m *Module) GenRemoteStateCodeBlockHCL(name string) ([]byte, error) {
+type backendConfigSpec struct {
+	Bucket string `hcl:"bucket"`
+	Key    string `hcl:"key"`
+	Region string `hcl:"region"`
+}
 
-	type BackendSpec struct {
-		Bucket string `hcl:"bucket"`
-		Key    string `hcl:"key"`
-		Region string `hcl:"region"`
-	}
-
-	type Data struct {
-		KeyRemState  string      `hcl:",key"`
-		KeyStateName string      `hcl:",key"`
-		Backend      string      `hcl:"backend"`
-		Config       BackendSpec `hcl:"config"`
-	}
-
-	type Config struct {
-		TfBlock []Data `hcl:"data"`
-	}
-
-	input := Config{}
-
+func (m *Module) GetDepsRemoteStatesHCL() ([]byte, error) {
+	var res []byte
 	for _, dep := range m.Dependencies {
-		tf := Data{
-			KeyRemState:  "terraform_remote_state",
-			KeyStateName: fmt.Sprintf("%s-%s", dep.Module.InfraPtr.Name, dep.Module.Name),
-			Config: BackendSpec{
-				Bucket: name,
-				Key:    fmt.Sprintf("%s/%s", dep.Module.InfraPtr.Name, dep.Module.Name),
-				Region: "us-east1",
-			},
-			Backend: "s3",
+		rs, err := dep.Module.GetRemoteStateToSelfHCL()
+		if err != nil {
+			return nil, err
 		}
-
-		input.TfBlock = append(input.TfBlock, tf)
+		res = append(res, rs...)
 	}
-
-	return hclencoder.Encode(input)
-
+	return res, nil
 }
 
-func findModule(infra, name string, modsList map[string]*Module) *Module {
-	mod, exists := modsList[fmt.Sprintf("%s.%s", infra, name)]
-	// log.Printf("Check Mod: %s, exists: %v, list %v", name, exists, modsList)
-	if !exists {
-		return nil
-	}
-	return mod
+func (m *Module) GetRemoteStateToSelfHCL() ([]byte, error) {
+	return m.BackendPtr.GetBackendHCL(*m)
 }
 
 func (m *Module) checkDependMarker(data reflect.Value) (reflect.Value, error) {
@@ -169,6 +110,7 @@ func (m *Module) checkDependMarker(data reflect.Value) (reflect.Value, error) {
 				Output: marker.Output,
 			})
 			remoteStateRef := fmt.Sprintf("${data.terraform_remote_state.%s-%s.%s}", marker.InfraName, marker.ModuleName, marker.Output)
+			// log.Debugf("Module: %v\nDep: %v", depModule, remoteStateRef)
 			replacer := strings.NewReplacer(key, remoteStateRef)
 			resString = replacer.Replace(resString)
 			return reflect.ValueOf(resString), nil

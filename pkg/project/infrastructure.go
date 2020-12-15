@@ -1,4 +1,4 @@
-package reconciler
+package project
 
 import (
 	"bytes"
@@ -8,10 +8,10 @@ import (
 )
 
 type Infrastructure struct {
-	Name      string
-	Backend   string
-	Template  []byte
-	Variables map[string]interface{}
+	Name        string
+	BackendName string
+	Template    []byte
+	Variables   map[string]interface{}
 }
 
 func (g *Project) readInfrastructureObj(obj map[string]interface{}) error {
@@ -56,7 +56,7 @@ func (g *Project) readInfrastructureObj(obj map[string]interface{}) error {
 	infra.Template = tmpl.Bytes()
 
 	// Read backend name.
-	infra.Backend, ok = obj["backend"].(string)
+	infra.BackendName, ok = obj["backend"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'provider'")
 	}
