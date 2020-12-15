@@ -12,7 +12,6 @@ modules:
     type: terraform
     source: github.com/shalb/cluster.dev/terraform/aws/vpc?ref={{ ReconcilerVersionTag }}
     inputs:
-      vpc_id: {{ .variables.vpc }}
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
       domain: {{ remoteState "this.route53.common_domain" }}
@@ -23,7 +22,7 @@ modules:
     inputs:
       registry: {{ .variables.registry }}
       reg2: {{ .variables.registry }}
-  - name: sdasd
+  - name: addons
     type: terraform
     source: github.com/shalb/cluster.dev/terraform/aws/eks?ref={{ ReconcilerVersionTag }}
     inputs:

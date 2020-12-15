@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 )
 
-type Infrastructure struct {
+type infrastructure struct {
 	Name        string
 	BackendName string
 	Template    []byte
@@ -24,7 +24,7 @@ func (g *Project) readInfrastructureObj(obj map[string]interface{}) error {
 		return fmt.Errorf("Duplicate infrastructure name '%s'", name)
 	}
 
-	infra := Infrastructure{}
+	infra := infrastructure{}
 	tmplFileName, ok := obj["template"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'template'")

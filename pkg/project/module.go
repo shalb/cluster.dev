@@ -11,8 +11,9 @@ import (
 	"github.com/rodaine/hclencoder"
 )
 
+// Module - describe module.
 type Module struct {
-	InfraPtr     *Infrastructure
+	InfraPtr     *infrastructure
 	ProjectPtr   *Project
 	BackendPtr   Backend
 	Name         string
@@ -22,11 +23,13 @@ type Module struct {
 	Dependencies []Dependency
 }
 
+// Dependency describe module dependency.
 type Dependency struct {
 	Module *Module
 	Output string
 }
 
+// GenMainCodeBlockHCL generate main code block for this module.
 func (m *Module) GenMainCodeBlockHCL() ([]byte, error) {
 	type ModuleVars map[string]interface{}
 
@@ -61,7 +64,8 @@ func (m *Module) GenMainCodeBlockHCL() ([]byte, error) {
 
 }
 
-func (m *Module) GenBackendCodeBlockHCL() ([]byte, error) {
+// GenBackendCodeBlock generate backend code block for this module.
+func (m *Module) GenBackendCodeBlock() ([]byte, error) {
 
 	res, err := m.BackendPtr.GetBackendHCL(*m)
 	if err != nil {
@@ -70,7 +74,8 @@ func (m *Module) GenBackendCodeBlockHCL() ([]byte, error) {
 	return res, nil
 }
 
-func (m *Module) GetDepsRemoteStatesHCL() ([]byte, error) {
+// GenDepsRemoteStates generate terraform remote states for all dependencies of this module.
+func (m *Module) GenDepsRemoteStates() ([]byte, error) {
 	var res []byte
 	depsUniq := map[*Module]bool{}
 
@@ -79,7 +84,7 @@ func (m *Module) GetDepsRemoteStatesHCL() ([]byte, error) {
 			continue
 		}
 		depsUniq[dep.Module] = true
-		rs, err := dep.Module.GetRemoteStateToSelfHCL()
+		rs, err := dep.Module.GenRemoteStateToSelf()
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +93,8 @@ func (m *Module) GetDepsRemoteStatesHCL() ([]byte, error) {
 	return res, nil
 }
 
-func (m *Module) GetRemoteStateToSelfHCL() ([]byte, error) {
+// GenRemoteStateToSelf - remote state block generate terraform code. It's remote state !to this module! witch should be used in another module depend of this.
+func (m *Module) GenRemoteStateToSelf() ([]byte, error) {
 	return m.BackendPtr.GetRemoteStateHCL(*m)
 }
 

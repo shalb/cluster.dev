@@ -104,7 +104,6 @@ func (b *BackendS3) GetRemoteStateHCL(module project.Module) ([]byte, error) {
 	}
 
 	input := Config{}
-	log.Debugf("%v-%v", module.Name, module.InfraPtr.Name)
 	tf := Data{
 		KeyRemState:  "terraform_remote_state",
 		KeyStateName: fmt.Sprintf("%s-%s", module.InfraPtr.Name, module.Name),

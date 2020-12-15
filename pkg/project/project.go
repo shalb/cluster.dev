@@ -19,11 +19,12 @@ type Project struct {
 	Modules           map[string]*Module
 	DependencyMarkers map[string]DependencyMarker
 	InsertYAMLMarkers map[string]interface{}
-	Infrastructures   map[string]*Infrastructure
+	Infrastructures   map[string]*infrastructure
 	TmplFunctionsMap  template.FuncMap
 	Backends          map[string]Backend
 }
 
+// DependencyMarker - marker for template function AddDepMarker. Represent module dependency (remote state).
 type DependencyMarker struct {
 	InfraName  string
 	ModuleName string
@@ -36,7 +37,7 @@ func NewProject(configs [][]byte) (*Project, error) {
 	project := &Project{
 		DependencyMarkers: map[string]DependencyMarker{},
 		InsertYAMLMarkers: map[string]interface{}{},
-		Infrastructures:   map[string]*Infrastructure{},
+		Infrastructures:   map[string]*infrastructure{},
 		Modules:           map[string]*Module{},
 		Backends:          map[string]Backend{},
 	}
@@ -103,16 +104,28 @@ func (p *Project) readObject(obj map[string]interface{}) error {
 	return fmt.Errorf("Unknown object kind '%s'", objKind)
 }
 
-// func (p *Project) checkDependencies() error {
-// 	for _, mod := range p.Modules {
-// 		for _, dep := range mod.Dependencies {
-// 			if findModule(dep.Infra, dep.Module, p.Modules) == nil {
-// 				return fmt.Errorf("module: '%s.%s': dependency not found: '%s.%s'", mod.InfraPtr.Name, mod.Name, dep.Infra, dep.Module)
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }
+func (p *Project) checkGraph() error {
+	errDepth := 15
+	for _, mod := range p.Modules {
+		if ok := checkDependenciesRecursive(*mod, errDepth); !ok {
+			return fmt.Errorf("Unresolved dependency in module %v.%v", mod.InfraPtr.Name, mod.Name)
+		}
+	}
+	return nil
+}
+
+func checkDependenciesRecursive(mod Module, errDepth int) bool {
+	if errDepth == 0 {
+		return false
+	}
+	// log.Debugf("Mod: %v, depth: %v", mod.Name, errDepth)
+	for _, dep := range mod.Dependencies {
+		if ok := checkDependenciesRecursive(*dep.Module, errDepth-1); !ok {
+			return false
+		}
+	}
+	return true
+}
 
 // func (p *Project) checkGraph() error {
 
@@ -157,6 +170,7 @@ func (p *Project) readObject(obj map[string]interface{}) error {
 // 	return nil
 // }
 
+// AddDepMarker function for template. Add hash marker, witch will be replaced with desired remote state.
 func (p *Project) AddDepMarker(path string) (string, error) {
 	splittedPath := strings.Split(path, ".")
 	if len(splittedPath) != 3 {
@@ -173,6 +187,7 @@ func (p *Project) AddDepMarker(path string) (string, error) {
 	return fmt.Sprintf("%s", marker), nil
 }
 
+// AddYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
 func (p *Project) AddYAMLBlockMarker(data interface{}) (string, error) {
 	marker := createMarker("YAML")
 	p.InsertYAMLMarkers[marker] = data
@@ -180,7 +195,6 @@ func (p *Project) AddYAMLBlockMarker(data interface{}) (string, error) {
 }
 
 func (p *Project) appendModules() error {
-
 	// Read modules from all infrastructures.
 	for infraName, infra := range p.Infrastructures {
 		infrastructureTemplate := make(map[string]interface{})
@@ -253,10 +267,14 @@ func (p *Project) appendModules() error {
 			}
 		}
 	}
-
+	log.Debug("Check modules dependencies...")
+	if err := p.checkGraph(); err != nil {
+		return err
+	}
 	return nil
 }
 
+// GenCode generate all terraform code for project.
 func (p *Project) GenCode(codeStructName string) error {
 	baseOutDir := filepath.Join("./", ".outputs")
 	if _, err := os.Stat(baseOutDir); os.IsNotExist(err) {
@@ -298,13 +316,13 @@ func (p *Project) GenCode(codeStructName string) error {
 
 		tfFile = filepath.Join(modDir, "init.tf")
 		log.Debugf(" file: '%v'", tfFile)
-		codeBlock, err = module.GenBackendCodeBlockHCL()
+		codeBlock, err = module.GenBackendCodeBlock()
 		if err != nil {
 			return err
 		}
 
 		ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
-		codeBlock, err = module.GetDepsRemoteStatesHCL()
+		codeBlock, err = module.GenDepsRemoteStates()
 		if err != nil {
 			return err
 		}

@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Backend interface for backend provider.
 type Backend interface {
 	Name() string
 	Provider() string
@@ -13,10 +14,12 @@ type Backend interface {
 	GetRemoteStateHCL(Module) ([]byte, error)
 }
 
+// BackendsFactory - interface for backend provider factory. New() creates backend.
 type BackendsFactory interface {
 	New([]byte, string) (Backend, error)
 }
 
+// RegisterBackendFactory - register factory of some provider (like s3) in map.
 func RegisterBackendFactory(f BackendsFactory, provider string) error {
 	if _, exists := BackendsFactories[provider]; exists {
 		return fmt.Errorf("backend with provider name '%v' already exists", provider)
@@ -25,6 +28,7 @@ func RegisterBackendFactory(f BackendsFactory, provider string) error {
 	return nil
 }
 
+// BackendsFactories map of backend providers factories. Use BackendsFactories["prov_name"].New() to create backend of provider 'prov_name'
 var BackendsFactories = map[string]BackendsFactory{}
 
 func (g *Project) readBackendObj(obj map[string]interface{}) error {
