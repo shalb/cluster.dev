@@ -83,7 +83,7 @@ func (m *Module) GetDepsRemoteStatesHCL() ([]byte, error) {
 }
 
 func (m *Module) GetRemoteStateToSelfHCL() ([]byte, error) {
-	return m.BackendPtr.GetBackendHCL(*m)
+	return m.BackendPtr.GetRemoteStateHCL(*m)
 }
 
 func (m *Module) checkDependMarker(data reflect.Value) (reflect.Value, error) {
