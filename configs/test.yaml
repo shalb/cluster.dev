@@ -1,0 +1,17 @@
+name: infra-dev
+template: "templates/test.tmpl"
+kind: infrastructure
+backend: aws
+variables:
+  region: eu-central-1
+  availability_zones:
+    - eu-central-1a
+    - eu-central-1b
+  instance_type: t3.nano
+---
+name: aws
+kind: backend
+provider: s3
+spec:
+  bucket: new-cluster-dev
+  region: eu-central-1

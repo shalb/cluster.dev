@@ -26,6 +26,8 @@ type ConfSpec struct {
 	ClusterConfig      string
 	Version            string
 	Build              string
+	TmpDir             string
+	WorkingDir         string
 	OnlyPrintVersion   bool
 }
 
@@ -42,12 +44,15 @@ func init() {
 	flag.BoolVar(&Global.OnlyPrintVersion, "version", false, "Print binary version tag.")
 
 	curPath, err := os.Getwd()
-	Global.Version = Version
-	Global.Build = Build
 	if err != nil {
 		log.Fatalf("Failed to get current directory: %s", err.Error())
 	}
-	Global.ClusterConfigsPath = filepath.Join(curPath, ".cluster.dev")
+	Global.WorkingDir = curPath
+	Global.Version = Version
+	Global.Build = Build
+
+	Global.ClusterConfigsPath = filepath.Join(curPath, "configs")
+	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
 	// Parse args.
 	flag.Parse()
 

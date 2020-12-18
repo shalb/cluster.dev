@@ -11,17 +11,22 @@ import (
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 	"gopkg.in/yaml.v3"
 )
+
+// Modules that can be running in parallel.
+type ModulesPack []*Module
 
 // Project describes main config with user-defined variables.
 type Project struct {
 	Modules           map[string]*Module
-	DependencyMarkers map[string]DependencyMarker
+	DependencyMarkers map[string]*DependencyMarker
 	InsertYAMLMarkers map[string]interface{}
 	Infrastructures   map[string]*infrastructure
 	TmplFunctionsMap  template.FuncMap
 	Backends          map[string]Backend
+	DeploySequence    []ModulesPack
 }
 
 // DependencyMarker - marker for template function AddDepMarker. Represent module dependency (remote state).
@@ -35,7 +40,7 @@ type DependencyMarker struct {
 func NewProject(configs [][]byte) (*Project, error) {
 
 	project := &Project{
-		DependencyMarkers: map[string]DependencyMarker{},
+		DependencyMarkers: map[string]*DependencyMarker{},
 		InsertYAMLMarkers: map[string]interface{}{},
 		Infrastructures:   map[string]*infrastructure{},
 		Modules:           map[string]*Module{},
@@ -127,48 +132,58 @@ func checkDependenciesRecursive(mod Module, errDepth int) bool {
 	return true
 }
 
-// func (p *Project) checkGraph() error {
+func (p *Project) buildDeploySequence() error {
 
-// 	modDone := map[string]*Module{}
-// 	modWait := map[string]*Module{}
+	modDone := map[string]*Module{}
+	modWait := map[string]*Module{}
 
-// 	for _, mod := range p.Modules {
-// 		modWait[fmt.Sprintf("%s.%s", mod.InfraPtr.Name, mod.Name)] = mod
-// 	}
-// 	for c := 1; c < 20; c++ {
-// 		doneLen := len(modDone)
-// 		for _, mod := range modWait {
-// 			modIndex := fmt.Sprintf("%s.%s", mod.InfraPtr.Name, mod.Name)
-// 			if len(mod.Dependencies) == 0 {
+	for _, mod := range p.Modules {
+		modWait[fmt.Sprintf("%s.%s", mod.InfraPtr.Name, mod.Name)] = mod
+	}
+	res := []ModulesPack{}
+	for c := 1; c < 20; c++ {
+		doneLen := len(modDone)
+		modPack := ModulesPack{}
+		modIterDone := map[string]*Module{}
+		for _, mod := range modWait {
+			modIndex := fmt.Sprintf("%s.%s", mod.InfraPtr.Name, mod.Name)
+			if len(mod.Dependencies) == 0 {
 
-// 				log.Infof("Mod '%s' done (%d)", modIndex, c)
-// 				modDone[modIndex] = mod
-// 				delete(modWait, modIndex)
-// 				continue
-// 			}
-// 			var allDepsDone bool = true
-// 			for _, dep := range mod.Dependencies {
-// 				if findModule(dep.Infra, dep.Module, modDone) == nil {
-// 					allDepsDone = false
-// 					break
-// 				}
-// 			}
-// 			if allDepsDone {
-// 				log.Infof("Mod '%s' with deps %v done (%d)", modIndex, mod.Dependencies, c)
-// 				modDone[modIndex] = mod
-// 				delete(modWait, modIndex)
-// 			}
-// 		}
-// 		if doneLen == len(modDone) {
-// 			log.Fatalf("Unresolved dependency %v", modWait)
-// 			return fmt.Errorf("Unresolved dependency %v", modWait)
-// 		}
-// 		if len(modWait) == 0 {
-// 			return nil
-// 		}
-// 	}
-// 	return nil
-// }
+				log.Infof("Mod '%s' done (%d)", modIndex, c)
+				modIterDone[modIndex] = mod
+				delete(modWait, modIndex)
+				modPack = append(modPack, mod)
+				continue
+			}
+			var allDepsDone bool = true
+			for _, dep := range mod.Dependencies {
+				if findModule(*dep.Module, modDone) == nil {
+					allDepsDone = false
+					break
+				}
+			}
+			if allDepsDone {
+				log.Infof("Mod '%s' with deps %v done (%d)", modIndex, mod.Dependencies, c)
+				modIterDone[modIndex] = mod
+				delete(modWait, modIndex)
+				modPack = append(modPack, mod)
+			}
+		}
+		for k, v := range modIterDone {
+			modDone[k] = v
+		}
+		res = append(res, modPack)
+		p.DeploySequence = res
+		if doneLen == len(modDone) {
+			log.Fatalf("Unresolved dependency %v", modWait)
+			return fmt.Errorf("Unresolved dependency %v", modWait)
+		}
+		if len(modWait) == 0 {
+			return nil
+		}
+	}
+	return nil
+}
 
 // AddDepMarker function for template. Add hash marker, witch will be replaced with desired remote state.
 func (p *Project) AddDepMarker(path string) (string, error) {
@@ -182,7 +197,7 @@ func (p *Project) AddDepMarker(path string) (string, error) {
 		Output:     splittedPath[2],
 	}
 	marker := createMarker("DEP")
-	p.DependencyMarkers[marker] = dep
+	p.DependencyMarkers[marker] = &dep
 
 	return fmt.Sprintf("%s", marker), nil
 }
@@ -239,6 +254,7 @@ func (p *Project) appendModules() error {
 				Source:       mSource.(string),
 				Inputs:       map[string]interface{}{},
 				Dependencies: []Dependency{},
+				Outputs:      map[string]bool{},
 			}
 			inputs := mInputs.(map[string]interface{})
 			//log.Debugf("%+v", p.Modules)
@@ -256,27 +272,29 @@ func (p *Project) appendModules() error {
 			return err
 		}
 		modStringCheck := fmt.Sprintf("%+v", mod)
-		for marker := range p.DependencyMarkers {
-			if strings.Contains(modStringCheck, marker) {
-				log.Fatalf("Unprocessed remote state pointer found in module '%s.%s', template function remoteState can only be used as a yaml value or a part of yaml value.", mod.InfraPtr.Name, mod.Name)
-			}
-		}
+		// for marker := range p.DependencyMarkers {
+		// 	if strings.Contains(modStringCheck, marker) {
+		// 		log.Fatalf("Unprocessed remote state pointer found in module '%s.%s', template function remoteState can only be used as a yaml value or a part of yaml value.", mod.InfraPtr.Name, mod.Name)
+		// 	}
+		// }
 		for marker := range p.InsertYAMLMarkers {
 			if strings.Contains(modStringCheck, marker) {
 				log.Fatalf("Unprocessed yaml block pointer found in module '%s.%s', template function insertYAML can only be used as a yaml value for module inputs.", mod.InfraPtr.Name, mod.Name)
 			}
 		}
 	}
+
 	log.Debug("Check modules dependencies...")
 	if err := p.checkGraph(); err != nil {
 		return err
 	}
+	p.buildDeploySequence()
 	return nil
 }
 
 // GenCode generate all terraform code for project.
 func (p *Project) GenCode(codeStructName string) error {
-	baseOutDir := filepath.Join("./", ".outputs")
+	baseOutDir := config.Global.TmpDir
 	if _, err := os.Stat(baseOutDir); os.IsNotExist(err) {
 		err := os.Mkdir(baseOutDir, 0755)
 		if err != nil {
@@ -303,36 +321,131 @@ func (p *Project) GenCode(codeStructName string) error {
 		if err != nil {
 			return err
 		}
-
+		// Create main.tf
 		tfFile := filepath.Join(modDir, "main.tf")
-
 		log.Debugf(" file: '%v'", tfFile)
 		codeBlock, err := module.GenMainCodeBlockHCL()
 		if err != nil {
 			log.Fatal(err.Error())
 			return err
 		}
+		if p.checkContainsMarkers(string(codeBlock)) {
+			log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (module block). Template function remoteState can only be used as a yaml value or a part of yaml value.", module.InfraPtr.Name, module.Name)
+		}
 		ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
-
+		if err != nil {
+			return err
+		}
+		// Create init.tf
 		tfFile = filepath.Join(modDir, "init.tf")
 		log.Debugf(" file: '%v'", tfFile)
 		codeBlock, err = module.GenBackendCodeBlock()
 		if err != nil {
 			return err
 		}
-
+		if p.checkContainsMarkers(string(codeBlock)) {
+			log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (backend block). Template function remoteState can only be used as a yaml value or a part of yaml value.", module.InfraPtr.Name, module.Name)
+		}
 		ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		// Create remote_state.tf
 		codeBlock, err = module.GenDepsRemoteStates()
 		if err != nil {
 			return err
 		}
 		if len(codeBlock) > 1 {
 			tfFile = filepath.Join(modDir, "remote_state.tf")
+			if p.checkContainsMarkers(string(codeBlock)) {
+				log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (remote states block). Template function remoteState can only be used as a yaml value or a part of yaml value.", module.InfraPtr.Name, module.Name)
+			}
 			log.Debugf(" file: '%v'", tfFile)
 			ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
+			if err != nil {
+				return err
+			}
+		}
+		// Create outputs.tf
+		codeBlock, err = module.GenOutputsBlock()
+		if err != nil {
+			return err
+		}
+		if len(codeBlock) > 1 {
+			tfFile = filepath.Join(modDir, "outputs.tf")
+			if p.checkContainsMarkers(string(codeBlock)) {
+				log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (output block). Template function remoteState can only be used as a yaml value or a part of yaml value.", module.InfraPtr.Name, module.Name)
+			}
+			log.Debugf(" file: '%v'", tfFile)
+			ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	script, err := p.generateScriptApply()
+	if err != nil {
+		return err
+	}
+	scriptFile := filepath.Join(codeDir, "apply.sh")
+	ioutil.WriteFile(scriptFile, []byte(script), 0777)
+	if err != nil {
+		return err
+	}
+	script, err = p.generateScriptDestroy()
+	if err != nil {
+		return err
+	}
+	scriptFile = filepath.Join(codeDir, "destroy.sh")
+	ioutil.WriteFile(scriptFile, []byte(script), 0777)
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+func (p *Project) generateScriptApply() (string, error) {
+
+	applyScript := `#!/bin/bash
+
+mkdir -p ../.tmp/plugins/
+
+`
+
+	for index, modPack := range p.DeploySequence {
+		for _, mod := range modPack {
+			scr, err := mod.generateScripts("apply")
+			if err != nil {
+				return "", err
+			}
+			applyScript += fmt.Sprintf("# Parallel index %d", index)
+			applyScript += scr
+		}
+	}
+	return applyScript, nil
+}
+
+func (p *Project) generateScriptDestroy() (string, error) {
+
+	applyScript := `#!/bin/bash
+
+mkdir -p ../.tmp/plugins/
+
+`
+	index := 0
+	for i := len(p.DeploySequence) - 1; i >= 0; i-- {
+		modPack := p.DeploySequence[i]
+		for _, mod := range modPack {
+			scr, err := mod.generateScripts("destroy")
+			if err != nil {
+				return "", err
+			}
+			applyScript += fmt.Sprintf("# Parallel index %d", index)
+			applyScript += scr
+			index++
+		}
+	}
+	return applyScript, nil
 }
 
 func processingMarkers(data interface{}, procFunc func(data reflect.Value) (reflect.Value, error)) error {
@@ -375,4 +488,13 @@ func processingMarkers(data interface{}, procFunc func(data reflect.Value) (refl
 
 	}
 	return nil
+}
+
+func (p *Project) checkContainsMarkers(data string) bool {
+	for marker := range p.DependencyMarkers {
+		if strings.Contains(data, marker) {
+			return true
+		}
+	}
+	return false
 }

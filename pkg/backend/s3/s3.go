@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"github.com/apex/log"
-	"github.com/rodaine/hclencoder"
+	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
@@ -55,68 +56,33 @@ type backendConfigSpec struct {
 
 // GetBackendHCL generate terraform backend config.
 func (b *BackendS3) GetBackendHCL(module project.Module) ([]byte, error) {
-	type BackendConfig struct {
-		BlockKey          string `hcl:",key"`
-		backendConfigSpec `hcl:",squash"`
-	}
+	f := hclwrite.NewEmptyFile()
+	rootBody := f.Body()
+	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
+	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"s3"})
+	backendBody := backendBlock.Body()
+	backendBody.SetAttributeValue("bucket", cty.StringVal(b.Bucket))
+	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s", module.InfraPtr.Name, module.Name)))
+	backendBody.SetAttributeValue("region", cty.StringVal(b.Region))
 
-	type Terraform struct {
-		Backend BackendConfig `hcl:"backend"`
-		ReqVer  string        `hcl:"required_version"`
-	}
+	terraformBlock.Body().SetAttributeValue("required_version", cty.StringVal("~> 0.13"))
+	return f.Bytes(), nil
 
-	type Config struct {
-		TfBlock Terraform `hcl:"terraform"`
-	}
-
-	bSpeck := backendConfigSpec{
-		Bucket: b.Bucket,
-		Key:    fmt.Sprintf("%s/%s", module.InfraPtr.Name, module.Name),
-		Region: "us-east1",
-	}
-
-	tf := Terraform{
-		Backend: BackendConfig{
-			BlockKey:          "s3",
-			backendConfigSpec: bSpeck,
-		},
-		ReqVer: "~> 0.13",
-	}
-
-	input := Config{
-		TfBlock: tf,
-	}
-	return hclencoder.Encode(input)
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
 func (b *BackendS3) GetRemoteStateHCL(module project.Module) ([]byte, error) {
+	f := hclwrite.NewEmptyFile()
 
-	type Data struct {
-		KeyRemState  string            `hcl:",key"`
-		KeyStateName string            `hcl:",key"`
-		Backend      string            `hcl:"backend"`
-		Config       backendConfigSpec `hcl:"config"`
-	}
+	rootBody := f.Body()
+	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", module.InfraPtr.Name, module.Name)})
+	dataBody := dataBlock.Body()
+	dataBody.SetAttributeValue("backend", cty.StringVal("s3"))
+	dataBody.SetAttributeValue("config", cty.MapVal(map[string]cty.Value{
+		"bucket": cty.StringVal(b.Bucket),
+		"key":    cty.StringVal(fmt.Sprintf("%s/%s", module.InfraPtr.Name, module.Name)),
+		"region": cty.StringVal(b.Region),
+	}))
 
-	type Config struct {
-		TfBlock []Data `hcl:"data"`
-	}
-
-	input := Config{}
-	tf := Data{
-		KeyRemState:  "terraform_remote_state",
-		KeyStateName: fmt.Sprintf("%s-%s", module.InfraPtr.Name, module.Name),
-		Config: backendConfigSpec{
-			Bucket: b.Bucket,
-			Key:    fmt.Sprintf("%s/%s", module.InfraPtr.Name, module.Name),
-			Region: "us-east1",
-		},
-		Backend: "s3",
-	}
-
-	input.TfBlock = append(input.TfBlock, tf)
-
-	return hclencoder.Encode(input)
-
+	return f.Bytes(), nil
 }

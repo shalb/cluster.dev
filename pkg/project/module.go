@@ -1,14 +1,17 @@
 package project
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/apex/log"
-
-	json "github.com/json-iterator/go"
-	"github.com/rodaine/hclencoder"
+	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/shalb/cluster.dev/pkg/hcltools"
+	"github.com/zclconf/go-cty/cty"
 )
 
 // Module - describe module.
@@ -21,6 +24,7 @@ type Module struct {
 	Source       string
 	Inputs       map[string]interface{}
 	Dependencies []Dependency
+	Outputs      map[string]bool
 }
 
 // Dependency describe module dependency.
@@ -31,37 +35,23 @@ type Dependency struct {
 
 // GenMainCodeBlockHCL generate main code block for this module.
 func (m *Module) GenMainCodeBlockHCL() ([]byte, error) {
-	type ModuleVars map[string]interface{}
-
-	type HCLModule struct {
-		Name       string `hcl:",key"`
-		ModuleVars `hcl:",squash"`
+	f := hclwrite.NewEmptyFile()
+	rootBody := f.Body()
+	moduleBlock := rootBody.AppendNewBlock("module", []string{m.Name})
+	moduleBody := moduleBlock.Body()
+	moduleBody.SetAttributeValue("source", cty.StringVal(m.Source))
+	for key, val := range m.Inputs {
+		ctyVal, err := hcltools.InterfaceToCty(val)
+		if err != nil {
+			return nil, err
+		}
+		moduleBody.SetAttributeValue(key, ctyVal)
 	}
-	type Config struct {
-		Mod HCLModule `hcl:"module"`
+	for hash, marker := range m.ProjectPtr.DependencyMarkers {
+		remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.InfraName, marker.ModuleName, marker.Output)
+		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, remoteStateRef)
 	}
-
-	inp, err := json.Marshal(m.Inputs)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	unmInputs := ModuleVars{}
-	err = json.Unmarshal(inp, &unmInputs)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	unmInputs["source"] = m.Source
-	mod := HCLModule{
-		Name:       m.Name,
-		ModuleVars: unmInputs,
-	}
-
-	input := Config{
-		Mod: mod,
-	}
-	return hclencoder.Encode(input)
-
+	return f.Bytes(), nil
 }
 
 // GenBackendCodeBlock generate backend code block for this module.
@@ -72,6 +62,27 @@ func (m *Module) GenBackendCodeBlock() ([]byte, error) {
 		return nil, err
 	}
 	return res, nil
+}
+
+// GenOutputsBlock generate output code block for this module.
+func (m *Module) GenOutputsBlock() ([]byte, error) {
+	f := hclwrite.NewEmptyFile()
+
+	rootBody := f.Body()
+	for output := range m.Outputs {
+		log.Debugf("Output: %v", output)
+		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
+		outputName := re.FindString(output)
+		if len(outputName) < 1 {
+			return nil, fmt.Errorf("invalid output '%v' in module '%v'", output, m.Name)
+		}
+		dataBlock := rootBody.AppendNewBlock("output", []string{outputName})
+		dataBody := dataBlock.Body()
+		outputStr := fmt.Sprintf("module.%s.%s", m.Name, outputName)
+		dataBody.SetAttributeRaw("value", hcltools.CreateTokensForOutput(outputStr))
+	}
+	return f.Bytes(), nil
+
 }
 
 // GenDepsRemoteStates generate terraform remote states for all dependencies of this module.
@@ -115,10 +126,11 @@ func (m *Module) checkDependMarker(data reflect.Value) (reflect.Value, error) {
 				Module: depModule,
 				Output: marker.Output,
 			})
-			remoteStateRef := fmt.Sprintf("${data.terraform_remote_state.%s-%s.%s}", marker.InfraName, marker.ModuleName, marker.Output)
+			depModule.Outputs[marker.Output] = true
+			//remoteStateRef := fmt.Sprintf("${data.terraform_remote_state.%s-%s.outputs.%s}", marker.InfraName, marker.ModuleName, marker.Output)
 			// log.Debugf("Module: %v\nDep: %v", depModule, remoteStateRef)
-			replacer := strings.NewReplacer(key, remoteStateRef)
-			resString = replacer.Replace(resString)
+			// replacer := strings.NewReplacer(key, remoteStateRef)
+			// resString = replacer.Replace(resString)
 			return reflect.ValueOf(resString), nil
 		}
 	}
@@ -146,4 +158,36 @@ func (m *Module) ReplaceMarkers() error {
 		return err
 	}
 	return nil
+}
+
+func (m *Module) generateScripts(subCmd string) (string, error) {
+
+	tfCmd := `
+# Module '{{ .module }}' infra '{{ .infra }}'.
+pushd {{ .infra }}.{{ .module }}
+mkdir .terraform
+rm -f ./.terraform/plugins
+ln -s  ../../../.tmp/plugins ./.terraform/plugins
+terraform init
+terraform {{ .command }} -auto-approve
+popd
+
+`
+	t := map[string]interface{}{
+		"module":  m.Name,
+		"infra":   m.InfraPtr.Name,
+		"command": subCmd,
+	}
+	tmpl, err := template.New("main").Option("missingkey=error").Parse(tfCmd)
+
+	if err != nil {
+		return "", err
+	}
+	templatedConf := bytes.Buffer{}
+	err = tmpl.Execute(&templatedConf, &t)
+	if err != nil {
+		return "", err
+	}
+
+	return templatedConf.String(), nil
 }

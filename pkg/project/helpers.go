@@ -48,8 +48,8 @@ func removeDirContent(dir string) error {
 	return nil
 }
 
-func findModule(infra, name string, modsList map[string]*Module) *Module {
-	mod, exists := modsList[fmt.Sprintf("%s.%s", infra, name)]
+func findModule(module Module, modsList map[string]*Module) *Module {
+	mod, exists := modsList[fmt.Sprintf("%s.%s", module.InfraPtr.Name, module.Name)]
 	// log.Printf("Check Mod: %s, exists: %v, list %v", name, exists, modsList)
 	if !exists {
 		return nil
