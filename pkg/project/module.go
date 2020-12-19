@@ -23,14 +23,16 @@ type Module struct {
 	Type         string
 	Source       string
 	Inputs       map[string]interface{}
-	Dependencies []Dependency
+	Dependencies []*Dependency
 	Outputs      map[string]bool
 }
 
 // Dependency describe module dependency.
 type Dependency struct {
-	Module *Module
-	Output string
+	Module     *Module
+	ModuleName string
+	InfraName  string
+	Output     string
 }
 
 // GenMainCodeBlockHCL generate main code block for this module.
@@ -122,7 +124,7 @@ func (m *Module) checkDependMarker(data reflect.Value) (reflect.Value, error) {
 			if !exists {
 				return reflect.ValueOf(nil), fmt.Errorf("Depend module does not exists. Src: '%s.%s', depend: '%s'", m.InfraPtr.Name, m.Name, modKey)
 			}
-			m.Dependencies = append(m.Dependencies, Dependency{
+			m.Dependencies = append(m.Dependencies, &Dependency{
 				Module: depModule,
 				Output: marker.Output,
 			})

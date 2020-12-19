@@ -1,31 +1,37 @@
+# set additional template variables
+{{- $gitUrl := "github.com/shalb/cluster.dev/terraform/aws" }}
+{{- $branch := "new-reconciler" }}
 modules:
   - name: route53
     type: terraform
-    source: github.com/shalb/cluster.dev/terraform/aws/route53?ref={{ ReconcilerVersionTag }}
+    source: {{ $gitUrl }}/route53?ref={{ $branch }}
     inputs:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
-      dep: {{ .variables.dep53 }}
       cluster_domain: {{ .variables.env }}.{{ .variables.domain }}
       zone_delegation: {{ if eq .variables.domain "cluster.dev" }}true{{ else }}false{{ end }}
   - name: vpc
     type: terraform
-    source: github.com/shalb/cluster.dev/terraform/aws/vpc?ref={{ ReconcilerVersionTag }}
+    source: {{ $gitUrl }}/vpc?ref={{ $branch }}
     inputs:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
-      domain: {{ remoteState "this.route53.common_domain" }}
-      vpc_cidr: {{ .variables.vpc_cidr }}
-  - name: instance
+      availability_zones: {{ insertYAML .variables.azs }}
+  - name: minikube
     type: terraform
-    source: github.com/shalb/cluster.dev/terraform/aws/instance?ref={{ ReconcilerVersionTag }}
+    source: {{ $gitUrl }}/minikube?ref={{ $branch }}
     inputs:
-      registry: {{ .variables.registry }}
-      reg2: {{ .variables.registry }}
+      region: {{ .variables.region }}
+      cluster_name: {{ .name }}
+      aws_instance_type: {{ .variables.instance_type }}
+      hosted_zone: {{ .variables.env }}.{{ .variables.domain }}
+      aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
   - name: addons
     type: terraform
-    source: github.com/shalb/cluster.dev/terraform/aws/eks?ref={{ ReconcilerVersionTag }}
+    source: {{ $gitUrl }}/addons?ref={{ $branch }}
+    depends_on: this.minikube
     inputs:
-      vpc_id: {{ .variables.vpc }}
+      region: {{ .variables.region }}
       cluster_name: {{ .name }}
-      node_group: {{ insertYAML .variables.node_group }}
+      cluster_cloud_domain: {{ .variables.env }}.{{ .variables.domain }}
+      dns_zone_id: {{ remoteState "this.route53.zone_id" }}

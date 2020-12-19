@@ -1,0 +1,23 @@
+name: aws
+kind: backend
+provider: s3
+spec:
+  bucket: new-cluster-dev
+  region: eu-central-1
+---
+name: infra-dev
+template: "templates/infra.tmpl"
+kind: infrastructure
+backend: aws
+variables:
+  region: eu-central-1
+  organization: "shalb"
+  domain: shalb.com
+  instance_type: "t3.medium"
+  env: "dev"
+  azs:
+    - "eu-central-1a"
+    - "eu-central-1b"
+
+
+

@@ -17,3 +17,8 @@ variable "hosted_zone" {
   type        = string
   description = "DNS zone to use in cluster"
 }
+
+variable "aws_subnet_id" {
+  type        = string
+  description = "Subnet id"
+}

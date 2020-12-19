@@ -119,13 +119,13 @@ func (p *Project) checkGraph() error {
 	return nil
 }
 
-func checkDependenciesRecursive(mod Module, errDepth int) bool {
-	if errDepth == 0 {
+func checkDependenciesRecursive(mod Module, maxDepth int) bool {
+	if maxDepth == 0 {
 		return false
 	}
-	// log.Debugf("Mod: %v, depth: %v", mod.Name, errDepth)
+	log.Debugf("Mod: %v, depth: %v\n%+v", mod.Name, maxDepth, mod.Dependencies)
 	for _, dep := range mod.Dependencies {
-		if ok := checkDependenciesRecursive(*dep.Module, errDepth-1); !ok {
+		if ok := checkDependenciesRecursive(*dep.Module, maxDepth-1); !ok {
 			return false
 		}
 	}
@@ -215,6 +215,7 @@ func (p *Project) appendModules() error {
 		infrastructureTemplate := make(map[string]interface{})
 		err := yaml.Unmarshal(infra.Template, &infrastructureTemplate)
 		if err != nil {
+			log.Debugf("Can't unmarshal infrastructure template: %v", string(infra.Template))
 			return err
 		}
 		// log.Debugf("%+v\n", infrastructureTemplate)
@@ -245,6 +246,22 @@ func (p *Project) appendModules() error {
 			if !exists {
 				return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
 			}
+			modDeps := []*Dependency{}
+			dependsOn, ok := moduleData.(map[string]interface{})["depends_on"]
+			if ok {
+				splDep := strings.Split(dependsOn.(string), ".")
+				if len(splDep) != 2 {
+					return fmt.Errorf("Incorrect module dependency '%c'", dependsOn)
+				}
+				infNm := splDep[0]
+				if infNm == "this" {
+					infNm = infra.Name
+				}
+				modDeps = append(modDeps, &Dependency{
+					InfraName:  infNm,
+					ModuleName: splDep[1],
+				})
+			}
 			mod := Module{
 				InfraPtr:     infra,
 				ProjectPtr:   p,
@@ -252,8 +269,8 @@ func (p *Project) appendModules() error {
 				Name:         mName.(string),
 				Type:         mType.(string),
 				Source:       mSource.(string),
+				Dependencies: modDeps,
 				Inputs:       map[string]interface{}{},
-				Dependencies: []Dependency{},
 				Outputs:      map[string]bool{},
 			}
 			inputs := mInputs.(map[string]interface{})
@@ -272,11 +289,22 @@ func (p *Project) appendModules() error {
 			return err
 		}
 		modStringCheck := fmt.Sprintf("%+v", mod)
-		// for marker := range p.DependencyMarkers {
-		// 	if strings.Contains(modStringCheck, marker) {
-		// 		log.Fatalf("Unprocessed remote state pointer found in module '%s.%s', template function remoteState can only be used as a yaml value or a part of yaml value.", mod.InfraPtr.Name, mod.Name)
-		// 	}
-		// }
+		for _, dep := range mod.Dependencies {
+			if dep.Module == nil {
+				if dep.ModuleName == "" || dep.InfraName == "" {
+					log.Fatalf("Empty dependency in module '%v.%v'", mod.InfraPtr.Name, mod.Name)
+				}
+				depMod, exists := p.Modules[fmt.Sprintf("%v.%v", dep.InfraName, dep.ModuleName)]
+				if !exists {
+					log.Fatalf("Error in module '%v.%v' dependency, target '%v.%v' does not exist", mod.InfraPtr.Name, mod.Name, dep.InfraName, dep.ModuleName)
+				}
+				dep.InfraName = ""
+				dep.ModuleName = ""
+				dep.Module = depMod
+				dep.Output = ""
+			}
+		}
+		//log.Debugf("Mod deps: %+v", mod.Dependencies)
 		for marker := range p.InsertYAMLMarkers {
 			if strings.Contains(modStringCheck, marker) {
 				log.Fatalf("Unprocessed yaml block pointer found in module '%s.%s', template function insertYAML can only be used as a yaml value for module inputs.", mod.InfraPtr.Name, mod.Name)

@@ -14,18 +14,3 @@ terraform {
 provider "aws" {
   region = var.region
 }
-
-data "terraform_remote_state" "vpc" {
-  backend = "s3"
-  config = {
-    bucket = var.cluster_name
-    key    = "states/terraform-vpc.state"
-    region = var.region
-  }
-  defaults = {
-    private_subnets = []
-    public_subnets  = []
-    vpc_id          = ""
-    vpc_cidr        = ""
-  }
-}
