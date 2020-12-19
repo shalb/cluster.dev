@@ -105,7 +105,7 @@ resource "null_resource" "cert_manager_issuers" {
 
   provisioner "local-exec" {
     when    = destroy
-    command = "kubectl delete --kubeconfig ${var.config_path} -n cert-manager -f -<<EOF\n${data.template_file.clusterissuers_production.rendered}\nEOF"
+    command = "exit 0"
   }
 
   triggers = {
