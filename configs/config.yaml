@@ -12,7 +12,7 @@ backend: aws
 variables:
   region: eu-central-1
   organization: "shalb"
-  domain: shalb.com
+  domain: cluster.dev
   instance_type: "t3.medium"
   env: "dev-test1"
   azs:
