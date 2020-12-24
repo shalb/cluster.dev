@@ -3,6 +3,7 @@ package project
 import (
 	"fmt"
 
+	"github.com/apex/log"
 	"gopkg.in/yaml.v2"
 )
 
@@ -57,5 +58,6 @@ func (g *Project) readBackendObj(obj map[string]interface{}) error {
 		return err
 	}
 	g.Backends[name] = b
+	log.Infof("Backend '%v' added", name)
 	return nil
 }

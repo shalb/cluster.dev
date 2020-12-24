@@ -28,6 +28,7 @@ type ConfSpec struct {
 	Build              string
 	TmpDir             string
 	WorkingDir         string
+	TraceLog					 bool
 	OnlyPrintVersion   bool
 }
 
@@ -42,7 +43,7 @@ func init() {
 	flag.StringVar(&Global.LogLevel, "log-level", getEnv("VERBOSE_LVL", "info"), "Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")")
 	flag.StringVar(&Global.ClusterConfig, "config", "", "Define cluster config. If empty - reconciler will use all configs by mask ./cluster.dev/*.yaml .")
 	flag.BoolVar(&Global.OnlyPrintVersion, "version", false, "Print binary version tag.")
-
+	flag.BoolVar(&Global.TraceLog, "trace", false, "Print function trace info in logs.")
 	curPath, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current directory: %s", err.Error())

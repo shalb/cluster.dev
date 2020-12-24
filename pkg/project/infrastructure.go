@@ -5,26 +5,32 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+
+	"github.com/apex/log"
 )
 
-type infrastructure struct {
+type Infrastructure struct {
+	ProjectPtr  *Project
+	Backend     Backend
 	Name        string
 	BackendName string
 	Template    []byte
 	Variables   map[string]interface{}
 }
 
-func (g *Project) readInfrastructureObj(obj map[string]interface{}) error {
+func (p *Project) readInfrastructureObj(obj map[string]interface{}) error {
 	name, ok := obj["name"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'name'")
 	}
 	// Check if infra with this name is already exists in project.
-	if _, ok = g.Infrastructures[name]; ok {
+	if _, ok = p.Infrastructures[name]; ok {
 		return fmt.Errorf("Duplicate infrastructure name '%s'", name)
 	}
 
-	infra := infrastructure{}
+	infra := Infrastructure{
+		ProjectPtr: p,
+	}
 	tmplFileName, ok := obj["template"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'template'")
@@ -41,7 +47,7 @@ func (g *Project) readInfrastructureObj(obj map[string]interface{}) error {
 		return err
 	}
 
-	t, err := template.New("main").Funcs(g.TmplFunctionsMap).Option("missingkey=error").Parse(string(tmplData))
+	t, err := template.New("main").Funcs(p.TmplFunctionsMap).Option("missingkey=error").Parse(string(tmplData))
 
 	if err != nil {
 		return err
@@ -58,9 +64,15 @@ func (g *Project) readInfrastructureObj(obj map[string]interface{}) error {
 	// Read backend name.
 	infra.BackendName, ok = obj["backend"].(string)
 	if !ok {
-		return fmt.Errorf("infrastructure object must contain field 'provider'")
+		return fmt.Errorf("infrastructure object must contain field 'backend'")
 	}
+	bPtr, exists := p.Backends[infra.BackendName]
+	if !exists {
+		return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
+	}
+	infra.Backend = bPtr
 	infra.Name = name
-	g.Infrastructures[name] = &infra
+	p.Infrastructures[name] = &infra
+	log.Infof("Infrastructure '%v' added", name)
 	return nil
 }

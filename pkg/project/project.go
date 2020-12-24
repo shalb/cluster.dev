@@ -15,44 +15,57 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Modules that can be running in parallel.
-type ModulesPack []*Module
+// ModulesPack that can be running in parallel.
+type ModulesPack []Module
+
+// MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
+type MarkerScanner func(data reflect.Value, module Module) (reflect.Value, error)
 
 // Project describes main config with user-defined variables.
 type Project struct {
-	Modules           map[string]*Module
-	DependencyMarkers map[string]*DependencyMarker
-	InsertYAMLMarkers map[string]interface{}
-	Infrastructures   map[string]*infrastructure
-	TmplFunctionsMap  template.FuncMap
-	Backends          map[string]Backend
-	DeploySequence    []ModulesPack
-}
-
-// DependencyMarker - marker for template function AddDepMarker. Represent module dependency (remote state).
-type DependencyMarker struct {
-	InfraName  string
-	ModuleName string
-	Output     string
+	Modules          map[string]Module
+	ModuleDrivers    map[string]ModuleDriver
+	Infrastructures  map[string]*Infrastructure
+	TmplFunctionsMap template.FuncMap
+	MarkerScaners    []MarkerScanner
+	Backends         map[string]Backend
+	DeploySequence   []ModulesPack
+	Markers          map[string]interface{}
 }
 
 // NewProject creates init and check new infrastructure project.
 func NewProject(configs [][]byte) (*Project, error) {
 
 	project := &Project{
-		DependencyMarkers: map[string]*DependencyMarker{},
-		InsertYAMLMarkers: map[string]interface{}{},
-		Infrastructures:   map[string]*infrastructure{},
-		Modules:           map[string]*Module{},
-		Backends:          map[string]Backend{},
+		Infrastructures: map[string]*Infrastructure{},
+		Modules:         map[string]Module{},
+		Backends:        map[string]Backend{},
+		Markers:         map[string]interface{}{},
+		ModuleDrivers:   map[string]ModuleDriver{},
+		MarkerScaners:   []MarkerScanner{},
 	}
 
 	fMap := template.FuncMap{
-		"remoteState":          project.AddDepMarker,
 		"insertYAML":           project.AddYAMLBlockMarker,
 		"ReconcilerVersionTag": printVersion,
 	}
 
+	project.MarkerScaners = append(project.MarkerScaners, project.checkYAMLBlockMarker)
+	for key, drvFac := range ModuleDriverFactories {
+		drv := drvFac.New(project)
+		project.ModuleDrivers[key] = drv
+		project.MarkerScaners = append(project.MarkerScaners, drv.GetScanners()...)
+		for k, f := range drv.GetTemplateFunctions() {
+			_, ok := fMap[k]
+			if ok {
+				log.Debugf("Template function '%v' is already exists", k)
+				return nil, fmt.Errorf("Template function '%v' is already exists in map", k)
+			}
+			fMap[k] = f
+		}
+
+	}
+	log.Debugf("Fmap %v", fMap)
 	project.TmplFunctionsMap = fMap
 
 	templatedConfigs := [][]byte{}
@@ -88,7 +101,11 @@ func NewProject(configs [][]byte) (*Project, error) {
 		}
 
 	}
-	err := project.appendModules()
+	err := project.readModules()
+	if err != nil {
+		return nil, err
+	}
+	err = project.prepareModules()
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +129,8 @@ func (p *Project) readObject(obj map[string]interface{}) error {
 func (p *Project) checkGraph() error {
 	errDepth := 15
 	for _, mod := range p.Modules {
-		if ok := checkDependenciesRecursive(*mod, errDepth); !ok {
-			return fmt.Errorf("Unresolved dependency in module %v.%v", mod.InfraPtr.Name, mod.Name)
+		if ok := checkDependenciesRecursive(mod, errDepth); !ok {
+			return fmt.Errorf("Unresolved dependency in module %v.%v", mod.InfraName(), mod.Name())
 		}
 	}
 	return nil
@@ -123,8 +140,8 @@ func checkDependenciesRecursive(mod Module, maxDepth int) bool {
 	if maxDepth == 0 {
 		return false
 	}
-	log.Debugf("Mod: %v, depth: %v\n%+v", mod.Name, maxDepth, mod.Dependencies)
-	for _, dep := range mod.Dependencies {
+	// log.Debugf("Mod: %v, depth: %v\n%+v", mod.Name, maxDepth, mod.Dependencies)
+	for _, dep := range *mod.Dependencies() {
 		if ok := checkDependenciesRecursive(*dep.Module, maxDepth-1); !ok {
 			return false
 		}
@@ -134,11 +151,11 @@ func checkDependenciesRecursive(mod Module, maxDepth int) bool {
 
 func (p *Project) buildDeploySequence() error {
 
-	modDone := map[string]*Module{}
-	modWait := map[string]*Module{}
+	modDone := map[string]Module{}
+	modWait := map[string]Module{}
 
 	for _, mod := range p.Modules {
-		modWait[fmt.Sprintf("%s.%s", mod.InfraPtr.Name, mod.Name)] = mod
+		modWait[fmt.Sprintf("%s.%s", mod.InfraName(), mod.Name())] = mod
 	}
 	res := []ModulesPack{}
 	for c := 1; c < 20; c++ {
@@ -146,31 +163,30 @@ func (p *Project) buildDeploySequence() error {
 		modPack := ModulesPack{}
 		modIterDone := map[string]*Module{}
 		for _, mod := range modWait {
-			modIndex := fmt.Sprintf("%s.%s", mod.InfraPtr.Name, mod.Name)
-			if len(mod.Dependencies) == 0 {
-
-				log.Infof("Mod '%s' done (%d)", modIndex, c)
-				modIterDone[modIndex] = mod
+			modIndex := fmt.Sprintf("%s.%s", mod.InfraName(), mod.Name())
+			if len(*mod.Dependencies()) == 0 {
+				modIterDone[modIndex] = &mod
+				log.Infof(" '%s' - ok", modIndex)
 				delete(modWait, modIndex)
 				modPack = append(modPack, mod)
 				continue
 			}
 			var allDepsDone bool = true
-			for _, dep := range mod.Dependencies {
+			for _, dep := range *mod.Dependencies() {
 				if findModule(*dep.Module, modDone) == nil {
 					allDepsDone = false
 					break
 				}
 			}
 			if allDepsDone {
-				log.Infof("Mod '%s' with deps %v done (%d)", modIndex, mod.Dependencies, c)
-				modIterDone[modIndex] = mod
+				log.Infof(" '%s' - ok", modIndex)
+				modIterDone[modIndex] = &mod
 				delete(modWait, modIndex)
 				modPack = append(modPack, mod)
 			}
 		}
 		for k, v := range modIterDone {
-			modDone[k] = v
+			modDone[k] = *v
 		}
 		res = append(res, modPack)
 		p.DeploySequence = res
@@ -185,31 +201,7 @@ func (p *Project) buildDeploySequence() error {
 	return nil
 }
 
-// AddDepMarker function for template. Add hash marker, witch will be replaced with desired remote state.
-func (p *Project) AddDepMarker(path string) (string, error) {
-	splittedPath := strings.Split(path, ".")
-	if len(splittedPath) != 3 {
-		return "", fmt.Errorf("bad dependency path")
-	}
-	dep := DependencyMarker{
-		InfraName:  splittedPath[0],
-		ModuleName: splittedPath[1],
-		Output:     splittedPath[2],
-	}
-	marker := createMarker("DEP")
-	p.DependencyMarkers[marker] = &dep
-
-	return fmt.Sprintf("%s", marker), nil
-}
-
-// AddYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
-func (p *Project) AddYAMLBlockMarker(data interface{}) (string, error) {
-	marker := createMarker("YAML")
-	p.InsertYAMLMarkers[marker] = data
-	return fmt.Sprintf("%s", marker), nil
-}
-
-func (p *Project) appendModules() error {
+func (p *Project) readModules() error {
 	// Read modules from all infrastructures.
 	for infraName, infra := range p.Infrastructures {
 		infrastructureTemplate := make(map[string]interface{})
@@ -221,67 +213,22 @@ func (p *Project) appendModules() error {
 		// log.Debugf("%+v\n", infrastructureTemplate)
 		modulesSliceIf, ok := infrastructureTemplate["modules"]
 		if !ok {
-			return fmt.Errorf("Incompatible struct")
+			return fmt.Errorf("Incorrect template in infra '%v'", infraName)
 		}
 		modulesSlice := modulesSliceIf.([]interface{})
 		for _, moduleData := range modulesSlice {
-			mName, ok := moduleData.(map[string]interface{})["name"]
-			if !ok {
-				return fmt.Errorf("Incorrect module name")
+			mod, err := NewModule(moduleData.(map[string]interface{}), infra)
+			if err != nil {
+				return err
 			}
-			mType, ok := moduleData.(map[string]interface{})["type"]
-			if !ok {
-				return fmt.Errorf("Incorrect module type")
-			}
-			mSource, ok := moduleData.(map[string]interface{})["source"]
-			if !ok {
-				return fmt.Errorf("Incorrect module source")
-			}
-			mInputs, ok := moduleData.(map[string]interface{})["inputs"]
-			if !ok {
-				return fmt.Errorf("Incorrect module inputs")
-			}
-
-			bPtr, exists := p.Backends[infra.BackendName]
-			if !exists {
-				return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
-			}
-			modDeps := []*Dependency{}
-			dependsOn, ok := moduleData.(map[string]interface{})["depends_on"]
-			if ok {
-				splDep := strings.Split(dependsOn.(string), ".")
-				if len(splDep) != 2 {
-					return fmt.Errorf("Incorrect module dependency '%c'", dependsOn)
-				}
-				infNm := splDep[0]
-				if infNm == "this" {
-					infNm = infra.Name
-				}
-				modDeps = append(modDeps, &Dependency{
-					InfraName:  infNm,
-					ModuleName: splDep[1],
-				})
-			}
-			mod := Module{
-				InfraPtr:     infra,
-				ProjectPtr:   p,
-				BackendPtr:   bPtr,
-				Name:         mName.(string),
-				Type:         mType.(string),
-				Source:       mSource.(string),
-				Dependencies: modDeps,
-				Inputs:       map[string]interface{}{},
-				Outputs:      map[string]bool{},
-			}
-			inputs := mInputs.(map[string]interface{})
-			//log.Debugf("%+v", p.Modules)
-			for key, val := range inputs {
-				mod.Inputs[key] = val
-			}
-			modKey := fmt.Sprintf("%s.%s", infraName, mName)
-			p.Modules[modKey] = &mod
+			modKey := fmt.Sprintf("%s.%s", infraName, mod.Name())
+			p.Modules[modKey] = mod
 		}
 	}
+	return nil
+}
+
+func (p *Project) prepareModules() error {
 	// After reads all modules to project - process templated markers and set all dependencies between modules.
 	for _, mod := range p.Modules {
 		err := mod.ReplaceMarkers()
@@ -289,30 +236,36 @@ func (p *Project) appendModules() error {
 			return err
 		}
 		modStringCheck := fmt.Sprintf("%+v", mod)
-		for _, dep := range mod.Dependencies {
+		for _, dep := range *mod.Dependencies() {
 			if dep.Module == nil {
 				if dep.ModuleName == "" || dep.InfraName == "" {
-					log.Fatalf("Empty dependency in module '%v.%v'", mod.InfraPtr.Name, mod.Name)
+					log.Fatalf("Empty dependency in module '%v.%v'", mod.InfraName(), mod.Name())
 				}
 				depMod, exists := p.Modules[fmt.Sprintf("%v.%v", dep.InfraName, dep.ModuleName)]
 				if !exists {
-					log.Fatalf("Error in module '%v.%v' dependency, target '%v.%v' does not exist", mod.InfraPtr.Name, mod.Name, dep.InfraName, dep.ModuleName)
+					log.Fatalf("Error in module '%v.%v' dependency, target '%v.%v' does not exist", mod.InfraName(), mod.Name(), dep.InfraName, dep.ModuleName)
 				}
 				dep.InfraName = ""
 				dep.ModuleName = ""
-				dep.Module = depMod
+				dep.Module = &depMod
 				dep.Output = ""
 			}
 		}
 		//log.Debugf("Mod deps: %+v", mod.Dependencies)
-		for marker := range p.InsertYAMLMarkers {
+		yamlMarkers, ok := p.Markers["InsertYAMLMarkers"].(map[string]interface{})
+		if !ok {
+			log.Debugf("Internal error.")
+			return fmt.Errorf("internal error")
+		}
+		for marker := range yamlMarkers {
 			if strings.Contains(modStringCheck, marker) {
-				log.Fatalf("Unprocessed yaml block pointer found in module '%s.%s', template function insertYAML can only be used as a yaml value for module inputs.", mod.InfraPtr.Name, mod.Name)
+				log.Debugf("%+v", modStringCheck)
+				log.Fatalf("Unprocessed yaml block pointer found in module '%s.%s', template function insertYAML can only be used as a yaml value for module inputs.", mod.InfraName(), mod.Name())
 			}
 		}
 	}
 
-	log.Debug("Check modules dependencies...")
+	log.Info("Check modules dependencies...")
 	if err := p.checkGraph(); err != nil {
 		return err
 	}
@@ -342,74 +295,11 @@ func (p *Project) GenCode(codeStructName string) error {
 	if err != nil {
 		return err
 	}
-	for mName, module := range p.Modules {
-		modDir := filepath.Join(codeDir, mName)
-		log.Debugf("Processing module '%v' directory: '%v'", mName, modDir)
-		err := os.Mkdir(modDir, 0755)
-		if err != nil {
+	for _, module := range p.Modules {
+		if err := module.CreateCodeDir(codeDir); err != nil {
 			return err
 		}
-		// Create main.tf
-		tfFile := filepath.Join(modDir, "main.tf")
-		log.Debugf(" file: '%v'", tfFile)
-		codeBlock, err := module.GenMainCodeBlockHCL()
-		if err != nil {
-			log.Fatal(err.Error())
-			return err
-		}
-		if p.checkContainsMarkers(string(codeBlock)) {
-			log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (module block). Template function remoteState can only be used as a yaml value or a part of yaml value.", module.InfraPtr.Name, module.Name)
-		}
-		ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
-		if err != nil {
-			return err
-		}
-		// Create init.tf
-		tfFile = filepath.Join(modDir, "init.tf")
-		log.Debugf(" file: '%v'", tfFile)
-		codeBlock, err = module.GenBackendCodeBlock()
-		if err != nil {
-			return err
-		}
-		if p.checkContainsMarkers(string(codeBlock)) {
-			log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (backend block). Template function remoteState can only be used as a yaml value or a part of yaml value.", module.InfraPtr.Name, module.Name)
-		}
-		ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
-		if err != nil {
-			return err
-		}
-		// Create remote_state.tf
-		codeBlock, err = module.GenDepsRemoteStates()
-		if err != nil {
-			return err
-		}
-		if len(codeBlock) > 1 {
-			tfFile = filepath.Join(modDir, "remote_state.tf")
-			if p.checkContainsMarkers(string(codeBlock)) {
-				log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (remote states block). Template function remoteState can only be used as a yaml value or a part of yaml value.", module.InfraPtr.Name, module.Name)
-			}
-			log.Debugf(" file: '%v'", tfFile)
-			ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
-			if err != nil {
-				return err
-			}
-		}
-		// Create outputs.tf
-		codeBlock, err = module.GenOutputsBlock()
-		if err != nil {
-			return err
-		}
-		if len(codeBlock) > 1 {
-			tfFile = filepath.Join(modDir, "outputs.tf")
-			if p.checkContainsMarkers(string(codeBlock)) {
-				log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (output block). Template function remoteState can only be used as a yaml value or a part of yaml value.", module.InfraPtr.Name, module.Name)
-			}
-			log.Debugf(" file: '%v'", tfFile)
-			ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
-			if err != nil {
-				return err
-			}
-		}
+
 	}
 	script, err := p.generateScriptApply()
 	if err != nil {
@@ -442,10 +332,7 @@ mkdir -p ../.tmp/plugins/
 
 	for index, modPack := range p.DeploySequence {
 		for _, mod := range modPack {
-			scr, err := mod.generateScripts("apply")
-			if err != nil {
-				return "", err
-			}
+			scr := mod.GetApplyShellCmd()
 			applyScript += fmt.Sprintf("# Parallel index %d", index)
 			applyScript += scr
 		}
@@ -464,10 +351,7 @@ mkdir -p ../.tmp/plugins/
 	for i := len(p.DeploySequence) - 1; i >= 0; i-- {
 		modPack := p.DeploySequence[i]
 		for _, mod := range modPack {
-			scr, err := mod.generateScripts("destroy")
-			if err != nil {
-				return "", err
-			}
+			scr := mod.GetDestroyShellCmd()
 			applyScript += fmt.Sprintf("# Parallel index %d", index)
 			applyScript += scr
 			index++
@@ -476,53 +360,41 @@ mkdir -p ../.tmp/plugins/
 	return applyScript, nil
 }
 
-func processingMarkers(data interface{}, procFunc func(data reflect.Value) (reflect.Value, error)) error {
-	out := reflect.ValueOf(data)
-	if out.Kind() == reflect.Ptr && !out.IsNil() {
-		out = out.Elem()
-	}
-	switch out.Kind() {
-	case reflect.Slice:
-		for i := 0; i < out.Len(); i++ {
-			if out.Index(i).Elem().Kind() == reflect.String {
-				val, err := procFunc(out.Index(i))
-				if err != nil {
-					return err
-				}
-				out.Index(i).Set(val)
-			} else {
-				err := processingMarkers(out.Index(i).Interface(), procFunc)
-				if err != nil {
-					return err
-				}
-			}
+func (p *Project) CheckContainsMarkers(data string) bool {
+	for _, markerClass := range p.Markers {
+		vl := reflect.ValueOf(markerClass)
+		if vl.Kind() != reflect.Map {
+			log.Fatal("Internal error.")
 		}
-	case reflect.Map:
-		for _, key := range out.MapKeys() {
-			if out.MapIndex(key).Elem().Kind() == reflect.String {
-				val, err := procFunc(out.MapIndex(key))
-				if err != nil {
-					return err
-				}
-				out.SetMapIndex(key, val)
-			} else {
-				err := processingMarkers(out.MapIndex(key).Interface(), procFunc)
-				if err != nil {
-					return err
-				}
+		for _, marker := range vl.MapKeys() {
+			if strings.Contains(data, marker.String()) {
+				return true
 			}
-		}
-	default:
-
-	}
-	return nil
-}
-
-func (p *Project) checkContainsMarkers(data string) bool {
-	for marker := range p.DependencyMarkers {
-		if strings.Contains(data, marker) {
-			return true
 		}
 	}
 	return false
+}
+
+// AddYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
+func (p *Project) AddYAMLBlockMarker(data interface{}) (string, error) {
+	markers := map[string]interface{}{}
+	marker := p.CreateMarker("YAML")
+	markers[marker] = data
+	p.Markers["InsertYAMLMarkers"] = markers
+	return fmt.Sprintf("%s", marker), nil
+}
+
+func (p *Project) checkYAMLBlockMarker(data reflect.Value, module Module) (reflect.Value, error) {
+	subVal := reflect.ValueOf(data.Interface())
+
+	yamlMarkers, ok := p.Markers["InsertYAMLMarkers"].(map[string]interface{})
+	if !ok {
+		log.Fatalf("Internal error.")
+	}
+	for hash := range yamlMarkers {
+		if subVal.String() == hash {
+			return reflect.ValueOf(yamlMarkers[hash]), nil
+		}
+	}
+	return subVal, nil
 }
