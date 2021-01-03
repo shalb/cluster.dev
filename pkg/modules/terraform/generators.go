@@ -218,7 +218,7 @@ func (m *TFModule) getShellCmd(subCmd string) string {
 	tfCmd := `
 # Module '{{ .module }}' infra '{{ .infra }}'.
 pushd {{ .infra }}.{{ .module }}
-mkdir .terraform
+mkdir -p .terraform
 rm -f ./.terraform/plugins
 mkdir -p ../../../.tmp/plugins
 ln -s  ../../../.tmp/plugins ./.terraform/plugins
