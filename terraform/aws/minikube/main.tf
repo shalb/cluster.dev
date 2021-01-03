@@ -2,6 +2,7 @@ data "template_file" "k8s_userdata" {
   template = file("${path.module}/k8s-userdata.tpl.sh")
   vars = {
     cluster_name = var.cluster_name
+    bucket_name  = var.bucket_name
     private_key  = tls_private_key.bastion_key.private_key_pem
   }
 }

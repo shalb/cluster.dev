@@ -8,6 +8,11 @@ variable "cluster_name" {
   description = "Name of the cluster"
 }
 
+variable "bucket_name" {
+  type        = string
+  description = "Name of the s3 bucket for kubeconfig upload"
+}
+
 variable "aws_instance_type" {
   type        = string
   description = "Instance size"

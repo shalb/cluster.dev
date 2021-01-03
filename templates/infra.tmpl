@@ -8,7 +8,7 @@ modules:
     inputs:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
-      cluster_domain: {{ .variables.env }}.{{ .variables.domain }}
+      cluster_domain: {{ .variables.domain }}
       zone_delegation: {{ if eq .variables.domain "cluster.dev" }}true{{ else }}false{{ end }}
   - name: vpc
     type: terraform
@@ -24,7 +24,7 @@ modules:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
       aws_instance_type: {{ .variables.instance_type }}
-      hosted_zone: {{ .variables.env }}.{{ .variables.domain }}
+      hosted_zone: {{ .name }}.{{ .variables.domain }}
       aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
   - name: get_kubeconfig
     type: shell
@@ -38,5 +38,5 @@ modules:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
       kubeconfig: {{ output "this.get_kubeconfig.kubeconfig_path" }}
-      cluster_cloud_domain: {{ .variables.env }}.{{ .variables.domain }}
+      cluster_cloud_domain: {{ .name }}.{{ .variables.domain }}
       dns_zone_id: {{ remoteState "this.route53.zone_id" }}
