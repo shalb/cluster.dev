@@ -6,7 +6,7 @@ require (
 	github.com/apex/log v1.6.0
 	github.com/aws/aws-sdk-go v1.20.6
 	github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59
-	github.com/coreos/etcd v3.3.25+incompatible // indirect
+	github.com/coreos/etcd v3.3.25+incompatible
 	github.com/docker/swarmkit v1.12.0
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/go-git/go-git/v5 v5.2.0

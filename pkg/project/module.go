@@ -14,8 +14,13 @@ type Module interface {
 	ReplaceMarkers() error
 	GetApplyShellCmd() string
 	GetDestroyShellCmd() string
-	Dependencies() *[]*Dependency
+	Dependencies() []*Dependency
 	Self() interface{}
+	// ExpectedOutputs return expected outputs.
+	ExpectedOutputs() *map[string]bool
+	// BuildDeps - check string dependencies, finds the corresponding module and add module ptr to dependency.
+	BuildDeps() error
+	PreHook() *Dependency
 }
 
 type ModuleDriver interface {
@@ -43,7 +48,7 @@ var ModuleDriverFactories = map[string]ModuleDriverFactory{}
 
 // Dependency describe module dependency.
 type Dependency struct {
-	Module     *Module
+	Module     Module
 	ModuleName string
 	InfraName  string
 	Output     string

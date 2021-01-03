@@ -9,6 +9,8 @@ import (
 	"github.com/apex/log"
 )
 
+const infraObjKindKey = "infrastructure"
+
 type Infrastructure struct {
 	ProjectPtr  *Project
 	Backend     Backend

@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
@@ -27,34 +26,34 @@ type Project struct {
 	ModuleDrivers    map[string]ModuleDriver
 	Infrastructures  map[string]*Infrastructure
 	TmplFunctionsMap template.FuncMap
-	MarkerScaners    []MarkerScanner
 	Backends         map[string]Backend
 	DeploySequence   []ModulesPack
 	Markers          map[string]interface{}
+	objects          map[string][]interface{}
 }
 
-// NewProject creates init and check new infrastructure project.
+// NewProject creates init and check new project.
 func NewProject(configs [][]byte) (*Project, error) {
 
 	project := &Project{
-		Infrastructures: map[string]*Infrastructure{},
-		Modules:         map[string]Module{},
-		Backends:        map[string]Backend{},
-		Markers:         map[string]interface{}{},
-		ModuleDrivers:   map[string]ModuleDriver{},
-		MarkerScaners:   []MarkerScanner{},
+		Infrastructures:  map[string]*Infrastructure{},
+		Modules:          map[string]Module{},
+		Backends:         map[string]Backend{},
+		Markers:          map[string]interface{}{},
+		ModuleDrivers:    map[string]ModuleDriver{},
+		TmplFunctionsMap: template.FuncMap{},
+		DeploySequence:   []ModulesPack{},
+		objects:          map[string][]interface{}{},
 	}
 
 	fMap := template.FuncMap{
-		"insertYAML":           project.AddYAMLBlockMarker,
+		"output":               project.addOutputMarker,
 		"ReconcilerVersionTag": printVersion,
 	}
 
-	project.MarkerScaners = append(project.MarkerScaners, project.checkYAMLBlockMarker)
 	for key, drvFac := range ModuleDriverFactories {
 		drv := drvFac.New(project)
 		project.ModuleDrivers[key] = drv
-		project.MarkerScaners = append(project.MarkerScaners, drv.GetScanners()...)
 		for k, f := range drv.GetTemplateFunctions() {
 			_, ok := fMap[k]
 			if ok {
@@ -65,10 +64,9 @@ func NewProject(configs [][]byte) (*Project, error) {
 		}
 
 	}
-	log.Debugf("Fmap %v", fMap)
+	// log.Debugf("Fmap %v", fMap)
 	project.TmplFunctionsMap = fMap
 
-	templatedConfigs := [][]byte{}
 	for _, cnf := range configs {
 		tmpl, err := template.New("main").Funcs(fMap).Option("missingkey=error").Parse(string(cnf))
 
@@ -81,27 +79,15 @@ func NewProject(configs [][]byte) (*Project, error) {
 		if err != nil {
 			return nil, err
 		}
-		templatedConfigs = append(templatedConfigs, templatedConf.Bytes())
-		//var infrastructuresList []map[string]interface{}
-		dec := yaml.NewDecoder(bytes.NewReader(templatedConf.Bytes()))
-		for {
-			var parsedConf = make(map[string]interface{})
-			err = dec.Decode(&parsedConf)
-			if err != nil {
-				if err.Error() == "EOF" {
-					break
-				}
-				log.Debugf("can't decode config to yaml: %s\n%s", err.Error(), string(cnf))
-				return nil, fmt.Errorf("can't decode config to yaml: %s", err.Error())
-			}
-			err := project.readObject(parsedConf)
-			if err != nil {
-				return nil, err
-			}
-		}
-
+		project.readObjects(templatedConf.Bytes())
 	}
-	err := project.readModules()
+
+	err := project.prepareObjects()
+	if err != nil {
+		return nil, err
+	}
+
+	err = project.readModules()
 	if err != nil {
 		return nil, err
 	}
@@ -112,18 +98,53 @@ func NewProject(configs [][]byte) (*Project, error) {
 	return project, nil
 }
 
-func (p *Project) readObject(obj map[string]interface{}) error {
-	objKind, ok := obj["kind"].(string)
-	if !ok {
-		log.Fatal("infra must contain field 'kind'")
+func (p *Project) readObjects(objData []byte) error {
+	dec := yaml.NewDecoder(bytes.NewReader(objData))
+	for {
+		var parsedConf = make(map[string]interface{})
+		err := dec.Decode(&parsedConf)
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			log.Debugf("can't decode config to yaml: %s", err.Error())
+			return fmt.Errorf("can't decode config to yaml: %s", err.Error())
+		}
+		objKind, ok := parsedConf["kind"].(string)
+		if !ok {
+			log.Fatal("infra must contain field 'kind'")
+		}
+		if _, exists := p.objects[objKind]; !exists {
+			p.objects[objKind] = []interface{}{}
+		}
+		p.objects[objKind] = append(p.objects[objKind], parsedConf)
 	}
-	switch objKind {
-	case "backend":
-		return p.readBackendObj(obj)
-	case "infrastructure":
-		return p.readInfrastructureObj(obj)
+	return nil
+}
+
+func (p *Project) prepareObjects() error {
+	// Read and parse backends.
+	bks, exists := p.objects[backendObjKindKey]
+	if !exists {
+		err := fmt.Errorf("no backend found, at least one backend needed")
+		log.Debug(err.Error())
+		return err
 	}
-	return fmt.Errorf("Unknown object kind '%s'", objKind)
+	for _, bk := range bks {
+		p.readBackendObj(bk.(map[string]interface{}))
+	}
+
+	// Read and parse infrastructures.
+	infras, exists := p.objects[infraObjKindKey]
+	if !exists {
+		err := fmt.Errorf("no infrastructures found, at least one backend needed")
+		log.Debug(err.Error())
+		return err
+	}
+	for _, infra := range infras {
+		p.readInfrastructureObj(infra.(map[string]interface{}))
+	}
+	return nil
 }
 
 func (p *Project) checkGraph() error {
@@ -134,19 +155,6 @@ func (p *Project) checkGraph() error {
 		}
 	}
 	return nil
-}
-
-func checkDependenciesRecursive(mod Module, maxDepth int) bool {
-	if maxDepth == 0 {
-		return false
-	}
-	// log.Debugf("Mod: %v, depth: %v\n%+v", mod.Name, maxDepth, mod.Dependencies)
-	for _, dep := range *mod.Dependencies() {
-		if ok := checkDependenciesRecursive(*dep.Module, maxDepth-1); !ok {
-			return false
-		}
-	}
-	return true
 }
 
 func (p *Project) buildDeploySequence() error {
@@ -164,7 +172,7 @@ func (p *Project) buildDeploySequence() error {
 		modIterDone := map[string]*Module{}
 		for _, mod := range modWait {
 			modIndex := fmt.Sprintf("%s.%s", mod.InfraName(), mod.Name())
-			if len(*mod.Dependencies()) == 0 {
+			if len(mod.Dependencies()) == 0 {
 				modIterDone[modIndex] = &mod
 				log.Infof(" '%s' - ok", modIndex)
 				delete(modWait, modIndex)
@@ -172,8 +180,8 @@ func (p *Project) buildDeploySequence() error {
 				continue
 			}
 			var allDepsDone bool = true
-			for _, dep := range *mod.Dependencies() {
-				if findModule(*dep.Module, modDone) == nil {
+			for _, dep := range mod.Dependencies() {
+				if findModule(dep.Module, modDone) == nil {
 					allDepsDone = false
 					break
 				}
@@ -235,33 +243,8 @@ func (p *Project) prepareModules() error {
 		if err != nil {
 			return err
 		}
-		modStringCheck := fmt.Sprintf("%+v", mod)
-		for _, dep := range *mod.Dependencies() {
-			if dep.Module == nil {
-				if dep.ModuleName == "" || dep.InfraName == "" {
-					log.Fatalf("Empty dependency in module '%v.%v'", mod.InfraName(), mod.Name())
-				}
-				depMod, exists := p.Modules[fmt.Sprintf("%v.%v", dep.InfraName, dep.ModuleName)]
-				if !exists {
-					log.Fatalf("Error in module '%v.%v' dependency, target '%v.%v' does not exist", mod.InfraName(), mod.Name(), dep.InfraName, dep.ModuleName)
-				}
-				dep.InfraName = ""
-				dep.ModuleName = ""
-				dep.Module = &depMod
-				dep.Output = ""
-			}
-		}
-		//log.Debugf("Mod deps: %+v", mod.Dependencies)
-		yamlMarkers, ok := p.Markers["InsertYAMLMarkers"].(map[string]interface{})
-		if !ok {
-			log.Debugf("Internal error.")
-			return fmt.Errorf("internal error")
-		}
-		for marker := range yamlMarkers {
-			if strings.Contains(modStringCheck, marker) {
-				log.Debugf("%+v", modStringCheck)
-				log.Fatalf("Unprocessed yaml block pointer found in module '%s.%s', template function insertYAML can only be used as a yaml value for module inputs.", mod.InfraName(), mod.Name())
-			}
+		if err = mod.BuildDeps(); err != nil {
+			return err
 		}
 	}
 
@@ -306,7 +289,7 @@ func (p *Project) GenCode(codeStructName string) error {
 		return err
 	}
 	scriptFile := filepath.Join(codeDir, "apply.sh")
-	ioutil.WriteFile(scriptFile, []byte(script), 0777)
+	err = ioutil.WriteFile(scriptFile, []byte(script), 0777)
 	if err != nil {
 		return err
 	}
@@ -315,7 +298,7 @@ func (p *Project) GenCode(codeStructName string) error {
 		return err
 	}
 	scriptFile = filepath.Join(codeDir, "destroy.sh")
-	ioutil.WriteFile(scriptFile, []byte(script), 0777)
+	err = ioutil.WriteFile(scriptFile, []byte(script), 0777)
 	if err != nil {
 		return err
 	}
@@ -326,6 +309,7 @@ func (p *Project) generateScriptApply() (string, error) {
 
 	applyScript := `#!/bin/bash
 
+set -e
 mkdir -p ../.tmp/plugins/
 
 `
@@ -344,6 +328,7 @@ func (p *Project) generateScriptDestroy() (string, error) {
 
 	applyScript := `#!/bin/bash
 
+set -e
 mkdir -p ../.tmp/plugins/
 
 `
@@ -351,8 +336,12 @@ mkdir -p ../.tmp/plugins/
 	for i := len(p.DeploySequence) - 1; i >= 0; i-- {
 		modPack := p.DeploySequence[i]
 		for _, mod := range modPack {
-			scr := mod.GetDestroyShellCmd()
-			applyScript += fmt.Sprintf("# Parallel index %d", index)
+			var scr string
+			if mod.PreHook() != nil {
+				scr += mod.PreHook().Module.GetDestroyShellCmd()
+				p.deleteModFromDeploySeq(mod.PreHook().Module)
+			}
+			scr += mod.GetDestroyShellCmd()
 			applyScript += scr
 			index++
 		}
@@ -360,41 +349,19 @@ mkdir -p ../.tmp/plugins/
 	return applyScript, nil
 }
 
-func (p *Project) CheckContainsMarkers(data string) bool {
-	for _, markerClass := range p.Markers {
-		vl := reflect.ValueOf(markerClass)
-		if vl.Kind() != reflect.Map {
-			log.Fatal("Internal error.")
-		}
-		for _, marker := range vl.MapKeys() {
-			if strings.Contains(data, marker.String()) {
-				return true
+func (p *Project) deleteModFromDeploySeq(m Module) {
+	for di, modPack := range p.DeploySequence {
+		for i, mod := range modPack {
+			if isSameModule(m, mod) {
+				p.DeploySequence[di] = append(modPack[:i], modPack[i+1:]...)
 			}
 		}
 	}
+}
+
+func isSameModule(mod1 Module, mod2 Module) bool {
+	if mod1.Name() == mod2.Name() && mod1.InfraPtr() == mod2.InfraPtr() {
+		return true
+	}
 	return false
-}
-
-// AddYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
-func (p *Project) AddYAMLBlockMarker(data interface{}) (string, error) {
-	markers := map[string]interface{}{}
-	marker := p.CreateMarker("YAML")
-	markers[marker] = data
-	p.Markers["InsertYAMLMarkers"] = markers
-	return fmt.Sprintf("%s", marker), nil
-}
-
-func (p *Project) checkYAMLBlockMarker(data reflect.Value, module Module) (reflect.Value, error) {
-	subVal := reflect.ValueOf(data.Interface())
-
-	yamlMarkers, ok := p.Markers["InsertYAMLMarkers"].(map[string]interface{})
-	if !ok {
-		log.Fatalf("Internal error.")
-	}
-	for hash := range yamlMarkers {
-		if subVal.String() == hash {
-			return reflect.ValueOf(yamlMarkers[hash]), nil
-		}
-	}
-	return subVal, nil
 }

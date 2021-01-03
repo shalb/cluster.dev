@@ -26,12 +26,17 @@ modules:
       aws_instance_type: {{ .variables.instance_type }}
       hosted_zone: {{ .variables.env }}.{{ .variables.domain }}
       aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
+  - name: get_kubeconfig
+    type: shell
+    depends_on: this.minikube
+    command: "aws s3 cp s3://{{ .name }}/kubeconfig_{{ .name }} ../kubeconfig_{{ .name }} && echo set_output_kubeconfig_path=../kubeconfig{{ .name }} "
   - name: addons
     type: terraform
     source: {{ $gitUrl }}/addons?ref={{ $branch }}
-    depends_on: this.minikube
+    pre_hook: this.get_kubeconfig
     inputs:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
+      kubeconfig: {{ output "this.get_kubeconfig.kubeconfig_path" }}
       cluster_cloud_domain: {{ .variables.env }}.{{ .variables.domain }}
       dns_zone_id: {{ remoteState "this.route53.zone_id" }}

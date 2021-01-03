@@ -7,6 +7,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const backendObjKindKey = "backend"
+
 // Backend interface for backend provider.
 type Backend interface {
 	Name() string
@@ -35,7 +37,7 @@ var BackendsFactories = map[string]BackendsFactory{}
 func (g *Project) readBackendObj(obj map[string]interface{}) error {
 	name, ok := obj["name"].(string)
 	if !ok {
-		return fmt.Errorf("backend object must contain field 'kind'")
+		return fmt.Errorf("backend object must contain field 'name'")
 	}
 	spec, ok := obj["spec"]
 	if !ok {

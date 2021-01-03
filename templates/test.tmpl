@@ -15,3 +15,12 @@ modules:
       cluster_name: {{ .name }}
       subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
       instance_type: {{ .variables.instance_type }}
+  - name: postScript
+    type: shell
+    command: "echo {{ output "this.vpc.output1" }}"
+    inputs:
+      - "--asdasd"
+      - "{{ output "this.vpc.output1" }}"
+  - name: postScript2
+    type: shell
+    command: "echo {{ output "this.postScript.output1" }}"

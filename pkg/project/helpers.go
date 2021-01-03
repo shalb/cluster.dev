@@ -6,7 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
+	"strings"
 
+	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
 )
 
@@ -59,8 +62,8 @@ func findModule(module Module, modsList map[string]Module) *Module {
 	return &mod
 }
 
-// ReplaceMarkers use marker scanner function to replace templated markers.
-func ReplaceMarkers(data interface{}, procFunc MarkerScanner, module Module) error {
+// ScanMarkers use marker scanner function to replace templated markers.
+func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error {
 	out := reflect.ValueOf(data)
 	if out.Kind() == reflect.Ptr && !out.IsNil() {
 		out = out.Elem()
@@ -75,7 +78,7 @@ func ReplaceMarkers(data interface{}, procFunc MarkerScanner, module Module) err
 				}
 				out.Index(i).Set(val)
 			} else {
-				err := ReplaceMarkers(out.Index(i).Interface(), procFunc, module)
+				err := ScanMarkers(out.Index(i).Interface(), procFunc, module)
 				if err != nil {
 					return err
 				}
@@ -90,7 +93,7 @@ func ReplaceMarkers(data interface{}, procFunc MarkerScanner, module Module) err
 				}
 				out.SetMapIndex(key, val)
 			} else {
-				err := ReplaceMarkers(out.MapIndex(key).Interface(), procFunc, module)
+				err := ScanMarkers(out.MapIndex(key).Interface(), procFunc, module)
 				if err != nil {
 					return err
 				}
@@ -98,6 +101,52 @@ func ReplaceMarkers(data interface{}, procFunc MarkerScanner, module Module) err
 		}
 	default:
 
+	}
+	return nil
+}
+
+func checkDependenciesRecursive(mod Module, maxDepth int) bool {
+	if maxDepth == 0 {
+		return false
+	}
+	// log.Debugf("Mod: %v, depth: %v\n%+v", mod.Name, maxDepth, mod.Dependencies)
+	for _, dep := range mod.Dependencies() {
+		if ok := checkDependenciesRecursive(dep.Module, maxDepth-1); !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func ConvertToTfVarName(name string) string {
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	processedString := reg.ReplaceAllString(name, "_")
+	return strings.ToLower(processedString)
+}
+
+func ConvertToShellVarName(name string) string {
+	return strings.ToUpper(ConvertToTfVarName(name))
+}
+
+func ConvertToShellVar(name string) string {
+	return fmt.Sprintf("${%s}", ConvertToShellVarName(name))
+}
+
+func BuildDep(m Module, dep *Dependency) error {
+	if dep.Module == nil {
+
+		if dep.ModuleName == "" || dep.InfraName == "" {
+			return fmt.Errorf("Empty dependency in module '%v.%v'", m.InfraName(), m.Name())
+		}
+		depMod, exists := m.ProjectPtr().Modules[fmt.Sprintf("%v.%v", dep.InfraName, dep.ModuleName)]
+		if !exists {
+			return fmt.Errorf("Error in module '%v.%v' dependency, target '%v.%v' does not exist", m.InfraName(), m.Name(), dep.InfraName, dep.ModuleName)
+		}
+		dep.Module = depMod
+		log.Debugf("DEPENDENCY DONE! %+v", *dep)
 	}
 	return nil
 }

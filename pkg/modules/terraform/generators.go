@@ -30,13 +30,34 @@ func (m *TFModule) genMainCodeBlockHCL() ([]byte, error) {
 		}
 		moduleBody.SetAttributeValue(key, ctyVal)
 	}
-	depMarkers, ok := m.projectPtr.Markers["DependencyMarkers"]
+	depMarkers, ok := m.projectPtr.Markers[remoteStateMarkerCatName]
 	if !ok {
 		log.Debug("Internal error.")
+		return nil, fmt.Errorf("internal error")
 	}
-	for hash, marker := range depMarkers.(map[string]*DependencyMarker) {
-		remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.InfraName, marker.ModuleName, marker.Output)
+	for hash, marker := range depMarkers.(map[string]*project.Dependency) {
+		remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output)
 		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, remoteStateRef)
+	}
+	outputMarkers, ok := m.projectPtr.Markers[project.OutputMarkerCatName]
+	if !ok {
+		log.Debug("Internal error.")
+		return nil, fmt.Errorf("internal error")
+	}
+	for hash, marker := range outputMarkers.(map[string]*project.Dependency) {
+		vName := project.ConvertToTfVarName(fmt.Sprintf("%s_%s_%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output))
+		outputRef := fmt.Sprintf("var.%s", vName)
+		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, outputRef)
+	}
+
+	for _, d := range m.dependenciesOutputs {
+		if d.Output == "" {
+			continue
+		}
+		vName := project.ConvertToTfVarName(fmt.Sprintf("%s_%s_%s", d.Module.InfraName(), d.Module.Name(), d.Output))
+		vBlock := rootBody.AppendNewBlock("variable", []string{vName})
+		vBlockBody := vBlock.Body()
+		vBlockBody.SetAttributeValue("type", cty.StringVal("string"))
 	}
 	return f.Bytes(), nil
 }
@@ -56,8 +77,16 @@ func (m *TFModule) genOutputsBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	for output := range m.ExpectedOutputs {
-		log.Debugf("Output: %v", output)
+	exOutputs := map[string]bool{}
+
+	for output := range m.expectedRemoteStates {
+		exOutputs[output] = true
+	}
+	for output := range m.expectedOutputs {
+		exOutputs[output] = true
+	}
+
+	for output := range exOutputs {
 		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
 		outputName := re.FindString(output)
 		if len(outputName) < 1 {
@@ -75,14 +104,17 @@ func (m *TFModule) genOutputsBlock() ([]byte, error) {
 // genDepsRemoteStates generate terraform remote states for all dependencies of this module.
 func (m *TFModule) genDepsRemoteStates() ([]byte, error) {
 	var res []byte
-	depsUniq := map[*project.Module]bool{}
-
-	for _, dep := range *m.Dependencies() {
+	depsUniq := map[project.Module]bool{}
+	for _, dep := range m.Dependencies() {
 		if _, ok := depsUniq[dep.Module]; ok {
 			continue
 		}
 		depsUniq[dep.Module] = true
-		rs, err := m.genRemoteStateToSelf()
+		convertedMod, ok := dep.Module.Self().(*TFModule)
+		if !ok {
+			continue
+		}
+		rs, err := convertedMod.genRemoteStateToSelf()
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +132,7 @@ func (m *TFModule) genRemoteStateToSelf() ([]byte, error) {
 func (m *TFModule) CreateCodeDir(codeDir string) error {
 
 	mName := fmt.Sprintf("%s.%s", m.InfraName(), m.Name())
-	modDir := filepath.Join(codeDir, m.Name())
+	modDir := filepath.Join(codeDir, mName)
 	log.Infof("Generating code for module module '%v'", mName)
 	err := os.Mkdir(modDir, 0755)
 	if err != nil {
@@ -191,14 +223,36 @@ rm -f ./.terraform/plugins
 mkdir -p ../../../.tmp/plugins
 ln -s  ../../../.tmp/plugins ./.terraform/plugins
 terraform init
-terraform {{ .command }} -auto-approve
+terraform {{ .command }} {{ .vars }} -auto-approve
+{{ .outputs }}
 popd
 
 `
+	var outputsShellBlock string
+
+	for output := range m.expectedOutputs {
+		envVarName := project.ConvertToShellVarName(fmt.Sprintf("%v.%v.%v", m.InfraName(), m.Name(), output))
+		outputsShellBlock += fmt.Sprintf("%[1]s=\"$(terraform output %[2]s)\"\nexport %[1]s\n", envVarName, output)
+		// log.Debugf("%v", outputsShellBlock)
+	}
+
+	var varString string
+
+	for _, v := range m.dependenciesOutputs {
+		if len(v.Output) == 0 {
+			continue
+		}
+		envVarName := project.ConvertToShellVar(fmt.Sprintf("%v.%v.%v", v.InfraName, v.ModuleName, v.Output))
+		varName := project.ConvertToTfVarName(fmt.Sprintf("%v.%v.%v", v.InfraName, v.ModuleName, v.Output))
+		varString += fmt.Sprintf("-var \"%v=%v\" ", varName, envVarName)
+	}
+
 	t := map[string]interface{}{
 		"module":  m.Name(),
 		"infra":   m.InfraName(),
 		"command": subCmd,
+		"outputs": outputsShellBlock,
+		"vars":    varString,
 	}
 	tmpl, err := template.New("main").Option("missingkey=error").Parse(tfCmd)
 
@@ -209,7 +263,7 @@ popd
 	templatedConf := bytes.Buffer{}
 	err = tmpl.Execute(&templatedConf, &t)
 	if err != nil {
-		log.Trace(err.Error())
+		log.Fatal(err.Error())
 		return ""
 	}
 

@@ -9,15 +9,18 @@ const moduleTypeKey = "terraform"
 
 // TFModule describe cluster.dev module to deploy/destroy terraform modules.
 type TFModule struct {
-	infraPtr        *project.Infrastructure
-	projectPtr      *project.Project
-	BackendPtr      project.Backend
-	name            string
-	Type            string
-	Source          string
-	Inputs          map[string]interface{}
-	dependencies    []*project.Dependency
-	ExpectedOutputs map[string]bool
+	infraPtr                *project.Infrastructure
+	projectPtr              *project.Project
+	BackendPtr              project.Backend
+	name                    string
+	Type                    string
+	Source                  string
+	Inputs                  map[string]interface{}
+	dependenciesOutputs     []*project.Dependency
+	dependenciesRemoteState []*project.Dependency
+	expectedOutputs         map[string]bool
+	expectedRemoteStates    map[string]bool
+	preHook                 *project.Dependency
 }
 
 // Name return module name.
@@ -47,22 +50,75 @@ func (m *TFModule) Backend() project.Backend {
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *TFModule) ReplaceMarkers() error {
-	for _, scanner := range m.projectPtr.MarkerScaners {
-		err := project.ReplaceMarkers(m.Inputs, scanner, m)
-		if err != nil {
-			return err
-		}
+	err := project.ScanMarkers(m.Inputs, yamlBlockMarkerScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.Inputs, outputMarkersScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.Inputs, remoteStatesScanner, m)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
 // Dependencies return slice of module dependencies.
-func (m *TFModule) Dependencies() *[]*project.Dependency {
-	return &m.dependencies
+func (m *TFModule) Dependencies() []*project.Dependency {
+	depsUniq := map[*project.Dependency]bool{}
+	for _, dep := range m.dependenciesOutputs {
+		depsUniq[dep] = true
+	}
+	for _, dep := range m.dependenciesRemoteState {
+		depsUniq[dep] = true
+	}
+	deps := []*project.Dependency{}
+	for dep := range depsUniq {
+		deps = append(deps, dep)
+	}
+	return deps
+}
+
+// ExpectedOutputs return expected outputs.
+func (m *TFModule) ExpectedOutputs() *map[string]bool {
+	return &m.expectedOutputs
 }
 
 // Self return pointer to self.
 // It should be used fo access to some internal module data or methods (witch not described in Module interface) from it terraform module driver.
 func (m *TFModule) Self() interface{} {
 	return m
+}
+
+// BuildDeps check all dependencies and add module pointer.
+func (m *TFModule) BuildDeps() error {
+
+	for _, dep := range m.dependenciesOutputs {
+		err := project.BuildDep(m, dep)
+		if err != nil {
+			return err
+		}
+	}
+	for _, dep := range m.dependenciesRemoteState {
+		err := project.BuildDep(m, dep)
+		if err != nil {
+			return err
+		}
+	}
+	if m.preHook == nil {
+		return nil
+	}
+
+	err := project.BuildDep(m, m.preHook)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// PreHook return module pre hook dependency.
+func (m *TFModule) PreHook() *project.Dependency {
+	return m.preHook
 }
