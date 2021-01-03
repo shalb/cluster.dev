@@ -26,10 +26,11 @@ modules:
       aws_instance_type: {{ .variables.instance_type }}
       hosted_zone: {{ .name }}.{{ .variables.domain }}
       aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
+      bucket_name: {{ .variables.bucket }}
   - name: get_kubeconfig
     type: shell
     depends_on: this.minikube
-    command: "aws s3 cp s3://{{ .name }}/kubeconfig_{{ .name }} ../kubeconfig_{{ .name }} && echo set_output_kubeconfig_path=../kubeconfig{{ .name }} "
+    command: "aws s3 cp s3://{{ .variables.bucket }}/kubeconfig_{{ .name }} ../kubeconfig_{{ .name }} && echo set_output_kubeconfig_path=../kubeconfig{{ .name }} "
   - name: addons
     type: terraform
     source: {{ $gitUrl }}/addons?ref={{ $branch }}

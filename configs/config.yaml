@@ -5,11 +5,12 @@ spec:
   bucket: new-cluster-dev
   region: eu-central-1
 ---
-name: infra-dev
+name: infra-dev2
 template: "templates/infra.tmpl"
 kind: infrastructure
 backend: aws
 variables:
+  bucket: new-cluster-dev
   region: eu-central-1
   organization: "shalb"
   domain: cluster.dev
