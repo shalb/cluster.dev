@@ -89,8 +89,8 @@ kind: infrastructure
 backend: aws
 variables:
   bucket: new-cluster-dev
-  region: eu-central-1
-  organization: "shalb"
+  region: {{ remoteState infra.vpc.region }}
+  organization: {{ projectVariable organization }}
   domain: cluster.dev
   instance_type: "t3.medium"
   env: "dev-test1"
