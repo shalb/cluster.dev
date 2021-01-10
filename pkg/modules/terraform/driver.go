@@ -172,37 +172,6 @@ func remoteStatesScanner(data reflect.Value, module project.Module) (reflect.Val
 	return subVal, nil
 }
 
-// outputMarkersScanner - project scanner function, witch process dependencies markers in module data setted by AddRemoteStateMarker template function.
-func outputMarkersScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
-	subVal := reflect.ValueOf(data.Interface())
-	resString := subVal.String()
-	depMarkers, ok := module.ProjectPtr().Markers[project.OutputMarkerCatName]
-	if !ok {
-		return subVal, nil
-	}
-	for key, marker := range depMarkers.(map[string]*project.Dependency) {
-		if strings.Contains(resString, key) {
-			if marker.InfraName == "this" {
-				marker.InfraName = module.InfraName()
-			}
-			modKey := fmt.Sprintf("%s.%s", marker.InfraName, marker.ModuleName)
-			depModule, exists := module.ProjectPtr().Modules[modKey]
-			if !exists {
-				return reflect.ValueOf(nil), fmt.Errorf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
-			}
-			thisModTf, ok := module.Self().(*TFModule)
-			if ok {
-				thisModTf.dependenciesOutputs = append(thisModTf.dependenciesOutputs, marker)
-			} else {
-				log.Fatal("Internal error")
-			}
-			(*depModule.ExpectedOutputs())[marker.Output] = true
-			return reflect.ValueOf(resString), nil
-		}
-	}
-	return subVal, nil
-}
-
 func yamlBlockMarkerScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
 	subVal := reflect.ValueOf(data.Interface())
 

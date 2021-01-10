@@ -39,4 +39,4 @@ terraform/aws/addons/auth.yaml
 .gitignore
 bin/reconciler
 **/vars-tmp.tfvars.json
-.cluster.dev/**
+**/.cluster.dev/**

@@ -16,9 +16,7 @@ type TFModule struct {
 	Type                    string
 	Source                  string
 	Inputs                  map[string]interface{}
-	dependenciesOutputs     []*project.Dependency
 	dependenciesRemoteState []*project.Dependency
-	expectedOutputs         map[string]bool
 	expectedRemoteStates    map[string]bool
 	preHook                 *project.Dependency
 }
@@ -54,10 +52,6 @@ func (m *TFModule) ReplaceMarkers() error {
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.Inputs, outputMarkersScanner, m)
-	if err != nil {
-		return err
-	}
 	err = project.ScanMarkers(m.Inputs, remoteStatesScanner, m)
 	if err != nil {
 		return err
@@ -68,11 +62,8 @@ func (m *TFModule) ReplaceMarkers() error {
 // Dependencies return slice of module dependencies.
 func (m *TFModule) Dependencies() []*project.Dependency {
 	depsUniq := map[*project.Dependency]bool{}
-	for _, dep := range m.dependenciesOutputs {
-		depsUniq[dep] = true
-	}
 	for _, dep := range m.dependenciesRemoteState {
-		depsUniq[dep] = true
+		depsUniq[dep.Module.Index()] = true
 	}
 	deps := []*project.Dependency{}
 	for dep := range depsUniq {
@@ -83,7 +74,7 @@ func (m *TFModule) Dependencies() []*project.Dependency {
 
 // ExpectedOutputs return expected outputs.
 func (m *TFModule) ExpectedOutputs() *map[string]bool {
-	return &m.expectedOutputs
+	return nil
 }
 
 // Self return pointer to self.
@@ -95,12 +86,6 @@ func (m *TFModule) Self() interface{} {
 // BuildDeps check all dependencies and add module pointer.
 func (m *TFModule) BuildDeps() error {
 
-	for _, dep := range m.dependenciesOutputs {
-		err := project.BuildDep(m, dep)
-		if err != nil {
-			return err
-		}
-	}
 	for _, dep := range m.dependenciesRemoteState {
 		err := project.BuildDep(m, dep)
 		if err != nil {
