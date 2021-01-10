@@ -12,8 +12,18 @@ import (
 // Version - git tag from compiller
 var Version string
 
-// Build - build date from compiller
-var Build string
+// BuildTimestamp - build date from compiller
+var BuildTimestamp string
+
+type SubCmd int
+
+const (
+	Plan SubCmd = iota
+	Apply
+	Destroy
+	Build
+	Clear
+)
 
 // ConfSpec type for global config.
 type ConfSpec struct {
@@ -28,8 +38,10 @@ type ConfSpec struct {
 	Build              string
 	TmpDir             string
 	WorkingDir         string
-	TraceLog					 bool
+	TraceLog           bool
 	OnlyPrintVersion   bool
+	MaxParallel        int
+	SubCommand         SubCmd
 }
 
 // Global config for executor.
@@ -41,22 +53,51 @@ func init() {
 	// Read flags.
 	// Read debug option ( --debug )
 	flag.StringVar(&Global.LogLevel, "log-level", getEnv("VERBOSE_LVL", "info"), "Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")")
-	flag.StringVar(&Global.ClusterConfig, "config", "", "Define cluster config. If empty - reconciler will use all configs by mask ./cluster.dev/*.yaml .")
 	flag.BoolVar(&Global.OnlyPrintVersion, "version", false, "Print binary version tag.")
 	flag.BoolVar(&Global.TraceLog, "trace", false, "Print function trace info in logs.")
+	flag.IntVar(&Global.MaxParallel, "max-paraless", 3, "Max parallel module applying")
+	var build, apply, plan, destroy bool
+	flag.BoolVar(&build, "build", false, "Build project code")
+	flag.BoolVar(&apply, "apply", false, "Apply project")
+	flag.BoolVar(&plan, "plan", false, "Show terraform plan")
+	flag.BoolVar(&destroy, "destroy", false, "Destroy project")
+
 	curPath, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current directory: %s", err.Error())
 	}
 	Global.WorkingDir = curPath
 	Global.Version = Version
-	Global.Build = Build
+	Global.Build = BuildTimestamp
 
-	Global.ClusterConfigsPath = filepath.Join(curPath, "configs")
+	Global.ClusterConfigsPath = curPath
 	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
 	// Parse args.
 	flag.Parse()
 
+	cmdsCount := 0
+	if build {
+		cmdsCount++
+		Global.SubCommand = Build
+	}
+	if apply {
+		cmdsCount++
+		Global.SubCommand = Apply
+	}
+	if plan {
+		cmdsCount++
+		Global.SubCommand = Plan
+	}
+	if destroy {
+		cmdsCount++
+		Global.SubCommand = Destroy
+	}
+	if cmdsCount > 1 {
+		log.Fatal("You should use only one of commands: (-apply|-plan|-destroy|-build)")
+	}
+	if cmdsCount < 1 {
+		log.Fatal("Command require: (-apply|-plan|-destroy|-build)")
+	}
 	// Detect git provider and set config vars.
 	detectGitProvider(&Global)
 

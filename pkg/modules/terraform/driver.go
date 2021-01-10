@@ -2,10 +2,13 @@ package terraform
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
@@ -55,6 +58,7 @@ func (d *TFModuleDriver) NewModule(spec map[string]interface{}, infra *project.I
 			InfraName:  infNm,
 			ModuleName: splDep[1],
 		})
+		log.Debugf("Dep added: %v.%v", infNm, splDep[1])
 	}
 
 	bPtr, exists := infra.ProjectPtr.Backends[infra.BackendName]
@@ -68,10 +72,8 @@ func (d *TFModuleDriver) NewModule(spec map[string]interface{}, infra *project.I
 		name:                    mName.(string),
 		Type:                    mType.(string),
 		Source:                  mSource.(string),
-		dependenciesOutputs:     modDeps,
-		dependenciesRemoteState: []*project.Dependency{},
+		dependenciesRemoteState: modDeps,
 		Inputs:                  mInputs.(map[string]interface{}),
-		expectedOutputs:         map[string]bool{},
 		expectedRemoteStates:    map[string]bool{},
 		preHook:                 nil,
 		BackendPtr:              bPtr,
@@ -79,18 +81,29 @@ func (d *TFModuleDriver) NewModule(spec map[string]interface{}, infra *project.I
 
 	modPreHook, ok := spec["pre_hook"]
 	if ok {
-		splDep := strings.Split(modPreHook.(string), ".")
-		if len(splDep) != 2 {
-			return nil, fmt.Errorf("Incorrect module pre_hook '%v'", modPreHook)
+		hook, ok := modPreHook.(map[string]interface{})
+		if !ok {
+			log.Fatalf("Pre_hook configuration error.")
 		}
-		infNm := splDep[0]
-		if infNm == "this" {
-			infNm = infra.Name
+		cmd, cmdExists := hook["command"].(string)
+		script, scrExists := hook["script"].(string)
+		if cmdExists && scrExists {
+			log.Fatalf("Error in pre_hook config, use 'script' or 'command' option, not both")
 		}
-		mod.preHook = &project.Dependency{
-			InfraName:  infNm,
-			ModuleName: splDep[1],
+		if !cmdExists && !scrExists {
+			log.Fatalf("Error in pre_hook config, use one of 'script' or 'command' option")
 		}
+		var ScriptData []byte
+		var err error
+		if cmdExists {
+			ScriptData = []byte(fmt.Sprintf("#!/usr/bin/env bash\nset -e\n\n%s", cmd))
+		} else {
+			ScriptData, err = ioutil.ReadFile(filepath.Join(config.Global.WorkingDir, script))
+			if err != nil {
+				log.Fatalf("can't load pre hook script: %v", err.Error())
+			}
+		}
+		mod.preHook = ScriptData
 	}
 	return &mod, nil
 }
@@ -150,7 +163,7 @@ func remoteStatesScanner(data reflect.Value, module project.Module) (reflect.Val
 			modKey := fmt.Sprintf("%s.%s", marker.InfraName, marker.ModuleName)
 			depModule, exists := module.ProjectPtr().Modules[modKey]
 			if !exists {
-				return reflect.ValueOf(nil), fmt.Errorf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
+				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
 			}
 			thisModTf, ok := module.Self().(*TFModule)
 			if ok {
@@ -171,7 +184,6 @@ func remoteStatesScanner(data reflect.Value, module project.Module) (reflect.Val
 	}
 	return subVal, nil
 }
-
 func yamlBlockMarkerScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
 	subVal := reflect.ValueOf(data.Interface())
 

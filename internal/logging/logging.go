@@ -86,15 +86,20 @@ func logFormatter(e *log.Entry) string {
 
 	// ts := time.Since(utilStartTime) / time.Second
 	tsR := time.Now().Format("15:04:05.000")
+
 	output := fmt.Sprintf("%s %s", rgbterm.FgString(tsR, 204, 204, 204), color(fmt.Sprintf("[%s]", level)))
+
+	if len(names) > 0 {
+		output += " "
+	}
+	for _, name := range names {
+		output += rgbterm.FgString(fmt.Sprintf("[%v]", e.Fields.Get(name)), 225, 225, 225)
+	}
 	if config.Global.TraceLog {
-		traceMsg := rgbterm.FgString(fmt.Sprintf("<%s>", formatCallpath(5, 15)), 255, 255, 255)
+		traceMsg := rgbterm.FgString(fmt.Sprintf("<%s>", formatCallpath(6, 15)), 255, 255, 255)
 		output = fmt.Sprintf("%s %s", output, traceMsg)
 	}
 	output = fmt.Sprintf("%s %-25s", output, e.Message)
 
-	for _, name := range names {
-		output += fmt.Sprintf(" %s=%v", color(name), e.Fields.Get(name))
-	}
 	return fmt.Sprintln(output)
 }

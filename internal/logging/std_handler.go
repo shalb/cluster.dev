@@ -26,13 +26,13 @@ func (h *StdHandler) HandleLog(e *log.Entry) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	if e.Level >= log.ErrorLevel {
-		h.Writer = os.Stderr
-	} else {
-		h.Writer = os.Stdout
-	}
+	// if e.Level >= log.ErrorLevel {
+	// 	h.Writer = os.Stderr
+	// } else {
+	// 	h.Writer = os.Stdout
+	// }
 
-	fmt.Fprint(h.Writer, logFormatter(e))
+	fmt.Fprint(os.Stdout, logFormatter(e))
 
 	return nil
 }

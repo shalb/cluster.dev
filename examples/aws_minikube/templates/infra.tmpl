@@ -1,10 +1,7 @@
-# set additional template variables
-{{- $gitUrl := "github.com/shalb/cluster.dev//terraform/aws" }}
-{{- $branch := "new-reconciler" }}
 modules:
   - name: route53
     type: terraform
-    source: {{ $gitUrl }}/route53?ref={{ $branch }}
+    source: github.com/shalb/cluster.dev//terraform/aws/route53?ref=new-reconciler
     inputs:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
@@ -12,14 +9,14 @@ modules:
       zone_delegation: {{ if eq .variables.domain "cluster.dev" }}true{{ else }}false{{ end }}
   - name: vpc
     type: terraform
-    source: {{ $gitUrl }}/vpc?ref={{ $branch }}
+    source: github.com/shalb/cluster.dev//terraform/aws/vpc?ref=new-reconciler
     inputs:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
       availability_zones: {{ insertYAML .variables.azs }}
   - name: minikube
     type: terraform
-    source: {{ $gitUrl }}/minikube?ref={{ $branch }}
+    source: github.com/shalb/cluster.dev//terraform/aws/minikube?ref=new-reconciler
     inputs:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
@@ -27,17 +24,15 @@ modules:
       hosted_zone: {{ .name }}.{{ .variables.domain }}
       aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
       bucket_name: {{ .variables.bucket }}
-  - name: get_kubeconfig
-    type: shell
-    depends_on: this.minikube
-    command: "aws s3 cp s3://{{ .variables.bucket }}/kubeconfig_{{ .name }} ../kubeconfig_{{ .name }} && echo set_output_kubeconfig_path=../kubeconfig{{ .name }} "
   - name: addons
     type: terraform
-    source: {{ $gitUrl }}/addons?ref={{ $branch }}
-    pre_hook: this.get_kubeconfig
+    depends_on: this.minikube
+    source: github.com/shalb/cluster.dev//terraform/aws/addons?ref=new-reconciler
+    pre_hook:
+      command: "echo set_output_kubeconfig_path=../kubeconfig_{{ .name }} "
     inputs:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
-      kubeconfig: {{ output "this.get_kubeconfig.kubeconfig_path" }}
+      kubeconfig: ../kubeconfig_{{ .name }}
       cluster_cloud_domain: {{ .name }}.{{ .variables.domain }}
       dns_zone_id: {{ remoteState "this.route53.zone_id" }}

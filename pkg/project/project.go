@@ -229,8 +229,9 @@ func (p *Project) readModules() error {
 			if err != nil {
 				return err
 			}
-			modKey := fmt.Sprintf("%s.%s", infraName, mod.Name())
-			p.Modules[modKey] = mod
+			// modKey := fmt.Sprintf("%s.%s", infraName, mod.Name())
+
+			p.Modules[mod.Key()] = mod
 		}
 	}
 	return nil
@@ -274,15 +275,14 @@ func (p *Project) GenCode(codeStructName string) error {
 		}
 	}
 	log.Debugf("Remove all old content: %s", codeDir)
-	err := removeDirContent(codeDir)
-	if err != nil {
-		return err
-	}
+	// err := removeDirContent(codeDir)
+	// if err != nil {
+	// 	return err
+	// }
 	for _, module := range p.Modules {
 		if err := module.CreateCodeDir(codeDir); err != nil {
 			return err
 		}
-
 	}
 	script, err := p.generateScriptApply()
 	if err != nil {
@@ -305,8 +305,82 @@ func (p *Project) GenCode(codeStructName string) error {
 	return nil
 }
 
-func (p *Project) generateScriptApply() (string, error) {
+func (p *Project) Destroy() error {
 
+	grph := grapher{}
+	grph.Init(p, 1, true)
+
+	for {
+		if grph.Len() == 0 {
+			return nil
+		}
+		md, fn, err := grph.GetNext()
+		if err != nil {
+			log.Errorf("error in module %v, waitint for all running modules done.", md.Key())
+			grph.Wait()
+			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
+		}
+		if md == nil {
+			return nil
+		}
+		go func(mod Module, finFunc func(error)) {
+			res := mod.Destroy()
+			finFunc(res)
+		}(md, fn)
+	}
+}
+
+func (p *Project) Apply() error {
+
+	grph := grapher{}
+	grph.Init(p, config.Global.MaxParallel, false)
+
+	for {
+		if grph.Len() == 0 {
+			return nil
+		}
+		md, fn, err := grph.GetNext()
+		if err != nil {
+			log.Errorf("error in module %v, waitint for all running modules done.", md.Key())
+			grph.Wait()
+			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
+		}
+		if md == nil {
+			return nil
+		}
+		go func(mod Module, finFunc func(error)) {
+			res := mod.Apply()
+			finFunc(res)
+		}(md, fn)
+	}
+}
+
+func (p *Project) Plan() error {
+
+	grph := grapher{}
+	grph.Init(p, 1, false)
+
+	for {
+		if grph.Len() == 0 {
+			return nil
+		}
+		md, fn, err := grph.GetNext()
+		if err != nil {
+			log.Errorf("error in module %v, waitint for all running modules done.", md.Key())
+			grph.Wait()
+			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
+		}
+		if md == nil {
+			return nil
+		}
+		go func(mod Module, finFunc func(error)) {
+			res := mod.Plan()
+			finFunc(res)
+		}(md, fn)
+	}
+}
+
+func (p *Project) generateScriptApply() (string, error) {
 	applyScript := `#!/bin/bash
 
 set -e
@@ -325,7 +399,6 @@ mkdir -p ../.tmp/plugins/
 }
 
 func (p *Project) generateScriptDestroy() (string, error) {
-
 	applyScript := `#!/bin/bash
 
 set -e
@@ -337,10 +410,6 @@ mkdir -p ../.tmp/plugins/
 		modPack := p.DeploySequence[i]
 		for _, mod := range modPack {
 			var scr string
-			if mod.PreHook() != nil {
-				scr += mod.PreHook().Module.GetDestroyShellCmd()
-				p.deleteModFromDeploySeq(mod.PreHook().Module)
-			}
 			scr += mod.GetDestroyShellCmd()
 			applyScript += scr
 			index++

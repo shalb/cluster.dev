@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/apex/log"
@@ -17,8 +18,22 @@ type LogWriter struct {
 	ctx           *log.Entry
 }
 
+type SliceFielder struct {
+	Flds []string
+}
+
+func (s SliceFielder) Fields() log.Fields {
+
+	fields := log.Fields{}
+	for i, fl := range s.Flds {
+		fields[strconv.Itoa(i)] = fl
+	}
+	return fields
+}
+
 // NewLogWriter create log io writer.
 func NewLogWriter(logLevel log.Level, fielder log.Fielder) (*LogWriter, error) {
+
 	ctx := log.WithFields(fielder)
 	//log.WithFields(fielder)
 	var logFunctionsMap = map[log.Level]func(string){

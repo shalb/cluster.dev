@@ -16,11 +16,13 @@ type Module interface {
 	GetDestroyShellCmd() string
 	Dependencies() []*Dependency
 	Self() interface{}
-	// ExpectedOutputs return expected outputs.
-	ExpectedOutputs() *map[string]bool
 	// BuildDeps - check string dependencies, finds the corresponding module and add module ptr to dependency.
 	BuildDeps() error
-	PreHook() *Dependency
+	PreHook() []byte
+	Apply() error
+	Plan() error
+	Destroy() error
+	Key() string
 }
 
 type ModuleDriver interface {

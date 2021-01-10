@@ -28,6 +28,30 @@ func Run() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	if config.Global.SubCommand == config.Build {
+		return
+	}
+	if config.Global.SubCommand == config.Plan {
+		err = project.Plan()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		return
+	}
+	if config.Global.SubCommand == config.Apply {
+		err = project.Apply()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		return
+	}
+	if config.Global.SubCommand == config.Destroy {
+		err = project.Destroy()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		return
+	}
 	return
 }
 

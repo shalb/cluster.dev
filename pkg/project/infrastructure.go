@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 )
 
 const infraObjKindKey = "infrastructure"
@@ -44,7 +46,8 @@ func (p *Project) readInfrastructureObj(obj map[string]interface{}) error {
 	}
 
 	// Read infra template data and apply variables.
-	tmplData, err := ioutil.ReadFile(tmplFileName)
+	templatesFile := filepath.Join(config.Global.WorkingDir, tmplFileName)
+	tmplData, err := ioutil.ReadFile(templatesFile)
 	if err != nil {
 		return err
 	}

@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -84,17 +83,13 @@ func (b *BashRunner) commandExecCommon(command string, outputBuff io.Writer, err
 }
 
 // Run - exec command and hide secrets in log output.
-func (b *BashRunner) Run(command string, secrets ...string) error {
+func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, error) {
 	// Mask secrets with ***
 	hiddenCommand := stringHideSecrets(command, secrets...)
 	log.Debugf("Executing command \"%s\"", hiddenCommand)
 
-	// Set runner output logging level.
-	var logWriter *logging.LogWriter
-
 	// Create log writer.
-	var err error
-	logWriter, err = logging.NewLogWriter(log.DebugLevel, log.Fields{})
+	logWriter, err := logging.NewLogWriter(log.DebugLevel, logging.SliceFielder{Flds: b.LogLabels})
 	if err != nil {
 		log.Fatalf("can't init logging: %v", err)
 	}
@@ -104,19 +99,11 @@ func (b *BashRunner) Run(command string, secrets ...string) error {
 
 	bannerStopChan := make(chan struct{})
 	if config.Global.LogLevel != "debug" {
-		curpath, err := os.Getwd()
-		if err != nil {
-			curpath = "/"
-		}
-		dir, err := filepath.Rel(curpath, b.workingDir)
-		if err != nil {
-			dir = b.workingDir
-		}
 		var banner string
 		for _, str := range b.LogLabels {
 			banner = fmt.Sprintf("%s[%s]", banner, str)
 		}
-		banner = fmt.Sprintf("%s[dir='%s'][cmd='%s']", banner, "./"+dir, command)
+		// banner = fmt.Sprintf("%s[dir='%s'][cmd='%s']", banner, "./"+dir, command)
 		banner = fmt.Sprintf("%s executing in progress...", banner)
 		go showBanner(banner, bannerStopChan)
 
@@ -125,13 +112,9 @@ func (b *BashRunner) Run(command string, secrets ...string) error {
 			close(stop)
 		}(bannerStopChan)
 	}
-	//defer lh.Close()
-	// Run command.
-	err = b.commandExecCommon(command, logWriter, errOutput)
-	if err != nil {
-		return fmt.Errorf("%s, output: \n%s", err.Error(), errOutput.String())
-	}
-	return nil
+	logCollector := newCollector(logWriter)
+	err = b.commandExecCommon(command, logCollector, errOutput)
+	return logCollector.Data(), errOutput.Bytes(), err
 }
 
 // RunMutely - exec command and hide secrets in output. Return command output and errors output.

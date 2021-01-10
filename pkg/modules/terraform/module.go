@@ -1,6 +1,9 @@
 package terraform
 
 import (
+	"fmt"
+
+	"github.com/shalb/cluster.dev/internal/executor"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
@@ -18,7 +21,8 @@ type TFModule struct {
 	Inputs                  map[string]interface{}
 	dependenciesRemoteState []*project.Dependency
 	expectedRemoteStates    map[string]bool
-	preHook                 *project.Dependency
+	preHook                 []byte
+	codeDir                 string
 }
 
 // Name return module name.
@@ -63,18 +67,13 @@ func (m *TFModule) ReplaceMarkers() error {
 func (m *TFModule) Dependencies() []*project.Dependency {
 	depsUniq := map[*project.Dependency]bool{}
 	for _, dep := range m.dependenciesRemoteState {
-		depsUniq[dep.Module.Index()] = true
+		depsUniq[dep] = true
 	}
 	deps := []*project.Dependency{}
 	for dep := range depsUniq {
 		deps = append(deps, dep)
 	}
 	return deps
-}
-
-// ExpectedOutputs return expected outputs.
-func (m *TFModule) ExpectedOutputs() *map[string]bool {
-	return nil
 }
 
 // Self return pointer to self.
@@ -85,25 +84,90 @@ func (m *TFModule) Self() interface{} {
 
 // BuildDeps check all dependencies and add module pointer.
 func (m *TFModule) BuildDeps() error {
-
 	for _, dep := range m.dependenciesRemoteState {
 		err := project.BuildDep(m, dep)
 		if err != nil {
 			return err
 		}
 	}
-	if m.preHook == nil {
-		return nil
-	}
-
-	err := project.BuildDep(m, m.preHook)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
 // PreHook return module pre hook dependency.
-func (m *TFModule) PreHook() *project.Dependency {
+func (m *TFModule) PreHook() []byte {
 	return m.preHook
+}
+
+// Apply module.
+func (m *TFModule) Apply() error {
+	rn, err := executor.NewBashRunner(m.codeDir)
+	if err != nil {
+		return err
+	}
+	rn.LogLabels = []string{
+		m.InfraName(),
+		m.Name(),
+		"apply",
+	}
+	var cmd = ""
+	if m.preHook != nil {
+		cmd = "./pre_hook.sh\n"
+	}
+	cmd += "terraform init && terraform apply -auto-approve"
+
+	_, errMsg, err := rn.Run(cmd)
+	if err != nil {
+		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+	}
+	return nil
+}
+
+// Plan module.
+func (m *TFModule) Plan() error {
+	rn, err := executor.NewBashRunner(m.codeDir)
+	if err != nil {
+		return err
+	}
+	rn.LogLabels = []string{
+		m.InfraName(),
+		m.Name(),
+		"plan",
+	}
+	var cmd = ""
+	cmd += "terraform init && terraform plan"
+
+	_, errMsg, err := rn.Run(cmd)
+	if err != nil {
+		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+	}
+	return nil
+}
+
+// Destroy module.
+func (m *TFModule) Destroy() error {
+	rn, err := executor.NewBashRunner(m.codeDir)
+	if err != nil {
+		return err
+	}
+	rn.LogLabels = []string{
+		m.InfraName(),
+		m.Name(),
+		"destroy",
+	}
+	var cmd = ""
+	if m.preHook != nil {
+		cmd = "./pre_hook.sh\n"
+	}
+	cmd += "terraform init && terraform destroy -auto-approve"
+
+	_, errMsg, err := rn.Run(cmd)
+	if err != nil {
+		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+	}
+	return nil
+}
+
+// Key return uniq module index (string key for maps).
+func (m *TFModule) Key() string {
+	return fmt.Sprintf("%v.%v", m.InfraName(), m.name)
 }

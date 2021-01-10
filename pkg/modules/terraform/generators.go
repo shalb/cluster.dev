@@ -39,26 +39,6 @@ func (m *TFModule) genMainCodeBlockHCL() ([]byte, error) {
 		remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output)
 		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, remoteStateRef)
 	}
-	outputMarkers, ok := m.projectPtr.Markers[project.OutputMarkerCatName]
-	if !ok {
-		log.Debug("Internal error.")
-		return nil, fmt.Errorf("internal error")
-	}
-	for hash, marker := range outputMarkers.(map[string]*project.Dependency) {
-		vName := project.ConvertToTfVarName(fmt.Sprintf("%s_%s_%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output))
-		outputRef := fmt.Sprintf("var.%s", vName)
-		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, outputRef)
-	}
-
-	for _, d := range m.dependenciesOutputs {
-		if d.Output == "" {
-			continue
-		}
-		vName := project.ConvertToTfVarName(fmt.Sprintf("%s_%s_%s", d.Module.InfraName(), d.Module.Name(), d.Output))
-		vBlock := rootBody.AppendNewBlock("variable", []string{vName})
-		vBlockBody := vBlock.Body()
-		vBlockBody.SetAttributeValue("type", cty.StringVal("string"))
-	}
 	return f.Bytes(), nil
 }
 
@@ -82,10 +62,6 @@ func (m *TFModule) genOutputsBlock() ([]byte, error) {
 	for output := range m.expectedRemoteStates {
 		exOutputs[output] = true
 	}
-	for output := range m.expectedOutputs {
-		exOutputs[output] = true
-	}
-
 	for output := range exOutputs {
 		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
 		outputName := re.FindString(output)
@@ -135,9 +111,9 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 	modDir := filepath.Join(codeDir, mName)
 	log.Infof("Generating code for module module '%v'", mName)
 	err := os.Mkdir(modDir, 0755)
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 	// Create main.tf
 	tfFile := filepath.Join(modDir, "main.tf")
 	log.Debugf(" file: '%v'", tfFile)
@@ -200,6 +176,18 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 		}
 	}
 
+	if m.preHook != nil {
+		preHookFile := filepath.Join(modDir, "pre_hook.sh")
+		if m.projectPtr.CheckContainsMarkers(string(m.preHook)) {
+			log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (pre_hook). Template function remoteState and insertYAML can't be used in pre_hook.", m.infraPtr.Name, m.name)
+		}
+		log.Debugf(" file: '%v'", preHookFile)
+		ioutil.WriteFile(preHookFile, m.preHook, 0777)
+		if err != nil {
+			return err
+		}
+	}
+	m.codeDir = modDir
 	return nil
 }
 
@@ -219,40 +207,27 @@ func (m *TFModule) getShellCmd(subCmd string) string {
 # Module '{{ .module }}' infra '{{ .infra }}'.
 pushd {{ .infra }}.{{ .module }}
 mkdir -p .terraform
-rm -f ./.terraform/plugins
+rm -rf ./.terraform/plugins
 mkdir -p ../../../.tmp/plugins
 ln -s  ../../../.tmp/plugins ./.terraform/plugins
 terraform init
-terraform {{ .command }} {{ .vars }} -auto-approve
+{{- if .pre_hook }}
+./pre_hook.sh{{ end }}
+terraform {{ .command }} -auto-approve
 {{ .outputs }}
 popd
 
 `
 	var outputsShellBlock string
-
-	for output := range m.expectedOutputs {
-		envVarName := project.ConvertToShellVarName(fmt.Sprintf("%v.%v.%v", m.InfraName(), m.Name(), output))
-		outputsShellBlock += fmt.Sprintf("%[1]s=\"$(terraform output %[2]s)\"\nexport %[1]s\n", envVarName, output)
-		// log.Debugf("%v", outputsShellBlock)
-	}
-
-	var varString string
-
-	for _, v := range m.dependenciesOutputs {
-		if len(v.Output) == 0 {
-			continue
-		}
-		envVarName := project.ConvertToShellVar(fmt.Sprintf("%v.%v.%v", v.InfraName, v.ModuleName, v.Output))
-		varName := project.ConvertToTfVarName(fmt.Sprintf("%v.%v.%v", v.InfraName, v.ModuleName, v.Output))
-		varString += fmt.Sprintf("-var \"%v=%v\" ", varName, envVarName)
-	}
+	var pre_hook bool
+	pre_hook = m.preHook != nil
 
 	t := map[string]interface{}{
-		"module":  m.Name(),
-		"infra":   m.InfraName(),
-		"command": subCmd,
-		"outputs": outputsShellBlock,
-		"vars":    varString,
+		"module":   m.Name(),
+		"infra":    m.InfraName(),
+		"command":  subCmd,
+		"outputs":  outputsShellBlock,
+		"pre_hook": pre_hook,
 	}
 	tmpl, err := template.New("main").Option("missingkey=error").Parse(tfCmd)
 

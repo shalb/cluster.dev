@@ -105,19 +105,6 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 	return nil
 }
 
-func checkDependenciesRecursive(mod Module, maxDepth int) bool {
-	if maxDepth == 0 {
-		return false
-	}
-	// log.Debugf("Mod: %v, depth: %v\n%+v", mod.Name, maxDepth, mod.Dependencies)
-	for _, dep := range mod.Dependencies() {
-		if ok := checkDependenciesRecursive(dep.Module, maxDepth-1); !ok {
-			return false
-		}
-	}
-	return true
-}
-
 func ConvertToTfVarName(name string) string {
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
