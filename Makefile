@@ -1,5 +1,5 @@
 BINDIR      := $(CURDIR)/bin
-BINNAME     ?= reconciler
+BINNAME     ?= cdev
 
 GOPATH        = $(shell go env GOPATH)
 GOIMPORTS     = $(GOPATH)/bin/goimports
@@ -19,11 +19,11 @@ all: build
 
 .PHONY: build
 build:
-	GO111MODULE=on CGO_ENABLED=0 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(BINNAME) ./cmd/reconciler
+	GO111MODULE=on CGO_ENABLED=0 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(BINNAME) ./cmd/$(BINNAME)
 
 .PHONY: install
 install:
-	GO111MODULE=on CGO_ENABLED=0 go install -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" ./cmd/reconciler
+	GO111MODULE=on CGO_ENABLED=0 go install -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" ./cmd/$(BINNAME)
 
 .PHONY: clean
 clean:

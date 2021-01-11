@@ -37,6 +37,6 @@ tests/config.sh
 # Local reconciler run artifacts
 terraform/aws/addons/auth.yaml
 .gitignore
-bin/reconciler
+bin/*
 **/vars-tmp.tfvars.json
 **/.cluster.dev/**
