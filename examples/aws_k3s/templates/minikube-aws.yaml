@@ -14,14 +14,15 @@ modules:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
       availability_zones: {{ insertYAML .variables.azs }}
-  - name: minikube
+  - name: k3s
     type: terraform
-    depends_on: this.route53
-    source: github.com/shalb/cluster.dev//terraform/aws/minikube?ref=new-reconciler
+    source: github.com/shalb/terraform-aws-k3s.git
     inputs:
-      region: {{ .variables.region }}
       cluster_name: {{ .name }}
-      aws_instance_type: {{ .variables.instance_type }}
-      hosted_zone: {{ .name }}.{{ .variables.domain }}
-      aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
-      bucket_name: {{ .variables.bucket }}
+      domain: {{ remoteState "this.route53.domain" }}
+      k3s_version: "1.19.3+k3s1"
+      key_name: "arti-key"
+      public_subnets: {{ remoteState "this.vpc.public_subnets" }}
+      region: {{ .variables.region }}
+      s3_bucket: {{ .variables.bucket }}
+      master_node_count: 1

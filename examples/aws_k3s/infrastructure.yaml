@@ -2,15 +2,15 @@ name: aws-backend
 kind: backend
 provider: s3
 spec:
-  bucket: new-cluster-dev
+  bucket: cluster-dev-k3s
   region: eu-central-1
 ---
-name: infra-dev3
+name: k3s-test
 template: "templates/minikube-aws.yaml"
 kind: infrastructure
 backend: aws-backend
 variables:
-  bucket: new-cluster-dev
+  bucket: cluster-dev-k3s
   region: eu-central-1
   organization: "shalb"
   domain: cluster.dev
