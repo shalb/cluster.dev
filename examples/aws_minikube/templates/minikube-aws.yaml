@@ -24,15 +24,3 @@ modules:
       hosted_zone: {{ .name }}.{{ .variables.domain }}
       aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
       bucket_name: {{ .variables.bucket }}
-  - name: addons
-    type: terraform
-    depends_on: this.minikube
-    source: github.com/shalb/cluster.dev//terraform/aws/addons?ref=new-reconciler
-    pre_hook:
-      command: "echo set_output_kubeconfig_path=../kubeconfig_{{ .name }} "
-    inputs:
-      region: {{ .variables.region }}
-      cluster_name: {{ .name }}
-      kubeconfig: ../kubeconfig_{{ .name }}
-      cluster_cloud_domain: {{ .name }}.{{ .variables.domain }}
-      dns_zone_id: {{ remoteState "this.route53.zone_id" }}

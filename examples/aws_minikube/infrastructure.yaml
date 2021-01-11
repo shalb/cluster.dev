@@ -1,4 +1,4 @@
-name: aws
+name: aws-backend
 kind: backend
 provider: s3
 spec:
@@ -6,9 +6,9 @@ spec:
   region: eu-central-1
 ---
 name: infra-dev2
-template: "templates/infra.tmpl"
+template: "templates/minikube-aws.yaml"
 kind: infrastructure
-backend: aws
+backend: aws-backend
 variables:
   bucket: new-cluster-dev
   region: eu-central-1
