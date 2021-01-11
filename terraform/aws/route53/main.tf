@@ -28,7 +28,8 @@ resource "null_resource" "zone_delegation" {
   triggers = {
     zone_id     = aws_route53_zone.sub.zone_id
     dns_record  = aws_route53_zone.sub.name_servers.0
-    json_string = "'{\"Action\": \"DELETE\", \"UserName\": \"${var.cluster_name}\", \"NameServers\": \"${aws_route53_zone.sub.name_servers.0}.,${aws_route53_zone.sub.name_servers.1}.,${aws_route53_zone.sub.name_servers.2}.,${aws_route53_zone.sub.name_servers.3}\", \"ZoneID\": \"${aws_route53_zone.sub.zone_id}\", \"DomainName\": \"${var.cluster_domain}\", \"Email\": \"${var.email}\"} ${var.dns_manager_url}'"
+    url         = var.dns_manager_url
+    json_string = "'{\"Action\": \"DELETE\", \"UserName\": \"${var.cluster_name}\", \"NameServers\": \"${aws_route53_zone.sub.name_servers.0}.,${aws_route53_zone.sub.name_servers.1}.,${aws_route53_zone.sub.name_servers.2}.,${aws_route53_zone.sub.name_servers.3}\", \"ZoneID\": \"${aws_route53_zone.sub.zone_id}\", \"DomainName\": \"${var.cluster_domain}\", \"Email\": \"${var.email}\"}'"
   }
   provisioner "local-exec" {
     command = <<EOF
@@ -38,7 +39,7 @@ resource "null_resource" "zone_delegation" {
   provisioner "local-exec" {
     when    = destroy
     command = <<EOF
-        curl -H "Content-Type: application/json" -d "${self.triggers.json_string}
+        curl -H "Content-Type: application/json" -d ${self.triggers.json_string} ${self.triggers.url} 
       EOF
   }
 }

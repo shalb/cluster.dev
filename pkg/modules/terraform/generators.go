@@ -31,13 +31,11 @@ func (m *TFModule) genMainCodeBlockHCL() ([]byte, error) {
 		moduleBody.SetAttributeValue(key, ctyVal)
 	}
 	depMarkers, ok := m.projectPtr.Markers[remoteStateMarkerCatName]
-	if !ok {
-		log.Debug("Internal error.")
-		return nil, fmt.Errorf("internal error")
-	}
-	for hash, marker := range depMarkers.(map[string]*project.Dependency) {
-		remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output)
-		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, remoteStateRef)
+	if ok {
+		for hash, marker := range depMarkers.(map[string]*project.Dependency) {
+			remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output)
+			hcltools.ReplaceStingMarkerInBody(moduleBody, hash, remoteStateRef)
+		}
 	}
 	return f.Bytes(), nil
 }
