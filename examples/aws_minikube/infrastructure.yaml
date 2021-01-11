@@ -5,7 +5,7 @@ spec:
   bucket: new-cluster-dev
   region: eu-central-1
 ---
-name: infra-dev2
+name: infra-dev3
 template: "templates/minikube-aws.yaml"
 kind: infrastructure
 backend: aws-backend

@@ -14,14 +14,14 @@ modules:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
       availability_zones: {{ insertYAML .variables.azs }}
-  # - name: minikube
-  #   type: terraform
-  #   depends_on: this.route53
-  #   source: github.com/shalb/cluster.dev//terraform/aws/minikube?ref=new-reconciler
-  #   inputs:
-  #     region: {{ .variables.region }}
-  #     cluster_name: {{ .name }}
-  #     aws_instance_type: {{ .variables.instance_type }}
-  #     hosted_zone: {{ .name }}.{{ .variables.domain }}
-  #     aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
-  #     bucket_name: {{ .variables.bucket }}
+  - name: minikube
+    type: terraform
+    depends_on: this.route53
+    source: github.com/shalb/cluster.dev//terraform/aws/minikube?ref=new-reconciler
+    inputs:
+      region: {{ .variables.region }}
+      cluster_name: {{ .name }}
+      aws_instance_type: {{ .variables.instance_type }}
+      hosted_zone: {{ .name }}.{{ .variables.domain }}
+      aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
+      bucket_name: {{ .variables.bucket }}

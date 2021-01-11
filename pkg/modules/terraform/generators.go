@@ -33,6 +33,9 @@ func (m *TFModule) genMainCodeBlockHCL() ([]byte, error) {
 	depMarkers, ok := m.projectPtr.Markers[remoteStateMarkerCatName]
 	if ok {
 		for hash, marker := range depMarkers.(map[string]*project.Dependency) {
+			if marker.Module == nil {
+				continue
+			}
 			remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output)
 			hcltools.ReplaceStingMarkerInBody(moduleBody, hash, remoteStateRef)
 		}
