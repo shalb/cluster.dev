@@ -105,6 +105,32 @@ func (d *TFModuleDriver) NewModule(spec map[string]interface{}, infra *project.I
 		}
 		mod.preHook = ScriptData
 	}
+	modPostHook, ok := spec["post_hook"]
+	if ok {
+		hook, ok := modPostHook.(map[string]interface{})
+		if !ok {
+			log.Fatalf("post_hook configuration error.")
+		}
+		cmd, cmdExists := hook["command"].(string)
+		script, scrExists := hook["script"].(string)
+		if cmdExists && scrExists {
+			log.Fatalf("Error in post_hook config, use 'script' or 'command' option, not both")
+		}
+		if !cmdExists && !scrExists {
+			log.Fatalf("Error in post_hook config, use one of 'script' or 'command' option")
+		}
+		var ScriptData []byte
+		var err error
+		if cmdExists {
+			ScriptData = []byte(fmt.Sprintf("#!/usr/bin/env bash\nset -e\n\n%s", cmd))
+		} else {
+			ScriptData, err = ioutil.ReadFile(filepath.Join(config.Global.WorkingDir, script))
+			if err != nil {
+				log.Fatalf("can't load post hook script: %v", err.Error())
+			}
+		}
+		mod.postHook = ScriptData
+	}
 	return &mod, nil
 }
 

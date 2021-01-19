@@ -14,6 +14,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// ConfigFileName name of required project config file.
+const ConfigFileName = "project.yaml"
+
 // ModulesPack that can be running in parallel.
 type ModulesPack []Module
 
@@ -22,6 +25,7 @@ type MarkerScanner func(data reflect.Value, module Module) (reflect.Value, error
 
 // Project describes main config with user-defined variables.
 type Project struct {
+	name             string
 	Modules          map[string]Module
 	ModuleDrivers    map[string]ModuleDriver
 	Infrastructures  map[string]*Infrastructure
@@ -30,11 +34,15 @@ type Project struct {
 	DeploySequence   []ModulesPack
 	Markers          map[string]interface{}
 	objects          map[string][]interface{}
+	TemplateData     map[string]interface{}
 }
 
 // NewProject creates init and check new project.
-func NewProject(configs [][]byte) (*Project, error) {
+func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 
+	if projectConf == nil {
+		log.Fatalf("Error reading project configuration file '%v', empty config or file does not exists.", ConfigFileName)
+	}
 	project := &Project{
 		Infrastructures:  map[string]*Infrastructure{},
 		Modules:          map[string]Module{},
@@ -44,6 +52,7 @@ func NewProject(configs [][]byte) (*Project, error) {
 		TmplFunctionsMap: template.FuncMap{},
 		DeploySequence:   []ModulesPack{},
 		objects:          map[string][]interface{}{},
+		TemplateData:     map[string]interface{}{},
 	}
 
 	fMap := template.FuncMap{
@@ -64,7 +73,22 @@ func NewProject(configs [][]byte) (*Project, error) {
 		}
 
 	}
-	// log.Debugf("Fmap %v", fMap)
+	var prjConfParsed map[string]interface{}
+	err := yaml.Unmarshal(projectConf, &prjConfParsed)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if name, ok := prjConfParsed["name"].(string); !ok {
+		log.Fatal("Error in project config. Name is required.")
+	} else {
+		project.name = name
+	}
+
+	if kn, ok := prjConfParsed["kind"].(string); !ok || kn != "project" {
+		log.Fatal("Error in project config. Kind is required.")
+	}
+
+	project.TemplateData["project"] = prjConfParsed
 	project.TmplFunctionsMap = fMap
 
 	for _, cnf := range configs {
@@ -75,14 +99,14 @@ func NewProject(configs [][]byte) (*Project, error) {
 		}
 
 		templatedConf := bytes.Buffer{}
-		err = tmpl.Execute(&templatedConf, nil)
+		err = tmpl.Execute(&templatedConf, project.TemplateData)
 		if err != nil {
 			return nil, err
 		}
 		project.readObjects(templatedConf.Bytes())
 	}
 
-	err := project.prepareObjects()
+	err = project.prepareObjects()
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +282,7 @@ func (p *Project) prepareModules() error {
 }
 
 // GenCode generate all terraform code for project.
-func (p *Project) GenCode(codeStructName string) error {
+func (p *Project) GenCode() error {
 	baseOutDir := config.Global.TmpDir
 	if _, err := os.Stat(baseOutDir); os.IsNotExist(err) {
 		err := os.Mkdir(baseOutDir, 0755)
@@ -266,7 +290,7 @@ func (p *Project) GenCode(codeStructName string) error {
 			return err
 		}
 	}
-	codeDir := filepath.Join(baseOutDir, codeStructName)
+	codeDir := filepath.Join(baseOutDir, p.name)
 	log.Debugf("Creates code directory: '%v'", codeDir)
 	if _, err := os.Stat(codeDir); os.IsNotExist(err) {
 		err := os.Mkdir(codeDir, 0755)
@@ -433,4 +457,9 @@ func isSameModule(mod1 Module, mod2 Module) bool {
 		return true
 	}
 	return false
+}
+
+// Name return project name.
+func (p *Project) Name() string {
+	return p.name
 }

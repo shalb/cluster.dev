@@ -1,0 +1,22 @@
+name: aws-backend
+kind: backend
+provider: s3
+spec:
+  bucket: {{ .project.variables.bucket_name }}
+  region: {{ .project.variables.region }}
+---
+name: k3s-infra
+template: "templates/minikube-aws.yaml"
+kind: infrastructure
+backend: aws-backend
+variables:
+  bucket: {{ .project.variables.bucket_name }}
+  region: {{ .project.variables.region }}
+  organization: {{ .project.variables.organization }}
+  domain: cluster.dev
+  instance_type: "t3.medium"
+  env: "dev-test1"
+  azs:
+    - "{{ .project.variables.region }}a"
+    - "{{ .project.variables.region }}b"
+

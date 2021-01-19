@@ -188,6 +188,17 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 			return err
 		}
 	}
+	if m.postHook != nil {
+		postHookFile := filepath.Join(modDir, "post_hook.sh")
+		if m.projectPtr.CheckContainsMarkers(string(m.preHook)) {
+			log.Fatalf("Unprocessed remote state pointer found in module '%s.%s' (post_hook). Template function remoteState and insertYAML can't be used in post_hook.", m.infraPtr.Name, m.name)
+		}
+		log.Debugf(" file: '%v'", postHookFile)
+		ioutil.WriteFile(postHookFile, m.postHook, 0777)
+		if err != nil {
+			return err
+		}
+	}
 	m.codeDir = modDir
 	return nil
 }
@@ -215,20 +226,24 @@ terraform init
 {{- if .pre_hook }}
 ./pre_hook.sh{{ end }}
 terraform {{ .command }} -auto-approve
+{{- if .post_hook }}
+./post_hook.sh{{ end }}
 {{ .outputs }}
 popd
 
 `
 	var outputsShellBlock string
-	var pre_hook bool
-	pre_hook = m.preHook != nil
+	var postHook, preHook bool
+	preHook = m.preHook != nil
+	postHook = m.preHook != nil
 
 	t := map[string]interface{}{
-		"module":   m.Name(),
-		"infra":    m.InfraName(),
-		"command":  subCmd,
-		"outputs":  outputsShellBlock,
-		"pre_hook": pre_hook,
+		"module":    m.Name(),
+		"infra":     m.InfraName(),
+		"command":   subCmd,
+		"outputs":   outputsShellBlock,
+		"pre_hook":  preHook,
+		"post_hook": postHook,
 	}
 	tmpl, err := template.New("main").Option("missingkey=error").Parse(tfCmd)
 

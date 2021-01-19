@@ -22,6 +22,7 @@ type TFModule struct {
 	dependenciesRemoteState []*project.Dependency
 	expectedRemoteStates    map[string]bool
 	preHook                 []byte
+	postHook                []byte
 	codeDir                 string
 }
 

@@ -1,0 +1,7 @@
+name: aws_example
+kind: project
+variables:
+  organization: shalb
+  region: eu-central-1
+  bucket_name: cluster-dev-k3s
+

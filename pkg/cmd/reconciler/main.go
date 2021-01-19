@@ -19,12 +19,12 @@ func Run() {
 		return
 	}
 
-	manifests := getManifests(config.Global.ClusterConfigsPath)
-	project, err := project.NewProject(manifests)
+	projConf, manifests := getManifests(config.Global.ClusterConfigsPath)
+	project, err := project.NewProject(projConf, manifests)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	err = project.GenCode("test")
+	err = project.GenCode()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -55,9 +55,11 @@ func Run() {
 	return
 }
 
-func getManifests(path string) [][]byte {
+// Return project conf and slice of others config files.
+func getManifests(path string) ([]byte, [][]byte) {
 
 	var files []string
+	var projectConf []byte
 	var err error
 	if config.Global.ClusterConfig != "" {
 		files = append(files, config.Global.ClusterConfig)
@@ -73,11 +75,16 @@ func getManifests(path string) [][]byte {
 
 	manifests := make([][]byte, len(files))
 	for i, file := range files {
-		manifest, err := ioutil.ReadFile(file)
+		manifest := []byte{}
+		if filepath.Base(file) == project.ConfigFileName {
+			projectConf, err = ioutil.ReadFile(file)
+		} else {
+			manifest, err = ioutil.ReadFile(file)
+			manifests[i] = manifest
+		}
 		if err != nil {
 			log.Fatalf("error while reading %v: %v", file, err)
 		}
-		manifests[i] = manifest
 	}
-	return manifests
+	return projectConf, manifests
 }
