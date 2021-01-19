@@ -6,7 +6,7 @@ spec:
   region: {{ .project.variables.region }}
 ---
 name: k3s-infra
-template: "templates/minikube-aws.yaml"
+template: "templates/aws-k3s.yaml"
 kind: infrastructure
 backend: aws-backend
 variables:
