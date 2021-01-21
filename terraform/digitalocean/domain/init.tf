@@ -1,5 +1,5 @@
 terraform {
-  required_version = "~> 0.12.0"
+  required_version = "~> 0.13.0"
   backend "s3" {
     region                      = "us-east-1"
     skip_credentials_validation = true
