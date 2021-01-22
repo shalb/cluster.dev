@@ -215,7 +215,7 @@ func yamlBlockMarkerScanner(data reflect.Value, module project.Module) (reflect.
 
 	yamlMarkers, ok := module.ProjectPtr().Markers[insertYAMLMarkerCatName].(map[string]interface{})
 	if !ok {
-		log.Fatalf("Internal error.")
+		return subVal, nil
 	}
 	for hash := range yamlMarkers {
 		if subVal.String() == hash {

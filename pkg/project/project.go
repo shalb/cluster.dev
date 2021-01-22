@@ -58,6 +58,7 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 	fMap := template.FuncMap{
 		"output":               project.addOutputMarker,
 		"ReconcilerVersionTag": printVersion,
+		"env":                  getEnv,
 	}
 
 	for key, drvFac := range ModuleDriverFactories {
@@ -166,7 +167,10 @@ func (p *Project) prepareObjects() error {
 		return err
 	}
 	for _, infra := range infras {
-		p.readInfrastructureObj(infra.(map[string]interface{}))
+		err := p.readInfrastructureObj(infra.(map[string]interface{}))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -222,13 +226,14 @@ func (p *Project) buildDeploySequence() error {
 		}
 		res = append(res, modPack)
 		p.DeploySequence = res
+		if len(modWait) == 0 {
+			return nil
+		}
 		if doneLen == len(modDone) {
 			log.Fatalf("Unresolved dependency %v", modWait)
 			return fmt.Errorf("Unresolved dependency %v", modWait)
 		}
-		if len(modWait) == 0 {
-			return nil
-		}
+
 	}
 	return nil
 }

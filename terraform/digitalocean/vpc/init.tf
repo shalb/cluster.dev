@@ -6,6 +6,9 @@ terraform {
     skip_metadata_api_check     = true
   }
   required_providers {
-    digitalocean = "~> 1.18.0"
+    digitalocean = {
+      version = "~> 2.4.0"
+      source  = "digitalocean/digitalocean"
+    }
   }
 }

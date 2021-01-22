@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -59,4 +60,11 @@ func (p *Project) addOutputMarker(output string) (string, error) {
 	p.Markers[OutputMarkerCatName].(map[string]*Dependency)[marker] = &dep
 
 	return fmt.Sprintf("%s", marker), nil
+}
+
+func getEnv(varName string) (string, error) {
+	if envVal, ok := os.LookupEnv(varName); ok {
+		return envVal, nil
+	}
+	return "", fmt.Errorf("'%v' does not exists", varName)
 }
