@@ -112,10 +112,12 @@ func (m *TFModule) Apply() error {
 	}
 	var cmd = ""
 	if m.preHook != nil {
-		cmd = "./pre_hook.sh\n"
+		cmd = "./pre_hook.sh && "
 	}
 	cmd += "terraform init && terraform apply -auto-approve"
-
+	if m.postHook != nil {
+		cmd += " && ./post_hook.sh"
+	}
 	_, errMsg, err := rn.Run(cmd)
 	if err != nil {
 		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
@@ -157,9 +159,13 @@ func (m *TFModule) Destroy() error {
 	}
 	var cmd = ""
 	if m.preHook != nil {
-		cmd = "./pre_hook.sh\n"
+		cmd = "./pre_hook.sh && "
 	}
 	cmd += "terraform init && terraform destroy -auto-approve"
+
+	if m.postHook != nil {
+		cmd += " && ./post_hook.sh"
+	}
 
 	_, errMsg, err := rn.Run(cmd)
 	if err != nil {

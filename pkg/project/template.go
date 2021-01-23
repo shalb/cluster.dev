@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/internal/config"
 )
 
 const OutputMarkerCatName = "outputMarkers"
@@ -67,4 +68,8 @@ func getEnv(varName string) (string, error) {
 		return envVal, nil
 	}
 	return "", fmt.Errorf("'%v' does not exists", varName)
+}
+
+func workDir() string {
+	return config.Global.WorkingDir
 }

@@ -227,9 +227,11 @@ func yamlBlockMarkerScanner(data reflect.Value, module project.Module) (reflect.
 
 // addYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
 func (d *TFModuleDriver) addYAMLBlockMarker(data interface{}) (string, error) {
-	markers := map[string]interface{}{}
+	_, ok := d.projectPtr.Markers[insertYAMLMarkerCatName]
+	if !ok {
+		d.projectPtr.Markers[insertYAMLMarkerCatName] = map[string]interface{}{}
+	}
 	marker := d.projectPtr.CreateMarker("YAML")
-	markers[marker] = data
-	d.projectPtr.Markers[insertYAMLMarkerCatName] = markers
+	d.projectPtr.Markers[insertYAMLMarkerCatName].(map[string]interface{})[marker] = data
 	return fmt.Sprintf("%s", marker), nil
 }

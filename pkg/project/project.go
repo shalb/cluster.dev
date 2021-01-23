@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 
+	"github.com/Masterminds/sprig"
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
 	"gopkg.in/yaml.v3"
@@ -55,10 +56,15 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 		TemplateData:     map[string]interface{}{},
 	}
 
-	fMap := template.FuncMap{
+	fMapInternal := template.FuncMap{
 		"output":               project.addOutputMarker,
 		"ReconcilerVersionTag": printVersion,
 		"env":                  getEnv,
+		"workDir":              workDir,
+	}
+	fMap := sprig.FuncMap()
+	for key, val := range fMapInternal {
+		fMap[key] = val
 	}
 
 	for key, drvFac := range ModuleDriverFactories {
@@ -93,7 +99,7 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 	project.TmplFunctionsMap = fMap
 
 	for _, cnf := range configs {
-		tmpl, err := template.New("main").Funcs(fMap).Option("missingkey=error").Parse(string(cnf))
+		tmpl, err := template.New("main").Funcs(fMap).Option("missingkey=default").Parse(string(cnf))
 
 		if err != nil {
 			return nil, err

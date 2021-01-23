@@ -235,8 +235,7 @@ popd
 	var outputsShellBlock string
 	var postHook, preHook bool
 	preHook = m.preHook != nil
-	postHook = m.preHook != nil
-
+	postHook = m.postHook != nil
 	t := map[string]interface{}{
 		"module":    m.Name(),
 		"infra":     m.InfraName(),

@@ -52,7 +52,7 @@ func (p *Project) readInfrastructureObj(obj map[string]interface{}) error {
 		return err
 	}
 
-	t, err := template.New("main").Funcs(p.TmplFunctionsMap).Option("missingkey=error").Parse(string(tmplData))
+	t, err := template.New("main").Funcs(p.TmplFunctionsMap).Option("missingkey=default").Parse(string(tmplData))
 
 	if err != nil {
 		return err
