@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -42,6 +43,7 @@ type ConfSpec struct {
 	OnlyPrintVersion   bool
 	MaxParallel        int
 	SubCommand         SubCmd
+	PluginsCacheDir    string
 }
 
 // Global config for executor.
@@ -100,7 +102,20 @@ func init() {
 	}
 	// Detect git provider and set config vars.
 	detectGitProvider(&Global)
-
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	Global.PluginsCacheDir = filepath.Join(usr.HomeDir, ".terraform.d/plugin-cache")
+	if _, err := os.Stat(Global.PluginsCacheDir); os.IsNotExist(err) {
+		err := os.MkdirAll(Global.PluginsCacheDir, 0755)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	}
 	// Detect project root dir.
 	var ok bool
 	if Global.ProjectRoot, ok = os.LookupEnv("PRJ_ROOT"); !ok {

@@ -63,8 +63,8 @@ func (g *grapher) updateDirectQueue() int {
 	count := 0
 	for key, mod := range g.modules {
 		isReady := true
-		if len(mod.Dependencies()) > 0 {
-			for _, dep := range mod.Dependencies() {
+		if len(*mod.Dependencies()) > 0 {
+			for _, dep := range *mod.Dependencies() {
 				if er, ok := g.finished[dep.Module.Key()]; !ok || er.Error != nil {
 					isReady = false
 					break
@@ -161,7 +161,7 @@ func checkDependenciesRecursive(mod Module, maxDepth int) bool {
 	if maxDepth == 0 {
 		return false
 	}
-	for _, dep := range mod.Dependencies() {
+	for _, dep := range *mod.Dependencies() {
 		if ok := checkDependenciesRecursive(dep.Module, maxDepth-1); !ok {
 			return false
 		}
@@ -172,7 +172,7 @@ func checkDependenciesRecursive(mod Module, maxDepth int) bool {
 func findDependedModules(modList map[string]Module, targetMod Module) map[string]Module {
 	res := map[string]Module{}
 	for key, mod := range modList {
-		for _, dep := range mod.Dependencies() {
+		for _, dep := range *mod.Dependencies() {
 			//log.Debugf("Tm: %v, M: %v Dependency: %v", targetMod.Name(), mod.Name(), dep.ModuleName)
 			if dep.Module.Key() == targetMod.Key() {
 				res[key] = mod

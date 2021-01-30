@@ -1,6 +1,7 @@
 package project
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand"
 	"os"
@@ -10,7 +11,8 @@ import (
 	"strings"
 
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/internal/config"
+	"github.com/shalb/cluster.dev/pkg/config"
+	"gopkg.in/yaml.v3"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -64,6 +66,9 @@ func findModule(module Module, modsList map[string]Module) *Module {
 
 // ScanMarkers use marker scanner function to replace templated markers.
 func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error {
+	if data == nil {
+		return nil
+	}
 	out := reflect.ValueOf(data)
 	if out.Kind() == reflect.Ptr && !out.IsNil() {
 		out = out.Elem()
@@ -133,7 +138,37 @@ func BuildDep(m Module, dep *Dependency) error {
 			return fmt.Errorf("Error in module '%v.%v' dependency, target '%v.%v' does not exist", m.InfraName(), m.Name(), dep.InfraName, dep.ModuleName)
 		}
 		dep.Module = depMod
-		log.Debugf("DEPENDENCY DONE! %+v", *dep)
 	}
 	return nil
+}
+
+// BuildModuleDeps check all dependencies and add module pointer.
+func BuildModuleDeps(m Module) error {
+	for _, dep := range *m.Dependencies() {
+		err := BuildDep(m, dep)
+		if err != nil {
+			log.Debug(err.Error())
+			return err
+		}
+	}
+	return nil
+}
+
+func ReadYAMLObjects(objData []byte) ([]interface{}, error) {
+
+	objects := []interface{}{}
+	dec := yaml.NewDecoder(bytes.NewReader(objData))
+	for {
+		var parsedConf = make(map[string]interface{})
+		err := dec.Decode(&parsedConf)
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			log.Debugf("can't decode config to yaml: %s", err.Error())
+			return nil, fmt.Errorf("can't decode config to yaml: %s", err.Error())
+		}
+		objects = append(objects, parsedConf)
+	}
+	return objects, nil
 }

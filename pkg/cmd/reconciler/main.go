@@ -7,7 +7,7 @@ import (
 
 	"github.com/apex/log"
 
-	"github.com/shalb/cluster.dev/internal/config"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
@@ -73,7 +73,7 @@ func getManifests(path string) ([]byte, [][]byte) {
 		log.Fatalf("no manifest found in %v", path)
 	}
 
-	manifests := make([][]byte, len(files))
+	manifests := make([][]byte, len(files)-1)
 	for i, file := range files {
 		manifest := []byte{}
 		if filepath.Base(file) == project.ConfigFileName {

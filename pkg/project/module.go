@@ -14,39 +14,34 @@ type Module interface {
 	ReplaceMarkers() error
 	GetApplyShellCmd() string
 	GetDestroyShellCmd() string
-	Dependencies() []*Dependency
+	Dependencies() *[]*Dependency
 	Self() interface{}
-	// BuildDeps - check string dependencies, finds the corresponding module and add module ptr to dependency.
-	BuildDeps() error
 	PreHook() []byte
 	Apply() error
 	Plan() error
 	Destroy() error
 	Key() string
+	ExpectedOutputs() map[string]bool
 }
 
 type ModuleDriver interface {
-	GetTemplateFunctions() map[string]interface{}
+	AddTemplateFunctions(projectPtr *Project) error
 	GetScanners() []MarkerScanner
-	NewModule(map[string]interface{}, *Infrastructure) (Module, error)
 }
 
-// ModuleDriverFactory - interface for module driver factory. New() creates module driver.
-type ModuleDriverFactory interface {
-	New(*Project) ModuleDriver
+type ModuleFactory interface {
+	New(map[string]interface{}, *Infrastructure) (Module, error)
 }
 
-// RegisterModuleDriverFactory - register factory of some driver type (like terraform) in map.
-func RegisterModuleDriverFactory(modDrv ModuleDriverFactory, driverType string) error {
-	if _, exists := ModuleDriverFactories[driverType]; exists {
-		return fmt.Errorf("module driver with provider name '%v' already exists", driverType)
+func RegisterModuleFactory(f ModuleFactory, modType string) error {
+	if _, exists := ModuleFactoriesMap[modType]; exists {
+		return fmt.Errorf("module driver with provider name '%v' already exists", modType)
 	}
-	ModuleDriverFactories[driverType] = modDrv
+	ModuleFactoriesMap[modType] = f
 	return nil
 }
 
-// ModuleDriverFactories map of module drivers factories. Use ModulesFactories["type"].New() to create module driver of type 'type'
-var ModuleDriverFactories = map[string]ModuleDriverFactory{}
+var ModuleFactoriesMap = map[string]ModuleFactory{}
 
 // Dependency describe module dependency.
 type Dependency struct {
@@ -58,14 +53,14 @@ type Dependency struct {
 
 // NewModule creates and return module with needed driver.
 func NewModule(spec map[string]interface{}, infra *Infrastructure) (Module, error) {
-	mType, ok := spec["type"]
+	mType, ok := spec["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("Incorrect module type")
 	}
-	modDrv, exists := infra.ProjectPtr.ModuleDrivers[mType.(string)]
+	modDrv, exists := ModuleFactoriesMap[mType]
 	if !exists {
 		return nil, fmt.Errorf("Incorrect module type '%v'", mType)
 	}
 
-	return modDrv.NewModule(spec, infra)
+	return modDrv.New(spec, infra)
 }

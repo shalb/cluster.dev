@@ -9,9 +9,8 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/Masterminds/sprig"
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/internal/config"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 
@@ -44,41 +43,20 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 	if projectConf == nil {
 		log.Fatalf("Error reading project configuration file '%v', empty config or file does not exists.", ConfigFileName)
 	}
+
 	project := &Project{
 		Infrastructures:  map[string]*Infrastructure{},
 		Modules:          map[string]Module{},
 		Backends:         map[string]Backend{},
 		Markers:          map[string]interface{}{},
 		ModuleDrivers:    map[string]ModuleDriver{},
-		TmplFunctionsMap: template.FuncMap{},
+		TmplFunctionsMap: templateFunctionsMap,
 		DeploySequence:   []ModulesPack{},
 		objects:          map[string][]interface{}{},
 		TemplateData:     map[string]interface{}{},
 	}
-
-	fMapInternal := template.FuncMap{
-		"output":               project.addOutputMarker,
-		"ReconcilerVersionTag": printVersion,
-		"env":                  getEnv,
-		"workDir":              workDir,
-	}
-	fMap := sprig.FuncMap()
-	for key, val := range fMapInternal {
-		fMap[key] = val
-	}
-
-	for key, drvFac := range ModuleDriverFactories {
-		drv := drvFac.New(project)
-		project.ModuleDrivers[key] = drv
-		for k, f := range drv.GetTemplateFunctions() {
-			_, ok := fMap[k]
-			if ok {
-				log.Debugf("Template function '%v' is already exists", k)
-				return nil, fmt.Errorf("Template function '%v' is already exists in map", k)
-			}
-			fMap[k] = f
-		}
-
+	for _, drv := range TemplateDriversMap {
+		drv.AddTemplateFunctions(project)
 	}
 	var prjConfParsed map[string]interface{}
 	err := yaml.Unmarshal(projectConf, &prjConfParsed)
@@ -96,10 +74,9 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 	}
 
 	project.TemplateData["project"] = prjConfParsed
-	project.TmplFunctionsMap = fMap
 
 	for _, cnf := range configs {
-		tmpl, err := template.New("main").Funcs(fMap).Option("missingkey=default").Parse(string(cnf))
+		tmpl, err := template.New("main").Funcs(project.TmplFunctionsMap).Option("missingkey=default").Parse(string(cnf))
 
 		if err != nil {
 			return nil, err
@@ -130,25 +107,20 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 }
 
 func (p *Project) readObjects(objData []byte) error {
-	dec := yaml.NewDecoder(bytes.NewReader(objData))
-	for {
-		var parsedConf = make(map[string]interface{})
-		err := dec.Decode(&parsedConf)
-		if err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
-			log.Debugf("can't decode config to yaml: %s", err.Error())
-			return fmt.Errorf("can't decode config to yaml: %s", err.Error())
-		}
-		objKind, ok := parsedConf["kind"].(string)
+
+	objs, err := ReadYAMLObjects(objData)
+	if err != nil {
+		return err
+	}
+	for _, obj := range objs {
+		objKind, ok := obj.(map[string]interface{})["kind"].(string)
 		if !ok {
 			log.Fatal("infra must contain field 'kind'")
 		}
 		if _, exists := p.objects[objKind]; !exists {
 			p.objects[objKind] = []interface{}{}
 		}
-		p.objects[objKind] = append(p.objects[objKind], parsedConf)
+		p.objects[objKind] = append(p.objects[objKind], obj)
 	}
 	return nil
 }
@@ -206,7 +178,7 @@ func (p *Project) buildDeploySequence() error {
 		modIterDone := map[string]*Module{}
 		for _, mod := range modWait {
 			modIndex := fmt.Sprintf("%s.%s", mod.InfraName(), mod.Name())
-			if len(mod.Dependencies()) == 0 {
+			if len(*mod.Dependencies()) == 0 {
 				modIterDone[modIndex] = &mod
 				log.Infof(" '%s' - ok", modIndex)
 				delete(modWait, modIndex)
@@ -214,7 +186,7 @@ func (p *Project) buildDeploySequence() error {
 				continue
 			}
 			var allDepsDone bool = true
-			for _, dep := range mod.Dependencies() {
+			for _, dep := range *mod.Dependencies() {
 				if findModule(dep.Module, modDone) == nil {
 					allDepsDone = false
 					break
@@ -258,14 +230,16 @@ func (p *Project) readModules() error {
 		if !ok {
 			return fmt.Errorf("Incorrect template in infra '%v'", infraName)
 		}
-		modulesSlice := modulesSliceIf.([]interface{})
+		modulesSlice, ok := modulesSliceIf.([]interface{})
+		if !ok {
+			return fmt.Errorf("Incorrect template in infra '%v'", infraName)
+		}
 		for _, moduleData := range modulesSlice {
 			mod, err := NewModule(moduleData.(map[string]interface{}), infra)
 			if err != nil {
+				log.Debugf("module '%v',%v", moduleData, err.Error())
 				return err
 			}
-			// modKey := fmt.Sprintf("%s.%s", infraName, mod.Name())
-
 			p.Modules[mod.Key()] = mod
 		}
 	}
@@ -279,7 +253,7 @@ func (p *Project) prepareModules() error {
 		if err != nil {
 			return err
 		}
-		if err = mod.BuildDeps(); err != nil {
+		if err = BuildModuleDeps(mod); err != nil {
 			return err
 		}
 	}
@@ -451,16 +425,6 @@ mkdir -p ../.tmp/plugins/
 		}
 	}
 	return applyScript, nil
-}
-
-func (p *Project) deleteModFromDeploySeq(m Module) {
-	for di, modPack := range p.DeploySequence {
-		for i, mod := range modPack {
-			if isSameModule(m, mod) {
-				p.DeploySequence[di] = append(modPack[:i], modPack[i+1:]...)
-			}
-		}
-	}
 }
 
 func isSameModule(mod1 Module, mod2 Module) bool {

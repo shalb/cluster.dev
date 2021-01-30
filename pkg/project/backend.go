@@ -34,7 +34,7 @@ func RegisterBackendFactory(f BackendsFactory, provider string) error {
 // BackendsFactories map of backend providers factories. Use BackendsFactories["prov_name"].New() to create backend of provider 'prov_name'
 var BackendsFactories = map[string]BackendsFactory{}
 
-func (g *Project) readBackendObj(obj map[string]interface{}) error {
+func (p *Project) readBackendObj(obj map[string]interface{}) error {
 	name, ok := obj["name"].(string)
 	if !ok {
 		return fmt.Errorf("backend object must contain field 'name'")
@@ -59,7 +59,7 @@ func (g *Project) readBackendObj(obj map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	g.Backends[name] = b
+	p.Backends[name] = b
 	log.Infof("Backend '%v' added", name)
 	return nil
 }

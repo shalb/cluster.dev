@@ -1,0 +1,19 @@
+name: do-backend
+kind: backend
+provider: do
+spec:
+  bucket: {{ .project.variables.bucket_name }}
+  region: {{ .project.variables.region }}
+  access_key: {{ env "SPACES_ACCESS_KEY_ID" }}
+  secret_key: {{ env "SPACES_SECRET_ACCESS_KEY" }}
+
+---
+name: k8s-cdev
+template: "templates/do-k8s.yaml"
+kind: infrastructure
+backend: do-backend
+variables:
+  bucket: {{ .project.variables.bucket_name }}
+  region: {{ .project.variables.region }}
+  k8s_version: "1.19.3-do.3"
+  domain: cluster.dev

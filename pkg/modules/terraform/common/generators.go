@@ -1,4 +1,4 @@
-package terraform
+package common
 
 import (
 	"bytes"
@@ -6,93 +6,52 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"text/template"
 
 	"github.com/apex/log"
-	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/project"
-	"github.com/zclconf/go-cty/cty"
 )
 
 // genMainCodeBlockHCL generate main code block for this module.
-func (m *TFModule) genMainCodeBlockHCL() ([]byte, error) {
-	f := hclwrite.NewEmptyFile()
-	rootBody := f.Body()
-	moduleBlock := rootBody.AppendNewBlock("module", []string{m.name})
-	moduleBody := moduleBlock.Body()
-	moduleBody.SetAttributeValue("source", cty.StringVal(m.Source))
-	for key, val := range m.Inputs {
-		ctyVal, err := hcltools.InterfaceToCty(val)
-		if err != nil {
-			return nil, err
-		}
-		moduleBody.SetAttributeValue(key, ctyVal)
-	}
-	depMarkers, ok := m.projectPtr.Markers[remoteStateMarkerCatName]
-	if ok {
-		for hash, marker := range depMarkers.(map[string]*project.Dependency) {
-			if marker.Module == nil {
-				continue
-			}
-			remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output)
-			hcltools.ReplaceStingMarkerInBody(moduleBody, hash, remoteStateRef)
-		}
-	}
-	return f.Bytes(), nil
+func (m *Module) genMainCodeBlockHCL() ([]byte, error) {
+	return nil, nil
 }
 
 // genBackendCodeBlock generate backend code block for this module.
-func (m *TFModule) genBackendCodeBlock() ([]byte, error) {
+func (m *Module) genBackendCodeBlock() ([]byte, error) {
 
-	res, err := m.BackendPtr.GetBackendHCL(m)
+	res, err := m.backendPtr.GetBackendHCL(m)
 	if err != nil {
+		log.Debug(err.Error())
 		return nil, err
 	}
 	return res, nil
 }
 
 // genOutputsBlock generate output code block for this module.
-func (m *TFModule) genOutputsBlock() ([]byte, error) {
-	f := hclwrite.NewEmptyFile()
-
-	rootBody := f.Body()
-	exOutputs := map[string]bool{}
-
-	for output := range m.expectedRemoteStates {
-		exOutputs[output] = true
-	}
-	for output := range exOutputs {
-		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
-		outputName := re.FindString(output)
-		if len(outputName) < 1 {
-			return nil, fmt.Errorf("invalid output '%v' in module '%v'", output, m.Name())
-		}
-		dataBlock := rootBody.AppendNewBlock("output", []string{outputName})
-		dataBody := dataBlock.Body()
-		outputStr := fmt.Sprintf("module.%s.%s", m.Name(), outputName)
-		dataBody.SetAttributeRaw("value", hcltools.CreateTokensForOutput(outputStr))
-	}
-	return f.Bytes(), nil
-
+func (m *Module) genOutputsBlock() ([]byte, error) {
+	return nil, nil
 }
 
 // genDepsRemoteStates generate terraform remote states for all dependencies of this module.
-func (m *TFModule) genDepsRemoteStates() ([]byte, error) {
+func (m *Module) genDepsRemoteStates() ([]byte, error) {
 	var res []byte
 	depsUniq := map[project.Module]bool{}
-	for _, dep := range m.Dependencies() {
+	for _, dep := range *m.Dependencies() {
+		// Ignore duplicated dependencies.
 		if _, ok := depsUniq[dep.Module]; ok {
 			continue
 		}
-		depsUniq[dep.Module] = true
-		convertedMod, ok := dep.Module.Self().(*TFModule)
-		if !ok {
+		// Ignore dependencies without output (user defined as 'depends_on' option.)
+		if dep.Output == "" {
 			continue
 		}
-		rs, err := convertedMod.genRemoteStateToSelf()
+		// Deduplication.
+		depsUniq[dep.Module] = true
+		modBackend := dep.Module.InfraPtr().Backend
+		rs, err := modBackend.GetRemoteStateHCL(dep.Module)
 		if err != nil {
+			log.Debug(err.Error())
 			return nil, err
 		}
 		res = append(res, rs...)
@@ -100,13 +59,8 @@ func (m *TFModule) genDepsRemoteStates() ([]byte, error) {
 	return res, nil
 }
 
-// genRemoteStateToSelf - remote state block generate terraform code. It's remote state !to this module! witch should be used in another module depend of this.
-func (m *TFModule) genRemoteStateToSelf() ([]byte, error) {
-	return m.BackendPtr.GetRemoteStateHCL(m)
-}
-
 // CreateCodeDir generate all terraform code for project.
-func (m *TFModule) CreateCodeDir(codeDir string) error {
+func (m *Module) CreateCodeDir(codeDir string) error {
 
 	mName := fmt.Sprintf("%s.%s", m.InfraName(), m.Name())
 	modDir := filepath.Join(codeDir, mName)
@@ -116,11 +70,12 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 	// 	return err
 	// }
 	// Create main.tf
+
 	tfFile := filepath.Join(modDir, "main.tf")
 	log.Debugf(" file: '%v'", tfFile)
 	codeBlock, err := m.genMainCodeBlockHCL()
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Debug(err.Error())
 		return err
 	}
 	if m.projectPtr.CheckContainsMarkers(string(codeBlock)) {
@@ -128,6 +83,7 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 	}
 	ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
 	if err != nil {
+		log.Debug(err.Error())
 		return err
 	}
 	// Create init.tf
@@ -135,6 +91,7 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 	log.Debugf(" file: '%v'", tfFile)
 	codeBlock, err = m.genBackendCodeBlock()
 	if err != nil {
+		log.Debug(err.Error())
 		return err
 	}
 	if m.projectPtr.CheckContainsMarkers(string(codeBlock)) {
@@ -142,11 +99,13 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 	}
 	ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
 	if err != nil {
+		log.Debug(err.Error())
 		return err
 	}
 	// Create remote_state.tf
 	codeBlock, err = m.genDepsRemoteStates()
 	if err != nil {
+		log.Debug(err.Error())
 		return err
 	}
 	if len(codeBlock) > 1 {
@@ -157,12 +116,14 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 		log.Debugf(" file: '%v'", tfFile)
 		ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
 		if err != nil {
+			log.Debug(err.Error())
 			return err
 		}
 	}
 	// Create outputs.tf
 	codeBlock, err = m.genOutputsBlock()
 	if err != nil {
+		log.Debug(err.Error())
 		return err
 	}
 	if len(codeBlock) > 1 {
@@ -173,6 +134,7 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 		log.Debugf(" file: '%v'", tfFile)
 		ioutil.WriteFile(tfFile, codeBlock, os.ModePerm)
 		if err != nil {
+			log.Debug(err.Error())
 			return err
 		}
 	}
@@ -185,6 +147,7 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 		log.Debugf(" file: '%v'", preHookFile)
 		ioutil.WriteFile(preHookFile, m.preHook, 0777)
 		if err != nil {
+			log.Debug(err.Error())
 			return err
 		}
 	}
@@ -196,6 +159,7 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 		log.Debugf(" file: '%v'", postHookFile)
 		ioutil.WriteFile(postHookFile, m.postHook, 0777)
 		if err != nil {
+			log.Debug(err.Error())
 			return err
 		}
 	}
@@ -204,16 +168,16 @@ func (m *TFModule) CreateCodeDir(codeDir string) error {
 }
 
 // GetApplyShellCmd return string with bash commands sequence witch need to run in working dir to apply this module.
-func (m *TFModule) GetApplyShellCmd() string {
+func (m *Module) GetApplyShellCmd() string {
 	return m.getShellCmd("apply")
 }
 
 // GetDestroyShellCmd return string with bash commands sequence witch need to run in working dir to destroy this module.
-func (m *TFModule) GetDestroyShellCmd() string {
+func (m *Module) GetDestroyShellCmd() string {
 	return m.getShellCmd("destroy")
 }
 
-func (m *TFModule) getShellCmd(subCmd string) string {
+func (m *Module) getShellCmd(subCmd string) string {
 
 	tfCmd := `
 # Module '{{ .module }}' infra '{{ .infra }}'.
@@ -253,7 +217,7 @@ popd
 	templatedConf := bytes.Buffer{}
 	err = tmpl.Execute(&templatedConf, &t)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Error(err.Error())
 		return ""
 	}
 

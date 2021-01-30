@@ -6,7 +6,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/aybabtme/rgbterm"
-	"github.com/shalb/cluster.dev/internal/config"
+	"github.com/shalb/cluster.dev/pkg/config"
 )
 
 // color function.

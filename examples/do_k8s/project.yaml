@@ -1,0 +1,7 @@
+name: do_example
+kind: project
+variables:
+  organization: shalb
+  region: ams3
+  bucket_name: k8s-states
+

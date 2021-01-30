@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/internal/config"
-	"github.com/shalb/cluster.dev/internal/logging"
+	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/logging"
 )
 
 // BashRunner - runs shell commands.

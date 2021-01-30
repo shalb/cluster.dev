@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/internal/config"
+	"github.com/shalb/cluster.dev/pkg/config"
 )
 
 const infraObjKindKey = "infrastructure"
@@ -18,12 +18,29 @@ type Infrastructure struct {
 	Backend     Backend
 	Name        string
 	BackendName string
+	TemplateSrc string
 	Template    []byte
 	Variables   map[string]interface{}
+	FullSpec    map[string]interface{}
 }
 
-func (p *Project) readInfrastructureObj(obj map[string]interface{}) error {
-	name, ok := obj["name"].(string)
+func (i *Infrastructure) DoTemplate(in []byte) ([]byte, error) {
+	t, err := template.New("main").Funcs(i.ProjectPtr.TmplFunctionsMap).Option("missingkey=default").Parse(string(in))
+
+	if err != nil {
+		return nil, err
+	}
+
+	tmpl := bytes.Buffer{}
+	err = t.Execute(&tmpl, i.FullSpec)
+	if err != nil {
+		return nil, err
+	}
+	return tmpl.Bytes(), nil
+}
+
+func (p *Project) readInfrastructureObj(infraSpec map[string]interface{}) error {
+	name, ok := infraSpec["name"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'name'")
 	}
@@ -34,13 +51,14 @@ func (p *Project) readInfrastructureObj(obj map[string]interface{}) error {
 
 	infra := Infrastructure{
 		ProjectPtr: p,
+		FullSpec:   infraSpec,
 	}
-	tmplFileName, ok := obj["template"].(string)
+	tmplFileName, ok := infraSpec["template"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'template'")
 	}
 
-	infra.Variables, ok = obj["variables"].(map[string]interface{})
+	infra.Variables, ok = infraSpec["variables"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'variables'")
 	}
@@ -52,22 +70,13 @@ func (p *Project) readInfrastructureObj(obj map[string]interface{}) error {
 		return err
 	}
 
-	t, err := template.New("main").Funcs(p.TmplFunctionsMap).Option("missingkey=default").Parse(string(tmplData))
-
+	infra.Template, err = infra.DoTemplate(tmplData)
 	if err != nil {
 		return err
 	}
-
-	tmpl := bytes.Buffer{}
-	err = t.Execute(&tmpl, obj)
-	if err != nil {
-		return err
-	}
-
-	infra.Template = tmpl.Bytes()
 
 	// Read backend name.
-	infra.BackendName, ok = obj["backend"].(string)
+	infra.BackendName, ok = infraSpec["backend"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'backend'")
 	}
@@ -77,6 +86,7 @@ func (p *Project) readInfrastructureObj(obj map[string]interface{}) error {
 	}
 	infra.Backend = bPtr
 	infra.Name = name
+	infra.TemplateSrc = tmplFileName
 	p.Infrastructures[name] = &infra
 	log.Infof("Infrastructure '%v' added", name)
 	return nil

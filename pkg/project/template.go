@@ -2,15 +2,15 @@ package project
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"reflect"
 	"strings"
 
+	"github.com/Masterminds/sprig"
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/internal/config"
+	"github.com/shalb/cluster.dev/pkg/config"
 )
-
-const OutputMarkerCatName = "outputMarkers"
 
 // CheckContainsMarkers - check if string contains any template markers.
 func (p *Project) CheckContainsMarkers(data string, kinds ...string) bool {
@@ -42,27 +42,6 @@ func (p *Project) CheckContainsMarkers(data string, kinds ...string) bool {
 	return false
 }
 
-func (p *Project) addOutputMarker(output string) (string, error) {
-	_, ok := p.Markers[OutputMarkerCatName]
-	if !ok {
-		p.Markers[OutputMarkerCatName] = map[string]*Dependency{}
-	}
-	splittedPath := strings.Split(output, ".")
-	if len(splittedPath) != 3 {
-		return "", fmt.Errorf("bad dependency path")
-	}
-	dep := Dependency{
-		Module:     nil,
-		InfraName:  splittedPath[0],
-		ModuleName: splittedPath[1],
-		Output:     splittedPath[2],
-	}
-	marker := p.CreateMarker(OutputMarkerCatName)
-	p.Markers[OutputMarkerCatName].(map[string]*Dependency)[marker] = &dep
-
-	return fmt.Sprintf("%s", marker), nil
-}
-
 func getEnv(varName string) (string, error) {
 	if envVal, ok := os.LookupEnv(varName); ok {
 		return envVal, nil
@@ -73,3 +52,27 @@ func getEnv(varName string) (string, error) {
 func workDir() string {
 	return config.Global.WorkingDir
 }
+
+var templateFunctionsMap = template.FuncMap{
+	"ReconcilerVersionTag": printVersion,
+	"env":                  getEnv,
+	"workDir":              workDir,
+}
+
+func init() {
+	for key, val := range sprig.FuncMap() {
+		templateFunctionsMap[key] = val
+	}
+}
+
+// RegisterTemplateDriver register module template driver.
+func RegisterTemplateDriver(drv TemplateDriver) {
+	TemplateDriversMap[drv.Name()] = drv
+}
+
+type TemplateDriver interface {
+	AddTemplateFunctions(*Project)
+	Name() string
+}
+
+var TemplateDriversMap map[string]TemplateDriver = map[string]TemplateDriver{}
