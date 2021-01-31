@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
-	"github.com/shalb/cluster.dev/pkg/project"
 )
 
 // BackendDo - describe do spaces backend for interface package.backend.
@@ -36,14 +35,14 @@ type backendConfigSpec struct {
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *BackendDo) GetBackendHCL(module project.Module) ([]byte, error) {
+func (b *BackendDo) GetBackendHCL(moduleName, infraName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
 	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"s3"})
 	backendBody := backendBlock.Body()
 	backendBody.SetAttributeValue("bucket", cty.StringVal(b.Bucket))
-	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s", module.InfraName(), module.Name())))
+	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s", infraName, moduleName)))
 	backendBody.SetAttributeValue("region", cty.StringVal("us-east-1"))
 	backendBody.SetAttributeValue("endpoint", cty.StringVal(fmt.Sprintf("%s.digitaloceanspaces.com", b.Region)))
 	backendBody.SetAttributeValue("skip_credentials_validation", cty.BoolVal(true))
@@ -58,17 +57,17 @@ func (b *BackendDo) GetBackendHCL(module project.Module) ([]byte, error) {
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *BackendDo) GetRemoteStateHCL(module project.Module) ([]byte, error) {
+func (b *BackendDo) GetRemoteStateHCL(moduleName, infraName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", module.InfraName(), module.Name())})
+	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", infraName, moduleName)})
 	dataBody := dataBlock.Body()
 	dataBody.SetAttributeValue("backend", cty.StringVal("s3"))
 
 	config := map[string]interface{}{
 		"bucket":                      b.Bucket,
-		"key":                         fmt.Sprintf("%s/%s", module.InfraName(), module.Name()),
+		"key":                         fmt.Sprintf("%s/%s", infraName, moduleName),
 		"region":                      "us-east-1",
 		"endpoint":                    fmt.Sprintf("%s.digitaloceanspaces.com", b.Region),
 		"skip_credentials_validation": true,

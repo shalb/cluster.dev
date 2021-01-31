@@ -27,6 +27,7 @@ type Module struct {
 	preHook         []byte
 	postHook        []byte
 	codeDir         string
+	FilesList       map[string][]byte
 }
 
 func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.Infrastructure) error {
@@ -55,6 +56,7 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	m.dependencies = modDeps
 	m.backendPtr = bPtr
 	m.expectedOutputs = map[string]bool{}
+	m.FilesList = map[string][]byte{}
 
 	if err != nil {
 		log.Debug(err.Error())
@@ -111,8 +113,7 @@ func (m *Module) Backend() project.Backend {
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
-
-	return nil
+	return fmt.Errorf("internal error")
 }
 
 // Dependencies return slice of module dependencies.

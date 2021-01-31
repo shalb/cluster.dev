@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -31,7 +30,6 @@ type Project struct {
 	Infrastructures  map[string]*Infrastructure
 	TmplFunctionsMap template.FuncMap
 	Backends         map[string]Backend
-	DeploySequence   []ModulesPack
 	Markers          map[string]interface{}
 	objects          map[string][]interface{}
 	TemplateData     map[string]interface{}
@@ -51,7 +49,6 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 		Markers:          map[string]interface{}{},
 		ModuleDrivers:    map[string]ModuleDriver{},
 		TmplFunctionsMap: templateFunctionsMap,
-		DeploySequence:   []ModulesPack{},
 		objects:          map[string][]interface{}{},
 		TemplateData:     map[string]interface{}{},
 	}
@@ -163,59 +160,6 @@ func (p *Project) checkGraph() error {
 	return nil
 }
 
-func (p *Project) buildDeploySequence() error {
-
-	modDone := map[string]Module{}
-	modWait := map[string]Module{}
-
-	for _, mod := range p.Modules {
-		modWait[fmt.Sprintf("%s.%s", mod.InfraName(), mod.Name())] = mod
-	}
-	res := []ModulesPack{}
-	for c := 1; c < 20; c++ {
-		doneLen := len(modDone)
-		modPack := ModulesPack{}
-		modIterDone := map[string]*Module{}
-		for _, mod := range modWait {
-			modIndex := fmt.Sprintf("%s.%s", mod.InfraName(), mod.Name())
-			if len(*mod.Dependencies()) == 0 {
-				modIterDone[modIndex] = &mod
-				log.Infof(" '%s' - ok", modIndex)
-				delete(modWait, modIndex)
-				modPack = append(modPack, mod)
-				continue
-			}
-			var allDepsDone bool = true
-			for _, dep := range *mod.Dependencies() {
-				if findModule(dep.Module, modDone) == nil {
-					allDepsDone = false
-					break
-				}
-			}
-			if allDepsDone {
-				log.Infof(" '%s' - ok", modIndex)
-				modIterDone[modIndex] = &mod
-				delete(modWait, modIndex)
-				modPack = append(modPack, mod)
-			}
-		}
-		for k, v := range modIterDone {
-			modDone[k] = *v
-		}
-		res = append(res, modPack)
-		p.DeploySequence = res
-		if len(modWait) == 0 {
-			return nil
-		}
-		if doneLen == len(modDone) {
-			log.Fatalf("Unresolved dependency %v", modWait)
-			return fmt.Errorf("Unresolved dependency %v", modWait)
-		}
-
-	}
-	return nil
-}
-
 func (p *Project) readModules() error {
 	// Read modules from all infrastructures.
 	for infraName, infra := range p.Infrastructures {
@@ -262,12 +206,11 @@ func (p *Project) prepareModules() error {
 	if err := p.checkGraph(); err != nil {
 		return err
 	}
-	p.buildDeploySequence()
 	return nil
 }
 
-// GenCode generate all terraform code for project.
-func (p *Project) GenCode() error {
+// Build generate all terraform code for project.
+func (p *Project) Build() error {
 	baseOutDir := config.Global.TmpDir
 	if _, err := os.Stat(baseOutDir); os.IsNotExist(err) {
 		err := os.Mkdir(baseOutDir, 0755)
@@ -284,32 +227,10 @@ func (p *Project) GenCode() error {
 		}
 	}
 	log.Debugf("Remove all old content: %s", codeDir)
-	// err := removeDirContent(codeDir)
-	// if err != nil {
-	// 	return err
-	// }
 	for _, module := range p.Modules {
-		if err := module.CreateCodeDir(codeDir); err != nil {
+		if err := module.Build(codeDir); err != nil {
 			return err
 		}
-	}
-	script, err := p.generateScriptApply()
-	if err != nil {
-		return err
-	}
-	scriptFile := filepath.Join(codeDir, "apply.sh")
-	err = ioutil.WriteFile(scriptFile, []byte(script), 0777)
-	if err != nil {
-		return err
-	}
-	script, err = p.generateScriptDestroy()
-	if err != nil {
-		return err
-	}
-	scriptFile = filepath.Join(codeDir, "destroy.sh")
-	err = ioutil.WriteFile(scriptFile, []byte(script), 0777)
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -387,51 +308,6 @@ func (p *Project) Plan() error {
 			finFunc(res)
 		}(md, fn)
 	}
-}
-
-func (p *Project) generateScriptApply() (string, error) {
-	applyScript := `#!/bin/bash
-
-set -e
-mkdir -p ../.tmp/plugins/
-
-`
-
-	for index, modPack := range p.DeploySequence {
-		for _, mod := range modPack {
-			scr := mod.GetApplyShellCmd()
-			applyScript += fmt.Sprintf("# Parallel index %d", index)
-			applyScript += scr
-		}
-	}
-	return applyScript, nil
-}
-
-func (p *Project) generateScriptDestroy() (string, error) {
-	applyScript := `#!/bin/bash
-
-set -e
-mkdir -p ../.tmp/plugins/
-
-`
-	index := 0
-	for i := len(p.DeploySequence) - 1; i >= 0; i-- {
-		modPack := p.DeploySequence[i]
-		for _, mod := range modPack {
-			var scr string
-			scr += mod.GetDestroyShellCmd()
-			applyScript += scr
-			index++
-		}
-	}
-	return applyScript, nil
-}
-
-func isSameModule(mod1 Module, mod2 Module) bool {
-	if mod1.Name() == mod2.Name() && mod1.InfraPtr() == mod2.InfraPtr() {
-		return true
-	}
-	return false
 }
 
 // Name return project name.

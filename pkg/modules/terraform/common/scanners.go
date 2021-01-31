@@ -13,12 +13,13 @@ import (
 func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
 	subVal := reflect.ValueOf(data.Interface())
 	resString := subVal.String()
-	depMarkers, ok := module.ProjectPtr().Markers[remoteStateMarkerCatName]
+	depMarkers, ok := module.ProjectPtr().Markers[RemoteStateMarkerCatName]
 	if !ok {
 		return subVal, nil
 	}
 	for key, marker := range depMarkers.(map[string]*project.Dependency) {
 		if strings.Contains(resString, key) {
+			log.Debugf("SCANNER marker: %v", key)
 			if marker.InfraName == "this" {
 				marker.InfraName = module.InfraName()
 			}
@@ -37,7 +38,7 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 func (m *Module) YamlBlockMarkerScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
 	subVal := reflect.ValueOf(data.Interface())
 
-	yamlMarkers, ok := module.ProjectPtr().Markers[insertYAMLMarkerCatName].(map[string]interface{})
+	yamlMarkers, ok := module.ProjectPtr().Markers[InsertYAMLMarkerCatName].(map[string]interface{})
 	if !ok {
 		return subVal, nil
 	}

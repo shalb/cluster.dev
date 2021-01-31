@@ -34,16 +34,16 @@ func (m *TerraformTemplateDriver) Name() string {
 	return "terraform"
 }
 
-// remoteStateMarkerCatName - name of markers category for remote states
-const remoteStateMarkerCatName = "RemoteStateMarkers"
-const insertYAMLMarkerCatName = "insertYAMLMarkers"
+// RemoteStateMarkerCatName - name of markers category for remote states
+const RemoteStateMarkerCatName = "RemoteStateMarkers"
+const InsertYAMLMarkerCatName = "insertYAMLMarkers"
 
 // addRemoteStateMarker function for template. Add hash marker, witch will be replaced with desired remote state.
 func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, error) {
 
-	_, ok := m.projectPtr.Markers[remoteStateMarkerCatName]
+	_, ok := m.projectPtr.Markers[RemoteStateMarkerCatName]
 	if !ok {
-		m.projectPtr.Markers[remoteStateMarkerCatName] = map[string]*project.Dependency{}
+		m.projectPtr.Markers[RemoteStateMarkerCatName] = map[string]*project.Dependency{}
 	}
 	splittedPath := strings.Split(path, ".")
 	if len(splittedPath) != 3 {
@@ -56,18 +56,18 @@ func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, 
 		Output:     splittedPath[2],
 	}
 	marker := m.projectPtr.CreateMarker("remoteState")
-	m.projectPtr.Markers[remoteStateMarkerCatName].(map[string]*project.Dependency)[marker] = &dep
+	m.projectPtr.Markers[RemoteStateMarkerCatName].(map[string]*project.Dependency)[marker] = &dep
 	return fmt.Sprintf("%s", marker), nil
 }
 
 // addYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
 func (m *terraformTemplateFunctions) addYAMLBlockMarker(data interface{}) (string, error) {
-	_, ok := m.projectPtr.Markers[insertYAMLMarkerCatName]
+	_, ok := m.projectPtr.Markers[InsertYAMLMarkerCatName]
 	if !ok {
-		m.projectPtr.Markers[insertYAMLMarkerCatName] = map[string]interface{}{}
+		m.projectPtr.Markers[InsertYAMLMarkerCatName] = map[string]interface{}{}
 	}
 	marker := m.projectPtr.CreateMarker("YAML")
-	m.projectPtr.Markers[insertYAMLMarkerCatName].(map[string]interface{})[marker] = data
+	m.projectPtr.Markers[InsertYAMLMarkerCatName].(map[string]interface{})[marker] = data
 	return fmt.Sprintf("%s", marker), nil
 }
 

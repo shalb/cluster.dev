@@ -6,14 +6,12 @@ import (
 
 // Module interface for module drivers.
 type Module interface {
-	CreateCodeDir(string) error
+	Build(string) error
 	Name() string
 	InfraPtr() *Infrastructure
 	ProjectPtr() *Project
 	InfraName() string
 	ReplaceMarkers() error
-	GetApplyShellCmd() string
-	GetDestroyShellCmd() string
 	Dependencies() *[]*Dependency
 	Self() interface{}
 	PreHook() []byte

@@ -26,6 +26,13 @@ func randSeq(n int) string {
 }
 
 // CreateMarker generate hash string for template markers.
+func CreateMarker(markerType string) string {
+	const markerLen = 10
+	hash := randSeq(markerLen)
+	return fmt.Sprintf("%s.%s.%s", hash, markerType, hash)
+}
+
+// CreateMarker generate hash string for template markers.
 func (p *Project) CreateMarker(markerType string) string {
 	const markerLen = 10
 	hash := randSeq(markerLen)
@@ -155,7 +162,6 @@ func BuildModuleDeps(m Module) error {
 }
 
 func ReadYAMLObjects(objData []byte) ([]interface{}, error) {
-
 	objects := []interface{}{}
 	dec := yaml.NewDecoder(bytes.NewReader(objData))
 	for {

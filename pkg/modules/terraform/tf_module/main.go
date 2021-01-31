@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
@@ -21,7 +22,7 @@ func (m *tfModule) ModKindKey() string {
 	return "terraform"
 }
 
-func (m *tfModule) GenMainCodeBlock(mod project.Module) ([]byte, error) {
+func (m *tfModule) genMainCodeBlock() ([]byte, error) {
 
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
@@ -36,7 +37,7 @@ func (m *tfModule) GenMainCodeBlock(mod project.Module) ([]byte, error) {
 		}
 		moduleBody.SetAttributeValue(key, ctyVal)
 	}
-	depMarkers, ok := m.ProjectPtr().Markers["remoteStateMarkerCatName"]
+	depMarkers, ok := m.ProjectPtr().Markers[common.RemoteStateMarkerCatName]
 	if ok {
 		for hash, marker := range depMarkers.(map[string]*project.Dependency) {
 			if marker.Module == nil {
@@ -50,7 +51,7 @@ func (m *tfModule) GenMainCodeBlock(mod project.Module) ([]byte, error) {
 }
 
 // genOutputsBlock generate output code block for this module.
-func (m *tfModule) GenOutputs(mod project.Module) ([]byte, error) {
+func (m *tfModule) genOutputs() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
@@ -102,4 +103,24 @@ func (m *tfModule) ReplaceMarkers() error {
 		return err
 	}
 	return nil
+}
+
+// CreateCodeDir generate all terraform code for project.
+func (m *tfModule) Build(codeDir string) error {
+	m.BuildCommon()
+	var err error
+	m.FilesList["main.tf"], err = m.genMainCodeBlock()
+	if err != nil {
+		log.Debug(err.Error())
+		return err
+	}
+
+	if len(m.ExpectedOutputs()) > 0 {
+		m.FilesList["outputs.tf"], err = m.genOutputs()
+		if err != nil {
+			log.Debug(err.Error())
+			return err
+		}
+	}
+	return m.CreateCodeDir(codeDir)
 }

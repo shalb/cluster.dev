@@ -13,8 +13,8 @@ const backendObjKindKey = "backend"
 type Backend interface {
 	Name() string
 	Provider() string
-	GetBackendHCL(Module) ([]byte, error)
-	GetRemoteStateHCL(Module) ([]byte, error)
+	GetBackendHCL(string, string) ([]byte, error)
+	GetRemoteStateHCL(string, string) ([]byte, error)
 }
 
 // BackendsFactory - interface for backend provider factory. New() creates backend.

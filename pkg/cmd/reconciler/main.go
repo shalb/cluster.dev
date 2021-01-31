@@ -24,7 +24,7 @@ func Run() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	err = project.GenCode()
+	err = project.Build()
 	if err != nil {
 		log.Fatal(err.Error())
 	}

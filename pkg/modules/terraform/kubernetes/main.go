@@ -21,11 +21,7 @@ type kubernetes struct {
 	inputs map[string]interface{}
 }
 
-func (m *kubernetes) ModKindKey() string {
-	return "kubernetes"
-}
-
-func (m *kubernetes) GenMainCodeBlock(mod project.Module) ([]byte, error) {
+func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	providerBlock := rootBody.AppendNewBlock("provider", []string{"kubernetes-alpha"})
@@ -41,7 +37,7 @@ func (m *kubernetes) GenMainCodeBlock(mod project.Module) ([]byte, error) {
 			return nil, err
 		}
 		moduleBody.SetAttributeValue("manifest", ctyVal)
-		depMarkers, ok := m.ProjectPtr().Markers["remoteStateMarkerCatName"]
+		depMarkers, ok := m.ProjectPtr().Markers[common.RemoteStateMarkerCatName]
 		if ok {
 			for hash, marker := range depMarkers.(map[string]*project.Dependency) {
 				if marker.Module == nil {
@@ -56,17 +52,7 @@ func (m *kubernetes) GenMainCodeBlock(mod project.Module) ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-// genOutputsBlock generate output code block for this module.
-func (m *kubernetes) GenOutputs(mod project.Module) ([]byte, error) {
-	if len(m.ExpectedOutputs()) > 0 {
-		return nil, fmt.Errorf("kubernetes module has no outputs, you cannot use references to it remote states in other modules")
-	}
-	return nil, nil
-
-}
-
 func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
-
 	source, ok := spec["source"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect module source")
@@ -129,4 +115,16 @@ func (m *kubernetes) ReplaceMarkers() error {
 		return err
 	}
 	return nil
+}
+
+// CreateCodeDir generate all terraform code for project.
+func (m *kubernetes) Build(codeDir string) error {
+	m.BuildCommon()
+	var err error
+	m.FilesList["main.tf"], err = m.genMainCodeBlock()
+	if err != nil {
+		log.Debug(err.Error())
+		return err
+	}
+	return m.CreateCodeDir(codeDir)
 }

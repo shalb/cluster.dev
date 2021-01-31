@@ -6,7 +6,6 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/shalb/cluster.dev/pkg/project"
 )
 
 // BackendS3 - describe s3 backend for interface package.backend.
@@ -33,14 +32,14 @@ type backendConfigSpec struct {
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *BackendS3) GetBackendHCL(module project.Module) ([]byte, error) {
+func (b *BackendS3) GetBackendHCL(moduleName, infraName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
 	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"s3"})
 	backendBody := backendBlock.Body()
 	backendBody.SetAttributeValue("bucket", cty.StringVal(b.Bucket))
-	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s", module.InfraName(), module.Name())))
+	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s", infraName, moduleName)))
 	backendBody.SetAttributeValue("region", cty.StringVal(b.Region))
 
 	terraformBlock.Body().SetAttributeValue("required_version", cty.StringVal("~> 0.13"))
@@ -49,16 +48,16 @@ func (b *BackendS3) GetBackendHCL(module project.Module) ([]byte, error) {
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *BackendS3) GetRemoteStateHCL(module project.Module) ([]byte, error) {
+func (b *BackendS3) GetRemoteStateHCL(moduleName, infraName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", module.InfraName(), module.Name())})
+	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", infraName, moduleName)})
 	dataBody := dataBlock.Body()
 	dataBody.SetAttributeValue("backend", cty.StringVal("s3"))
 	dataBody.SetAttributeValue("config", cty.MapVal(map[string]cty.Value{
 		"bucket": cty.StringVal(b.Bucket),
-		"key":    cty.StringVal(fmt.Sprintf("%s/%s", module.InfraName(), module.Name())),
+		"key":    cty.StringVal(fmt.Sprintf("%s/%s", infraName, moduleName)),
 		"region": cty.StringVal(b.Region),
 	}))
 
