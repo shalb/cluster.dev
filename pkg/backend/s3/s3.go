@@ -32,7 +32,7 @@ type backendConfigSpec struct {
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *BackendS3) GetBackendHCL(moduleName, infraName string) ([]byte, error) {
+func (b *BackendS3) GetBackendHCL(infraName, moduleName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
@@ -48,7 +48,7 @@ func (b *BackendS3) GetBackendHCL(moduleName, infraName string) ([]byte, error) 
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *BackendS3) GetRemoteStateHCL(moduleName, infraName string) ([]byte, error) {
+func (b *BackendS3) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()

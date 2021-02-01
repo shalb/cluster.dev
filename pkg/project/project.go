@@ -246,7 +246,7 @@ func (p *Project) Destroy() error {
 		}
 		md, fn, err := grph.GetNext()
 		if err != nil {
-			log.Errorf("error in module %v, waitint for all running modules done.", md.Key())
+			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
 			grph.Wait()
 			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
 		}
@@ -271,7 +271,7 @@ func (p *Project) Apply() error {
 		}
 		md, fn, err := grph.GetNext()
 		if err != nil {
-			log.Errorf("error in module %v, waitint for all running modules done.", md.Key())
+			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
 			grph.Wait()
 			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
 		}
@@ -296,7 +296,7 @@ func (p *Project) Plan() error {
 		}
 		md, fn, err := grph.GetNext()
 		if err != nil {
-			log.Errorf("error in module %v, waitint for all running modules done.", md.Key())
+			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
 			grph.Wait()
 			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
 		}
