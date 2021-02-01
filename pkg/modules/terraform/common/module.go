@@ -121,22 +121,6 @@ func (m *Module) Dependencies() *[]*project.Dependency {
 	return &m.dependencies
 }
 
-// Self return pointer to self.
-// It should be used fo access to some internal module data or methods (witch not described in Module interface) from it terraform module driver.
-func (m *Module) Self() interface{} {
-	return m
-}
-
-// PreHook return module pre hook dependency.
-func (m *Module) PreHook() []byte {
-	return m.preHook
-}
-
-// PostHook return module pre hook dependency.
-func (m *Module) PostHook() []byte {
-	return m.postHook
-}
-
 // Apply module.
 func (m *Module) Apply() error {
 	rn, err := executor.NewBashRunner(m.codeDir)

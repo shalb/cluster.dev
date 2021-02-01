@@ -6,15 +6,13 @@ import (
 
 // Module interface for module drivers.
 type Module interface {
-	Build(string) error
 	Name() string
 	InfraPtr() *Infrastructure
 	ProjectPtr() *Project
 	InfraName() string
 	ReplaceMarkers() error
 	Dependencies() *[]*Dependency
-	Self() interface{}
-	PreHook() []byte
+	Build(string) error
 	Apply() error
 	Plan() error
 	Destroy() error

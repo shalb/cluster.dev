@@ -69,7 +69,7 @@ func getManifests(path string) ([]byte, [][]byte) {
 			log.Fatalf("cannot read directory %v: %v", path, err)
 		}
 	}
-	if len(files) == 0 {
+	if len(files) < 2 {
 		log.Fatalf("no manifest found in %v", path)
 	}
 

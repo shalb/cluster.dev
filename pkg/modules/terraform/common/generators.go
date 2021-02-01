@@ -47,9 +47,9 @@ func (m *Module) genDepsRemoteStates() ([]byte, error) {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *Module) CreateCodeDir(codeDir string) error {
+func (m *Module) CreateCodeDir(projectCodeDir string) error {
 
-	modDir := filepath.Join(codeDir, m.Key())
+	modDir := filepath.Join(projectCodeDir, m.Key())
 	log.Infof("Generating code for module module '%v'", m.Key())
 	err := os.Mkdir(modDir, 0755)
 
