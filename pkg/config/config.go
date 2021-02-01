@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -76,6 +77,11 @@ func init() {
 	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
 	// Parse args.
 	flag.Parse()
+
+	if Global.OnlyPrintVersion {
+		fmt.Printf("Version: %s\nBuild: %s\n", Global.Version, Global.Build)
+		os.Exit(0)
+	}
 
 	cmdsCount := 0
 	if build {

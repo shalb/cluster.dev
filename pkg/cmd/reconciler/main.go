@@ -1,7 +1,6 @@
 package reconciler
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
@@ -13,11 +12,6 @@ import (
 
 // Run main process.
 func Run() {
-
-	if config.Global.OnlyPrintVersion {
-		fmt.Printf("Version: %s\nBuild: %s\n", config.Global.Version, config.Global.Build)
-		return
-	}
 
 	projConf, manifests := getManifests(config.Global.ClusterConfigsPath)
 	project, err := project.NewProject(projConf, manifests)

@@ -9,7 +9,7 @@ SRC        := $(shell find . -type f -name '*.go' -print)
 
 VERSION=`git describe --tags`
 BUILD=`date +%FT%T%z`
-CONFIG_PKG="github.com/shalb/cluster.dev/internal/config"
+CONFIG_PKG="github.com/shalb/cluster.dev/pkg/config"
 
 # Required for globs to work correctly
 SHELL      = /usr/bin/env bash
