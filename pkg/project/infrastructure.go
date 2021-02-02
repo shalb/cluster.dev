@@ -3,9 +3,9 @@ package project
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"path/filepath"
+	"text/template"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
@@ -62,7 +62,6 @@ func (p *Project) readInfrastructureObj(infraSpec map[string]interface{}) error 
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'variables'")
 	}
-
 	// Read infra template data and apply variables.
 	templatesFile := filepath.Join(config.Global.WorkingDir, tmplFileName)
 	tmplData, err := ioutil.ReadFile(templatesFile)

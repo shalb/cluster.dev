@@ -2,10 +2,10 @@ package project
 
 import (
 	"fmt"
-	"html/template"
 	"os"
 	"reflect"
 	"strings"
+	"text/template"
 
 	"github.com/Masterminds/sprig"
 	"github.com/apex/log"

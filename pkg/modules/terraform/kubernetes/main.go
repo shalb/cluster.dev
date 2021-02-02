@@ -17,8 +17,9 @@ import (
 
 type kubernetes struct {
 	common.Module
-	source string
-	inputs map[string]interface{}
+	source     string
+	kubeconfig string
+	inputs     map[string]interface{}
 }
 
 func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
@@ -26,8 +27,7 @@ func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
 	rootBody := f.Body()
 	providerBlock := rootBody.AppendNewBlock("provider", []string{"kubernetes-alpha"})
 	providerBody := providerBlock.Body()
-	providerBody.SetAttributeValue("config_path", cty.StringVal("~/.kube/config"))
-	log.Debugf("%+v", m.inputs)
+	providerBody.SetAttributeValue("config_path", cty.StringVal(m.kubeconfig))
 	for key, manifest := range m.inputs {
 		moduleBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
 		moduleBody := moduleBlock.Body()
@@ -99,6 +99,12 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
 	}
 	if len(m.inputs) < 1 {
 		return fmt.Errorf("the kubernetes module must contain at least one manifest")
+	}
+	kubeconfig, ok := spec["kubeconfig"].(string)
+	if ok {
+		m.kubeconfig = kubeconfig
+	} else {
+		m.kubeconfig = "~/.kube/config"
 	}
 	m.source = source
 	return nil

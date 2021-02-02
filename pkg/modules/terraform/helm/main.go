@@ -122,6 +122,14 @@ func (m *helm) ReplaceMarkers() error {
 	if err != nil {
 		return err
 	}
+	err = project.ScanMarkers(m.sets, m.YamlBlockMarkerScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.sets, m.RemoteStatesScanner, m)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

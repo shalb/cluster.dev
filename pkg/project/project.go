@@ -3,10 +3,10 @@ package project
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
 	"reflect"
+	"text/template"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
