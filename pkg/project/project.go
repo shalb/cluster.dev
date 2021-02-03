@@ -226,7 +226,14 @@ func (p *Project) Build() error {
 			return err
 		}
 	}
-	log.Debugf("Remove all old content: %s", codeDir)
+	if !config.Global.UseCache {
+		log.Debugf("Remove all old content: %s", codeDir)
+		err := removeDirContent(codeDir)
+		if err != nil {
+			log.Debug(err.Error())
+			return err
+		}
+	}
 	for _, module := range p.Modules {
 		if err := module.Build(codeDir); err != nil {
 			return err

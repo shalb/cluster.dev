@@ -45,6 +45,7 @@ type ConfSpec struct {
 	MaxParallel        int
 	SubCommand         SubCmd
 	PluginsCacheDir    string
+	UseCache           bool
 }
 
 // Global config for executor.
@@ -64,6 +65,7 @@ func init() {
 	flag.BoolVar(&apply, "apply", false, "Apply project")
 	flag.BoolVar(&plan, "plan", false, "Show terraform plan")
 	flag.BoolVar(&destroy, "destroy", false, "Destroy project")
+	flag.BoolVar(&Global.UseCache, "cache", false, "Use previously cached build directory")
 
 	curPath, err := os.Getwd()
 	if err != nil {

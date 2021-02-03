@@ -2,8 +2,10 @@ package common
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/apex/log"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/executor"
 	"github.com/shalb/cluster.dev/pkg/project"
@@ -78,6 +80,11 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 			log.Debug(err.Error())
 			return err
 		}
+	}
+	providers, exists := spec["providers"]
+	if exists {
+		log.Debugf("Type: %v\nSpec: %+v", reflect.TypeOf(providers), providers)
+		spew.Dump(providers)
 	}
 	return nil
 }
