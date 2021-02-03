@@ -107,8 +107,11 @@ func (m *tfModule) ReplaceMarkers() error {
 
 // CreateCodeDir generate all terraform code for project.
 func (m *tfModule) Build(codeDir string) error {
-	m.BuildCommon()
 	var err error
+	err = m.BuildCommon()
+	if err != nil {
+		return err
+	}
 	m.FilesList["main.tf"], err = m.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
