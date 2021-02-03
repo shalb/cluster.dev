@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
@@ -31,7 +32,8 @@ func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
 	for key, manifest := range m.inputs {
 		moduleBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
 		moduleBody := moduleBlock.Body()
-		moduleBody.SetAttributeValue("provider", cty.StringVal("kubernetes-alpha"))
+		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(" kubernetes-alpha"), SpacesBefore: 1}}
+		moduleBody.SetAttributeRaw("provider", tokens)
 		ctyVal, err := hcltools.InterfaceToCty(manifest)
 		if err != nil {
 			return nil, err
