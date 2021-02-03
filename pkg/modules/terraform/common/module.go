@@ -2,10 +2,8 @@ package common
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/apex/log"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/executor"
 	"github.com/shalb/cluster.dev/pkg/project"
@@ -30,6 +28,7 @@ type Module struct {
 	postHook        []byte
 	codeDir         string
 	FilesList       map[string][]byte
+	providers       interface{}
 }
 
 func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.Infrastructure) error {
@@ -83,8 +82,7 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	}
 	providers, exists := spec["providers"]
 	if exists {
-		log.Debugf("Type: %v\nSpec: %+v", reflect.TypeOf(providers), providers)
-		spew.Dump(providers)
+		m.providers = providers
 	}
 	return nil
 }

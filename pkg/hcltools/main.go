@@ -5,11 +5,22 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/zclconf/go-cty/cty"
 	ctyjson "github.com/zclconf/go-cty/cty/json"
+	"gopkg.in/yaml.v3"
 )
+
+const providersSpec = `
+helm:
+  kubernetes:
+    exec: true
+aws:
+  assume_role: true
+  ignore_tags: true
+`
 
 // InterfaceToCty convert go type tu cty.Value(for hlc lib), using hack with JSON marshal/unmarshal.
 func InterfaceToCty(in interface{}) (cty.Value, error) {
@@ -84,4 +95,78 @@ func CreateTokensForOutput(in string) hclwrite.Tokens {
 		}
 	}
 	return res
+}
+
+func ProvidersToHCL(in interface{}) (*hclwrite.File, error) {
+	provSpecConf := map[string]interface{}{}
+	err := yaml.Unmarshal([]byte(providersSpec), provSpecConf)
+	if err != nil {
+		log.Debug("Internal error")
+		return nil, fmt.Errorf("Internal error")
+	}
+	data, ok := in.([]interface{})
+	if !ok {
+		log.Debug("Malformed provider configuration")
+		return nil, fmt.Errorf("providerToHCL: malformed provider configuration")
+	}
+
+	f := hclwrite.NewEmptyFile()
+	rootBody := f.Body()
+	for _, block := range data {
+		providerMap, ok := block.(map[string]interface{})
+		if !ok || len(providerMap) != 1 {
+			log.Debug("Malformed provider configuration")
+			return nil, fmt.Errorf("providerToHCL: malformed provider configuration")
+		}
+		for provName, provSpec := range providerMap {
+			provBlock := rootBody.AppendNewBlock("provider", []string{provName})
+			provSubSpec, _ := provSpecConf[provName]
+			if _, ok := provSpec.(map[string]interface{}); !ok {
+				log.Debug("Malformed provider configuration")
+				return nil, fmt.Errorf("providerToHCL: malformed provider configuration")
+			}
+			err := fillBlock(provSpec.(map[string]interface{}), provBlock, provSubSpec)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return f, nil
+}
+func fillBlock(data map[string]interface{}, result *hclwrite.Block, configMap interface{}) error {
+	for key, val := range data {
+		if _, ok := val.(map[string]interface{}); ok {
+			if isBlock, subCat := checkHCLConfig(key, configMap); isBlock {
+				bl := result.Body().AppendNewBlock(key, []string{})
+				err := fillBlock(val.(map[string]interface{}), bl, subCat)
+				if err != nil {
+					log.Debug(err.Error())
+					return err
+				}
+				continue
+			}
+		}
+		dt, err := InterfaceToCty(val)
+		if err != nil {
+			log.Debug(err.Error())
+			return err
+		}
+		result.Body().SetAttributeValue(key, dt)
+	}
+	return nil
+}
+
+func checkHCLConfig(key string, configMap interface{}) (bool, interface{}) {
+	if configMap == nil {
+		return false, nil
+	}
+	checkMap, ok := configMap.(map[string]interface{})
+	if !ok {
+		return false, nil
+	}
+	res, exists := checkMap[key]
+	if !exists {
+		return false, nil
+	}
+	return true, res
 }

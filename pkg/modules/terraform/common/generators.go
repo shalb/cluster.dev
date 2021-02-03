@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
@@ -72,11 +73,21 @@ func (m *Module) CreateCodeDir(projectCodeDir string) error {
 
 func (m *Module) BuildCommon() error {
 	var err error
+
 	m.FilesList["init.tf"], err = m.genBackendCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
+	if m.providers != nil {
+		providers, err := hcltools.ProvidersToHCL(m.providers)
+		if err != nil {
+			log.Debug(err.Error())
+			return err
+		}
+		m.FilesList["init.tf"] = append(m.FilesList["init.tf"], providers.Bytes()...)
+	}
+
 	// Create remote_state.tf
 	remoteStates, err := m.genDepsRemoteStates()
 	if err != nil {
