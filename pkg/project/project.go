@@ -26,13 +26,12 @@ type MarkerScanner func(data reflect.Value, module Module) (reflect.Value, error
 type Project struct {
 	name             string
 	Modules          map[string]Module
-	ModuleDrivers    map[string]ModuleDriver
 	Infrastructures  map[string]*Infrastructure
 	TmplFunctionsMap template.FuncMap
 	Backends         map[string]Backend
 	Markers          map[string]interface{}
 	objects          map[string][]interface{}
-	TemplateData     map[string]interface{}
+	config           map[string]interface{}
 }
 
 // NewProject creates init and check new project.
@@ -47,10 +46,9 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 		Modules:          map[string]Module{},
 		Backends:         map[string]Backend{},
 		Markers:          map[string]interface{}{},
-		ModuleDrivers:    map[string]ModuleDriver{},
 		TmplFunctionsMap: templateFunctionsMap,
 		objects:          map[string][]interface{}{},
-		TemplateData:     map[string]interface{}{},
+		config:           map[string]interface{}{},
 	}
 	for _, drv := range TemplateDriversMap {
 		drv.AddTemplateFunctions(project)
@@ -70,7 +68,7 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 		log.Fatal("Error in project config. Kind is required.")
 	}
 
-	project.TemplateData["project"] = prjConfParsed
+	project.config["project"] = prjConfParsed
 
 	for _, cnf := range configs {
 		tmpl, err := template.New("main").Funcs(project.TmplFunctionsMap).Option("missingkey=default").Parse(string(cnf))
@@ -80,18 +78,16 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 		}
 
 		templatedConf := bytes.Buffer{}
-		err = tmpl.Execute(&templatedConf, project.TemplateData)
+		err = tmpl.Execute(&templatedConf, project.config)
 		if err != nil {
 			return nil, err
 		}
 		project.readObjects(templatedConf.Bytes())
 	}
-
 	err = project.prepareObjects()
 	if err != nil {
 		return nil, err
 	}
-
 	err = project.readModules()
 	if err != nil {
 		return nil, err

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/shalb/cluster.dev/pkg/cmd/reconciler"
+	"github.com/shalb/cluster.dev/pkg/cmd/cdev"
 )
 
 func main() {
-	reconciler.Run()
+	cdev.Run()
 }

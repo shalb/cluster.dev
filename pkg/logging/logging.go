@@ -6,7 +6,6 @@ import (
 
 	"github.com/apex/log"
 	"github.com/aybabtme/rgbterm"
-	"github.com/shalb/cluster.dev/pkg/config"
 )
 
 // color function.
@@ -71,12 +70,17 @@ var utilStartTime = time.Now()
 // loggingInit - initial function for logging subsystem.
 func init() {
 	log.SetHandler(NewLogStdHandler())
+}
 
-	lvl, err := log.ParseLevel(config.Global.LogLevel)
+var traceLog bool
+
+func InitLogLevel(ll string, trace bool) {
+	lvl, err := log.ParseLevel(ll)
 	if err != nil {
-		log.Fatalf("Can't parse logging level '%s': %s", config.Global.LogLevel, err.Error())
+		log.Fatalf("Can't parse logging level '%s': %s", ll, err.Error())
 	}
 	log.SetLevel(lvl)
+	traceLog = trace
 }
 
 func logFormatter(e *log.Entry) string {
@@ -95,7 +99,7 @@ func logFormatter(e *log.Entry) string {
 	for _, name := range names {
 		output += rgbterm.FgString(fmt.Sprintf("[%v]", e.Fields.Get(name)), 225, 225, 225)
 	}
-	if config.Global.TraceLog {
+	if traceLog {
 		traceMsg := rgbterm.FgString(fmt.Sprintf("<%s>", formatCallpath(6, 15)), 255, 255, 255)
 		output = fmt.Sprintf("%s %s", output, traceMsg)
 	}

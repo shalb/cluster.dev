@@ -1,14 +1,13 @@
 package config
 
 import (
-	"flag"
-	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
-	"strings"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/logging"
 )
 
 // Version - git tag from compiller
@@ -29,44 +28,27 @@ const (
 
 // ConfSpec type for global config.
 type ConfSpec struct {
-	GitProvider        string
-	GitRepoName        string
-	GitRepoRoot        string
 	ClusterConfigsPath string
 	LogLevel           string
-	ProjectRoot        string
 	ClusterConfig      string
 	Version            string
 	Build              string
 	TmpDir             string
 	WorkingDir         string
 	TraceLog           bool
-	OnlyPrintVersion   bool
 	MaxParallel        int
-	SubCommand         SubCmd
 	PluginsCacheDir    string
 	UseCache           bool
+	OptFooTest         bool
+	Manifests          [][]byte
+	ProjectConf        []byte
 }
 
 // Global config for executor.
 var Global ConfSpec
 
-// set global config values.
-func init() {
-
-	// Read flags.
-	// Read debug option ( --debug )
-	flag.StringVar(&Global.LogLevel, "log-level", getEnv("VERBOSE_LVL", "info"), "Set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") (default \"info\")")
-	flag.BoolVar(&Global.OnlyPrintVersion, "version", false, "Print binary version tag.")
-	flag.BoolVar(&Global.TraceLog, "trace", false, "Print function trace info in logs.")
-	flag.IntVar(&Global.MaxParallel, "max-paraless", 3, "Max parallel module applying")
-	var build, apply, plan, destroy bool
-	flag.BoolVar(&build, "build", false, "Build project code")
-	flag.BoolVar(&apply, "apply", false, "Apply project")
-	flag.BoolVar(&plan, "plan", false, "Show terraform plan")
-	flag.BoolVar(&destroy, "destroy", false, "Destroy project")
-	flag.BoolVar(&Global.UseCache, "cache", false, "Use previously cached build directory")
-
+// InitConfig set global config values.
+func InitConfig() {
 	curPath, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current directory: %s", err.Error())
@@ -74,42 +56,10 @@ func init() {
 	Global.WorkingDir = curPath
 	Global.Version = Version
 	Global.Build = BuildTimestamp
-
+	logging.InitLogLevel(Global.LogLevel, Global.TraceLog)
 	Global.ClusterConfigsPath = curPath
 	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
-	// Parse args.
-	flag.Parse()
 
-	if Global.OnlyPrintVersion {
-		fmt.Printf("Version: %s\nBuild: %s\n", Global.Version, Global.Build)
-		os.Exit(0)
-	}
-
-	cmdsCount := 0
-	if build {
-		cmdsCount++
-		Global.SubCommand = Build
-	}
-	if apply {
-		cmdsCount++
-		Global.SubCommand = Apply
-	}
-	if plan {
-		cmdsCount++
-		Global.SubCommand = Plan
-	}
-	if destroy {
-		cmdsCount++
-		Global.SubCommand = Destroy
-	}
-	if cmdsCount > 1 {
-		log.Fatal("You should use only one of commands: (-apply|-plan|-destroy|-build)")
-	}
-	if cmdsCount < 1 {
-		log.Fatal("Command require: (-apply|-plan|-destroy|-build)")
-	}
-	// Detect git provider and set config vars.
-	detectGitProvider(&Global)
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err.Error())
@@ -124,14 +74,7 @@ func init() {
 			log.Fatal(err.Error())
 		}
 	}
-	// Detect project root dir.
-	var ok bool
-	if Global.ProjectRoot, ok = os.LookupEnv("PRJ_ROOT"); !ok {
-		Global.ProjectRoot, err = os.Getwd()
-		if err != nil {
-			log.Fatalf("Can't detect project root dir: %s", err.Error())
-		}
-	}
+	Global.ProjectConf, Global.Manifests = getManifests(Global.ClusterConfigsPath)
 }
 
 // getEnv Helper for args parse.
@@ -142,20 +85,36 @@ func getEnv(key string, defaultVal string) string {
 	return defaultVal
 }
 
-func detectGitProvider(config *ConfSpec) {
-	if config.GitRepoName = getEnv("GITHUB_REPOSITORY", ""); config.GitRepoName != "" {
-		config.GitProvider = "github"
-		config.GitRepoRoot = getEnv("GIT_REPO_ROOT", "")
-	} else if config.GitRepoName = getEnv("CI_PROJECT_PATH", ""); config.GitRepoName != "" {
-		config.GitProvider = "github"
-		config.GitRepoRoot = getEnv("CI_PROJECT_DIR", "")
-	} else if config.GitRepoName = getEnv("BITBUCKET_GIT_HTTP_ORIGIN", ""); config.GitRepoName != "" {
-		config.GitProvider = "github"
-		config.GitRepoRoot = getEnv("BITBUCKET_CLONE_DIR", "")
-		config.GitRepoName = strings.ReplaceAll(config.GitRepoName, "http://bitbucket.org/", "")
+// Return project conf and slice of others config files.
+func getManifests(path string) ([]byte, [][]byte) {
+
+	var files []string
+	var projectConf []byte
+	var err error
+	if Global.ClusterConfig != "" {
+		files = append(files, Global.ClusterConfig)
 	} else {
-		config.GitProvider = "none"
-		config.GitRepoRoot = "./"
-		config.GitRepoName = "local/local"
+		files, err = filepath.Glob(path + "/*.yaml")
+		if err != nil {
+			log.Fatalf("cannot read directory %v: %v", path, err)
+		}
 	}
+	if len(files) < 2 {
+		log.Fatalf("no manifest found in %v", path)
+	}
+
+	manifests := make([][]byte, len(files)-1)
+	for i, file := range files {
+		manifest := []byte{}
+		if filepath.Base(file) == "project.yaml" {
+			projectConf, err = ioutil.ReadFile(file)
+		} else {
+			manifest, err = ioutil.ReadFile(file)
+			manifests[i] = manifest
+		}
+		if err != nil {
+			log.Fatalf("error while reading %v: %v", file, err)
+		}
+	}
+	return projectConf, manifests
 }

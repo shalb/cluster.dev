@@ -55,13 +55,17 @@ func workDir() string {
 
 var templateFunctionsMap = template.FuncMap{
 	"ReconcilerVersionTag": printVersion,
-	"env":                  getEnv,
+	"reqEnv":               getEnv,
 	"workDir":              workDir,
 }
 
 func init() {
 	for key, val := range sprig.FuncMap() {
-		templateFunctionsMap[key] = val
+		if _, ok := templateFunctionsMap[key]; !ok {
+			templateFunctionsMap[key] = val
+		} else {
+			log.Fatalf("Template functions name conflict '%v'", key)
+		}
 	}
 }
 
