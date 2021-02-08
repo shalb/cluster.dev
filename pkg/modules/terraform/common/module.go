@@ -16,6 +16,13 @@ const moduleTypeKeyHelm = "helm"
 const remoteStateMarkerName = "RemoteStateMarkers"
 const insertYAMLMarkerName = "insertYAMLMarkers"
 
+type hookSpec struct {
+	command   []byte
+	OnDestroy bool `yaml:"on_destroy,omitempty"`
+	OnApply   bool `yaml:"on_apply,omitempty"`
+	OnPlan    bool `yaml:"on_plan,omitempty"`
+}
+
 // Module describe cluster.dev module to deploy/destroy terraform modules.
 type Module struct {
 	infraPtr        *project.Infrastructure
@@ -24,8 +31,8 @@ type Module struct {
 	name            string
 	dependencies    []*project.Dependency
 	expectedOutputs map[string]bool
-	preHook         []byte
-	postHook        []byte
+	preHook         *hookSpec
+	postHook        *hookSpec
 	codeDir         string
 	FilesList       map[string][]byte
 	providers       interface{}
@@ -139,12 +146,13 @@ func (m *Module) Apply() error {
 		m.Name(),
 		"apply",
 	}
+
 	var cmd = ""
-	if m.preHook != nil {
+	if m.preHook != nil && m.preHook.OnApply {
 		cmd = "./pre_hook.sh && "
 	}
 	cmd += "terraform init && terraform apply -auto-approve"
-	if m.postHook != nil {
+	if m.postHook != nil && m.postHook.OnApply {
 		cmd += " && ./post_hook.sh"
 	}
 	_, errMsg, err := rn.Run(cmd)
@@ -168,9 +176,14 @@ func (m *Module) Plan() error {
 		"plan",
 	}
 	var cmd = ""
-
+	if m.preHook != nil && m.preHook.OnPlan {
+		cmd = "./pre_hook.sh && "
+	}
 	cmd += "terraform init && terraform plan"
 
+	if m.postHook != nil && m.postHook.OnPlan {
+		cmd += " && ./post_hook.sh"
+	}
 	planOutput, errMsg, err := rn.Run(cmd)
 	if err != nil {
 		log.Debug(err.Error())
@@ -194,12 +207,12 @@ func (m *Module) Destroy() error {
 		"destroy",
 	}
 	var cmd = ""
-	if m.preHook != nil {
+	if m.preHook != nil && m.preHook.OnDestroy {
 		cmd = "./pre_hook.sh && "
 	}
 	cmd += "terraform init && terraform destroy -auto-approve"
 
-	if m.postHook != nil {
+	if m.postHook != nil && m.postHook.OnDestroy {
 		cmd += " && ./post_hook.sh"
 	}
 
