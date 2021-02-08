@@ -168,13 +168,15 @@ func (m *Module) Plan() error {
 		"plan",
 	}
 	var cmd = ""
+
 	cmd += "terraform init && terraform plan"
 
-	_, errMsg, err := rn.Run(cmd)
+	planOutput, errMsg, err := rn.Run(cmd)
 	if err != nil {
 		log.Debug(err.Error())
 		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
 	}
+	log.Infof("Module '%v', plan output:\v%v", m.Key(), string(planOutput))
 	return nil
 }
 
