@@ -20,6 +20,10 @@ var destroyCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+		err = project.Destroy()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 	},
 }
 
