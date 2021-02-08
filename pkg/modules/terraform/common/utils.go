@@ -9,6 +9,7 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"gopkg.in/yaml.v3"
 )
 
 func readDeps(depsData interface{}, infra *project.Infrastructure) ([]*project.Dependency, error) {
@@ -38,7 +39,7 @@ func readDeps(depsData interface{}, infra *project.Infrastructure) ([]*project.D
 	return res, nil
 }
 
-func readHook(hookData interface{}, hookType string) ([]byte, error) {
+func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 	hook, ok := hookData.(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("%s configuration error", hookType)
@@ -51,16 +52,31 @@ func readHook(hookData interface{}, hookType string) ([]byte, error) {
 	if !cmdExists && !scrExists {
 		return nil, fmt.Errorf("Error in %s config, use one of 'script' or 'command' option", hookType)
 	}
-	var ScriptData []byte
+	ScriptData := hookSpec{
+		command:   nil,
+		OnDestroy: false,
+		OnApply:   true,
+		OnPlan:    false,
+	}
 	var err error
 	if cmdExists {
-		ScriptData = []byte(fmt.Sprintf("#!/usr/bin/env bash\nset -e\n\n%s", cmd))
+		ScriptData.command = []byte(fmt.Sprintf("#!/usr/bin/env bash\nset -e\n\n%s", cmd))
 	} else {
-		ScriptData, err = ioutil.ReadFile(filepath.Join(config.Global.WorkingDir, script))
+		ScriptData.command, err = ioutil.ReadFile(filepath.Join(config.Global.WorkingDir, script))
 		if err != nil {
 			return nil, fmt.Errorf("can't load %s script: %v", hookType, err.Error())
 		}
 	}
-	return ScriptData, nil
+	ymlTmp, err := yaml.Marshal(hookData)
+	if err != nil {
+		log.Debug(err.Error())
+		return nil, err
+	}
+	err = yaml.Unmarshal(ymlTmp, &ScriptData)
+	if err != nil {
+		log.Debug(err.Error())
+		return nil, err
+	}
+	return &ScriptData, nil
 
 }

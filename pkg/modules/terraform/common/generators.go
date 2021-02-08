@@ -99,10 +99,10 @@ func (m *Module) BuildCommon() error {
 	}
 
 	if m.preHook != nil {
-		m.FilesList["pre_hook.sh"] = m.preHook
+		m.FilesList["pre_hook.sh"] = m.preHook.command
 	}
 	if m.postHook != nil {
-		m.FilesList["post_hook.sh"] = m.preHook
+		m.FilesList["post_hook.sh"] = m.preHook.command
 	}
 	return nil
 }
