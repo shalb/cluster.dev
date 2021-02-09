@@ -31,7 +31,9 @@ func (m *tfModule) genMainCodeBlock() ([]byte, error) {
 	moduleBlock := rootBody.AppendNewBlock("module", []string{m.Name()})
 	moduleBody := moduleBlock.Body()
 	moduleBody.SetAttributeValue("source", cty.StringVal(m.source))
-	moduleBody.SetAttributeValue("version", cty.StringVal(m.version))
+	if m.version != "" {
+		moduleBody.SetAttributeValue("version", cty.StringVal(m.version))
+	}
 	for key, val := range m.inputs {
 		ctyVal, err := hcltools.InterfaceToCty(val)
 		if err != nil {
