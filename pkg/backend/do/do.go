@@ -42,7 +42,7 @@ func (b *BackendDo) GetBackendHCL(infraName, moduleName string) ([]byte, error) 
 	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"s3"})
 	backendBody := backendBlock.Body()
 	backendBody.SetAttributeValue("bucket", cty.StringVal(b.Bucket))
-	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s", infraName, moduleName)))
+	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s.state", infraName, moduleName)))
 	backendBody.SetAttributeValue("region", cty.StringVal("us-east-1"))
 	backendBody.SetAttributeValue("endpoint", cty.StringVal(fmt.Sprintf("%s.digitaloceanspaces.com", b.Region)))
 	backendBody.SetAttributeValue("skip_credentials_validation", cty.BoolVal(true))
@@ -67,7 +67,7 @@ func (b *BackendDo) GetRemoteStateHCL(infraName, moduleName string) ([]byte, err
 
 	config := map[string]interface{}{
 		"bucket":                      b.Bucket,
-		"key":                         fmt.Sprintf("%s/%s", infraName, moduleName),
+		"key":                         fmt.Sprintf("%s/%s.state", infraName, moduleName),
 		"region":                      "us-east-1",
 		"endpoint":                    fmt.Sprintf("%s.digitaloceanspaces.com", b.Region),
 		"skip_credentials_validation": true,

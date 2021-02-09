@@ -39,7 +39,7 @@ func (b *BackendS3) GetBackendHCL(infraName, moduleName string) ([]byte, error) 
 	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"s3"})
 	backendBody := backendBlock.Body()
 	backendBody.SetAttributeValue("bucket", cty.StringVal(b.Bucket))
-	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s", infraName, moduleName)))
+	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s.state", infraName, moduleName)))
 	backendBody.SetAttributeValue("region", cty.StringVal(b.Region))
 
 	terraformBlock.Body().SetAttributeValue("required_version", cty.StringVal("~> 0.13"))
@@ -57,7 +57,7 @@ func (b *BackendS3) GetRemoteStateHCL(infraName, moduleName string) ([]byte, err
 	dataBody.SetAttributeValue("backend", cty.StringVal("s3"))
 	dataBody.SetAttributeValue("config", cty.MapVal(map[string]cty.Value{
 		"bucket": cty.StringVal(b.Bucket),
-		"key":    cty.StringVal(fmt.Sprintf("%s/%s", infraName, moduleName)),
+		"key":    cty.StringVal(fmt.Sprintf("%s/%s.state", infraName, moduleName)),
 		"region": cty.StringVal(b.Region),
 	}))
 
