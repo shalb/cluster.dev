@@ -14,8 +14,9 @@ import (
 
 type tfModule struct {
 	common.Module
-	source string
-	inputs map[string]interface{}
+	source  string
+	version string
+	inputs  map[string]interface{}
 }
 
 func (m *tfModule) ModKindKey() string {
@@ -30,6 +31,7 @@ func (m *tfModule) genMainCodeBlock() ([]byte, error) {
 	moduleBlock := rootBody.AppendNewBlock("module", []string{m.Name()})
 	moduleBody := moduleBlock.Body()
 	moduleBody.SetAttributeValue("source", cty.StringVal(m.source))
+	moduleBody.SetAttributeValue("version", cty.StringVal(m.version))
 	for key, val := range m.inputs {
 		ctyVal, err := hcltools.InterfaceToCty(val)
 		if err != nil {
@@ -81,6 +83,9 @@ func (m *tfModule) ReadConfig(spec map[string]interface{}) error {
 	source, ok := spec["source"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect module source")
+	}
+	if version, ok := spec["version"]; ok {
+		m.version = fmt.Sprintf("%v", version)
 	}
 	m.source = source
 	mInputs, ok := spec["inputs"].(map[string]interface{})
