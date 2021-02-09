@@ -1,6 +1,6 @@
-name: aws_example
+name: dev
 kind: project
 variables:
   organization: shalb
   region: eu-central-1
-  bucket_name: cluster-dev-k3s
+  state_bucket_name: cluster-dev-state-bucket
