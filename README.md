@@ -34,21 +34,17 @@ We provide glue that could stick those components together, so you can deploy, t
 
 ## How does it work?
 
-You can create or download a predefined template,    Then set the variables,        then render and deploy a whole infra set    
-<image template sample>                            +   <infra variables>        =      <image with infra in cloud AWS/K8s>
+You can create or download a predefined template, set the variables, then render and deploy a whole infra set.    
 
 Ok, what else can it do?
 
 0. Re-use all existing Terraform private and public modules and Helm Charts.
  
-1. We can apply parallel changes in multiple infrastructures concurrently:
-<image with parallel reconciliation>
+1. We can apply parallel changes in multiple infrastructures concurrently.
  
-2. We can use the same global variables and secrets across different infrastructures, clouds and technologies.
-<image with variables in dev/stage>    <image with same variable in terraform/kubernetes>   <image same secrets in AWS/GCP>       
+2. We can use the same global variables and secrets across different infrastructures, clouds and technologies.    
                  
-3. Template anything with Go-template function, even Terraform modules in Helm style templates
-<sample invocation of terraform module templated with helm functions>
+3. Template anything with Go-template function, even Terraform modules in Helm style templates.
  
 4. Render GitOps configuration for applications and push it to the repos connected to a target infrastructure.
 
