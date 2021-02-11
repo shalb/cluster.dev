@@ -2,8 +2,6 @@
 
 If you plan to make some changes, please have a look at our [style guide requirements](style-guide.md) first.
 
-If you want to add another Cloud Provider or Kubernetes Provisioner, please see [add-provider-provisioner.md](add-provider-provisioner.md).
-
 ## How to contribute
 
 1) Create an issue that you are going to address in [GH Issues](https://github.com/shalb/cluster.dev/issues), for example issue `#3`.

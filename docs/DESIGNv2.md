@@ -1,26 +1,70 @@
-# Product Design
+# Design Overview
 
-Cluster.dev helps you manage Cloud Native Infrastructures with a simple declarative manifests - InfraTemplates.
+Cluster.dev helps you manage Cloud Native Infrastructures with a simple declarative manifests - Infra Templates.
 
-InfraTemplate could contain different technology patterns, like Terraform modules, Shell scripts, Kubernetes manifests, Helm charts, Kustomize and ArgoCD applications.
+So you can describe whole infrastructure an deploy it with single tool.
+
+InfraTemplate could contain different technology patterns, like Terraform modules, Shell scripts, Kubernetes manifests, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc..
+
+You can store, test, and distribute your infrastructure pattern as a complete versionated set of technologies.
 
 ## Base Concept
 
 ```bash
-# Common Infrastructure Project structure
-[Project]
-          -> /templates
-             /infrastructures
-             /scripts
-             /terraform
-             /kubernetes
-             /any_outher_technology
+# Common Infrastructure Project Structure
+[Project in Git Repo]
+  project.yaml           # Global variables and settings
+  secrets.yaml           # sops encoded secrets
+  /templates             # Pre-defined infra patterns:
+    aws-kubernetes.yaml
+    cloudflare-dns.yaml
+    do-mysql.yaml
+  /infrastructures       # Declared infra variables
+    dev-infra.yaml
+    production.yaml
+  /terraform             # Storage for custom tf modules
+    my-custom-module/
+  /kubernetes            # Storage for custom K8s resources
+    my-custom-helm-chart/
+  /any_other_technology # Storage for bash scripts, opa policies, etc..
 ```
+
+### Infrastructure Reconcilation
+
+```bash
+# Single command reconcile the whole project
+cdev apply
+```
+
+Would:
+
+ 1. Decode all required secrets.
+ 2. Template infrastructure variables with global project variables and secrets.
+ 3. Pull and diff project state and build a dependency graph.
+ 4. Invoke all required modules in parralel manner.
+    ex: `sops decode`, `terraform apply`, `helm install`, etc..
+
+### Demo Video
+
+video placeholder
+
+## Base Components
 
 ### Infrastructure Project
 
-Project represents the single scope under it infrastructures are stored and reconciled. The dependencies between different infrastructures could be used under the project scope.  
+Project represents the single scope for infrastructures unde what they are stored and reconciled. The dependencies between different infrastructures could be used under the project scope.
 Project could host a global variables that could be accessed to template target infrastructure.
+
+```yaml
+# Sample project
+name: yolo
+kind: project
+variables:
+  # global vars could be used across envs
+  organization: shalb
+  region: eu-central-1
+  state_bucket_name: cluster-dev-state-bucket
+```
 
 ### Infrastructure Template
 
@@ -29,53 +73,82 @@ Represents yaml structure that includes different invocation modules: Terraform 
 Template could utilize all kind of go-template and sprig functions (similar to Helm). Along that it is enhanced with functions like `insertYAML` that could pass yaml blocks directly.
 
 ```yaml
-# Sample infrastructure template that deploys k8s cluster in AWS
-# Define template variables
-{{- $gitUrl := "github.com/shalb/cluster.dev//terraform/aws" }}
-{{- $branch := "new-reconciler" }}
+# Sample infrastructure template
+# It deploys k8s cluster in AWS, install ArgoCD on it
+# and apply nginx-ingress as ArgoCD application.
 modules:
-# Invoke Terraform (type:terraform) module
-- name: route53
+  # Create DNS record with Terraform
+  - name: route53
     type: terraform
-    source: {{ $gitUrl }}/route53?ref={{ $branch }}
+    source: github.com/shalb/cluster.dev//terraform/aws/route53?ref=v0.5.0
     inputs:
       region: {{ .variables.region }}
       cluster_name: {{ .name }}
       cluster_domain: {{ .variables.domain }}
       zone_delegation: {{ if eq .variables.domain "cluster.dev" }}true{{ else }}false{{ end }}
+  # If VPC is not provided create a AWS VPC with Antons module
+  {{- if not .variables.vpc_id }}
   - name: vpc
     type: terraform
-    source: {{ $gitUrl }}/vpc?ref={{ $branch }}
+    source: terraform-aws-modules/vpc/aws
+    version: "v1.73.0"
     inputs:
-      region: {{ .variables.region }}
-      cluster_name: {{ .name }}
-      availability_zones: {{ insertYAML .variables.azs }}
-  - name: minikube
+      name: {{ .name }}
+      azs: {{ insertYAML .variables.azs }}
+      vpc_id: {{ .variables.vpc_id }}
+  {{- end }}
+  # Deploy k3s cluster with Terraform
+  - name: k3s
     type: terraform
-    source: {{ $gitUrl }}/minikube?ref={{ $branch }}
+    source: github.com/shalb/terraform-aws-k3s.git?ref=v0.1.2
     inputs:
+      cluster_name: {{ .name }}-1
+      extra_args:
+        - "--disable traefik"
+      domain: {{ remoteState "this.route53.domain" }}
+      kubeconfig_filename: "../kubeconfig"
+      k3s_version: "1.19.3+k3s1"
+      {{- if not .variables.vpc_id }}
+      public_subnets: {{ remoteState "this.vpc.public_subnets" }}
+      {{- end }}
+      {{- if .variables.vpc_id }}
+      public_subnets: {{ insertYAML .variables.public_subnets }}
+      {{- end }}
+      key_name: {{ remoteState "this.aws_key_pair.this_key_pair_key_name" }}
       region: {{ .variables.region }}
-      cluster_name: {{ .name }}
-      aws_instance_type: {{ .variables.instance_type }}
-      hosted_zone: {{ .name }}.{{ .variables.domain }}
-      aws_subnet_id: {{ remoteState "this.vpc.public_subnets[0]" }}
-      bucket_name: {{ .variables.bucket }}
-# Execute shell script during execution to set config
-  - name: get_kubeconfig
-    type: shell
-    depends_on: this.minikube
-    command: "aws s3 cp s3://{{ .variables.bucket }}/kubeconfig_{{ .name }} ../kubeconfig_{{ .name }} && echo set_output_kubeconfig_path=../kubeconfig{{ .name }} "
-# Invoke next Terraform module
-  - name: addons
-    type: terraform
-    source: {{ $gitUrl }}/addons?ref={{ $branch }}
-    pre_hook: this.get_kubeconfig
+      s3_bucket: {{ .variables.bucket }}
+      master_node_count: 1
+      worker_node_groups: {{ insertYAML .variables.worker_node_groups  }}
+  # Deploy ArgoCD to provisioned K3s cluster with Helm
+  - name: argocd
+    type: helm
+    source:
+      repository: "https://argoproj.github.io/argo-helm"
+      chart: "argo-cd"
+      version: "2.11.0"
+    pre_hook:
+      command: export KUBECONFIG=../kubeconfig || aws s3 cp s3://{{ .variables.bucket }}/{{ .name }}-1/kubeconfig ../kubeconfig
+      on_destroy: true
+    kubeconfig: ../kubeconfig
+    depends_on: this.k3s
+    additional_options:
+      namespace: "argocd"
+      create_namespace: true
     inputs:
-      region: {{ .variables.region }}
-      cluster_name: {{ .name }}
-      kubeconfig: {{ output "this.get_kubeconfig.kubeconfig_path" }}
-      cluster_cloud_domain: {{ .name }}.{{ .variables.domain }}
-      dns_zone_id: {{ remoteState "this.route53.zone_id" }}
+      global.image.tag: v1.8.3
+      service.type: LoadBalancer
+      server.certificate.domain: argocd.{{ .name }}.{{ .variables.domain }}
+      server.ingress.enabled: true
+      server.ingress.hosts[0]: argocd.{{ .name }}.{{ .variables.domain }}
+      server.ingress.tls[0].hosts[0]: argocd.{{ .name }}.{{ .variables.domain }}
+      server.config.url: https://argocd.{{ .name }}.{{ .variables.domain }}
+      configs.secret.argocdServerAdminPassword: {{ .variables.argocd_secret }}
+  # Deploy ArgoCD applications as Kubernetes raw manifest
+  - name: argocd_apps
+    type: kubernetes
+    source: ./argocd-apps/
+    kubeconfig: ../kubeconfig
+    depends_on: this.argocd
 ```
 
 ### Infrastructure Variables
@@ -83,27 +156,50 @@ modules:
 The values that would be used by template to render the resulting infrastructure.
 
 ```yaml
-name: infra-dev2
-template: "templates/infra.tmpl"
+# Define Backend to store Terraform states and other stuff
+name: aws-backend
+kind: backend
+provider: s3
+spec:
+  bucket: {{ .project.variables.state_bucket_name }}
+  region: {{ .project.variables.region }}
+---
+# Define infrastructure itself
+name: k3s-infra
+template: "templates/aws-k3s.yaml" # use template above
 kind: infrastructure
-backend: aws
+backend: aws-backend
 variables:
-  bucket: new-cluster-dev
-  region: {{ remoteState infra.vpc.region }}
-  organization: {{ projectVariable organization }}
+  bucket: {{ .project.variables.state_bucket_name }}
+  region: {{ .project.variables.region }}
+  organization: {{ .project.variables.organization }}
   domain: cluster.dev
   instance_type: "t3.medium"
-  env: "dev-test1"
+  vpc_id: "vpc-5ecf1234"
+  public_subnets:
+    - "subnet-d775f0bd"
+    - "subnet-6696651a"
+  env: "dev"
+  argocd_secret: {{ .secrets.infra-dev.argocd_secret }}
   azs:
-    - "eu-central-1a"
-    - "eu-central-1b"
+    - {{ .project.variables.region }}a
+  public_key_name: voa
+  worker_node_groups:
+    - name: "node_pool"
+      min_size: 0
+      max_size: 1
+      instance_type: "t3.medium"
 ```
+
+### Infrastructure Secrets
+
+Secrets are encoded/decoded with [sops](https://github.com/mozilla/sops) utility which could support AWS KMS, GCP KMS, Azure Key Vault and PGP keys.
 
 ## Reconcilation Modules
 
 ### Terraform Modules
 
-Reconciler supports direct Terraform module invocation. So you can use public or private modules just to define required dependencies.   
+Reconciler supports direct Terraform module invocation. So you can use public or private modules just to define required dependencies.
 The following module definition:
 
 ```yaml
