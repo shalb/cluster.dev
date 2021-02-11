@@ -13,6 +13,11 @@ type BackendS3 struct {
 	name   string
 	Bucket string `yaml:"bucket"`
 	Region string `yaml:"region"`
+	state  map[string]interface{}
+}
+
+func (b *BackendS3) State() map[string]interface{} {
+	return b.state
 }
 
 // Name return name.

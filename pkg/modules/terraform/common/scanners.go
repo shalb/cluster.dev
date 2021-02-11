@@ -19,7 +19,6 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 	}
 	for key, marker := range depMarkers.(map[string]*project.Dependency) {
 		if strings.Contains(resString, key) {
-			log.Debugf("SCANNER marker: %v", key)
 			if marker.InfraName == "this" {
 				marker.InfraName = module.InfraName()
 			}
@@ -29,6 +28,8 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
 			}
 			*module.Dependencies() = append(*module.Dependencies(), marker)
+			remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.InfraName, marker.ModuleName, marker.Output)
+			m.markers[key] = remoteStateRef
 			depModule.ExpectedOutputs()[marker.Output] = true
 			return reflect.ValueOf(resString), nil
 		}

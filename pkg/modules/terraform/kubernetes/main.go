@@ -10,6 +10,7 @@ import (
 	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
 	"github.com/shalb/cluster.dev/pkg/project"
@@ -21,6 +22,10 @@ type kubernetes struct {
 	source     string
 	kubeconfig string
 	inputs     map[string]interface{}
+}
+
+func (m *kubernetes) ModKindKey() string {
+	return "kubernetes"
 }
 
 func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
@@ -88,7 +93,7 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
 		if err != nil {
 			return err
 		}
-		manifests, err := project.ReadYAMLObjects(manifest)
+		manifests, err := config.ReadYAMLObjects(manifest)
 		if err != nil {
 			return err
 		}

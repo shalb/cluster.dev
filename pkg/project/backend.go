@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apex/log"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const backendObjKindKey = "backend"
@@ -15,6 +15,7 @@ type Backend interface {
 	Provider() string
 	GetBackendHCL(string, string) ([]byte, error)
 	GetRemoteStateHCL(string, string) ([]byte, error)
+	State() map[string]interface{}
 }
 
 // BackendsFactory - interface for backend provider factory. New() creates backend.
@@ -34,16 +35,30 @@ func RegisterBackendFactory(f BackendsFactory, provider string) error {
 // BackendsFactories map of backend providers factories. Use BackendsFactories["prov_name"].New() to create backend of provider 'prov_name'
 var BackendsFactories = map[string]BackendsFactory{}
 
-func (p *Project) readBackendObj(obj map[string]interface{}) error {
-	name, ok := obj["name"].(string)
+func (p *Project) readBackends() error {
+	// Read and parse backends.
+	bks, exists := p.objects[backendObjKindKey]
+	if !exists {
+		err := fmt.Errorf("no backend found, at least one backend needed")
+		log.Debug(err.Error())
+		return err
+	}
+	for _, bk := range bks {
+		p.readBackendObj(bk)
+	}
+	return nil
+}
+
+func (p *Project) readBackendObj(obj ObjectData) error {
+	name, ok := obj.data["name"].(string)
 	if !ok {
 		return fmt.Errorf("backend object must contain field 'name'")
 	}
-	spec, ok := obj["spec"]
+	spec, ok := obj.data["spec"]
 	if !ok {
 		return fmt.Errorf("backend object must contain field 'spec'")
 	}
-	provider, ok := obj["provider"].(string)
+	provider, ok := obj.data["provider"].(string)
 	if !ok {
 		return fmt.Errorf("backend object must contain field 'provider'")
 	}

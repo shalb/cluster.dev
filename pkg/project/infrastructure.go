@@ -21,7 +21,10 @@ type Infrastructure struct {
 	TemplateSrc string
 	Template    []byte
 	Variables   map[string]interface{}
-	FullSpec    map[string]interface{}
+	ConfigData  map[string]interface{}
+}
+
+type infrastructureState struct {
 }
 
 func (i *Infrastructure) DoTemplate(in []byte) ([]byte, error) {
@@ -32,15 +35,32 @@ func (i *Infrastructure) DoTemplate(in []byte) ([]byte, error) {
 	}
 
 	tmpl := bytes.Buffer{}
-	err = t.Execute(&tmpl, i.FullSpec)
+	err = t.Execute(&tmpl, i.ConfigData)
 	if err != nil {
 		return nil, err
 	}
 	return tmpl.Bytes(), nil
 }
 
-func (p *Project) readInfrastructureObj(infraSpec map[string]interface{}) error {
-	name, ok := infraSpec["name"].(string)
+func (p *Project) readInfrastructures() error {
+	// Read and parse infrastructures.
+	infras, exists := p.objects[infraObjKindKey]
+	if !exists {
+		err := fmt.Errorf("no infrastructures found, at least one backend needed")
+		log.Debug(err.Error())
+		return err
+	}
+	for _, infra := range infras {
+		err := p.readInfrastructureObj(infra)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Project) readInfrastructureObj(infraSpec ObjectData) error {
+	name, ok := infraSpec.data["name"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'name'")
 	}
@@ -51,14 +71,14 @@ func (p *Project) readInfrastructureObj(infraSpec map[string]interface{}) error 
 
 	infra := Infrastructure{
 		ProjectPtr: p,
-		FullSpec:   infraSpec,
+		ConfigData: infraSpec.data,
 	}
-	tmplFileName, ok := infraSpec["template"].(string)
+	tmplFileName, ok := infraSpec.data["template"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'template'")
 	}
 
-	infra.Variables, ok = infraSpec["variables"].(map[string]interface{})
+	infra.Variables, ok = infraSpec.data["variables"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'variables'")
 	}
@@ -75,7 +95,7 @@ func (p *Project) readInfrastructureObj(infraSpec map[string]interface{}) error 
 	}
 
 	// Read backend name.
-	infra.BackendName, ok = infraSpec["backend"].(string)
+	infra.BackendName, ok = infraSpec.data["backend"].(string)
 	if !ok {
 		return fmt.Errorf("infrastructure object must contain field 'backend'")
 	}

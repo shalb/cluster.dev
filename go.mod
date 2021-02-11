@@ -14,9 +14,11 @@ require (
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.1.1
 	github.com/tj/go-spin v1.1.0
 	github.com/zclconf/go-cty v1.7.1
+	go.mozilla.org/sops/v3 v3.6.1
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 	k8s.io/client-go v11.0.0+incompatible // indirect

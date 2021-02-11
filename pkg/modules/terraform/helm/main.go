@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"reflect"
 
 	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -21,6 +20,10 @@ type helm struct {
 	sets              map[string]interface{}
 	kubeconfig        string
 	valuesFileContent []byte
+}
+
+func (m *helm) ModKindKey() string {
+	return "helm"
 }
 
 func (m *helm) genMainCodeBlock() ([]byte, error) {
@@ -73,7 +76,6 @@ func (m *helm) genMainCodeBlock() ([]byte, error) {
 
 func (m *helm) ReadConfig(spec map[string]interface{}) error {
 	source, ok := spec["source"].(map[string]interface{})
-	log.Debugf("%v", reflect.TypeOf(spec["source"]))
 	if !ok {
 		return fmt.Errorf("Incorrect module source, %v", m.Key())
 	}

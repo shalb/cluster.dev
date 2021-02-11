@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
@@ -56,9 +57,10 @@ func (m *Module) CreateCodeDir(projectCodeDir string) error {
 
 	for fn, f := range m.FilesList {
 		filePath := filepath.Join(modDir, fn)
-		log.Debugf(" file: '%v'", filePath)
+		relPath, _ := filepath.Rel(config.Global.WorkingDir, filePath)
+		log.Debugf(" file: './%v'", relPath)
 		if m.projectPtr.CheckContainsMarkers(string(f)) {
-			log.Debugf("%+v", string(f))
+			log.Debugf("Unprocessed markers:\n %+v", string(f))
 			log.Fatalf("Unprocessed remote marker found in module '%s.%s' (backend block). Check documentation.", m.infraPtr.Name, m.name)
 		}
 		err = ioutil.WriteFile(filePath, f, 0777)

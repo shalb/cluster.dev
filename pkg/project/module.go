@@ -18,6 +18,7 @@ type Module interface {
 	Destroy() error
 	Key() string
 	ExpectedOutputs() map[string]bool
+	GetState() (interface{}, error)
 }
 
 type ModuleDriver interface {

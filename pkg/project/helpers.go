@@ -161,8 +161,8 @@ func BuildModuleDeps(m Module) error {
 	return nil
 }
 
-func ReadYAMLObjects(objData []byte) ([]interface{}, error) {
-	objects := []interface{}{}
+func ReadYAMLObjects(objData []byte) ([]map[string]interface{}, error) {
+	objects := []map[string]interface{}{}
 	dec := yaml.NewDecoder(bytes.NewReader(objData))
 	for {
 		var parsedConf = make(map[string]interface{})
