@@ -178,3 +178,9 @@ func ReadYAMLObjects(objData []byte) ([]map[string]interface{}, error) {
 	}
 	return objects, nil
 }
+
+// ReadYAML same as ReadYAMLObjects but parse only data with 1 yaml object.
+func ReadYAML(objData []byte) (res map[string]interface{}, err error) {
+	err = yaml.Unmarshal(objData, &res)
+	return
+}

@@ -1,6 +1,7 @@
 package project
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"reflect"
@@ -80,3 +81,28 @@ type TemplateDriver interface {
 }
 
 var TemplateDriversMap map[string]TemplateDriver = map[string]TemplateDriver{}
+
+// TemplateMust do template
+func (p *Project) TemplateMust(data []byte) (res []byte, err error) {
+	return p.tmplWithMissingKey(data, "error")
+}
+
+// TemplateTry do template
+func (p *Project) TemplateTry(data []byte) (res []byte, warn bool, err error) {
+	res, err = p.tmplWithMissingKey(data, "default")
+	if err != nil {
+		return res, false, err
+	}
+	_, missingKeysErr := p.tmplWithMissingKey(data, "error")
+	return res, missingKeysErr != nil, missingKeysErr
+}
+
+func (p *Project) tmplWithMissingKey(data []byte, missingKey string) (res []byte, err error) {
+	tmpl, err := template.New("main").Funcs(p.TmplFunctionsMap).Option("missingkey=" + missingKey).Parse(string(data))
+	if err != nil {
+		return
+	}
+	templatedConf := bytes.Buffer{}
+	err = tmpl.Execute(&templatedConf, p.configData)
+	return templatedConf.Bytes(), err
+}

@@ -1,206 +1,146 @@
 package project
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"text/template"
 
 	"github.com/apex/log"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/config"
-	"github.com/shalb/cluster.dev/pkg/executor"
-	"github.com/shalb/cluster.dev/pkg/sopstools"
 )
+
+type secretDriver int
 
 const secretObjKindKey = "secret"
 
 type Secret struct {
-	filename string
-	data     map[string]interface{}
+	Filename  string
+	DriverKey string
+	Data      interface{}
 }
 
 func (p *Project) readSecrets() error {
 	for filename, data := range config.Global.Manifests {
-		isSec, err := FileIsSecret(data, p)
+		templatedRaw, hasWarn, tmplErr := p.TemplateTry(data)
+		if tmplErr != nil && !hasWarn {
+			log.Debug(tmplErr.Error())
+			return tmplErr
+		}
+		secretDriver, err := getRwaSecretInfo(templatedRaw, p)
 		if err != nil {
 			return err
 		}
-		if !isSec {
+		if secretDriver == nil {
 			continue
 		}
-		decryptedRaw, err := sopstools.DecryptYaml(data)
+		if hasWarn {
+			return tmplErr
+		}
+		name, data, err := secretDriver.Read(templatedRaw)
 		if err != nil {
 			return err
 		}
-		objects, err := ReadYAMLObjects(decryptedRaw)
-		if err != nil {
-			log.Debug(err.Error())
-			return err
+		if _, exists := p.secrets[name]; exists {
+			return fmt.Errorf("duplicated secret name '%v'", name)
 		}
-		for _, obj := range objects {
-			err = p.readSecretObj(ObjectData{
-				filename: filename,
-				data:     obj,
-			})
-			if err != nil {
-				log.Debug(err.Error())
-				return err
-			}
+		p.secrets[name] = Secret{Filename: filename, DriverKey: secretDriver.Key(), Data: data}
+		if _, exists := p.configData["secret"]; !exists {
+			p.configData["secret"] = map[string]interface{}{}
 		}
+		p.configData["secret"].(map[string]interface{})[name] = data
 	}
+
 	return nil
 }
 
-func (p *Project) readSecretObj(secretSpec ObjectData) error {
-	name, ok := secretSpec.data["name"].(string)
-	if !ok {
-		return fmt.Errorf("Secret object must contain field 'name'")
-	}
-	// Check if infra with this name is already exists in project.
-	if _, ok = p.secrets[name]; ok {
-		return fmt.Errorf("Duplicate secrets name '%s'", name)
-	}
-
-	p.secrets[name] = Secret{
-		filename: secretSpec.filename,
-		data:     secretSpec.data,
-	}
-	if _, exists := p.configData["secrets"]; !exists {
-		p.configData["secrets"] = map[string]interface{}{}
-	}
-	dataForTemplate, ok := secretSpec.data["encrypted_data"]
-	if !ok {
-		return fmt.Errorf("secret must contain field 'encrypted_data'")
-	}
-	p.configData["secrets"].(map[string]interface{})[name] = dataForTemplate
-	return nil
-}
-
-func FileIsSecret(data []byte, p *Project) (bool, error) {
-	tmpl, err := template.New("main").Funcs(p.TmplFunctionsMap).Option("missingkey=default").Parse(string(data))
-	if err != nil {
-		return false, err
-	}
-	templatedConf := bytes.Buffer{}
-	err = tmpl.Execute(&templatedConf, nil)
-	if err != nil {
-		return false, err
-	}
-	objects, err := ReadYAMLObjects(templatedConf.Bytes())
-	if err != nil {
-		log.Debug(err.Error())
-		return false, err
-	}
-	isSec, err := AllObjectsIsSecrets(objects)
-	if err != nil {
-		log.Debug(err.Error())
-		return false, err
-	}
-
-	return isSec, nil
-}
-
-func AllObjectsIsSecrets(objects []map[string]interface{}) (bool, error) {
-	secretsCount := 0
-	for _, obj := range objects {
-		if kind, ok := obj["kind"].(string); ok {
-			if kind == "secret" {
-				secretsCount++
-			}
+func (p *Project) filenameIsSecret(fn string) bool {
+	for _, sec := range p.secrets {
+		if sec.Filename == fn {
+			return true
 		}
 	}
-	if secretsCount == len(objects) {
-		return true, nil
+	return false
+}
+
+func getRwaSecretInfo(data []byte, p *Project) (res SecretDriver, err error) {
+	objects, err := ReadYAMLObjects(data)
+	if err != nil {
+		return
 	}
-	if secretsCount == 0 {
-		return false, nil
+	if len(objects) != 1 {
+		return nil, nil
 	}
-	return false, fmt.Errorf("file with secrets must contain only secrets")
+	res, err = getSecretInfo(objects[0])
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func getSecretInfo(obj map[string]interface{}) (res SecretDriver, err error) {
+	kind, ok := obj["kind"].(string)
+	if !ok {
+		return
+	}
+	if kind == "secret" {
+		driver, ok := obj["driver"].(string)
+		if !ok {
+			err = fmt.Errorf("secrets: should contain 'driver' field")
+			return
+		}
+		res, ok = SecretDriversMap[driver]
+		if !ok {
+			err = fmt.Errorf("secrets: unknown driver type '%v'", driver)
+			return
+		}
+	}
+	log.Debug("error: file with secrets must contain only secrets")
+	return
 }
 
 func (p *Project) PrintSecretsList() {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "File"})
+	table.SetHeader([]string{"Name", "Driver", "File"})
 	for name, secret := range p.secrets {
-		relPath, _ := filepath.Rel(config.Global.WorkingDir, secret.filename)
-		table.Append([]string{name, "./" + relPath})
+		relPath, _ := filepath.Rel(config.Global.WorkingDir, secret.Filename)
+		table.Append([]string{name, secret.DriverKey, "./" + relPath})
 	}
 	table.Render()
 }
 
-func (p *Project) EditSecret(name string) error {
-	secret, exists := p.secrets[name]
-	runner, err := executor.NewBashRunner(config.Global.WorkingDir)
-	if err != nil {
-		return err
+func (p *Project) Create(drvName, name string) error {
+	if _, exists := p.secrets[name]; exists {
+		return fmt.Errorf("secret with name '%v' is already exists", name)
 	}
-	if exists {
-		command := fmt.Sprintf("sops %s", secret.filename)
-		err = runner.RunWithTty(command)
-		return err
-	} else {
-		filename, err := createSecretTmpl(name)
-		if err != nil {
-			return err
-		}
-		command := fmt.Sprintf("sops -e --encrypted-regex ^encrypted_data$ -i %s", filename)
-		err = runner.RunWithTty(command)
-		if err != nil {
-			return err
-		}
-		command = fmt.Sprintf("sops %s", filename)
-		err = runner.RunWithTty(command)
-		if err != nil {
-			return err
-		}
+	drv, ok := SecretDriversMap[drvName]
+	if !ok {
+		return fmt.Errorf("unknown secret driver '%v'", drvName)
 	}
+	return drv.Create(name)
+}
+
+func (p *Project) Edit(name string) error {
+	if _, exists := p.secrets[name]; !exists {
+		return fmt.Errorf("secret '%v' not found", name)
+	}
+	return SecretDriversMap[p.secrets[name].DriverKey].Edit(p.secrets[name])
+}
+
+type SecretDriver interface {
+	Read([]byte) (string, interface{}, error)
+	Key() string
+	Edit(Secret) error
+	Create(string) error
+}
+
+var SecretDriversMap = map[string]SecretDriver{}
+
+func RegisterSecretDriver(drv SecretDriver, key string) error {
+	if _, exists := SecretDriversMap[key]; exists {
+		return fmt.Errorf("secret driver is already exists '%v'", key)
+	}
+	SecretDriversMap[key] = drv
 	return nil
 }
-
-func createSecretTmpl(name string) (string, error) {
-	tmplData := map[string]string{
-		"name": name,
-	}
-	tmpl, err := template.New("main").Option("missingkey=error").Parse(secretTemplate)
-	if err != nil {
-		return "", err
-	}
-	templatedSecret := bytes.Buffer{}
-	err = tmpl.Execute(&templatedSecret, tmplData)
-	if err != nil {
-		return "", err
-	}
-	filenameCheck := filepath.Join(config.Global.WorkingDir, name+".yaml")
-	if _, err := os.Stat(filenameCheck); os.IsNotExist(err) {
-		err = ioutil.WriteFile(filenameCheck, templatedSecret.Bytes(), os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-		return filenameCheck, nil
-	}
-	f, err := ioutil.TempFile(config.Global.WorkingDir, name+"_*.yaml")
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	_, err = f.Write(templatedSecret.Bytes())
-	if err != nil {
-		return "", err
-	}
-	return f.Name(), nil
-}
-
-var secretTemplate = `
-name: {{ .name }}
-kind: secret
-# Only values inside encrypted_data will be encrypted
-encrypted_data: 
-    key: secret string
-    secret_cat:
-        int_key: 1
-        bool_key: true
-    password: PaSworD1
-`

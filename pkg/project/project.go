@@ -1,7 +1,6 @@
 package project
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -82,32 +81,17 @@ func NewProject(projectConf []byte, configs map[string][]byte) (*Project, error)
 	project, err := NewEmptyProject(projectConf, configs)
 
 	for filename, cnf := range configs {
-		// Check if file has unresolved template fields.
-		tmpl, err := template.New("main").Funcs(project.TmplFunctionsMap).Option("missingkey=error").Parse(string(cnf))
-		if err != nil {
-			return nil, err
-		}
-		templatedConf := bytes.Buffer{}
-		tmplError := tmpl.Execute(&templatedConf, project.configData)
-		// Template
-		tmpl, err = template.New("main").Funcs(project.TmplFunctionsMap).Option("missingkey=default").Parse(string(cnf))
-		if err != nil {
-			return nil, err
-		}
 
-		templatedConf = bytes.Buffer{}
-		err = tmpl.Execute(&templatedConf, project.configData)
+		templatedConf, isWarn, err := project.TemplateTry(cnf)
 		if err != nil {
-			return nil, err
-		}
-		if tmplError != nil {
-			rel, err := filepath.Rel(config.Global.WorkingDir, filename)
-			if err != nil {
+			if isWarn {
+				rel, _ := filepath.Rel(config.Global.WorkingDir, filename)
+				log.Warnf("File %v has unresolved template key: \n%v", rel, err.Error())
+			} else {
 				log.Fatal(err.Error())
 			}
-			log.Warnf("File %v has unresolved template keys: \n%v", rel, tmplError.Error())
 		}
-		project.readObjects(templatedConf.Bytes(), filename)
+		project.readObjects(templatedConf, filename)
 	}
 	err = project.prepareObjects()
 	if err != nil {
@@ -130,18 +114,13 @@ type ObjectData struct {
 }
 
 func (p *Project) readObjects(objData []byte, filename string) error {
-
+	// Ignore secrets.
+	if p.filenameIsSecret(filename) {
+		return nil
+	}
 	objs, err := ReadYAMLObjects(objData)
 	if err != nil {
 		return err
-	}
-	isSec, err := AllObjectsIsSecrets(objs)
-	if err != nil {
-		return err
-	}
-	// Ignore secrets.
-	if isSec {
-		return nil
 	}
 	for _, obj := range objs {
 		objKind, ok := obj["kind"].(string)
@@ -210,21 +189,6 @@ func (p *Project) readModules() error {
 	}
 	return nil
 }
-
-// func (p *Project) printState() {
-// 	for _, mod := range p.Modules {
-// 		state, err := mod.GetState()
-// 		if err != nil {
-// 			log.Fatal(err.Error())
-// 		}
-// 		log.Debugf("%+v", state)
-// 		rawState, err := json.MarshalIndent(state, " ", " ")
-// 		if err != nil {
-// 			log.Fatal(err.Error())
-// 		}
-// 		log.Info(string(rawState))
-// 	}
-// }
 
 func (p *Project) prepareModules() error {
 	// After reads all modules to project - process templated markers and set all dependencies between modules.
