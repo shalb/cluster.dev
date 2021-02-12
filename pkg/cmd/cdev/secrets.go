@@ -64,7 +64,7 @@ var secretCreate = &cobra.Command{
 func getCreateSubcommand(secretType string) (res *cobra.Command) {
 	res = &cobra.Command{
 		Use:   fmt.Sprintf("%v [secret_name]", secretType),
-		Short: fmt.Sprintf("Create new secret typo of %v", secretType),
+		Short: fmt.Sprintf("Create new secret type of %v", secretType),
 		Run: func(cmd *cobra.Command, args []string) {
 			p, err := project.NewEmptyProject(config.Global.ProjectConf, config.Global.Manifests)
 			if err != nil {
