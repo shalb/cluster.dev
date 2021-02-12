@@ -193,7 +193,62 @@ variables:
 
 ### Infrastructure Secrets
 
+There are to way use secrets:
+#### sops
 Secrets are encoded/decoded with [sops](https://github.com/mozilla/sops) utility which could support AWS KMS, GCP KMS, Azure Key Vault and PGP keys.
+How to use: 
+1. Use console client cdev to create new secret from scratch:
+```bash
+cdev secret create sops my_local_secret
+```
+
+2. Edit secret and set secret data in `encrypted_data:` section.
+
+3. Use references to secret's data it infrastructure template. 
+```yaml
+---
+name: my-infra
+template: "templates/k8s.yaml"
+kind: infrastructure
+backend: aws-backend
+variables:
+  region: {{ .secret.my_local_secret.some_key }}
+....
+```
+
+#### aws ssm
+cdev client could use aws ssm as secret storage. 
+
+How to use: 
+1. create new secret in aws ssm manager using aws cli or web console. Both data format raw and JSON structure are supported.
+
+2. Use console client cdev to create new secret from scratch:
+```bash
+cdev secret create aws_ssm my_ssm_secret
+```
+
+3. Edit secret and set correct region and ssm_secret name in spec.
+
+4. Use references to secret's data it infrastructure template. 
+```yaml
+---
+name: my-infra
+template: "templates/k8s.yaml"
+kind: infrastructure
+backend: aws-backend
+variables:
+  region: {{ .secret.my_ssm_secret.some_key }} # if secret is raw data use {{ .secret.my_ssm_secret }}
+....
+```
+
+To list and edit any secret use commands:
+```bash
+cdev secret ls
+```
+and 
+```bash
+cdev secret edit secret_name
+```
 
 ## Reconcilation Modules
 
