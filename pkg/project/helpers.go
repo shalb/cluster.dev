@@ -161,8 +161,8 @@ func BuildModuleDeps(m Module) error {
 	return nil
 }
 
-func ReadYAMLObjects(objData []byte) ([]interface{}, error) {
-	objects := []interface{}{}
+func ReadYAMLObjects(objData []byte) ([]map[string]interface{}, error) {
+	objects := []map[string]interface{}{}
 	dec := yaml.NewDecoder(bytes.NewReader(objData))
 	for {
 		var parsedConf = make(map[string]interface{})
@@ -177,4 +177,10 @@ func ReadYAMLObjects(objData []byte) ([]interface{}, error) {
 		objects = append(objects, parsedConf)
 	}
 	return objects, nil
+}
+
+// ReadYAML same as ReadYAMLObjects but parse only data with 1 yaml object.
+func ReadYAML(objData []byte) (res map[string]interface{}, err error) {
+	err = yaml.Unmarshal(objData, &res)
+	return
 }

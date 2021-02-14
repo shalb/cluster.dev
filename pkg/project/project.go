@@ -1,7 +1,6 @@
 package project
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -30,13 +29,12 @@ type Project struct {
 	TmplFunctionsMap template.FuncMap
 	Backends         map[string]Backend
 	Markers          map[string]interface{}
-	objects          map[string][]interface{}
-	config           map[string]interface{}
+	objects          map[string][]ObjectData
+	configData       map[string]interface{}
+	secrets          map[string]Secret
 }
 
-// NewProject creates init and check new project.
-func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
-
+func NewEmptyProject(projectConf []byte, configs map[string][]byte) (*Project, error) {
 	if projectConf == nil {
 		log.Fatalf("Error reading project configuration file '%v', empty config or file does not exists.", ConfigFileName)
 	}
@@ -47,8 +45,9 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 		Backends:         map[string]Backend{},
 		Markers:          map[string]interface{}{},
 		TmplFunctionsMap: templateFunctionsMap,
-		objects:          map[string][]interface{}{},
-		config:           map[string]interface{}{},
+		objects:          map[string][]ObjectData{},
+		configData:       map[string]interface{}{},
+		secrets:          map[string]Secret{},
 	}
 	for _, drv := range TemplateDriversMap {
 		drv.AddTemplateFunctions(project)
@@ -68,21 +67,31 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 		log.Fatal("Error in project config. Kind is required.")
 	}
 
-	project.config["project"] = prjConfParsed
+	project.configData["project"] = prjConfParsed
 
-	for _, cnf := range configs {
-		tmpl, err := template.New("main").Funcs(project.TmplFunctionsMap).Option("missingkey=default").Parse(string(cnf))
+	err = project.readSecrets()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return project, nil
+}
 
+// NewProject creates init and check new project.
+func NewProject(projectConf []byte, configs map[string][]byte) (*Project, error) {
+	project, err := NewEmptyProject(projectConf, configs)
+
+	for filename, cnf := range configs {
+
+		templatedConf, isWarn, err := project.TemplateTry(cnf)
 		if err != nil {
-			return nil, err
+			if isWarn {
+				rel, _ := filepath.Rel(config.Global.WorkingDir, filename)
+				log.Warnf("File %v has unresolved template key: \n%v", rel, err.Error())
+			} else {
+				log.Fatal(err.Error())
+			}
 		}
-
-		templatedConf := bytes.Buffer{}
-		err = tmpl.Execute(&templatedConf, project.config)
-		if err != nil {
-			return nil, err
-		}
-		project.readObjects(templatedConf.Bytes())
+		project.readObjects(templatedConf, filename)
 	}
 	err = project.prepareObjects()
 	if err != nil {
@@ -99,49 +108,44 @@ func NewProject(projectConf []byte, configs [][]byte) (*Project, error) {
 	return project, nil
 }
 
-func (p *Project) readObjects(objData []byte) error {
+type ObjectData struct {
+	filename string
+	data     map[string]interface{}
+}
 
+func (p *Project) readObjects(objData []byte, filename string) error {
+	// Ignore secrets.
+	if p.filenameIsSecret(filename) {
+		return nil
+	}
 	objs, err := ReadYAMLObjects(objData)
 	if err != nil {
 		return err
 	}
 	for _, obj := range objs {
-		objKind, ok := obj.(map[string]interface{})["kind"].(string)
+		objKind, ok := obj["kind"].(string)
 		if !ok {
 			log.Fatal("infra must contain field 'kind'")
 		}
 		if _, exists := p.objects[objKind]; !exists {
-			p.objects[objKind] = []interface{}{}
+			p.objects[objKind] = []ObjectData{}
 		}
-		p.objects[objKind] = append(p.objects[objKind], obj)
+		p.objects[objKind] = append(p.objects[objKind], ObjectData{
+			filename: filename,
+			data:     obj,
+		})
 	}
 	return nil
 }
 
 func (p *Project) prepareObjects() error {
-	// Read and parse backends.
-	bks, exists := p.objects[backendObjKindKey]
-	if !exists {
-		err := fmt.Errorf("no backend found, at least one backend needed")
-		log.Debug(err.Error())
+	err := p.readBackends()
+	if err != nil {
 		return err
 	}
-	for _, bk := range bks {
-		p.readBackendObj(bk.(map[string]interface{}))
-	}
-
-	// Read and parse infrastructures.
-	infras, exists := p.objects[infraObjKindKey]
-	if !exists {
-		err := fmt.Errorf("no infrastructures found, at least one backend needed")
-		log.Debug(err.Error())
+	err = p.readInfrastructures()
+	if err != nil {
 		return err
-	}
-	for _, infra := range infras {
-		err := p.readInfrastructureObj(infra.(map[string]interface{}))
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -202,6 +206,7 @@ func (p *Project) prepareModules() error {
 	if err := p.checkGraph(); err != nil {
 		return err
 	}
+	//p.printState()
 	return nil
 }
 
@@ -215,7 +220,8 @@ func (p *Project) Build() error {
 		}
 	}
 	codeDir := filepath.Join(baseOutDir, p.name)
-	log.Debugf("Creates code directory: '%v'", codeDir)
+	relPath, _ := filepath.Rel(config.Global.WorkingDir, codeDir)
+	log.Debugf("Creates code directory: './%v'", relPath)
 	if _, err := os.Stat(codeDir); os.IsNotExist(err) {
 		err := os.Mkdir(codeDir, 0755)
 		if err != nil {
@@ -223,7 +229,7 @@ func (p *Project) Build() error {
 		}
 	}
 	if !config.Global.UseCache {
-		log.Debugf("Remove all old content: %s", codeDir)
+		log.Debugf("Remove all old content: './%s'", relPath)
 		err := removeDirContent(codeDir)
 		if err != nil {
 			log.Debug(err.Error())

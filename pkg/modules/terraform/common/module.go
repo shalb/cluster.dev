@@ -36,6 +36,12 @@ type Module struct {
 	codeDir         string
 	FilesList       map[string][]byte
 	providers       interface{}
+	specRaw         map[string]interface{}
+	markers         map[string]string
+}
+
+func (m *Module) Markers() map[string]string {
+	return m.markers
 }
 
 func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.Infrastructure) error {
@@ -65,6 +71,8 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	m.backendPtr = bPtr
 	m.expectedOutputs = map[string]bool{}
 	m.FilesList = map[string][]byte{}
+	m.specRaw = spec
+	m.markers = map[string]string{}
 
 	if err != nil {
 		log.Debug(err.Error())

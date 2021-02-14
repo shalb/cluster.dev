@@ -1,6 +1,8 @@
 package config
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -8,6 +10,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/logging"
+	"gopkg.in/yaml.v3"
 )
 
 // Version - git tag from compiller
@@ -40,7 +43,7 @@ type ConfSpec struct {
 	PluginsCacheDir    string
 	UseCache           bool
 	OptFooTest         bool
-	Manifests          [][]byte
+	Manifests          map[string][]byte
 	ProjectConf        []byte
 }
 
@@ -74,7 +77,7 @@ func InitConfig() {
 			log.Fatal(err.Error())
 		}
 	}
-	Global.ProjectConf, Global.Manifests = getManifests(Global.ClusterConfigsPath)
+	readManifests(Global.ClusterConfigsPath)
 }
 
 // getEnv Helper for args parse.
@@ -86,10 +89,9 @@ func getEnv(key string, defaultVal string) string {
 }
 
 // Return project conf and slice of others config files.
-func getManifests(path string) ([]byte, [][]byte) {
+func readManifests(path string) {
 
 	var files []string
-	var projectConf []byte
 	var err error
 	if Global.ClusterConfig != "" {
 		files = append(files, Global.ClusterConfig)
@@ -102,19 +104,35 @@ func getManifests(path string) ([]byte, [][]byte) {
 	if len(files) < 2 {
 		log.Fatalf("no manifest found in %v", path)
 	}
-
-	manifests := make([][]byte, len(files)-1)
-	for i, file := range files {
+	Global.Manifests = map[string][]byte{}
+	for _, file := range files {
 		manifest := []byte{}
 		if filepath.Base(file) == "project.yaml" {
-			projectConf, err = ioutil.ReadFile(file)
+			Global.ProjectConf, err = ioutil.ReadFile(file)
 		} else {
 			manifest, err = ioutil.ReadFile(file)
-			manifests[i] = manifest
+			Global.Manifests[file] = manifest
 		}
 		if err != nil {
 			log.Fatalf("error while reading %v: %v", file, err)
 		}
 	}
-	return projectConf, manifests
+}
+
+func ReadYAMLObjects(objData []byte) ([]map[string]interface{}, error) {
+	objects := []map[string]interface{}{}
+	dec := yaml.NewDecoder(bytes.NewReader(objData))
+	for {
+		var parsedConf = make(map[string]interface{})
+		err := dec.Decode(&parsedConf)
+		if err != nil {
+			if err.Error() == "EOF" {
+				break
+			}
+			log.Debugf("can't decode config to yaml: %s", err.Error())
+			return nil, fmt.Errorf("can't decode config to yaml: %s", err.Error())
+		}
+		objects = append(objects, parsedConf)
+	}
+	return objects, nil
 }

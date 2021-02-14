@@ -82,6 +82,28 @@ func (b *BashRunner) commandExecCommon(command string, outputBuff io.Writer, err
 	return err
 }
 
+func (b *BashRunner) RunWithTty(command string) error {
+	var ctx context.Context
+	ctx = context.Background()
+
+	cmd := exec.CommandContext(ctx, "bash", "-c", command)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if b.workingDir != "" {
+		cmd.Dir = b.workingDir
+	}
+	// Add global environments.
+	log.Debugf("Run command '%s'", command)
+	envTmp := append(os.Environ(), Env...)
+	// Add environments of curent innstance.
+	cmd.Env = append(envTmp, b.Env...)
+	// Run command.
+	err := cmd.Run()
+	return err
+}
+
 // Run - exec command and hide secrets in log output.
 func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, error) {
 	// Mask secrets with ***

@@ -16,6 +16,11 @@ type BackendDo struct {
 	Region    string `yaml:"region"`
 	AccessKey string `yaml:"access_key,omitempty"`
 	SecretKey string `yaml:"secret_key,omitempty"`
+	state     map[string]interface{}
+}
+
+func (b *BackendDo) State() map[string]interface{} {
+	return b.state
 }
 
 // Name return name.
