@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -43,8 +42,6 @@ type ConfSpec struct {
 	PluginsCacheDir    string
 	UseCache           bool
 	OptFooTest         bool
-	Manifests          map[string][]byte
-	ProjectConf        []byte
 }
 
 // Global config for executor.
@@ -77,7 +74,6 @@ func InitConfig() {
 			log.Fatal(err.Error())
 		}
 	}
-	readManifests(Global.ClusterConfigsPath)
 }
 
 // getEnv Helper for args parse.
@@ -86,37 +82,6 @@ func getEnv(key string, defaultVal string) string {
 		return envVal
 	}
 	return defaultVal
-}
-
-// Return project conf and slice of others config files.
-func readManifests(path string) {
-
-	var files []string
-	var err error
-	if Global.ClusterConfig != "" {
-		files = append(files, Global.ClusterConfig)
-	} else {
-		files, err = filepath.Glob(path + "/*.yaml")
-		if err != nil {
-			log.Fatalf("cannot read directory %v: %v", path, err)
-		}
-	}
-	if len(files) < 2 {
-		log.Fatalf("no manifest found in %v", path)
-	}
-	Global.Manifests = map[string][]byte{}
-	for _, file := range files {
-		manifest := []byte{}
-		if filepath.Base(file) == "project.yaml" {
-			Global.ProjectConf, err = ioutil.ReadFile(file)
-		} else {
-			manifest, err = ioutil.ReadFile(file)
-			Global.Manifests[file] = manifest
-		}
-		if err != nil {
-			log.Fatalf("error while reading %v: %v", file, err)
-		}
-	}
 }
 
 func ReadYAMLObjects(objData []byte) ([]map[string]interface{}, error) {

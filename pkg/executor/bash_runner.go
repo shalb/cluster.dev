@@ -36,10 +36,10 @@ func NewBashRunner(workingDir string, envVariables ...string) (*BashRunner, erro
 	fi, err := os.Stat(workingDir)
 	if workingDir != "" {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("directory %s does not exist", workingDir)
+			return nil, fmt.Errorf("bash runner: directory %s does not exist", workingDir)
 		}
 		if !fi.Mode().IsDir() {
-			return nil, fmt.Errorf("%s is not dir", workingDir)
+			return nil, fmt.Errorf("bash runner: %s is not dir", workingDir)
 		}
 	}
 
@@ -76,7 +76,7 @@ func (b *BashRunner) commandExecCommon(command string, outputBuff io.Writer, err
 	// Run command.
 	err := cmd.Run()
 	if ctx.Err() == context.DeadlineExceeded {
-		return fmt.Errorf("command timeout '%s'", command)
+		return fmt.Errorf("bash runner: command timeout '%s'", command)
 	}
 
 	return err
@@ -113,7 +113,7 @@ func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, err
 	// Create log writer.
 	logWriter, err := logging.NewLogWriter(log.DebugLevel, logging.SliceFielder{Flds: b.LogLabels})
 	if err != nil {
-		log.Fatalf("can't init logging: %v", err)
+		return nil, nil, fmt.Errorf("bash runner: can't init logging: %v", err)
 	}
 
 	// errOutput - error text.

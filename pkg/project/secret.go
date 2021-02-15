@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/apex/log"
 	"github.com/olekukonko/tablewriter"
@@ -21,28 +22,28 @@ type Secret struct {
 }
 
 func (p *Project) readSecrets() error {
-	for filename, data := range config.Global.Manifests {
+	for filename, data := range p.objectsFiles {
 		templatedRaw, hasWarn, tmplErr := p.TemplateTry(data)
 		if tmplErr != nil && !hasWarn {
 			log.Debug(tmplErr.Error())
-			return tmplErr
+			return fmt.Errorf("searching for secrets in the project dir: %v", tmplErr.Error())
 		}
 		secretDriver, err := getRwaSecretInfo(templatedRaw, p)
 		if err != nil {
-			return err
+			return fmt.Errorf("searching for secrets in the project dir: %v", err.Error())
 		}
 		if secretDriver == nil {
 			continue
 		}
 		if hasWarn {
-			return tmplErr
+			return fmt.Errorf("searching for secrets in the project dir: %v", tmplErr.Error())
 		}
 		name, data, err := secretDriver.Read(templatedRaw)
 		if err != nil {
-			return err
+			return fmt.Errorf("searching for secrets in the project dir: %v", err.Error())
 		}
 		if _, exists := p.secrets[name]; exists {
-			return fmt.Errorf("duplicated secret name '%v'", name)
+			return fmt.Errorf("searching for secrets in the project dir: duplicated secret name '%v'", name)
 		}
 		p.secrets[name] = Secret{Filename: filename, DriverKey: secretDriver.Key(), Data: data}
 		if _, exists := p.configData["secret"]; !exists {
@@ -54,7 +55,7 @@ func (p *Project) readSecrets() error {
 	return nil
 }
 
-func (p *Project) filenameIsSecret(fn string) bool {
+func (p *Project) fileIsSecret(fn string) bool {
 	for _, sec := range p.secrets {
 		if sec.Filename == fn {
 			return true
@@ -80,6 +81,16 @@ func getRwaSecretInfo(data []byte, p *Project) (res SecretDriver, err error) {
 }
 
 func getSecretInfo(obj map[string]interface{}) (res SecretDriver, err error) {
+	name, ok := obj["name"].(string)
+	if !ok {
+		err = fmt.Errorf("secret spec: should contain 'name' field")
+		return
+	}
+	err = checkSecretName(name)
+	if err != nil {
+		err = fmt.Errorf("secret spec: %v", err.Error())
+		return
+	}
 	kind, ok := obj["kind"].(string)
 	if !ok {
 		return
@@ -87,16 +98,15 @@ func getSecretInfo(obj map[string]interface{}) (res SecretDriver, err error) {
 	if kind == "secret" {
 		driver, ok := obj["driver"].(string)
 		if !ok {
-			err = fmt.Errorf("secrets: should contain 'driver' field")
+			err = fmt.Errorf("secret spec: should contain 'driver' field")
 			return
 		}
 		res, ok = SecretDriversMap[driver]
 		if !ok {
-			err = fmt.Errorf("secrets: unknown driver type '%v'", driver)
+			err = fmt.Errorf("secret spec: unknown driver type '%v'", driver)
 			return
 		}
 	}
-	log.Debug("error: file with secrets must contain only secrets")
 	return
 }
 
@@ -111,6 +121,10 @@ func (p *Project) PrintSecretsList() {
 }
 
 func (p *Project) Create(drvName, name string) error {
+	err := checkSecretName(name)
+	if err != nil {
+		return fmt.Errorf("creating secret: %v", err.Error())
+	}
 	if _, exists := p.secrets[name]; exists {
 		return fmt.Errorf("secret with name '%v' is already exists", name)
 	}
@@ -142,5 +156,13 @@ func RegisterSecretDriver(drv SecretDriver, key string) error {
 		return fmt.Errorf("secret driver is already exists '%v'", key)
 	}
 	SecretDriversMap[key] = drv
+	return nil
+}
+
+func checkSecretName(name string) error {
+	res := regexp.MustCompile(`^[a-zA-Z][a-zA-Z_0-9]{0,32}$`).MatchString(name)
+	if !res {
+		return fmt.Errorf("incorrect name '%v', should contain only alphabetic characters a-z, A-Z, 0-9, _ and start with an alphabetic character. Regex to verify: [a-zA-Z][a-zA-Z_0-9]{0,32}", name)
+	}
 	return nil
 }

@@ -38,7 +38,7 @@ func (s *ssmDriver) Read(rawData []byte) (name string, data interface{}, err err
 	}
 	sp, ok := secretSpec["spec"].(map[string]interface{})
 	if !ok {
-		err = fmt.Errorf("aws_ssm secret must contain field 'region'")
+		err = fmt.Errorf("aws_ssm: secret must contain field 'region'")
 		return
 	}
 	specRaw, err := yaml.Marshal(sp)
@@ -69,7 +69,7 @@ func (s *ssmDriver) Key() string {
 func init() {
 	err := project.RegisterSecretDriver(&ssmDriver{}, ssmKey)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("secrets: ssm driver init: %v", err.Error())
 	}
 }
 
@@ -93,12 +93,12 @@ func (s *ssmDriver) Edit(sec project.Secret) error {
 func (s *ssmDriver) Create(name string) error {
 	runner, err := executor.NewBashRunner(config.Global.WorkingDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("secrets: create secret: %v", err.Error())
 	}
 
 	filename, err := createSecretTmpl(name)
 	if err != nil {
-		return err
+		return fmt.Errorf("secrets: %v", err.Error())
 	}
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
@@ -109,7 +109,7 @@ func (s *ssmDriver) Create(name string) error {
 	if err != nil {
 		os.RemoveAll(filename)
 		log.Debugf("err %+v", err)
-		return err
+		return fmt.Errorf("secrets: create secret: %v", err.Error())
 	}
 
 	return nil
@@ -121,29 +121,29 @@ func createSecretTmpl(name string) (string, error) {
 	}
 	tmpl, err := template.New("main").Option("missingkey=error").Parse(secretTemplate)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("secrets: create secret: %v", err.Error())
 	}
 	templatedSecret := bytes.Buffer{}
 	err = tmpl.Execute(&templatedSecret, tmplData)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("secrets: create secret: %v", err.Error())
 	}
 	filenameCheck := filepath.Join(config.Global.WorkingDir, name+".yaml")
 	if _, err := os.Stat(filenameCheck); os.IsNotExist(err) {
 		err = ioutil.WriteFile(filenameCheck, templatedSecret.Bytes(), os.ModePerm)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("secrets: create secret: %v", err.Error())
 		}
 		return filenameCheck, nil
 	}
 	f, err := ioutil.TempFile(config.Global.WorkingDir, name+"_*.yaml")
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("secrets: create secret: %v", err.Error())
 	}
 	defer f.Close()
 	_, err = f.Write(templatedSecret.Bytes())
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("secrets: create secret: %v", err.Error())
 	}
 	return f.Name(), nil
 }

@@ -23,10 +23,12 @@ type sopsDriver struct{}
 func (s *sopsDriver) Read(rawData []byte) (name string, data interface{}, err error) {
 	decryptedRaw, err := sopstools.DecryptYaml(rawData)
 	if err != nil {
+		err = fmt.Errorf("decrypting sops secret: %v", err.Error())
 		return
 	}
 	secretSpec, err := project.ReadYAML(decryptedRaw)
 	if err != nil {
+		err = fmt.Errorf("sops: secret must contain string field 'name'")
 		return
 	}
 	name, ok := secretSpec["name"].(string)

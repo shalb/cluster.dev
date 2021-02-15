@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -15,9 +16,6 @@ import (
 // ConfigFileName name of required project config file.
 const ConfigFileName = "project.yaml"
 
-// ModulesPack that can be running in parallel.
-type ModulesPack []Module
-
 // MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
 type MarkerScanner func(data reflect.Value, module Module) (reflect.Value, error)
 
@@ -29,16 +27,15 @@ type Project struct {
 	TmplFunctionsMap template.FuncMap
 	Backends         map[string]Backend
 	Markers          map[string]interface{}
-	objects          map[string][]ObjectData
-	configData       map[string]interface{}
 	secrets          map[string]Secret
+	configData       map[string]interface{}
+	configDataFile   []byte
+	objects          map[string][]ObjectData
+	objectsFiles     map[string][]byte
 }
 
-func NewEmptyProject(projectConf []byte, configs map[string][]byte) (*Project, error) {
-	if projectConf == nil {
-		log.Fatalf("Error reading project configuration file '%v', empty config or file does not exists.", ConfigFileName)
-	}
-
+// NewEmptyProject creates new empty project. The configuration will not be loaded.
+func NewEmptyProject() *Project {
 	project := &Project{
 		Infrastructures:  map[string]*Infrastructure{},
 		Modules:          map[string]Module{},
@@ -52,36 +49,49 @@ func NewEmptyProject(projectConf []byte, configs map[string][]byte) (*Project, e
 	for _, drv := range TemplateDriversMap {
 		drv.AddTemplateFunctions(project)
 	}
+	return project
+}
+
+// LoadProjectBase read project data in current directory, create base project, and load secrets.
+// Infrastructures, backends and other objects are not loads.
+func LoadProjectBase() (*Project, error) {
+
+	project := NewEmptyProject()
+
+	err := project.readManifests()
+	if project.configDataFile == nil {
+		log.Fatalf("Loading project: loading project config: file '%v', empty config file does not exists.", ConfigFileName)
+	}
+
 	var prjConfParsed map[string]interface{}
-	err := yaml.Unmarshal(projectConf, &prjConfParsed)
+	err = yaml.Unmarshal(project.configDataFile, &prjConfParsed)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("Loading project: parsing project config: ", err.Error())
 	}
 	if name, ok := prjConfParsed["name"].(string); !ok {
-		log.Fatal("Error in project config. Name is required.")
+		log.Fatal("Loading project: error in project config: name is required.")
 	} else {
 		project.name = name
 	}
 
 	if kn, ok := prjConfParsed["kind"].(string); !ok || kn != "project" {
-		log.Fatal("Error in project config. Kind is required.")
+		log.Fatal("Loading project: error in project config: kind is required.")
 	}
 
 	project.configData["project"] = prjConfParsed
 
 	err = project.readSecrets()
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("Loading project: %v", err.Error())
 	}
 	return project, nil
 }
 
-// NewProject creates init and check new project.
-func NewProject(projectConf []byte, configs map[string][]byte) (*Project, error) {
-	project, err := NewEmptyProject(projectConf, configs)
+// LoadProjectFull read project data in current directory, create base project, load secrets and all project's objects.
+func LoadProjectFull() (*Project, error) {
+	project, err := LoadProjectBase()
 
-	for filename, cnf := range configs {
-
+	for filename, cnf := range project.objectsFiles {
 		templatedConf, isWarn, err := project.TemplateTry(cnf)
 		if err != nil {
 			if isWarn {
@@ -108,6 +118,7 @@ func NewProject(projectConf []byte, configs map[string][]byte) (*Project, error)
 	return project, nil
 }
 
+// ObjectData simple representation of project object.
 type ObjectData struct {
 	filename string
 	data     map[string]interface{}
@@ -115,7 +126,7 @@ type ObjectData struct {
 
 func (p *Project) readObjects(objData []byte, filename string) error {
 	// Ignore secrets.
-	if p.filenameIsSecret(filename) {
+	if p.fileIsSecret(filename) {
 		return nil
 	}
 	objs, err := ReadYAMLObjects(objData)
@@ -244,6 +255,7 @@ func (p *Project) Build() error {
 	return nil
 }
 
+// Destroy all modules.
 func (p *Project) Destroy() error {
 
 	grph := grapher{}
@@ -269,6 +281,7 @@ func (p *Project) Destroy() error {
 	}
 }
 
+// Apply all modules.
 func (p *Project) Apply() error {
 
 	grph := grapher{}
@@ -294,6 +307,7 @@ func (p *Project) Apply() error {
 	}
 }
 
+// Plan and output result.
 func (p *Project) Plan() error {
 
 	grph := grapher{}
@@ -322,4 +336,25 @@ func (p *Project) Plan() error {
 // Name return project name.
 func (p *Project) Name() string {
 	return p.name
+}
+
+// Return project conf and slice of others config files.
+func (p *Project) readManifests() error {
+	var files []string
+	var err error
+	files, _ = filepath.Glob(config.Global.WorkingDir + "/*.yaml")
+	objFiles := make(map[string][]byte)
+	for _, file := range files {
+		fileName, _ := filepath.Rel(config.Global.WorkingDir, file)
+		if fileName == ConfigFileName {
+			p.configDataFile, err = ioutil.ReadFile(file)
+		} else {
+			objFiles[file], err = ioutil.ReadFile(file)
+		}
+		if err != nil {
+			return fmt.Errorf("reading configs %v: %v", file, err)
+		}
+	}
+	p.objectsFiles = objFiles
+	return nil
 }

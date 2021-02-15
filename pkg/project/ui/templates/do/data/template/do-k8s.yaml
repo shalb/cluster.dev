@@ -1,0 +1,60 @@
+modules:
+  - 
+    name: vpc
+    type: terraform
+    source: github.com/shalb/terraform-do-vpc?ref=v0.0.1
+    inputs:
+      name: {{ .name }}
+      region: {{ .variables.region }}
+      vpc_id: {{ .variables.vpc }}
+  - 
+    name: k8s
+    type: terraform
+    source: github.com/shalb/terraform-do-k8s?ref=v0.0.1
+    inputs:
+      cluster_name: {{ .name }}
+      region: {{ .variables.region }}
+      vpc_id: {{ remoteState "this.vpc.vpc_id" }}
+      k8s_version: {{ .variables.k8s_version }}
+      kubeconfig_bucket: {{ .variables.bucket }}
+      default_node_group: {{ insertYAML .variables.main_node_group }}
+      {{ if .variables.additional_node_groups }}additional_node_groups: {{  insertYAML .variables.additional_node_groups }} {{ end }}
+  - 
+    name: argocd
+    type: helm
+    source:
+      repository: "https://argoproj.github.io/argo-helm"
+      chart: "argo-cd"
+      version: "2.11.0"
+    kubeconfig: ./kubeconfig
+    depends_on: this.k8s
+    additional_options:
+      namespace: "argocd"
+      create_namespace: true
+    pre_hook:
+      command: export KUBECONFIG=./kubeconfig || doctl auth init -t {{ env "DIGITALOCEAN_TOKEN" }} && doctl kubernetes cluster kubeconfig save {{ .name }}
+      on_destroy: true
+      on_plan: true
+    inputs:
+      service.type: LoadBalancer
+      server.certificate.domain: argocd.{{ .variables.domain }}
+      server.ingress.annotations.\"cluster\\.dev/domain\": argocd.{{ .variables.domain }}
+      server.ingress.hosts[0]: argocd.{{ .variables.domain }}
+      server.ingress.tls[0].hosts[0]: argocd.{{ .variables.domain }}
+      server.config.url: https://argocd.{{ .variables.domain }}
+      configs.secret.argocdServerAdminPassword: {{ .variables.password }}
+      installCRDs: false
+  - 
+    name: argocd_apps
+    type: kubernetes
+    source: ./argocd/ingress-nginx.yaml
+    kubeconfig: ./kubeconfig
+    depends_on: this.argocd
+    pre_hook:
+      command: export KUBECONFIG=./kubeconfig || doctl auth init -t {{ env "DIGITALOCEAN_TOKEN" }} && doctl kubernetes cluster kubeconfig save {{ .name }}
+      on_destroy: true
+      on_plan: true
+
+
+
+

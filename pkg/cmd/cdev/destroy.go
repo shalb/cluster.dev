@@ -2,7 +2,6 @@ package cdev
 
 import (
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/spf13/cobra"
 )
@@ -11,7 +10,7 @@ var destroyCmd = &cobra.Command{
 	Use:   "destroy",
 	Short: "Destroy all modules",
 	Run: func(cmd *cobra.Command, args []string) {
-		project, err := project.NewProject(config.Global.ProjectConf, config.Global.Manifests)
+		project, err := project.LoadProjectFull()
 		if err != nil {
 			log.Fatal(err.Error())
 		}
