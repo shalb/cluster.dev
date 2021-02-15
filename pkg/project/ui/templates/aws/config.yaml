@@ -8,7 +8,7 @@ options:
     regex: "^[a-zA-Z][a-zA-Z_0-9]{0,64}$"
   - name: region
     description: AWS region
-    regex: "^[a-zA-Z][a-zA-Z_0-9]{0,32}$"
+    regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,32}$"
   - name: domain
     description: Route53 DNZ zone domain name
     regex: "^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$"
