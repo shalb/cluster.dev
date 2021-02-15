@@ -22,7 +22,7 @@ type helm struct {
 	valuesFileContent []byte
 }
 
-func (m *helm) ModKindKey() string {
+func (m *helm) KindKey() string {
 	return "helm"
 }
 

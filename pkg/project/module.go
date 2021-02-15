@@ -19,6 +19,7 @@ type Module interface {
 	Key() string
 	ExpectedOutputs() map[string]bool
 	GetState() (interface{}, error)
+	KindKey() string
 }
 
 type ModuleDriver interface {

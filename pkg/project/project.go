@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/apex/log"
+	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"gopkg.in/yaml.v3"
 )
@@ -356,5 +357,65 @@ func (p *Project) readManifests() error {
 		}
 	}
 	p.objectsFiles = objFiles
+	return nil
+}
+
+// PrintInfo print project info.
+func (p *Project) PrintInfo() error {
+	fmt.Println("Project:")
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Name", "Infra count", "Modules count", "Backends count", "Secrets count"})
+	table.Append([]string{
+		p.name,
+		fmt.Sprintf("%v", len(p.Infrastructures)),
+		fmt.Sprintf("%v", len(p.Modules)),
+		fmt.Sprintf("%v", len(p.Backends)),
+		fmt.Sprintf("%v", len(p.secrets)),
+	})
+	table.Render()
+
+	fmt.Println("Infrastructures:")
+	table = tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Name", "Modules count", "Backend name", "Backend type"})
+	for name, infra := range p.Infrastructures {
+		mCount := 0
+		for _, mod := range p.Modules {
+			if mod.InfraName() == infra.Name {
+				mCount++
+			}
+		}
+		table.Append([]string{
+			name,
+			fmt.Sprintf("%v", mCount),
+			infra.Backend.Name(),
+			infra.Backend.Provider(),
+		})
+	}
+	table.Render()
+
+	fmt.Println("Modules:")
+	table = tablewriter.NewWriter(os.Stdout)
+	table.SetRowLine(true)
+	// table.SetRowSeparator(".")
+	table.SetHeader([]string{"Name", "Infra", "Kind", "Dependencies"})
+	for name, mod := range p.Modules {
+		deps := ""
+		for i, dep := range *mod.Dependencies() {
+			deps = fmt.Sprintf("%s%s.%s", deps, dep.InfraName, dep.ModuleName)
+			if dep.Output != "" {
+				deps = fmt.Sprintf("%s.%s", deps, dep.Output)
+			}
+			if i != len(*mod.Dependencies())-1 {
+				deps += "\n"
+			}
+		}
+		table.Append([]string{
+			name,
+			mod.InfraName(),
+			mod.KindKey(),
+			deps,
+		})
+	}
+	table.Render()
 	return nil
 }

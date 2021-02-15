@@ -24,12 +24,13 @@ var projectLs = &cobra.Command{
 	Use:   "info",
 	Short: "List projects",
 	Run: func(cmd *cobra.Command, args []string) {
-		//p, err := project.LoadProjectBase()
-		// if err != nil {
-		// 	log.Info("No project found in the current directory.")
-		// 	return
-		// }
-		ui.Create()
+		p, err := project.LoadProjectFull()
+		if err != nil {
+			log.Info("No project found in the current directory.")
+			return
+		}
+		log.Info("Project info:")
+		p.PrintInfo()
 	},
 }
 
@@ -37,16 +38,9 @@ var projectCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Create new project",
 	Run: func(cmd *cobra.Command, args []string) {
-		p, err := project.LoadProjectBase()
-		if err != nil {
-			log.Fatal(err.Error())
+		if project.ProjectsFilesExists() {
+			log.Fatalf("project creating: some project's data (yaml files) found in current directory, use command in empty dir")
 		}
-		if len(args) != 1 {
-			log.Fatalf("project name is required")
-		}
-		err = p.Edit(args[0])
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+		ui.CreateProject()
 	},
 }

@@ -19,7 +19,7 @@ type tfModule struct {
 	inputs  map[string]interface{}
 }
 
-func (m *tfModule) ModKindKey() string {
+func (m *tfModule) KindKey() string {
 	return "terraform"
 }
 
@@ -72,7 +72,7 @@ func (m *tfModule) ReadConfig(spec map[string]interface{}) error {
 	if !ok {
 		return fmt.Errorf("Incorrect module type")
 	}
-	if modType != m.ModKindKey() {
+	if modType != m.KindKey() {
 		return fmt.Errorf("Incorrect module type")
 	}
 	source, ok := spec["source"].(string)

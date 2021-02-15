@@ -1,0 +1,17 @@
+description: Aws cloud, k3s kubernetes cluster with argocd
+options:
+  - name: name
+    description: Project name
+    regex: "^[a-zA-Z][a-zA-Z_0-9]{0,32}$"
+  - name: organization
+    description: Organization name
+    regex: "^[a-zA-Z][a-zA-Z_0-9]{0,64}$"
+  - name: region
+    description: AWS region
+    regex: "^[a-zA-Z][a-zA-Z_0-9]{0,32}$"
+  - name: domain
+    description: Route53 DNZ zone domain name
+    regex: "^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$"
+  - name: bucket_name
+    description: AWS s3 bucket name for states
+    regex: "^[a-zA-Z][a-zA-Z_0-9]{0,64}$"

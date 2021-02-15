@@ -1,8 +1,0 @@
-- name: name
-  description: Project name.
-- name: organization
-  description: Organization name.
-- name: region
-  description: AWS region
-- name: domain
-  description: Route53 DNZ zone domain name.

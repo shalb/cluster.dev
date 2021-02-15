@@ -1,8 +1,0 @@
-- name: name
-  description: Project name.
-- name: organization
-  description: Organization name.
-- name: region
-  description: DigitalOcean region
-- name: domain
-  description: DigitalOcean DNS zone domain name.

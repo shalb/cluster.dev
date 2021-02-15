@@ -15,7 +15,7 @@ func (m *kubernetes) GetState() (interface{}, error) {
 	stTf := State{
 		StateSpecCommon: st,
 		Inputs:          m.inputs,
-		Kind:            m.ModKindKey(),
+		Kind:            m.KindKey(),
 		Source:          m.source,
 		Kubeconfig:      m.kubeconfig,
 	}

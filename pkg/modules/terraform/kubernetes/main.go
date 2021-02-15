@@ -24,7 +24,7 @@ type kubernetes struct {
 	inputs     map[string]interface{}
 }
 
-func (m *kubernetes) ModKindKey() string {
+func (m *kubernetes) KindKey() string {
 	return "kubernetes"
 }
 

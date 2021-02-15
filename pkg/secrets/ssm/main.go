@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -130,7 +131,7 @@ func createSecretTmpl(name string) (string, error) {
 	}
 	filenameCheck := filepath.Join(config.Global.WorkingDir, name+".yaml")
 	if _, err := os.Stat(filenameCheck); os.IsNotExist(err) {
-		err = ioutil.WriteFile(filenameCheck, templatedSecret.Bytes(), os.ModePerm)
+		err = ioutil.WriteFile(filenameCheck, templatedSecret.Bytes(), fs.ModePerm)
 		if err != nil {
 			return "", fmt.Errorf("secrets: create secret: %v", err.Error())
 		}

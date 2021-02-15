@@ -184,3 +184,12 @@ func ReadYAML(objData []byte) (res map[string]interface{}, err error) {
 	err = yaml.Unmarshal(objData, &res)
 	return
 }
+
+func ProjectsFilesExists() bool {
+	project := NewEmptyProject()
+	_ = project.readManifests()
+	if project.configDataFile != nil || len(project.objectsFiles) > 0 {
+		return true
+	}
+	return false
+}

@@ -17,7 +17,7 @@ func (m *helm) GetState() (interface{}, error) {
 	stTf := State{
 		StateSpecCommon: st,
 
-		Kind:       m.ModKindKey(),
+		Kind:       m.KindKey(),
 		Source:     m.source,
 		Kubeconfig: m.kubeconfig,
 		HelmOpts:   m.helmOpts,
