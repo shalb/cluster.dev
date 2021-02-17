@@ -38,6 +38,7 @@ type Module struct {
 	providers       interface{}
 	specRaw         map[string]interface{}
 	markers         map[string]string
+	applyOutput     []byte
 }
 
 func (m *Module) Markers() map[string]string {
@@ -116,6 +117,11 @@ func (m *Module) InfraPtr() *project.Infrastructure {
 	return m.infraPtr
 }
 
+// ApplyOutput return output of last module applying.
+func (m *Module) ApplyOutput() []byte {
+	return m.applyOutput
+}
+
 // ProjectPtr return ptr to module project.
 func (m *Module) ProjectPtr() *project.Project {
 	return m.projectPtr
@@ -141,8 +147,7 @@ func (m *Module) Dependencies() *[]*project.Dependency {
 	return &m.dependencies
 }
 
-// Apply module.
-func (m *Module) Apply() error {
+func (m *Module) ApplyDefault() error {
 	rn, err := executor.NewBashRunner(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -163,11 +168,17 @@ func (m *Module) Apply() error {
 	if m.postHook != nil && m.postHook.OnApply {
 		cmd += " && ./post_hook.sh"
 	}
-	_, errMsg, err := rn.Run(cmd)
+	var errMsg []byte
+	m.applyOutput, errMsg, err = rn.Run(cmd)
 	if err != nil {
 		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
 	}
 	return nil
+}
+
+// Apply module.
+func (m *Module) Apply() error {
+	return m.ApplyDefault()
 }
 
 // Plan module.

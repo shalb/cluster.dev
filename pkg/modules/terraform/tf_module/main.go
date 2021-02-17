@@ -88,7 +88,6 @@ func (m *tfModule) ReadConfig(spec map[string]interface{}) error {
 		return fmt.Errorf("Incorrect module inputs")
 	}
 	m.inputs = mInputs
-	m.source = source
 	return nil
 }
 

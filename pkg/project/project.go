@@ -61,7 +61,7 @@ func LoadProjectBase() (*Project, error) {
 
 	err := project.readManifests()
 	if project.configDataFile == nil {
-		log.Fatalf("Loading project: loading project config: file '%v', empty configuration.", ConfigFileName)
+		log.Fatalf("Loading project: loading project config: file '%v', empty configuration	.", ConfigFileName)
 	}
 
 	var prjConfParsed map[string]interface{}
