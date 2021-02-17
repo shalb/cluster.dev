@@ -181,6 +181,25 @@ func (m *Module) Apply() error {
 	return m.ApplyDefault()
 }
 
+// Outputs module.
+func (m *Module) Outputs() (string, error) {
+	rn, err := executor.NewBashRunner(m.codeDir)
+	if err != nil {
+		log.Debug(err.Error())
+		return "", err
+	}
+
+	var cmd = ""
+	cmd += "terraform output"
+
+	var errMsg []byte
+	res, errMsg, err := rn.Run(cmd)
+	if err != nil {
+		return "", fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+	}
+	return string(res), nil
+}
+
 // Plan module.
 func (m *Module) Plan() error {
 	rn, err := executor.NewBashRunner(m.codeDir)

@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.33.18
 	github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59
 	github.com/buger/goterm v0.0.0-20200322175922-2f3e71b85129 // indirect
+	github.com/gookit/color v1.3.7 // indirect
 	github.com/hashicorp/hcl/v2 v2.8.2
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect

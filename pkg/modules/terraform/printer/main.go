@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apex/log"
+	"github.com/gookit/color"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
@@ -93,6 +94,12 @@ func (m *printer) Apply() (err error) {
 	if err != nil {
 		return
 	}
-	log.Infof("Printer output. Module: '%v', Infra: '%v'\n%v", m.Name(), m.InfraName(), string(m.ApplyOutput()))
+	outputs, err := m.Outputs()
+	if err != nil {
+		return
+	}
+
+	log.Infof("Printer output. Module: '%v', Infra: '%v'\n%v", m.Name(), m.InfraName(), color.Style{color.FgGreen, color.OpBold}.Sprintf(outputs))
+
 	return
 }
