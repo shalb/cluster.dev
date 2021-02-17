@@ -100,7 +100,6 @@ func (s *sopsDriver) Create(files map[string][]byte) error {
 }
 
 func saveTmplToFile(name string, data []byte) (string, error) {
-	log.Errorf("%v", string(data))
 	filenameCheck := filepath.Join(config.Global.WorkingDir, name)
 	if _, err := os.Stat(filenameCheck); os.IsNotExist(err) {
 		err = ioutil.WriteFile(filenameCheck, data, fs.ModePerm)
