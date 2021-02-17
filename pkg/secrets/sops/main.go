@@ -1,9 +1,7 @@
 package sops
 
 import (
-	"bytes"
 	"fmt"
-	"html/template"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -71,75 +69,54 @@ func (s *sopsDriver) Edit(sec project.Secret) error {
 	return nil
 }
 
-func (s *sopsDriver) Create(name string) error {
+func (s *sopsDriver) Create(files map[string][]byte) error {
 	runner, err := executor.NewBashRunner(config.Global.WorkingDir)
 	if err != nil {
 		return err
 	}
-
-	filename, err := createSecretTmpl(name)
-	if err != nil {
-		return err
+	if len(files) != 1 {
+		return fmt.Errorf("create sops secret: expected 1 file, received %v", len(files))
 	}
-	command := fmt.Sprintf("sops -e --encrypted-regex ^encrypted_data$ -i %s", filename)
-	err = runner.RunWithTty(command)
-	if err != nil {
-		os.RemoveAll(filename)
-		return err
+	for fn, data := range files {
+		filename, err := saveTmplToFile(fn, data)
+		if err != nil {
+			return fmt.Errorf("create sops secret: %v", err.Error())
+		}
+		command := fmt.Sprintf("sops -e --encrypted-regex ^encrypted_data$ -i %s", filename)
+		err = runner.RunWithTty(command)
+		if err != nil {
+			os.RemoveAll(filename)
+			return fmt.Errorf("create sops secret: %v", err.Error())
+		}
+		command = fmt.Sprintf("sops %s", filename)
+		err = runner.RunWithTty(command)
+		if err != nil && err.Error() != "exit status 200" {
+			os.RemoveAll(filename)
+			log.Debugf("err %+v", err)
+			return fmt.Errorf("create sops secret: %v", err.Error())
+		}
 	}
-	command = fmt.Sprintf("sops %s", filename)
-	err = runner.RunWithTty(command)
-	if err != nil && err.Error() != "exit status 200" {
-		os.RemoveAll(filename)
-		log.Debugf("err %+v", err)
-		return err
-	}
-
 	return nil
 }
 
-func createSecretTmpl(name string) (string, error) {
-	tmplData := map[string]string{
-		"name": name,
-	}
-	tmpl, err := template.New("main").Option("missingkey=error").Parse(secretTemplate)
-	if err != nil {
-		return "", err
-	}
-	templatedSecret := bytes.Buffer{}
-	err = tmpl.Execute(&templatedSecret, tmplData)
-	if err != nil {
-		return "", err
-	}
-	filenameCheck := filepath.Join(config.Global.WorkingDir, name+".yaml")
+func saveTmplToFile(name string, data []byte) (string, error) {
+	log.Errorf("%v", string(data))
+	filenameCheck := filepath.Join(config.Global.WorkingDir, name)
 	if _, err := os.Stat(filenameCheck); os.IsNotExist(err) {
-		err = ioutil.WriteFile(filenameCheck, templatedSecret.Bytes(), fs.ModePerm)
+		err = ioutil.WriteFile(filenameCheck, data, fs.ModePerm)
 		if err != nil {
 			return "", err
 		}
 		return filenameCheck, nil
 	}
-	f, err := ioutil.TempFile(config.Global.WorkingDir, name+"_*.yaml")
+	f, err := ioutil.TempFile(config.Global.WorkingDir, "*_"+name)
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
-	_, err = f.Write(templatedSecret.Bytes())
+	_, err = f.Write(data)
 	if err != nil {
 		return "", err
 	}
 	return f.Name(), nil
 }
-
-var secretTemplate = `
-name: {{ .name }}
-kind: secret
-driver: sops
-# Only values inside encrypted_data will be encrypted
-encrypted_data: 
-    key: secret string
-    secret_cat:
-        int_key: 1
-        bool_key: true
-    password: PaSworD1
-`

@@ -36,6 +36,7 @@
     "argoproj",
     "autoscaling",
     "awscli",
+    "cdev",
     "chown",
     "cidr",
     "clusterdev",

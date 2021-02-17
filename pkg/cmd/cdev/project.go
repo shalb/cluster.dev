@@ -3,7 +3,6 @@ package cdev
 import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
-	"github.com/shalb/cluster.dev/pkg/project/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +15,6 @@ var projectCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(projectCmd)
 	projectCmd.AddCommand(projectLs)
-	projectCmd.AddCommand(projectCreate)
 }
 
 // projectsCmd represents the plan command
@@ -31,16 +29,5 @@ var projectLs = &cobra.Command{
 		}
 		log.Info("Project info:")
 		p.PrintInfo()
-	},
-}
-
-var projectCreate = &cobra.Command{
-	Use:   "create",
-	Short: "Create new project",
-	Run: func(cmd *cobra.Command, args []string) {
-		if project.ProjectsFilesExists() {
-			log.Fatalf("project creating: some project's data (yaml files) found in current directory, use command in empty dir")
-		}
-		ui.CreateProject()
 	},
 }
