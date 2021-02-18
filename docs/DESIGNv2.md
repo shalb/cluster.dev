@@ -26,7 +26,7 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
     my-custom-module/
   /kubernetes            # Storage for custom K8s resources
     my-custom-helm-chart/
-  /any_other_technology # Storage for bash scripts, opa policies, etc..
+  /any_other_technology  # Storage for bash scripts, opa policies, etc..
 ```
 
 ### Infrastructure Reconcilation
