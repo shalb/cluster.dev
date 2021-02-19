@@ -8,14 +8,18 @@ jobs:
     container: golang:1.16.0-alpine
     steps:
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-
     - name: Install make
       run: apk add make bash jq curl git
 
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+
     - name: Build
-      run: make && mv bin/cdev ./
+      run: |
+        git fetch --prune --unshallow --tags
+        make && mv bin/cdev ./
       env:
         CGO_ENABLED: 0
 
