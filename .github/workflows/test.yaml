@@ -1,0 +1,26 @@
+name: Bin-release
+on: 
+  push:
+    branches:
+      - new-reconciler
+
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container: golang:1.16.0-alpine
+    steps:
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Install make
+      run: apk add make bash jq curl git
+
+    - name: Build
+      run: git describe --tags
+      env:
+        CGO_ENABLED: 0
+
+
