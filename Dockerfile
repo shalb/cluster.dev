@@ -1,30 +1,18 @@
 ARG HELMFILE_VERSION=0.113.0
+ARG GO_VERSION=1.16.0-alpine
+ARG TERRAFORM_VERSION=0.14.7
 
-FROM golang:1.14.2-alpine3.11 as builder
+FROM golang:${GO_VERSION} as builder
 
 RUN apk add --no-cache make git bash
 WORKDIR /workspace/cluster-dev
 COPY . /workspace/cluster-dev
 RUN make
 
-FROM hashicorp/terraform:0.12.29 as terraform
+FROM hashicorp/terraform:${TERRAFORM_VERSION} as terraform
 
-### Install Helmfile
-# Image pulled from https://hub.docker.com/r/chatwork/helmfile/dockerfile
-# TODO create own image with terraform and helmfile versioning
+COPY --from=builder /workspace/cluster-dev/bin/cdev /bin/cdev
 
-FROM chatwork/helmfile:$HELMFILE_VERSION
+WORKDIR /workspace/cluster-dev
 
-COPY --from=terraform /bin/terraform /bin/terraform
-COPY --from=builder /workspace/cluster-dev/bin/reconciler /bin/reconciler
-
-### Install s3cmd
-RUN python3 -m pip install --upgrade pip && \
-    pip3 install --no-cache-dir --upgrade s3cmd
-ENV PRJ_ROOT /app
-WORKDIR $PRJ_ROOT
-
-# Look on .dockerignore file to check what included
-COPY . .
-
-ENTRYPOINT ["/bin/reconciler"]
+ENTRYPOINT ["/bin/cdev"]

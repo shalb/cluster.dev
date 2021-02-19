@@ -1,0 +1,25 @@
+name: Bin-release
+on: release
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: golang:1.16.0-alpine
+    steps:
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Install make
+      run: apk add make
+
+    - name: Build
+      run: make
+      env:
+        CGO_ENABLED: 0
+
+    - name: Relese
+      run: cp .build/release.sh ./ && ./release.sh
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -15,14 +15,11 @@ on:
     tags:
       - 'v*'
     paths:
-      - 'entrypoint.sh'
-      - 'bin/**'
       - 'terraform/**'
-      - 'kubernetes/apps/**'
+      - 'pkg/**'
+      - 'cmd/**'
       - 'Dockerfile'
       - '.github/workflows/**'
-      - '.cluster.dev/**'
-      - 'action.yaml'
 
   # Run tests for any PRs.
   pull_request:

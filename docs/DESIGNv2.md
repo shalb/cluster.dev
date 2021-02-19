@@ -1,4 +1,4 @@
-# Design Overview
+# Cluster.dev: Cloud infrastructures management tool.
 
 Cluster.dev helps you manage Cloud Native Infrastructures with a simple declarative manifests - Infra Templates.
 
@@ -6,27 +6,59 @@ So you can describe whole infrastructure an deploy it with single tool.
 
 InfraTemplate could contain different technology patterns, like Terraform modules, Shell scripts, Kubernetes manifests, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc..
 
-You can store, test, and distribute your infrastructure pattern as a complete versionated set of technologies.
+You can store, test, and distribute your infrastructure pattern as a complete versioned set of technologies.
 
-## Base Concept
+**Table of contents:**
+
+1) [Concept](##Concept)
+2) [Install](##Install)
+    - [Pre requirements]() 
+    - [Download release]()
+    - [Build from source]()
+3) [Quick start]()
+    - [AWS]()
+    - [Google Cloud]()
+    - [Azure]()
+    - [DigitalOcean]()
+4) [Command arguments and options]()
+5) [Project configuration]()
+    - [Project]()
+    - [Infrastructures]()
+    - [Backends]()
+    - [Secrets]()
+      - [SOPS]()
+      - [Amazon secret manager]()
+6) [Template configuration]()
+    - [Basics]()
+    - [Functions]()
+    - [Modules]()
+      - [Terraform]()
+      - [Helm]()
+      - [Kubernetes]()
+      - [Printer]()
+7) [Generators]()
+    - [Project]()
+    - [Secret]()
+
+## Install
+
+
+## Concept
 
 ```bash
 # Common Infrastructure Project Structure
 [Project in Git Repo]
-  project.yaml           # Global variables and settings
-  secrets.yaml           # sops encoded secrets
-  /templates             # Pre-defined infra patterns:
+  project.yaml           # (Required) Global variables and settings
+  [filename].yaml        # (Required at least one) Different project's objects in yaml format (infrastructure, backend etc). 
+                         # Se details in configuration reference.
+  /templates             # Pre-defined infra patterns. See details in template configuration reference.
     aws-kubernetes.yaml
     cloudflare-dns.yaml
     do-mysql.yaml
-  /infrastructures       # Declared infra variables
-    dev-infra.yaml
-    production.yaml
-  /terraform             # Storage for custom tf modules
-    my-custom-module/
-  /kubernetes            # Storage for custom K8s resources
-    my-custom-helm-chart/
-  /any_other_technology  # Storage for bash scripts, opa policies, etc..
+
+    /files               # Some files, used in templates.
+      deployment.yaml
+      config.cfg
 ```
 
 ### Infrastructure Reconcilation
