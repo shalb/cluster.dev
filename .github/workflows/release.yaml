@@ -12,7 +12,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install make
-      run: apk add make
+      run: apk add make bash jq curl git
 
     - name: Build
       run: make
