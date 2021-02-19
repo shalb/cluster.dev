@@ -10,11 +10,11 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
 
 **Table of contents:**
 
-1) [Concept](##Concept)
-2) [Install](##Install)
-    - [Prerequisites](###Prerequisites)
-    - [Download from release](###Download-from-release)
-    - [Build from source](###Build-from-source)
+1) [Concept](#Concept)
+2) [Install](#Install)
+    - [Prerequisites](#Prerequisites)
+    - [Download from release](#Download-from-release)
+    - [Build from source](#Build-from-source)
 3) [Quick start]()
     - [AWS]()
     - [Google Cloud]()
@@ -39,6 +39,44 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
 7) [Generators]()
     - [Project]()
     - [Secret]()
+
+## Concept
+
+### Common Infrastructure Project Structure
+```bash
+# Common Infrastructure Project Structure
+[Project in Git Repo]
+  project.yaml           # (Required) Global variables and settings
+  [filename].yaml        # (Required at least one) Different project's objects in yaml format (infrastructure, backend etc). 
+                         # Se details in configuration reference.
+  /templates             # Pre-defined infra patterns. See details in template configuration reference.
+    aws-kubernetes.yaml
+    cloudflare-dns.yaml
+    do-mysql.yaml
+
+    /files               # Some files, used in templates.
+      deployment.yaml
+      config.cfg
+```
+
+### Infrastructure Reconcilation
+
+```bash
+# Single command reconcile the whole project
+cdev apply
+```
+
+Would:
+
+ 1. Decode all required secrets.
+ 2. Template infrastructure variables with global project variables and secrets.
+ 3. Pull and diff project state and build a dependency graph.
+ 4. Invoke all required modules in parralel manner.
+    ex: `sops decode`, `terraform apply`, `helm install`, etc..
+
+### Demo Video
+
+video will be uploaded later 
 
 ## Install
 ### Prerequisites
@@ -90,43 +128,6 @@ cd cluster.dev/ && make
 ./bin/cdev --help
 mv ./bin/cdev /usr/local/bin/
 ```
-
-## Concept
-
-```bash
-# Common Infrastructure Project Structure
-[Project in Git Repo]
-  project.yaml           # (Required) Global variables and settings
-  [filename].yaml        # (Required at least one) Different project's objects in yaml format (infrastructure, backend etc). 
-                         # Se details in configuration reference.
-  /templates             # Pre-defined infra patterns. See details in template configuration reference.
-    aws-kubernetes.yaml
-    cloudflare-dns.yaml
-    do-mysql.yaml
-
-    /files               # Some files, used in templates.
-      deployment.yaml
-      config.cfg
-```
-
-### Infrastructure Reconcilation
-
-```bash
-# Single command reconcile the whole project
-cdev apply
-```
-
-Would:
-
- 1. Decode all required secrets.
- 2. Template infrastructure variables with global project variables and secrets.
- 3. Pull and diff project state and build a dependency graph.
- 4. Invoke all required modules in parralel manner.
-    ex: `sops decode`, `terraform apply`, `helm install`, etc..
-
-### Demo Video
-
-video placeholder
 
 ## Base Components
 
