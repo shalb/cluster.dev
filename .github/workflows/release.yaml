@@ -4,6 +4,8 @@ on: release
 jobs:
   build:
     name: Build
+    runs-on: ubuntu-latest
+    container: golang:1.16.0-alpine
     steps:
 
     - name: Check out code into the Go module directory
@@ -21,7 +23,4 @@ jobs:
       run: cp .build/release.sh ./ && ./release.sh
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-runs:
-  using: 'docker'
-  image: 'golang:1.16.0-alpine'
+
