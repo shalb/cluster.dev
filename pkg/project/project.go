@@ -102,7 +102,10 @@ func LoadProjectFull() (*Project, error) {
 				log.Fatal(err.Error())
 			}
 		}
-		project.readObjects(templatedConf, filename)
+		err = project.readObjects(templatedConf, filename)
+		if err != nil {
+			log.Fatalf("load project: %v", err.Error())
+		}
 	}
 	err = project.prepareObjects()
 	if err != nil {
@@ -137,7 +140,7 @@ func (p *Project) readObjects(objData []byte, filename string) error {
 	for _, obj := range objs {
 		objKind, ok := obj["kind"].(string)
 		if !ok {
-			log.Fatal("infra must contain field 'kind'")
+			log.Fatal("object must contain field 'kind'")
 		}
 		if _, exists := p.objects[objKind]; !exists {
 			p.objects[objKind] = []ObjectData{}

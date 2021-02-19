@@ -13,13 +13,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Describe witch provider key is block, no value.
 const providersSpec = `
+kubernetes:
+	exec: true
 helm:
   kubernetes:
     exec: true
 aws:
   assume_role: true
   ignore_tags: true
+google:
+	batching: true
+google-beta:
+	batching: true
 `
 
 // InterfaceToCty convert go type tu cty.Value(for hlc lib), using hack with JSON marshal/unmarshal.

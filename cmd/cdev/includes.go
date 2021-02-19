@@ -1,7 +1,9 @@
 package main
 
 import (
+	_ "github.com/shalb/cluster.dev/pkg/backend/azurerm"
 	_ "github.com/shalb/cluster.dev/pkg/backend/do"
+	_ "github.com/shalb/cluster.dev/pkg/backend/gcs"
 	_ "github.com/shalb/cluster.dev/pkg/backend/s3"
 	_ "github.com/shalb/cluster.dev/pkg/logging"
 	_ "github.com/shalb/cluster.dev/pkg/modules/terraform/helm"

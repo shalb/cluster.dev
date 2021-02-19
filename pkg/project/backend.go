@@ -44,7 +44,10 @@ func (p *Project) readBackends() error {
 		return err
 	}
 	for _, bk := range bks {
-		p.readBackendObj(bk)
+		err := p.readBackendObj(bk)
+		if err != nil {
+			return fmt.Errorf("loading backend: %v", err.Error())
+		}
 	}
 	return nil
 }
