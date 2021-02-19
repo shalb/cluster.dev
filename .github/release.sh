@@ -6,7 +6,7 @@ if [ -z "${CMD_PATH+x}" ]; then
   export CMD_PATH=""
 fi
 set -x
-FILE_LIST="bin/cdev"
+FILE_LIST="cdev"
 GOOS="linux"
 GOARCH="amd64"
 EVENT_DATA=$(cat $GITHUB_EVENT_PATH)

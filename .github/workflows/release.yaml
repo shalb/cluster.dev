@@ -15,7 +15,7 @@ jobs:
       run: apk add make bash jq curl git
 
     - name: Build
-      run: make
+      run: make && mv bin/cdev ./
       env:
         CGO_ENABLED: 0
 
