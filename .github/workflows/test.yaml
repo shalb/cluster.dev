@@ -21,7 +21,7 @@ jobs:
 
     - name: Build
       run: |
-        find ./ 
+        git fetch --prune --unshallow --tags
         git describe --tags
       env:
         CGO_ENABLED: 0
