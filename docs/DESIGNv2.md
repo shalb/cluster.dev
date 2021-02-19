@@ -12,8 +12,8 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
 
 1) [Concept](##Concept)
 2) [Install](##Install)
-    - [Pre requirements]() 
-    - [Download release]()
+    - [Prerequisites]()
+    - [Download from release]()
     - [Build from source]()
 3) [Quick start]()
     - [AWS]()
@@ -41,7 +41,54 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
     - [Secret]()
 
 ## Install
+### Prerequisites
+#### Terraform
+Cdev client uses the terraform binary. The required terraform version is ~13 or higher. Refer to the [Terraform installation instructions](https://www.terraform.io/downloads.html) to install terraform.
 
+Terraform installation example for linux amd64:
+```bash
+curl -O https://releases.hashicorp.com/terraform/0.14.7/terraform_0.14.7_linux_amd64.zip
+unzip terraform_0.14.7_linux_amd64.zip
+mv terraform /usr/local/bin/
+```
+#### SOPS
+For **creating** and **editing** SOPS secrets, cdev uses sops binary. 
+
+But sops binary in not required for decrypting and using sops secrets. All cdev reconcilation processes (build, plan, apply) is not required sops, so no need to install it for pipelines.
+
+See [SOPS installation instructions](https://github.com/mozilla/sops#download) on official repo.
+
+Also see [Secrets section]() in this documentation.
+
+### Download from release
+
+Binaries and packages of the latest stable release are available at [Releases page](https://github.com/shalb/cluster.dev/releases). This documentation is suitable for **v0.4.0 or higher**
+Cdev client installation example for linux amd64:
+```bash
+wget https://github.com/shalb/cluster.dev/releases/download/v0.4.0-rc1/cluster.dev_v0.4.0-rc1_linux_amd64.tgz
+tar -xzvf cluster.dev_v0.4.0-rc1_linux_amd64.tgz -C /usr/local/bin
+
+cdev --help
+```
+
+### Build from source
+
+Go version 16 or higher is required. [Golang installation instructions](https://golang.org/doc/install)
+
+To build cluster.dev client from src:
+1)  Clone cluster.dev git repo:
+```bash
+git clone --depth 1 --branch v0.4.0-rc1 https://github.com/shalb/cluster.dev/
+```
+2) Build binary: 
+```bash
+cd cluster.dev/ && make
+```
+3) Check cdev and move binary to bin folder: 
+```bash
+./bin/cdev --help
+mv ./bin/cdev /usr/local/bin/
+```
 
 ## Concept
 
