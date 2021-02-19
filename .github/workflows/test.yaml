@@ -9,7 +9,6 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    container: golang:1.16.0-alpine
     steps:
 
     - name: Check out code into the Go module directory
@@ -17,8 +16,8 @@ jobs:
       with:
         fetch-depth: 2
 
-    - name: Install make
-      run: apk add make bash jq curl git
+    # - name: Install make
+    #   run: apk add make bash jq curl git
 
     - name: Build
       run: |
