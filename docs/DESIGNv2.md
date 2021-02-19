@@ -12,9 +12,9 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
 
 1) [Concept](##Concept)
 2) [Install](##Install)
-    - [Prerequisites]()
-    - [Download from release]()
-    - [Build from source]()
+    - [Prerequisites](###Prerequisites)
+    - [Download from release](###Download-from-release)
+    - [Build from source](###Build-from-source)
 3) [Quick start]()
     - [AWS]()
     - [Google Cloud]()
@@ -61,6 +61,7 @@ See [SOPS installation instructions](https://github.com/mozilla/sops#download) o
 Also see [Secrets section]() in this documentation.
 
 ### Download from release
+
 
 Binaries and packages of the latest stable release are available at [Releases page](https://github.com/shalb/cluster.dev/releases). This documentation is suitable for **v0.4.0 or higher**
 Cdev client installation example for linux amd64:
