@@ -15,32 +15,33 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
     - [Prerequisites](#Prerequisites)
     - [Download from release](#Download-from-release)
     - [Build from source](#Build-from-source)
-3) [Quick start]()
-    - [AWS]()
-    - [Google Cloud]()
-    - [Azure]()
-    - [DigitalOcean]()
-4) [Reference]()
-    - [Cli commands]()
-    - [Cli options]()
-5) [Project configuration]()
-    - [Project]()
-    - [Infrastructures]()
-    - [Backends]()
-    - [Secrets]()
-      - [SOPS]()
-      - [Amazon secret manager]()
-6) [Template configuration]()
-    - [Basics]()
-    - [Functions]()
-    - [Modules]()
-      - [Terraform]()
-      - [Helm]()
-      - [Kubernetes]()
-      - [Printer]()
-7) [Generators]()
-    - [Project]()
-    - [Secret]()
+3) [Cloud providers](#Cloud-providers)
+    - [AWS](#AWS)
+    - [Google Cloud](#Google-Cloud)
+    - [Azure](#Azure)
+    - [DigitalOcean](#DigitalOcean)
+4) [Quick start](#Quick-start)
+4) [Reference](#Reference)
+    - [Cli commands](#Cli-commands)
+    - [Cli options](#Cli-options)
+5) [Project configuration](#Project-configuration)
+    - [Project](#Project)
+    - [Infrastructures](#Infrastructures)
+    - [Backends](#Backends)
+    - [Secrets](#Secrets)
+      - [SOPS](#SOPS)
+      - [Amazon secret manager](#Amazon-secret-manager)
+6) [Template configuration](#Template-configuration)
+    - [Basics](#Basics)
+    - [Functions](#Functions)
+    - [Modules](#Modules)
+      - [Terraform](#Terraform)
+      - [Helm](#Helm)
+      - [Kubernetes](#Kubernetes)
+      - [Printer](#Printer)
+7) [Generators](#Generators)
+    - [Project](#Project)
+    - [Secret](#Secret)
 
 ## Concept
 
@@ -130,9 +131,8 @@ $ ./bin/cdev --help
 $ mv ./bin/cdev /usr/local/bin/
 ```
 
-## Quick start
-This guide describes how to quickly deploy infrastructure across different cloud providers. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for each cloud provider.
-
+## Cloud providers
+This guide describes how to set up cloud providers so that `cdev` can start deploying.
 ### AWS
 #### Authentication
 First, you need to configure access to the AWS cloud provider.
@@ -189,6 +189,11 @@ For the built-in AWS example, you need to define a route53 hosted zone. Options:
 ### Google cloud
 ### Azure
 ### DigitalOcean
+
+## Quick start
+This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for each cloud provider.
+
+`to be continued`
 
 ## Reference
 ### Cli commands
