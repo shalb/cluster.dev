@@ -35,10 +35,10 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
     - [Basics](#Basics)
     - [Functions](#Functions)
     - [Modules](#Modules)
-      - [Terraform](#Terraform)
-      - [Helm](#Helm)
-      - [Kubernetes](#Kubernetes)
-      - [Printer](#Printer)
+      - [Terraform](#Terraform-module)
+      - [Helm](#Helm-module)
+      - [Kubernetes](#Kubernetes-module)
+      - [Printer](#Printer-module)
 7) [Generators](#Generators)
     - [Project](#Project)
     - [Secret](#Secret)
@@ -264,10 +264,10 @@ $ cdev secret edit secret_name
 ### Basics
 ### Functions
 ### Modules
-#### Terraform
-#### Helm
-#### Kubernetes
-#### Printer
+#### Terraform module
+#### Helm module
+#### Kubernetes module
+#### Printer module 
 
 ## Generators
 ### Project
