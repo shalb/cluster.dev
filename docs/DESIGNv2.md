@@ -175,7 +175,7 @@ $ aws s3 ls
 #### Create s3 bucker for states
 To store cluster.dev and terraform states, you should create s3 bucket:
 ```bash
-aws s3 mb s3://cdev-quick-start-states
+$ aws s3 mb s3://cdev-quick-start-states
 ```
 #### DNS Zone:
 For the built-in AWS example, you need to define a route53 hosted zone. Options:
@@ -210,7 +210,7 @@ Secrets are encoded/decoded with [sops](https://github.com/mozilla/sops) utility
 How to use: 
 1. Use console client cdev to create new secret from scratch:
 ```bash
-cdev secret create sops my_local_secret
+$ cdev secret create sops my_local_secret
 ```
 
 2. Edit secret and set secret data in `encrypted_data:` section.
@@ -235,7 +235,7 @@ How to use:
 
 2. Use console client cdev to create new secret from scratch:
 ```bash
-cdev secret create aws_ssm my_ssm_secret
+$ cdev secret create aws_ssm my_ssm_secret
 ```
 
 3. Edit secret and set correct region and ssm_secret name in spec.
@@ -254,11 +254,11 @@ variables:
 
 To list and edit any secret use commands:
 ```bash
-cdev secret ls
+$ cdev secret ls
 ```
 and 
 ```bash
-cdev secret edit secret_name
+$ cdev secret edit secret_name
 ```
 ## Template configuration
 ### Basics
