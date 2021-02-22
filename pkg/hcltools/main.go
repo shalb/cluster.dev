@@ -16,7 +16,7 @@ import (
 // Describe witch provider key is block, no value.
 const providersSpec = `
 kubernetes:
-	exec: true
+  exec: true
 helm:
   kubernetes:
     exec: true
@@ -24,9 +24,9 @@ aws:
   assume_role: true
   ignore_tags: true
 google:
-	batching: true
+  batching: true
 google-beta:
-	batching: true
+  batching: true
 `
 
 // InterfaceToCty convert go type tu cty.Value(for hlc lib), using hack with JSON marshal/unmarshal.
@@ -108,8 +108,8 @@ func ProvidersToHCL(in interface{}) (*hclwrite.File, error) {
 	provSpecConf := map[string]interface{}{}
 	err := yaml.Unmarshal([]byte(providersSpec), provSpecConf)
 	if err != nil {
-		log.Debug("Internal error")
-		return nil, fmt.Errorf("Internal error")
+		log.Debugf("Internal error ProvidersToHCL: %v", providersSpec)
+		return nil, fmt.Errorf("ProvidersToHCL: %v", err.Error())
 	}
 	data, ok := in.([]interface{})
 	if !ok {

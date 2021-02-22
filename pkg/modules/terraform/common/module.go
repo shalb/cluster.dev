@@ -137,10 +137,10 @@ func (m *Module) Backend() project.Backend {
 	return m.infraPtr.Backend
 }
 
-// ReplaceMarkers replace all templated markers with values.
-func (m *Module) ReplaceMarkers() error {
-	return fmt.Errorf("internal error")
-}
+// // ReplaceMarkers replace all templated markers with values.
+// func (m *Module) ReplaceMarkers() error {
+// 	return fmt.Errorf("internal error")
+// }
 
 // Dependencies return slice of module dependencies.
 func (m *Module) Dependencies() *[]*project.Dependency {

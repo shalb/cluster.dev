@@ -99,6 +99,10 @@ func (m *Module) BuildCommon() error {
 	if len(remoteStates) > 0 {
 		m.FilesList["remote_states.tf"], err = m.genDepsRemoteStates()
 	}
+	if err != nil {
+		log.Debug(err.Error())
+		return err
+	}
 
 	if m.preHook != nil {
 		m.FilesList["pre_hook.sh"] = m.preHook.command

@@ -29,7 +29,7 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
     - [Infrastructures](#Infrastructures)
     - [Backends](#Backends)
     - [Secrets](#Secrets)
-      - [SOPS](#SOPS)
+      - [SOPS](#SOPS-secret)
       - [Amazon secret manager](#Amazon-secret-manager)
 6) [Template configuration](#Template-configuration)
     - [Basics](#Basics)
@@ -97,7 +97,7 @@ For **creating** and **editing** SOPS secrets, cdev uses sops binary. But sops b
 
 See [SOPS installation instructions](https://github.com/mozilla/sops#download) on official repo.
 
-Also see [Secrets section]() in this documentation.
+Also see [Secrets section](SOPS-secret) in this documentation.
 
 ### Download from release
 
@@ -175,7 +175,7 @@ $ aws s3 ls
 #### Create s3 bucker for states
 To store cluster.dev and terraform states, you should create s3 bucket:
 ```bash
-$ aws s3 mb s3://cdev-quick-start-states
+$ aws s3 mb s3://cdev-states
 ```
 #### DNS Zone:
 For the built-in AWS example, you need to define a route53 hosted zone. Options:
@@ -191,21 +191,75 @@ For the built-in AWS example, you need to define a route53 hosted zone. Options:
 ### DigitalOcean
 
 ## Quick start
-This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for each cloud provider.
-
-`to be continued`
+This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for chosen cloud provider.
+1) [Install cdev and soft](#Install).
+2) Prepare [cloud provider](#Cloud-providers).
+3) Create new empty dir for project and use [cdev generators](#Generators) to create new project from template:
+```bash
+$ mkdir my-cdev-project && cd my-cdev-project
+$ cdev new project
+```
+4) Choose one of the available projects. Check out the description of the example. Enter the data required for the generator.
+5) After finishing work with the generator - check the project:
+```bash
+$ cdev project info
+```
+6) Edit [project](#Project-configuration) and [template](#Template-configuration) configuration, if needed. 
+```bash
+$ vim project.yaml
+$ vim infra.yaml
+$ vim templates/aws-k3s.yaml # (name depends of chosen option in step 4)
+```
+7) Apply the project:
+```bash
+$ cdev apply -l debug
+```
 
 ## Reference
 ### Cli commands
+Available Commands:
+  - `build`       Build all modules - read project configuration. Check it, render templates and generate code of all modules in tmp dir: `./cluster.dev/project-name/`
+  - `apply`       Apply all modules - build project (see build command), calculate dependencies, create and check graph. Deploy all modules according to the graph.
+  - `destroy`     Destroy all modules - build project (see build command), calculate dependencies, create and check the reverse graph. Run destroy scenario for all modules according to the graph.
+  - `help`        Help about any command
+  - `new`         Code generator. Creates new 'project' or 'secret' from template in interactive mode.
+  - `plan`        Plan all modules - build project. Try to run the plan scenario for modules. Modules often refer to the remote states of other modules. Because of this, the plan command may fail if the remote state does not already exist.
+  - `project`     Manage projects:
+    - `info`      Read project and info message.
+  - `secret`      Manage secrets:
+    - `ls`        List secrets in current project.
+    - `edit`      Edit secret by name. Usage: `cdev secret edit secret-name`
 ### Cli options
+Available global flags:
+  - `--cache`             Use previously cached build directory
+  - `-l, --log-level string`   Set the logging level ('debug'|'info'|'warn'|'error'|'fatal') (default "info")
+  - `--parallelism int`    Max parallel threads for module applying (default - `3`)
+  - `--trace`              Print functions trace info in logs (Mainly used for development)
+
 ## Project configuration
+`cdev` reads configuration from current directory. Reads all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them "---". The exception is the project.yaml configuration and files with secrets.
 ### Project
+File: `project.yaml`. Required. 
+Contain global project variables, which can be used in other configuration objects such as backend or infrastructure (except `secrets`). File `project.conf` is not renders with template, you cannot use template units in it. 
+
+Example `project.yaml`:
+```yaml
+name: my_project
+kind: project
+variables:
+  organization: shalb
+  region: eu-central-1
+  state_bucket_name: cdev-states
+```
+- `name`: project name. *Required*.
+- `kind`: object kind. Must be `project`. *Required*.
+- `variables`: a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the name of the organization will look like this: `{{ .project.variables.organization }}`
 ### Infrastructures
 ### Backends
 ### Secrets
 
 There are to way use secrets:
-#### sops
+#### SOPS secret
 Secrets are encoded/decoded with [sops](https://github.com/mozilla/sops) utility which could support AWS KMS, GCP KMS, Azure Key Vault and PGP keys.
 How to use: 
 1. Use console client cdev to create new secret from scratch:
@@ -227,7 +281,7 @@ variables:
 ....
 ```
 
-#### aws ssm
+#### Amazon secret manager
 cdev client could use aws ssm as secret storage. 
 
 How to use: 
@@ -235,7 +289,7 @@ How to use:
 
 2. Use console client cdev to create new secret from scratch:
 ```bash
-$ cdev secret create aws_ssm my_ssm_secret
+$ cdev new secret
 ```
 
 3. Edit secret and set correct region and ssm_secret name in spec.
