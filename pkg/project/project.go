@@ -79,6 +79,13 @@ func LoadProjectBase() (*Project, error) {
 		log.Fatal("Loading project: error in project config: kind is required.")
 	}
 
+	if exports, ok := prjConfParsed["exports"]; ok {
+		err = project.ProcessExport(exports)
+		if err != nil {
+			log.Fatalf("Loading project: %v", err.Error())
+		}
+	}
+
 	project.configData["project"] = prjConfParsed
 
 	err = project.readSecrets()
@@ -420,5 +427,17 @@ func (p *Project) PrintInfo() error {
 		})
 	}
 	table.Render()
+	return nil
+}
+
+func (p *Project) ProcessExport(ex interface{}) error {
+	exports, correct := ex.(map[string]interface{})
+	if !correct {
+		return fmt.Errorf("exports: malformed exports configuration")
+	}
+	for key, val := range exports {
+		valStr := fmt.Sprintf("%v", val)
+		os.Setenv(key, valStr)
+	}
 	return nil
 }
