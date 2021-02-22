@@ -45,11 +45,17 @@ func GetSecret(region string, secretName string) (interface{}, error) {
 		}
 		secretData = string(decodedBinarySecretBytes[:len])
 	}
+	parseCheck := []interface{}{}
+	errSliceCheck := json.Unmarshal([]byte(secretData), &parseCheck)
+
 	parsed := map[string]interface{}{}
 	err = json.Unmarshal([]byte(secretData), &parsed)
 	if err != nil {
-		log.Debugf("JSON parse error: %v", err.Error())
-		return secretData, nil
+		if errSliceCheck != nil {
+			log.Debugf("Secret '%v' is not JSON, creating raw data", secretName)
+			return secretData, nil
+		}
+		return nil, fmt.Errorf("aws get secret: JSON secret must be a map, not array")
 	}
 	return parsed, nil
 }

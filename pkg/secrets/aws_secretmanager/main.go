@@ -57,6 +57,10 @@ func (s *smDriver) Read(rawData []byte) (name string, data interface{}, err erro
 		}
 	}
 	data, err = aws.GetSecret(spec.Region, spec.SecretName)
+	if err != nil {
+		return "", nil, err
+	}
+	log.Debugf("%+v", data)
 	return
 }
 
