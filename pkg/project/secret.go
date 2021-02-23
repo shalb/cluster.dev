@@ -35,18 +35,18 @@ func (p *Project) readSecrets() error {
 		if secretDriver == nil {
 			continue
 		}
-		name, data, err := secretDriver.Read(data)
+		name, d, err := secretDriver.Read(data)
 		if err != nil {
 			return fmt.Errorf("searching for secrets in %v: %v", filename, err.Error())
 		}
 		if _, exists := p.secrets[name]; exists {
 			return fmt.Errorf("searching for secrets in the project dir: duplicated secret name '%v'", name)
 		}
-		p.secrets[name] = Secret{Filename: filename, DriverKey: secretDriver.Key(), Data: data}
+		p.secrets[name] = Secret{Filename: filename, DriverKey: secretDriver.Key(), Data: d}
 		if _, exists := p.configData["secret"]; !exists {
 			p.configData["secret"] = map[string]interface{}{}
 		}
-		p.configData["secret"].(map[string]interface{})[name] = data
+		p.configData["secret"].(map[string]interface{})[name] = d
 	}
 
 	return nil
@@ -78,6 +78,24 @@ func getRwaSecretInfo(data []byte, p *Project) (res SecretDriver, err error) {
 }
 
 func getSecretInfo(obj map[string]interface{}) (res SecretDriver, err error) {
+	kind, ok := obj["kind"].(string)
+	if !ok {
+		return
+	}
+	if kind != "secret" {
+		return
+	}
+	driver, ok := obj["driver"].(string)
+	if !ok {
+		err = fmt.Errorf("secret spec: should contain 'driver' field")
+		return
+	}
+	res, ok = SecretDriversMap[driver]
+	if !ok {
+		err = fmt.Errorf("secret spec: unknown driver type '%v'", driver)
+		return
+	}
+
 	name, ok := obj["name"].(string)
 	if !ok {
 		err = fmt.Errorf("secret spec: should contain 'name' field")
@@ -87,22 +105,6 @@ func getSecretInfo(obj map[string]interface{}) (res SecretDriver, err error) {
 	if err != nil {
 		err = fmt.Errorf("secret spec: %v", err.Error())
 		return
-	}
-	kind, ok := obj["kind"].(string)
-	if !ok {
-		return
-	}
-	if kind == "secret" {
-		driver, ok := obj["driver"].(string)
-		if !ok {
-			err = fmt.Errorf("secret spec: should contain 'driver' field")
-			return
-		}
-		res, ok = SecretDriversMap[driver]
-		if !ok {
-			err = fmt.Errorf("secret spec: unknown driver type '%v'", driver)
-			return
-		}
 	}
 	return
 }

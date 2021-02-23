@@ -32,13 +32,6 @@ func CreateMarker(markerType string) string {
 	return fmt.Sprintf("%s.%s.%s", hash, markerType, hash)
 }
 
-// CreateMarker generate hash string for template markers.
-func (p *Project) CreateMarker(markerType string) string {
-	const markerLen = 10
-	hash := randSeq(markerLen)
-	return fmt.Sprintf("%s.%s.%s", hash, markerType, hash)
-}
-
 func printVersion() string {
 	return config.Global.Version
 }

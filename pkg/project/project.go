@@ -101,6 +101,10 @@ func LoadProjectFull() (*Project, error) {
 
 	for filename, cnf := range project.objectsFiles {
 		templatedConf, isWarn, err := project.TemplateTry(cnf)
+		if project.fileIsSecret(filename) {
+			// Skip secrets, which loaded in LoadProjectBase().
+			continue
+		}
 		if err != nil {
 			if isWarn {
 				rel, _ := filepath.Rel(config.Global.WorkingDir, filename)
