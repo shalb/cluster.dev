@@ -39,9 +39,6 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
       - [Helm](#Helm-module)
       - [Kubernetes](#Kubernetes-module)
       - [Printer](#Printer-module)
-7) [Generators](#Generators)
-    - [Project](#Project)
-    - [Secret](#Secret)
 
 ## Concept
 
@@ -187,8 +184,19 @@ For the built-in AWS example, you need to define a route53 hosted zone. Options:
 3) Use "cluster.dev" domain for zone delegation.
 
 ### Google cloud
+#### Auth:
+See [terraform Google cloud provider documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication) 
 ### Azure
+#### Auth:
+See [terraform Azure provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure)
 ### DigitalOcean
+#### Auth:
+Create [an access token](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
+Export variable: 
+```bash
+$ export DIGITALOCEAN_TOKEN="MyToken"
+```
+How to use DO spaces bucket as backend, see [here](https://www.digitalocean.com/community/questions/spaces-as-terraform-backend)
 
 ## Quick start
 This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for chosen cloud provider.
@@ -238,6 +246,9 @@ Available global flags:
 
 ## Project configuration
 `cdev` reads configuration from current directory. Reads all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them "---". The exception is the project.yaml configuration and files with secrets.
+
+Project represents the single scope for infrastructures unde what they are stored and reconciled. The dependencies between different infrastructures could be used under the project scope. Project could host a global variables that could be accessed to template target infrastructure.
+
 ### Project
 File: `project.yaml`. Required. 
 Contain global project variables, which can be used in other configuration objects such as backend or infrastructure (except `secrets`). File `project.conf` is not renders with template, you cannot use template units in it. 
@@ -255,7 +266,75 @@ variables:
 - `kind`: object kind. Must be `project`. *Required*.
 - `variables`: a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the name of the organization will look like this: `{{ .project.variables.organization }}`
 ### Infrastructures
+File: searching in `./*.yaml`. *Required at least one*.
+Infrastructure object (`kind: infrastructure`) contain reference to template, variables to render that template and backend for states. 
+
+Example: 
+```yaml
+# Define infrastructure itself
+name: k3s-infra
+template: "templates/aws-k3s.yaml"
+kind: infrastructure
+backend: aws-backend
+variables:
+  bucket: {{ .project.variables.state_bucket_name }} # Using project variables.
+  region: {{ .project.variables.region }}
+  organization: {{ .project.variables.organization }}
+  domain: cluster.dev
+  instance_type: "t3.medium"
+  vpc_id: "vpc-5ecf1234"
+```
+- `name`: infrastructure name. *Required*.
+- `kind`: object kind. `infrastructure`. *Required*.
+- `backend`: name of [backend](#Backends), which will be used to store the states of this infrastructure. *Required*
+- `variables`: data set for [template rendering](#Template-configuration). 
+
 ### Backends
+File: searching in `./*.yaml`. *Required at least one*.
+An object that describes a backend storage for terraform and cdev states.
+In backends configuration you can use any options of appropriate terraform backend. They will be converted as is.
+Currently 4 types of backends are supported:
+
+- `s3` AWS S3 backend:
+```yaml
+name: aws-backend
+kind: backend
+provider: s3
+spec:
+  bucket: cdev-states
+  region: {{ .project.variables.region }}
+```
+- `do` DigitalOcean spaces backend:
+```yaml
+name: do-backend
+kind: backend
+provider: do
+spec:
+  bucket: cdev-states
+  region: {{ .project.variables.region }}
+  access_key: {{ env "SPACES_ACCESS_KEY_ID" }}
+  secret_key: {{ env "SPACES_SECRET_ACCESS_KEY" }}
+```
+- `azurerm` Microsoft azurem:
+```yaml
+name: gcs-b
+kind: backend
+provider: azurerm
+spec:
+  resource_group_name: "StorageAccount-ResourceGroup"
+  storage_account_name: "example"
+  container_name: "cdev-states"
+```
+- `gcs` Google Cloud backend:
+```yaml
+name: do-backend
+kind: backend
+provider: gcs
+spec:
+  bucket: cdev-states
+  prefix: pref
+```
+
 ### Secrets
 
 There are to way use secrets:
@@ -266,45 +345,24 @@ How to use:
 ```bash
 $ cdev secret create sops my_local_secret
 ```
+2. Use interactive menu to create secret.
+3. Edit secret and set secret data in `encrypted_data:` section.
+4. Use references to secret's data it infrastructure template (examples you can find in generated secret file). 
 
-2. Edit secret and set secret data in `encrypted_data:` section.
-
-3. Use references to secret's data it infrastructure template. 
-```yaml
----
-name: my-infra
-template: "templates/k8s.yaml"
-kind: infrastructure
-backend: aws-backend
-variables:
-  region: {{ .secret.my_local_secret.some_key }}
-....
-```
 
 #### Amazon secret manager
 cdev client could use aws ssm as secret storage. 
 
 How to use: 
-1. create new secret in aws ssm manager using aws cli or web console. Both data format raw and JSON structure are supported.
+1. create new secret in aws secret manager using aws cli or web console. Both data format raw and JSON structure are supported.
 
 2. Use console client cdev to create new secret from scratch:
 ```bash
-$ cdev new secret
+$ cdev secret create
 ```
+3. Answer the questions. For `Name of secret in AWS Secrets manager` enter name of aws secret, created above.
+4. Use references to secret's data it infrastructure template (examples you can find in generated secret file). 
 
-3. Edit secret and set correct region and ssm_secret name in spec.
-
-4. Use references to secret's data it infrastructure template. 
-```yaml
----
-name: my-infra
-template: "templates/k8s.yaml"
-kind: infrastructure
-backend: aws-backend
-variables:
-  region: {{ .secret.my_ssm_secret.some_key }} # if secret is raw data use {{ .secret.my_ssm_secret }}
-....
-```
 
 To list and edit any secret use commands:
 ```bash
@@ -316,15 +374,174 @@ $ cdev secret edit secret_name
 ```
 ## Template configuration
 ### Basics
+Template represents yaml structure with array of different invocation [modules](#Modules)
+Common view:
+```yaml
+modules: 
+  - module1
+  - module2
+  - module3
+  ...
+```
+
+Template could utilize all kind of go-template and sprig functions (similar to Helm). Along that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
+
 ### Functions
+1) [Base go-template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
+2) [Sprig functions](https://masterminds.github.io/sprig/).
+3) Enhanced functions: all functions described above allow you to modify the template text. Besides these, some special enhanced functions are available. They may not be used everywhere. They are integrated with the functionality of the program and with the yaml syntax:
+  - `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block.
+  **Allowed use**: only as full yaml value, in module `inputs`. Example:
+source yaml:
+```yaml
+values:
+  node_groups:
+    - name: ng1
+      min_size: 1
+      max_size: 5
+    - name: ng2
+      max_size: 2
+      type: spot
+```
+target yaml template:
+```yaml
+modules: 
+  - name: k3s
+    type: terraform
+    node_groups: {{ insertYAML .values.node_groups }}
+```
+rendered template:
+```yaml
+modules: 
+  - name: k3s
+    type: terraform
+    node_groups:     
+    - name: ng1
+      min_size: 1
+      max_size: 5
+    - name: ng2
+      max_size: 2
+      type: spot
+```
+  - `remoteState` - used for passing data between modules and infrastructures. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: as yaml value , only in module `inputs`.
+ 
+
 ### Modules
+All modules described below have a common format and common fields. Base example: 
+```yaml
+  - name: k3s
+    type: terraform
+    depends_on: 
+      - this.module1_name
+      - this.module2_name
+#   depends_on: this.module1_name # is allowed to use string for single, or list for multiple dependencies
+    pre_hook:
+      command: "echo pre_hook"
+      # script: "./scripts/hook.sh"
+      on_apply: true
+      on_destroy: false
+      on_plan: false
+    post_hook:
+      # command: "echo post_hook" 
+      script: "./scripts/hook.sh"
+      on_apply: true
+      on_destroy: false
+      on_plan: false
+```
+- `name` - module name. *Required*.
+- `type` - module type. One of: `terraform`, `helm`, `kubernetes`, `printer`. See below.
+- `depends_on` - *string* or *list of strings*. One or multiple dependencies of module in format "infra_name.module_name". Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"` 
+- `pre_hook` and `post_hook` blocks: describes the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. All environment variables will be available between them.
+    - `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
+    - `script` - *string* path to shell script file which is relative to template directory. Can be used if the "script" option is not used. One of `command` or `script` is required.
+    - `on_apply` *bool*, *optional* turn off/on when on module applying. **Default: "true"**
+    - `on_destroy` - *bool*, *optional* turn off/on when on module destroying. **Default: "false"**
+    - `on_plan` - *bool*, *optional* turn off/on when on module plan executing. **Default: "false"**
+
 #### Terraform module
+Describes direct Terraform module invocation. 
+
+Example: 
+```yaml
+modules:
+  - name: vpc
+    type: terraform
+    version: "2.77.0"
+    source: terraform-aws-modules/vpc/aws
+    inputs:
+      name: {{ .name }}
+      azs: {{ insertYAML .variables.azs }}
+      vpc_id: {{ .variables.vpc_id }}
+```
+In addition to common options, the following are available:
+- `source` - *string*, *required*. Terraform module [source](https://www.terraform.io/docs/language/modules/syntax.html#source). **It is not allowed to use local folders in source!** 
+- `version` - *string*, *optional*. Module [version](https://www.terraform.io/docs/language/modules/syntax.html#version).
+- `inputs` - *map of any*, *required*. Map, which correspond to [input variables](https://www.terraform.io/docs/language/values/variables.html) defined by the module. This block allows to use functions `remoteState` and `insertYAML`
 #### Helm module
+Describes [Terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
+
+Example: 
+```yaml
+modules:
+  - name: argocd
+    type: helm
+    source:
+      repository: "https://argoproj.github.io/argo-helm"
+      chart: "argo-cd"
+      version: "2.11.0"
+    kubeconfig: ../kubeconfig
+    depends_on: this.k3s
+    pre_hook:
+      script: ./scripts/get_kubeconfig.sh ./kubeconfig
+      on_destroy: true
+      on_plan: true
+    additional_options:
+      namespace: "argocd"
+      create_namespace: true
+    inputs:
+      global.image.tag: v1.8.3
+      service.type: LoadBalancer
+```
+In addition to common options, the following are available:
+- `source` - *map*, *required*. Block describes helm chart source. 
+    - `chart`, `repository`, `version` - correspond to options of the same name of helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
+    - `kubeconfig` - *string*, *required*. Path to kubeconfig file which is relative to directory where the module was executed.
+    - `additional_options` - *map of any*, *optional*. Corresponds to [helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be pass as is.
+    - `inputs` - *map of any*, *optional*. Map, which represents [helm release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`.
+    
+    For example: 
+    ```yaml
+    inputs:
+      global.image.tag: v1.8.3
+      service.type: LoadBalancer
+    ```
+    corresponds to 
+    ```hcl
+    set {
+      name = "global.image.tag"
+      value = "v1.8.3"
+    }
+    set  {
+      name = "service.type"
+      value = "LoadBalancer"
+    }
+    ```
 #### Kubernetes module
+Describes [Terraform kubernetes-alpha provider](https://github.com/hashicorp/terraform-provider-kubernetes-alpha) invocation.
+
+Example: 
+```yaml
+  - name: argocd_apps
+    type: kubernetes
+    source: ./argocd-apps/app1.yaml
+    kubeconfig: ../kubeconfig
+    depends_on: this.argocd
+```
+
+- `source` - *string*, *required*. Path to kubernetes manifest, which will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with template, and also allows the use of functions `remoteState` and `insertYAML`**
+- `kubeconfig` - *string*, *required*. Path to kubeconfig file which is relative to directory where the module was executed.
 #### Printer module 
 
-## Generators
-### Project
-### Secret
+
 
 
