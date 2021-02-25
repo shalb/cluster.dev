@@ -531,6 +531,7 @@ Describes [Terraform kubernetes-alpha provider](https://github.com/hashicorp/ter
 
 Example: 
 ```yaml
+modules:
   - name: argocd_apps
     type: kubernetes
     source: ./argocd-apps/app1.yaml
@@ -538,10 +539,19 @@ Example:
     depends_on: this.argocd
 ```
 
-- `source` - *string*, *required*. Path to kubernetes manifest, which will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with template, and also allows the use of functions `remoteState` and `insertYAML`**
+- `source` - *string*, *required*. Path to kubernetes manifest, which will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with template, and also allows to use of functions `remoteState` and `insertYAML`**
 - `kubeconfig` - *string*, *required*. Path to kubeconfig file which is relative to directory where the module was executed.
 #### Printer module 
+Module is mainly used to see the outputs of other modules in the console logs.
 
-
-
+Example:
+```
+modules:
+  - name: print_outputs
+    type: printer
+    inputs:
+      cluster_name: {{ .name }}
+      worker_iam_role_arn: {{ remoteState "this.eks.worker_iam_role_arn" }}
+```
+`inputs` - *any*, *requited* - map, represents data to be printed in the log. This block **allows to use of functions `remoteState` and `insertYAML`**
 
