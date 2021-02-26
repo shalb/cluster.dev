@@ -454,9 +454,9 @@ All modules described below have a common format and common fields. Base example
 - `pre_hook` and `post_hook` blocks: describes the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. All environment variables will be available between them.
     - `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
     - `script` - *string* path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
-    - `on_apply` *bool*, *optional* turn off/on when on module applying. **Default: "true"**
-    - `on_destroy` - *bool*, *optional* turn off/on when on module destroying. **Default: "false"**
-    - `on_plan` - *bool*, *optional* turn off/on when on module plan executing. **Default: "false"**
+    - `on_apply` *bool*, *optional* turn off/on when module applying. **Default: "true"**
+    - `on_destroy` - *bool*, *optional* turn off/on when module destroying. **Default: "false"**
+    - `on_plan` - *bool*, *optional* turn off/on when module plan executing. **Default: "false"**
 
 #### Terraform module
 Describes direct Terraform module invocation. 
