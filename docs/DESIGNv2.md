@@ -245,13 +245,13 @@ Available global flags:
   - `--trace`              Print functions trace info in logs (Mainly used for development)
 
 ## Project configuration
-`cdev` reads configuration from current directory, i.e. all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them with "---". The exception is the project.yaml configuration and files with secrets.
+`cdev` reads configuration from current directory, i.e. all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them with "---". The exception is the project.yaml configuration file and files with secrets.
 
-Project represents the single scope for infrastructures unde what they are stored and reconciled. The dependencies between different infrastructures could be used under the project scope. Project can host global variables that can be used to template target infrastructure.
+Project represents a single scope for infrastructures within which they are stored and reconciled. The dependencies between different infrastructures can be used within the project scope. Project can host global variables that can be used to template target infrastructure.
 
 ### Project
 File: `project.yaml`. Required. 
-Contain global project variables, which can be used in other configuration objects such as backend or infrastructure (except `secrets`). File `project.conf` is not renders with template, you cannot use template units in it. 
+Contains global project variables that can be used in other configuration objects, such as backend or infrastructure (except `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it. 
 
 Example `project.yaml`:
 ```yaml
@@ -264,10 +264,10 @@ variables:
 ```
 - `name`: project name. *Required*.
 - `kind`: object kind. Must be `project`. *Required*.
-- `variables`: a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the name of the organization will look like this: `{{ .project.variables.organization }}`
+- `variables`: a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the organization name will look like this: `{{ .project.variables.organization }}`
 ### Infrastructures
 File: searching in `./*.yaml`. *Required at least one*.
-Infrastructure object (`kind: infrastructure`) contain reference to template, variables to render that template and backend for states. 
+Infrastructure object (`kind: infrastructure`) contains reference to a template, variables to render the template and backend for states. 
 
 Example: 
 ```yaml
@@ -286,13 +286,13 @@ variables:
 ```
 - `name`: infrastructure name. *Required*.
 - `kind`: object kind. `infrastructure`. *Required*.
-- `backend`: name of [backend](#Backends), which will be used to store the states of this infrastructure. *Required*
+- `backend`: name of the [backend](#Backends) that will be used to store the states of this infrastructure. *Required*
 - `variables`: data set for [template rendering](#Template-configuration). 
 
 ### Backends
 File: searching in `./*.yaml`. *Required at least one*.
-An object that describes a backend storage for terraform and cdev states.
-In backends configuration you can use any options of appropriate terraform backend. They will be converted as is.
+An object that describes a backend storage for Terraform and cdev states.
+In backends' configuration you can use any options of appropriate Terraform backend. They will be converted as is.
 Currently 4 types of backends are supported:
 
 - `s3` AWS S3 backend:
@@ -337,34 +337,34 @@ spec:
 
 ### Secrets
 
-There are to way use secrets:
+There are two ways to use secrets:
 #### SOPS secret
-Secrets are encoded/decoded with [sops](https://github.com/mozilla/sops) utility which could support AWS KMS, GCP KMS, Azure Key Vault and PGP keys.
+Secrets are encoded/decoded with [SOPS](https://github.com/mozilla/sops) utility that supports AWS KMS, GCP KMS, Azure Key Vault and PGP keys.
 How to use: 
-1. Use console client cdev to create new secret from scratch:
+1. Use console client cdev to create a new secret from scratch:
 ```bash
 $ cdev secret create sops my_local_secret
 ```
-2. Use interactive menu to create secret.
-3. Edit secret and set secret data in `encrypted_data:` section.
-4. Use references to secret's data it infrastructure template (examples you can find in generated secret file). 
+2. Use interactive menu to create a secret.
+3. Edit the secret and set secret data in `encrypted_data:` section.
+4. Use references to the secret's data in infrastructure template (you can find the examples in the generated secret file). 
 
 
 #### Amazon secret manager
-cdev client could use aws ssm as secret storage. 
+cdev client can use AWS SSM as a secret storage. 
 
 How to use: 
-1. create new secret in aws secret manager using aws cli or web console. Both data format raw and JSON structure are supported.
+1. create a new secret in AWS secret manager using AWS cli or web console. Both raw and JSON data formats are supported.
 
-2. Use console client cdev to create new secret from scratch:
+2. Use the console client cdev to create a new secret from scratch:
 ```bash
 $ cdev secret create
 ```
-3. Answer the questions. For `Name of secret in AWS Secrets manager` enter name of aws secret, created above.
-4. Use references to secret's data it infrastructure template (examples you can find in generated secret file). 
+3. Answer the questions. For `Name of secret in AWS Secrets manager` enter the name of the AWS secret created above.
+4. Use references to the secret's data in infrastructure template (you can find the examples in the generated secret file). 
 
 
-To list and edit any secret use commands:
+To list and edit any secret, use the commands:
 ```bash
 $ cdev secret ls
 ```
@@ -374,7 +374,7 @@ $ cdev secret edit secret_name
 ```
 ## Template configuration
 ### Basics
-Template represents yaml structure with array of different invocation [modules](#Modules)
+Template represents yaml structure with the array of different invocation [modules](#Modules)
 Common view:
 ```yaml
 modules: 
@@ -384,12 +384,12 @@ modules:
   ...
 ```
 
-Template could utilize all kind of go-template and sprig functions (similar to Helm). Along that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
+Template can utilize all kinds of go-templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
 
 ### Functions
 1) [Base go-template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
 2) [Sprig functions](https://masterminds.github.io/sprig/).
-3) Enhanced functions: all functions described above allow you to modify the template text. Besides these, some special enhanced functions are available. They may not be used everywhere. They are integrated with the functionality of the program and with the yaml syntax:
+3) Enhanced functions: all functions described above allow you to modify the template text. Apart from these, some special enhanced functions are available. They cannot be used everywhere. The functions are integrated within the functionality of the program and with the yaml syntax:
   - `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block.
   **Allowed use**: only as full yaml value, in module `inputs`. Example:
 source yaml:
@@ -423,7 +423,7 @@ modules:
       max_size: 2
       type: spot
 ```
-  - `remoteState` - used for passing data between modules and infrastructures. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: as yaml value , only in module `inputs`.
+  - `remoteState` - is used for passing data between modules and infrastructures. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: as yaml value, only in module `inputs`.
  
 
 ### Modules
@@ -450,8 +450,8 @@ All modules described below have a common format and common fields. Base example
 ```
 - `name` - module name. *Required*.
 - `type` - module type. One of: `terraform`, `helm`, `kubernetes`, `printer`. See below.
-- `depends_on` - *string* or *list of strings*. One or multiple dependencies of module in format "infra_name.module_name". Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"` 
-- `pre_hook` and `post_hook` blocks: describes the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. All environment variables will be available between them.
+- `depends_on` - *string* or *list of strings*. One or multiple module dependencies in the format "infra_name.module_name". Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"` 
+- `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. All environment variables will be available between the blocks.
     - `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
     - `script` - *string* path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
     - `on_apply` *bool*, *optional* turn off/on when module applying. **Default: "true"**
@@ -476,7 +476,7 @@ modules:
 In addition to common options, the following are available:
 - `source` - *string*, *required*. Terraform module [source](https://www.terraform.io/docs/language/modules/syntax.html#source). **It is not allowed to use local folders in source!** 
 - `version` - *string*, *optional*. Module [version](https://www.terraform.io/docs/language/modules/syntax.html#version).
-- `inputs` - *map of any*, *required*. Map, which correspond to [input variables](https://www.terraform.io/docs/language/values/variables.html) defined by the module. This block allows to use functions `remoteState` and `insertYAML`
+- `inputs` - *map of any*, *required*. A map that corresponds to [input variables](https://www.terraform.io/docs/language/values/variables.html) defined by the module. This block allows to use functions `remoteState` and `insertYAML`
 #### Helm module
 Describes [Terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
 
@@ -504,10 +504,10 @@ modules:
 ```
 In addition to common options, the following are available:
 - `source` - *map*, *required*. Block describes helm chart source. 
-    - `chart`, `repository`, `version` - correspond to options of the same name of helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
-    - `kubeconfig` - *string*, *required*. Path to kubeconfig file which is relative to directory where the module was executed.
-    - `additional_options` - *map of any*, *optional*. Corresponds to [helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be pass as is.
-    - `inputs` - *map of any*, *optional*. Map, which represents [helm release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`.
+    - `chart`, `repository`, `version` - correspond to options with the same name from helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
+    - `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
+    - `additional_options` - *map of any*, *optional*. Corresponds to [Helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be pass as is.
+    - `inputs` - *map of any*, *optional*. A map that represents [Helm release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`.
     
     For example: 
     ```yaml
@@ -539,10 +539,10 @@ modules:
     depends_on: this.argocd
 ```
 
-- `source` - *string*, *required*. Path to kubernetes manifest, which will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with template, and also allows to use of functions `remoteState` and `insertYAML`**
-- `kubeconfig` - *string*, *required*. Path to kubeconfig file which is relative to directory where the module was executed.
+- `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the template, and also allows to use the functions `remoteState` and `insertYAML`**
+- `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
 #### Printer module 
-Module is mainly used to see the outputs of other modules in the console logs.
+The module is mainly used to see the outputs of other modules in the console logs.
 
 Example:
 ```
@@ -553,5 +553,5 @@ modules:
       cluster_name: {{ .name }}
       worker_iam_role_arn: {{ remoteState "this.eks.worker_iam_role_arn" }}
 ```
-`inputs` - *any*, *requited* - map, represents data to be printed in the log. This block **allows to use of functions `remoteState` and `insertYAML`**
+`inputs` - *any*, *required* - a map that represents data to be printed in the log. The block **allows to use the functions `remoteState` and `insertYAML`**
 
