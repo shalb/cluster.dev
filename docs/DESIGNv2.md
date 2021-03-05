@@ -451,7 +451,7 @@ All modules described below have a common format and common fields. Base example
 - `name` - module name. *Required*.
 - `type` - module type. One of: `terraform`, `helm`, `kubernetes`, `printer`. See below.
 - `depends_on` - *string* or *list of strings*. One or multiple module dependencies in the format "infra_name.module_name". Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"` 
-- `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. All environment variables will be available between the blocks.
+- `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the module execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the module. 
     - `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
     - `script` - *string* path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
     - `on_apply` *bool*, *optional* turn off/on when module applying. **Default: "true"**
