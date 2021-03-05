@@ -1,10 +1,10 @@
-# Cluster.dev: Cloud infrastructures management tool.
+# Cluster.dev: Cloud infrastructures' management tool.
 
-Cluster.dev helps you manage Cloud Native Infrastructures with a simple declarative manifests - Infra Templates.
+Cluster.dev helps you manage Cloud Native Infrastructures with simple declarative manifests - Infra Templates.
 
-So you can describe whole infrastructure an deploy it with single tool.
+So you can describe a whole infrastructure and deploy it with a single tool.
 
-InfraTemplate could contain different technology patterns, like Terraform modules, Shell scripts, Kubernetes manifests, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc..
+Infra Template could contain different technology patterns, such as Terraform modules, Shell scripts, Kubernetes manifests, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc.
 
 You can store, test, and distribute your infrastructure pattern as a complete versioned set of technologies.
 
@@ -48,13 +48,13 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
 [Project in Git Repo]
   project.yaml           # (Required) Global variables and settings
   [filename].yaml        # (Required at least one) Different project's objects in yaml format (infrastructure, backend etc). 
-                         # Se details in configuration reference.
+                         # See details in configuration reference.
   /templates             # Pre-defined infra patterns. See details in template configuration reference.
     aws-kubernetes.yaml
     cloudflare-dns.yaml
     do-mysql.yaml
 
-    /files               # Some files, used in templates.
+    /files               # Some files used in templates.
       deployment.yaml
       config.cfg
 ```
@@ -62,26 +62,26 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
 ### Infrastructure Reconcilation
 
 ```bash
-# Single command reconcile the whole project
+# Single command reconciles the whole project
 cdev apply
 ```
 
-Would:
+Running the command will:
 
  1. Decode all required secrets.
  2. Template infrastructure variables with global project variables and secrets.
  3. Pull and diff project state and build a dependency graph.
- 4. Invoke all required modules in parralel manner.
+ 4. Invoke all required modules in a parralel manner.
     ex: `sops decode`, `terraform apply`, `helm install`, etc..
 
 ### Demo Video
 
-video will be uploaded later 
+video will be uploaded soon.
 
 ## Install 
 ### Prerequisites
 #### Terraform
-Cdev client uses the terraform binary. The required terraform version is ~13 or higher. Refer to the [Terraform installation instructions](https://www.terraform.io/downloads.html) to install terraform.
+Cdev client uses the Terraform binary. The required Terraform version is ~13 or higher. Refer to the [Terraform installation instructions](https://www.terraform.io/downloads.html) to install Terraform.
 
 Terraform installation example for linux amd64:
 ```bash
@@ -90,9 +90,9 @@ $ unzip terraform_0.14.7_linux_amd64.zip
 $ mv terraform /usr/local/bin/
 ```
 #### SOPS
-For **creating** and **editing** SOPS secrets, cdev uses sops binary. But sops binary in **not required** for decrypting and using sops secrets. All cdev reconcilation processes (build, plan, apply) is not required sops, so no need to install it for pipelines.
+For **creating** and **editing** SOPS secrets, cdev uses SOPS binary. But the SOPS binary is **not required** for decrypting and using SOPS secrets. As none of cdev reconcilation processes (build, plan, apply) requires SOPS to be performed, you don't have to install it for pipelines.
 
-See [SOPS installation instructions](https://github.com/mozilla/sops#download) on official repo.
+See [SOPS installation instructions](https://github.com/mozilla/sops#download) in official repo.
 
 Also see [Secrets section](SOPS-secret) in this documentation.
 
@@ -129,13 +129,13 @@ $ mv ./bin/cdev /usr/local/bin/
 ```
 
 ## Cloud providers
-This guide describes how to set up cloud providers so that `cdev` can start deploying.
+This section contains guidelines on cloud settings required for `cdev` to start deploying.
 ### AWS
 #### Authentication
 First, you need to configure access to the AWS cloud provider.
 There are several ways to do this:
 
-- **Environment variables**: provide your credentials via the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, environment variables, representing your AWS Access Key and AWS Secret Key. You could also ue the `AWS_DEFAULT_REGION` or `AWS_REGION` environment variable, to set region, if needed. Example usage:
+- **Environment variables**: provide your credentials via the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, the environment variables that represent your AWS Access Key and AWS Secret Key. You can also use the `AWS_DEFAULT_REGION` or `AWS_REGION` environment variable to set region, if needed. Example usage:
 ```bash
 $ export AWS_ACCESS_KEY_ID="MYACCESSKEY"
 $ export AWS_SECRET_ACCESS_KEY="MYSECRETKEY"
@@ -169,26 +169,26 @@ $ sudo ./aws/install
 $ aws s3 ls
 ```
 
-#### Create s3 bucker for states
-To store cluster.dev and terraform states, you should create s3 bucket:
+#### Create S3 bucket for states
+To store cluster.dev and Terraform states, you should create an S3 bucket:
 ```bash
 $ aws s3 mb s3://cdev-states
 ```
 #### DNS Zone:
-For the built-in AWS example, you need to define a route53 hosted zone. Options:
+For the built-in AWS example, you need to define a Route 53 hosted zone. Options:
 
-1) You already have route53 hosted zone.
+1) You already have a Route 53 hosted zone.
 
-2) Create new hosted zone, using [route53 documentation example](https://docs.aws.amazon.com/cli/latest/reference/route53/create-hosted-zone.html#examples).
+2) Create a new hosted zone using a [Route 53 documentation example](https://docs.aws.amazon.com/cli/latest/reference/route53/create-hosted-zone.html#examples).
 
 3) Use "cluster.dev" domain for zone delegation.
 
 ### Google cloud
 #### Auth:
-See [terraform Google cloud provider documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication) 
+See [Terraform Google cloud provider documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication) 
 ### Azure
 #### Auth:
-See [terraform Azure provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure)
+See [Terraform Azure provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure)
 ### DigitalOcean
 #### Auth:
 Create [an access token](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
@@ -196,19 +196,19 @@ Export variable:
 ```bash
 $ export DIGITALOCEAN_TOKEN="MyToken"
 ```
-How to use DO spaces bucket as backend, see [here](https://www.digitalocean.com/community/questions/spaces-as-terraform-backend)
+For details on using DO spaces bucket as a backend, see [here](https://www.digitalocean.com/community/questions/spaces-as-terraform-backend)
 
 ## Quick start
-This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for chosen cloud provider.
+This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for the chosen cloud provider.
 1) [Install cdev and soft](#Install).
 2) Prepare [cloud provider](#Cloud-providers).
-3) Create new empty dir for project and use [cdev generators](#Generators) to create new project from template:
+3) Create a new empty dir for the project and use [cdev generators](#Generators) to create the new project from a template:
 ```bash
 $ mkdir my-cdev-project && cd my-cdev-project
 $ cdev new project
 ```
-4) Choose one of the available projects. Check out the description of the example. Enter the data required for the generator.
-5) After finishing work with the generator - check the project:
+4) Choose one from the available projects. Check out the description of the example. Enter the data required for the generator.
+5) Having finished working with the generator, check the project:
 ```bash
 $ cdev project info
 ```
@@ -216,7 +216,7 @@ $ cdev project info
 ```bash
 $ vim project.yaml
 $ vim infra.yaml
-$ vim templates/aws-k3s.yaml # (name depends of chosen option in step 4)
+$ vim templates/aws-k3s.yaml # (the name depends on chosen option in step 4)
 ```
 7) Apply the project:
 ```bash
@@ -245,9 +245,9 @@ Available global flags:
   - `--trace`              Print functions trace info in logs (Mainly used for development)
 
 ## Project configuration
-`cdev` reads configuration from current directory. Reads all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them "---". The exception is the project.yaml configuration and files with secrets.
+`cdev` reads configuration from current directory, i.e. all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them with "---". The exception is the project.yaml configuration and files with secrets.
 
-Project represents the single scope for infrastructures unde what they are stored and reconciled. The dependencies between different infrastructures could be used under the project scope. Project could host a global variables that could be accessed to template target infrastructure.
+Project represents the single scope for infrastructures unde what they are stored and reconciled. The dependencies between different infrastructures could be used under the project scope. Project can host global variables that can be used to template target infrastructure.
 
 ### Project
 File: `project.yaml`. Required. 
