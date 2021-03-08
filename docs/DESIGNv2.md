@@ -1,4 +1,4 @@
-# Cluster.dev: Cloud infrastructures' management tool.
+# Cluster.dev: Cloud infrastructures' management tool
 
 Cluster.dev helps you manage Cloud Native Infrastructures with simple declarative manifests - Infra Templates.
 
@@ -10,44 +10,55 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
 
 **Table of contents:**
 
-1) [Concept](#Concept)
-2) [Install](#Install)
-    - [Prerequisites](#Prerequisites)
-    - [Download from release](#Download-from-release)
-    - [Build from source](#Build-from-source)
-3) [Cloud providers](#Cloud-providers)
-    - [AWS](#AWS)
-    - [Google Cloud](#Google-Cloud)
-    - [Azure](#Azure)
-    - [DigitalOcean](#DigitalOcean)
-4) [Quick start](#Quick-start)
-4) [Reference](#Reference)
-    - [Cli commands](#Cli-commands)
-    - [Cli options](#Cli-options)
-5) [Project configuration](#Project-configuration)
-    - [Project](#Project)
-    - [Infrastructures](#Infrastructures)
-    - [Backends](#Backends)
-    - [Secrets](#Secrets)
-      - [SOPS](#SOPS-secret)
-      - [Amazon secret manager](#Amazon-secret-manager)
-6) [Template configuration](#Template-configuration)
-    - [Basics](#Basics)
-    - [Functions](#Functions)
-    - [Modules](#Modules)
-      - [Terraform](#Terraform-module)
-      - [Helm](#Helm-module)
-      - [Kubernetes](#Kubernetes-module)
-      - [Printer](#Printer-module)
+* [Concept](#concept)
+  * [Common Infrastructure Project Structure](#common-infrastructure-project-structure)
+  * [Infrastructure Reconcilation](#infrastructure-reconcilation)
+  * [Demo Video](#demo-video)
+* [Install](#install)
+  * [Prerequisites](#prerequisites)
+    * [Terraform](#terraform)
+    * [SOPS](#sops)
+  * [Download from release](#download-from-release)
+  * [Build from source](#build-from-source)
+* [Cloud providers](#cloud-providers)
+  * [AWS](#aws)
+    * [Authentication](#authentication)
+    * [Install AWS client and check access](#install-aws-client-and-check-access)
+    * [Create S3 bucket for states](#create-s3-bucket-for-states)
+    * [DNS Zone](#dns-zone)
+  * [Google cloud](#google-cloud)
+    * [Auth](#auth)
+  * [Azure Authentication](#azure-authentication)
+  * [DigitalOcean Authentication](#digitalocean-authentication)
+* [Quick start](#quick-start)
+* [Reference](#reference)
+  * [Cli commands](#cli-commands)
+  * [Cli options](#cli-options)
+* [Project configuration](#project-configuration)
+  * [Project](#project)
+  * [Infrastructures](#infrastructures)
+  * [Backends](#backends)
+  * [Secrets](#secrets)
+    * [SOPS secret](#sops-secret)
+    * [Amazon secret manager](#amazon-secret-manager)
+* [Template configuration](#template-configuration)
+  * [Basics](#basics)
+  * [Functions](#functions)
+  * [Modules](#modules)
+    * [Terraform module](#terraform-module)
+    * [Helm module](#helm-module)
+    * [Kubernetes module](#kubernetes-module)
+    * [Printer module](#printer-module)
 
 ## Concept
 
 ### Common Infrastructure Project Structure
+
 ```bash
 # Common Infrastructure Project Structure
 [Project in Git Repo]
   project.yaml           # (Required) Global variables and settings
-  [filename].yaml        # (Required at least one) Different project's objects in yaml format (infrastructure, backend etc). 
+  [filename].yaml        # (Required at least one) Different project's objects in yaml format (infrastructure, backend etc).
                          # See details in configuration reference.
   /templates             # Pre-defined infra patterns. See details in template configuration reference.
     aws-kubernetes.yaml
@@ -78,18 +89,24 @@ Running the command will:
 
 video will be uploaded soon.
 
-## Install 
+## Install
+
 ### Prerequisites
+
 #### Terraform
+
 Cdev client uses the Terraform binary. The required Terraform version is ~13 or higher. Refer to the [Terraform installation instructions](https://www.terraform.io/downloads.html) to install Terraform.
 
 Terraform installation example for linux amd64:
+
 ```bash
-$ curl -O https://releases.hashicorp.com/terraform/0.14.7/terraform_0.14.7_linux_amd64.zip
-$ unzip terraform_0.14.7_linux_amd64.zip
-$ mv terraform /usr/local/bin/
+curl -O https://releases.hashicorp.com/terraform/0.14.7/terraform_0.14.7_linux_amd64.zip
+unzip terraform_0.14.7_linux_amd64.zip
+mv terraform /usr/local/bin/
 ```
+
 #### SOPS
+
 For **creating** and **editing** SOPS secrets, cdev uses SOPS binary. But the SOPS binary is **not required** for decrypting and using SOPS secrets. As none of cdev reconcilation processes (build, plan, apply) requires SOPS to be performed, you don't have to install it for pipelines.
 
 See [SOPS installation instructions](https://github.com/mozilla/sops#download) in official repo.
@@ -99,14 +116,15 @@ Also see [Secrets section](SOPS-secret) in this documentation.
 ### Download from release
 
 Binaries of the latest stable release are available at [releases page](https://github.com/shalb/cluster.dev/releases). This documentation is suitable for **v0.4.0 or higher**
-cluster.dev client. 
+cluster.dev client.
 
 Installation example for linux amd64:
-```bash
-$ wget https://github.com/shalb/cluster.dev/releases/download/v0.4.0-rc1/cluster.dev_v0.4.0-rc1_linux_amd64.tgz
-$ tar -xzvf cluster.dev_v0.4.0-rc1_linux_amd64.tgz -C /usr/local/bin
 
-$ cdev --help
+```bash
+wget https://github.com/shalb/cluster.dev/releases/download/v0.4.0-rc1/cluster.dev_v0.4.0-rc1_linux_amd64.tgz
+tar -xzvf cluster.dev_v0.4.0-rc1_linux_amd64.tgz -C /usr/local/bin
+
+cdev --help
 ```
 
 ### Build from source
@@ -114,67 +132,89 @@ $ cdev --help
 Go version 16 or higher is required. [Golang installation instructions](https://golang.org/doc/install)
 
 To build cluster.dev client from src:
-1)  Clone cluster.dev git repo:
+
+Clone cluster.dev git repo:
+
 ```bash
-$ git clone --depth 1 --branch v0.4.0-rc1 https://github.com/shalb/cluster.dev/
+git clone --depth 1 --branch v0.4.0-rc1 https://github.com/shalb/cluster.dev/
 ```
-2) Build binary: 
+
+Build binary:
+
 ```bash
-$ cd cluster.dev/ && make
+cd cluster.dev/ && make
 ```
-3) Check cdev and move binary to bin folder: 
+
+Check cdev and move binary to bin folder:
+
 ```bash
-$ ./bin/cdev --help
-$ mv ./bin/cdev /usr/local/bin/
+./bin/cdev --help
+mv ./bin/cdev /usr/local/bin/
 ```
 
 ## Cloud providers
+
 This section contains guidelines on cloud settings required for `cdev` to start deploying.
+
 ### AWS
+
 #### Authentication
+
 First, you need to configure access to the AWS cloud provider.
 There are several ways to do this:
 
-- **Environment variables**: provide your credentials via the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, the environment variables that represent your AWS Access Key and AWS Secret Key. You can also use the `AWS_DEFAULT_REGION` or `AWS_REGION` environment variable to set region, if needed. Example usage:
-```bash
-$ export AWS_ACCESS_KEY_ID="MYACCESSKEY"
-$ export AWS_SECRET_ACCESS_KEY="MYSECRETKEY"
-$ export AWS_DEFAULT_REGION="eu-central-1"
-```
-- **Shared Credentials File (recommended)**: set up an [AWS configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials. 
+* **Environment variables**: provide your credentials via the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, the environment variables that represent your AWS Access Key and AWS Secret Key. You can also use the `AWS_DEFAULT_REGION` or `AWS_REGION` environment variable to set region, if needed. Example usage:
 
-Credentials file `~/.aws/credentials` example: 
+```bash
+export AWS_ACCESS_KEY_ID="MYACCESSKEY"
+export AWS_SECRET_ACCESS_KEY="MYSECRETKEY"
+export AWS_DEFAULT_REGION="eu-central-1"
+```
+
+* **Shared Credentials File (recommended)**: set up an [AWS configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials.
+
+Credentials file `~/.aws/credentials` example:
+
 ```bash
 [cluster-dev]
 aws_access_key_id = MYACCESSKEY
 aws_secret_access_key = MYSECRETKEY
 ```
+
 Config: `~/.aws/config` example:
+
 ```bash
 [profile cluster-dev]
 region = eu-central-1
 ```
-Then export `AWS_PROFILE` environment variable. 
+
+Then export `AWS_PROFILE` environment variable.
+
 ```bash
-$ export AWS_PROFILE=cluster-dev
+export AWS_PROFILE=cluster-dev
 ```
 
 #### Install AWS client and check access
 
 See how to install AWS cli in [official installation guide](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html), or use commands from example:
+
 ```bash
-$ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-$ unzip awscliv2.zip
-$ sudo ./aws/install
-$ aws s3 ls
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+aws s3 ls
 ```
 
 #### Create S3 bucket for states
+
 To store cluster.dev and Terraform states, you should create an S3 bucket:
+
 ```bash
-$ aws s3 mb s3://cdev-states
+aws s3 mb s3://cdev-states
 ```
-#### DNS Zone:
+
+#### DNS Zone
+
 For the built-in AWS example, you need to define a Route 53 hosted zone. Options:
 
 1) You already have a Route 53 hosted zone.
@@ -184,43 +224,57 @@ For the built-in AWS example, you need to define a Route 53 hosted zone. Options
 3) Use "cluster.dev" domain for zone delegation.
 
 ### Google cloud
-#### Auth:
-See [Terraform Google cloud provider documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication) 
-### Azure
-#### Auth:
+
+#### Auth
+
+See [Terraform Google cloud provider documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication)
+
+### Azure Authentication
+
 See [Terraform Azure provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure)
-### DigitalOcean
-#### Auth:
-Create [an access token](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
-Export variable: 
+
+### DigitalOcean Authentication
+
+Create [an access token](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/).
+Export variable:
+
 ```bash
-$ export DIGITALOCEAN_TOKEN="MyToken"
+export DIGITALOCEAN_TOKEN="MyToken"
 ```
+
 For details on using DO spaces bucket as a backend, see [here](https://www.digitalocean.com/community/questions/spaces-as-terraform-backend)
 
 ## Quick start
+
 This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for the chosen cloud provider.
-1) [Install cdev and soft](#Install).
-2) Prepare [cloud provider](#Cloud-providers).
-3) Create a new empty dir for the project and use [cdev generators](#Generators) to create the new project from a template:
+
+1. [Install cdev and required software](#Install).
+2. Prepare [cloud provider](#Cloud-providers).
+3. Create a new empty dir for the project and use [cdev generators](#Generators) to create the new project from a template:
+
 ```bash
-$ mkdir my-cdev-project && cd my-cdev-project
-$ cdev new project
+mkdir my-cdev-project && cd my-cdev-project
+cdev new project
 ```
-4) Choose one from the available projects. Check out the description of the example. Enter the data required for the generator.
-5) Having finished working with the generator, check the project:
+
+1) Choose one from the available projects. Check out the description of the example. Enter the data required for the generator.
+2) After finished working with the generator, check the project:
+
 ```bash
-$ cdev project info
+cdev project info
 ```
-6) Edit [project](#Project-configuration) and [template](#Template-configuration) configuration, if needed. 
+
+1) Edit [project](#Project-configuration) and [template](#Template-configuration) configuration, if needed. 
 ```bash
 $ vim project.yaml
 $ vim infra.yaml
 $ vim templates/aws-k3s.yaml # (the name depends on chosen option in step 4)
 ```
+
 7) Apply the project:
+
 ```bash
-$ cdev apply -l debug
+cdev apply -l debug
 ```
 
 ## Reference
