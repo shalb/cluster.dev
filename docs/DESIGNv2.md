@@ -1,60 +1,71 @@
-# Cluster.dev: Cloud infrastructures management tool.
+# Cluster.dev: Cloud infrastructures' management tool
 
-Cluster.dev helps you manage Cloud Native Infrastructures with a simple declarative manifests - Infra Templates.
+Cluster.dev helps you manage Cloud Native Infrastructures with simple declarative manifests - Infra Templates.
 
-So you can describe whole infrastructure an deploy it with single tool.
+So you can describe a whole infrastructure and deploy it with a single tool.
 
-InfraTemplate could contain different technology patterns, like Terraform modules, Shell scripts, Kubernetes manifests, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc..
+Infra Template could contain different technology patterns, such as Terraform modules, Shell scripts, Kubernetes manifests, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc.
 
 You can store, test, and distribute your infrastructure pattern as a complete versioned set of technologies.
 
 **Table of contents:**
 
-1) [Concept](#Concept)
-2) [Install](#Install)
-    - [Prerequisites](#Prerequisites)
-    - [Download from release](#Download-from-release)
-    - [Build from source](#Build-from-source)
-3) [Cloud providers](#Cloud-providers)
-    - [AWS](#AWS)
-    - [Google Cloud](#Google-Cloud)
-    - [Azure](#Azure)
-    - [DigitalOcean](#DigitalOcean)
-4) [Quick start](#Quick-start)
-4) [Reference](#Reference)
-    - [Cli commands](#Cli-commands)
-    - [Cli options](#Cli-options)
-5) [Project configuration](#Project-configuration)
-    - [Project](#Project)
-    - [Infrastructures](#Infrastructures)
-    - [Backends](#Backends)
-    - [Secrets](#Secrets)
-      - [SOPS](#SOPS-secret)
-      - [Amazon secret manager](#Amazon-secret-manager)
-6) [Template configuration](#Template-configuration)
-    - [Basics](#Basics)
-    - [Functions](#Functions)
-    - [Modules](#Modules)
-      - [Terraform](#Terraform-module)
-      - [Helm](#Helm-module)
-      - [Kubernetes](#Kubernetes-module)
-      - [Printer](#Printer-module)
+* [Concept](#concept)
+  * [Common Infrastructure Project Structure](#common-infrastructure-project-structure)
+  * [Infrastructure Reconcilation](#infrastructure-reconcilation)
+  * [Demo Video](#demo-video)
+* [Install](#install)
+  * [Prerequisites](#prerequisites)
+    * [Terraform](#terraform)
+    * [SOPS](#sops)
+  * [Download from release](#download-from-release)
+  * [Build from source](#build-from-source)
+* [Cloud providers](#cloud-providers)
+  * [AWS](#aws)
+    * [Authentication](#authentication)
+    * [Install AWS client and check access](#install-aws-client-and-check-access)
+    * [Create S3 bucket for states](#create-s3-bucket-for-states)
+    * [DNS Zone](#dns-zone)
+  * [Google cloud](#google-cloud)
+    * [Auth](#auth)
+  * [Azure Authentication](#azure-authentication)
+  * [DigitalOcean Authentication](#digitalocean-authentication)
+* [Quick start](#quick-start)
+* [Reference](#reference)
+  * [Cli commands](#cli-commands)
+  * [Cli options](#cli-options)
+* [Project configuration](#project-configuration)
+  * [Project](#project)
+  * [Infrastructures](#infrastructures)
+  * [Backends](#backends)
+  * [Secrets](#secrets)
+    * [SOPS secret](#sops-secret)
+    * [Amazon secret manager](#amazon-secret-manager)
+* [Template configuration](#template-configuration)
+  * [Basics](#basics)
+  * [Functions](#functions)
+  * [Modules](#modules)
+    * [Terraform module](#terraform-module)
+    * [Helm module](#helm-module)
+    * [Kubernetes module](#kubernetes-module)
+    * [Printer module](#printer-module)
 
 ## Concept
 
 ### Common Infrastructure Project Structure
+
 ```bash
 # Common Infrastructure Project Structure
 [Project in Git Repo]
   project.yaml           # (Required) Global variables and settings
-  [filename].yaml        # (Required at least one) Different project's objects in yaml format (infrastructure, backend etc). 
-                         # Se details in configuration reference.
+  [filename].yaml        # (Required at least one) Different project's objects in yaml format (infrastructure, backend etc).
+                         # See details in configuration reference.
   /templates             # Pre-defined infra patterns. See details in template configuration reference.
     aws-kubernetes.yaml
     cloudflare-dns.yaml
     do-mysql.yaml
 
-    /files               # Some files, used in templates.
+    /files               # Some files used in templates.
       deployment.yaml
       config.cfg
 ```
@@ -62,51 +73,58 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
 ### Infrastructure Reconcilation
 
 ```bash
-# Single command reconcile the whole project
+# Single command reconciles the whole project
 cdev apply
 ```
 
-Would:
+Running the command will:
 
  1. Decode all required secrets.
  2. Template infrastructure variables with global project variables and secrets.
  3. Pull and diff project state and build a dependency graph.
- 4. Invoke all required modules in parralel manner.
+ 4. Invoke all required modules in a parralel manner.
     ex: `sops decode`, `terraform apply`, `helm install`, etc..
 
 ### Demo Video
 
-video will be uploaded later 
+video will be uploaded soon.
 
-## Install 
+## Install
+
 ### Prerequisites
+
 #### Terraform
-Cdev client uses the terraform binary. The required terraform version is ~13 or higher. Refer to the [Terraform installation instructions](https://www.terraform.io/downloads.html) to install terraform.
+
+Cdev client uses the Terraform binary. The required Terraform version is ~13 or higher. Refer to the [Terraform installation instructions](https://www.terraform.io/downloads.html) to install Terraform.
 
 Terraform installation example for linux amd64:
-```bash
-$ curl -O https://releases.hashicorp.com/terraform/0.14.7/terraform_0.14.7_linux_amd64.zip
-$ unzip terraform_0.14.7_linux_amd64.zip
-$ mv terraform /usr/local/bin/
-```
-#### SOPS
-For **creating** and **editing** SOPS secrets, cdev uses sops binary. But sops binary in **not required** for decrypting and using sops secrets. All cdev reconcilation processes (build, plan, apply) is not required sops, so no need to install it for pipelines.
 
-See [SOPS installation instructions](https://github.com/mozilla/sops#download) on official repo.
+```bash
+curl -O https://releases.hashicorp.com/terraform/0.14.7/terraform_0.14.7_linux_amd64.zip
+unzip terraform_0.14.7_linux_amd64.zip
+mv terraform /usr/local/bin/
+```
+
+#### SOPS
+
+For **creating** and **editing** SOPS secrets, cdev uses SOPS binary. But the SOPS binary is **not required** for decrypting and using SOPS secrets. As none of cdev reconcilation processes (build, plan, apply) requires SOPS to be performed, you don't have to install it for pipelines.
+
+See [SOPS installation instructions](https://github.com/mozilla/sops#download) in official repo.
 
 Also see [Secrets section](SOPS-secret) in this documentation.
 
 ### Download from release
 
 Binaries of the latest stable release are available at [releases page](https://github.com/shalb/cluster.dev/releases). This documentation is suitable for **v0.4.0 or higher**
-cluster.dev client. 
+cluster.dev client.
 
 Installation example for linux amd64:
-```bash
-$ wget https://github.com/shalb/cluster.dev/releases/download/v0.4.0-rc1/cluster.dev_v0.4.0-rc1_linux_amd64.tgz
-$ tar -xzvf cluster.dev_v0.4.0-rc1_linux_amd64.tgz -C /usr/local/bin
 
-$ cdev --help
+```bash
+wget https://github.com/shalb/cluster.dev/releases/download/v0.4.0-rc1/cluster.dev_v0.4.0-rc1_linux_amd64.tgz
+tar -xzvf cluster.dev_v0.4.0-rc1_linux_amd64.tgz -C /usr/local/bin
+
+cdev --help
 ```
 
 ### Build from source
@@ -114,113 +132,149 @@ $ cdev --help
 Go version 16 or higher is required. [Golang installation instructions](https://golang.org/doc/install)
 
 To build cluster.dev client from src:
-1)  Clone cluster.dev git repo:
+
+Clone cluster.dev git repo:
+
 ```bash
-$ git clone --depth 1 --branch v0.4.0-rc1 https://github.com/shalb/cluster.dev/
+git clone --depth 1 --branch v0.4.0-rc1 https://github.com/shalb/cluster.dev/
 ```
-2) Build binary: 
+
+Build binary:
+
 ```bash
-$ cd cluster.dev/ && make
+cd cluster.dev/ && make
 ```
-3) Check cdev and move binary to bin folder: 
+
+Check cdev and move binary to bin folder:
+
 ```bash
-$ ./bin/cdev --help
-$ mv ./bin/cdev /usr/local/bin/
+./bin/cdev --help
+mv ./bin/cdev /usr/local/bin/
 ```
 
 ## Cloud providers
-This guide describes how to set up cloud providers so that `cdev` can start deploying.
+
+This section contains guidelines on cloud settings required for `cdev` to start deploying.
+
 ### AWS
+
 #### Authentication
+
 First, you need to configure access to the AWS cloud provider.
 There are several ways to do this:
 
-- **Environment variables**: provide your credentials via the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, environment variables, representing your AWS Access Key and AWS Secret Key. You could also ue the `AWS_DEFAULT_REGION` or `AWS_REGION` environment variable, to set region, if needed. Example usage:
-```bash
-$ export AWS_ACCESS_KEY_ID="MYACCESSKEY"
-$ export AWS_SECRET_ACCESS_KEY="MYSECRETKEY"
-$ export AWS_DEFAULT_REGION="eu-central-1"
-```
-- **Shared Credentials File (recommended)**: set up an [AWS configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials. 
+* **Environment variables**: provide your credentials via the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, the environment variables that represent your AWS Access Key and AWS Secret Key. You can also use the `AWS_DEFAULT_REGION` or `AWS_REGION` environment variable to set region, if needed. Example usage:
 
-Credentials file `~/.aws/credentials` example: 
+```bash
+export AWS_ACCESS_KEY_ID="MYACCESSKEY"
+export AWS_SECRET_ACCESS_KEY="MYSECRETKEY"
+export AWS_DEFAULT_REGION="eu-central-1"
+```
+
+* **Shared Credentials File (recommended)**: set up an [AWS configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials.
+
+Credentials file `~/.aws/credentials` example:
+
 ```bash
 [cluster-dev]
 aws_access_key_id = MYACCESSKEY
 aws_secret_access_key = MYSECRETKEY
 ```
+
 Config: `~/.aws/config` example:
+
 ```bash
 [profile cluster-dev]
 region = eu-central-1
 ```
-Then export `AWS_PROFILE` environment variable. 
+
+Then export `AWS_PROFILE` environment variable.
+
 ```bash
-$ export AWS_PROFILE=cluster-dev
+export AWS_PROFILE=cluster-dev
 ```
 
 #### Install AWS client and check access
 
 See how to install AWS cli in [official installation guide](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html), or use commands from example:
+
 ```bash
-$ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-$ unzip awscliv2.zip
-$ sudo ./aws/install
-$ aws s3 ls
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+aws s3 ls
 ```
 
-#### Create s3 bucker for states
-To store cluster.dev and terraform states, you should create s3 bucket:
+#### Create S3 bucket for states
+
+To store cluster.dev and Terraform states, you should create an S3 bucket:
+
 ```bash
-$ aws s3 mb s3://cdev-states
+aws s3 mb s3://cdev-states
 ```
-#### DNS Zone:
-For the built-in AWS example, you need to define a route53 hosted zone. Options:
 
-1) You already have route53 hosted zone.
+#### DNS Zone
 
-2) Create new hosted zone, using [route53 documentation example](https://docs.aws.amazon.com/cli/latest/reference/route53/create-hosted-zone.html#examples).
+For the built-in AWS example, you need to define a Route 53 hosted zone. Options:
+
+1) You already have a Route 53 hosted zone.
+
+2) Create a new hosted zone using a [Route 53 documentation example](https://docs.aws.amazon.com/cli/latest/reference/route53/create-hosted-zone.html#examples).
 
 3) Use "cluster.dev" domain for zone delegation.
 
 ### Google cloud
-#### Auth:
-See [terraform Google cloud provider documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication) 
-### Azure
-#### Auth:
-See [terraform Azure provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure)
-### DigitalOcean
-#### Auth:
-Create [an access token](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/). 
-Export variable: 
+
+#### Auth
+
+See [Terraform Google cloud provider documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication)
+
+### Azure Authentication
+
+See [Terraform Azure provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure)
+
+### DigitalOcean Authentication
+
+Create [an access token](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/).
+Export variable:
+
 ```bash
-$ export DIGITALOCEAN_TOKEN="MyToken"
+export DIGITALOCEAN_TOKEN="MyToken"
 ```
-How to use DO spaces bucket as backend, see [here](https://www.digitalocean.com/community/questions/spaces-as-terraform-backend)
+
+For details on using DO spaces bucket as a backend, see [here](https://www.digitalocean.com/community/questions/spaces-as-terraform-backend)
 
 ## Quick start
-This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for chosen cloud provider.
-1) [Install cdev and soft](#Install).
-2) Prepare [cloud provider](#Cloud-providers).
-3) Create new empty dir for project and use [cdev generators](#Generators) to create new project from template:
+
+This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for the chosen cloud provider.
+
+1. [Install cdev and required software](#Install).
+2. Prepare [cloud provider](#Cloud-providers).
+3. Create a new empty dir for the project and use [cdev generators](#Generators) to create the new project from a template:
+
 ```bash
-$ mkdir my-cdev-project && cd my-cdev-project
-$ cdev new project
+mkdir my-cdev-project && cd my-cdev-project
+cdev new project
 ```
-4) Choose one of the available projects. Check out the description of the example. Enter the data required for the generator.
-5) After finishing work with the generator - check the project:
+
+1) Choose one from the available projects. Check out the description of the example. Enter the data required for the generator.
+2) After finished working with the generator, check the project:
+
 ```bash
-$ cdev project info
+cdev project info
 ```
-6) Edit [project](#Project-configuration) and [template](#Template-configuration) configuration, if needed. 
+
+1) Edit [project](#Project-configuration) and [template](#Template-configuration) configuration, if needed. 
 ```bash
 $ vim project.yaml
 $ vim infra.yaml
-$ vim templates/aws-k3s.yaml # (name depends of chosen option in step 4)
+$ vim templates/aws-k3s.yaml # (the name depends on chosen option in step 4)
 ```
+
 7) Apply the project:
+
 ```bash
-$ cdev apply -l debug
+cdev apply -l debug
 ```
 
 ## Reference
@@ -245,13 +299,13 @@ Available global flags:
   - `--trace`              Print functions trace info in logs (Mainly used for development)
 
 ## Project configuration
-`cdev` reads configuration from current directory. Reads all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them "---". The exception is the project.yaml configuration and files with secrets.
+`cdev` reads configuration from current directory, i.e. all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them with "---". The exception is the project.yaml configuration file and files with secrets.
 
-Project represents the single scope for infrastructures unde what they are stored and reconciled. The dependencies between different infrastructures could be used under the project scope. Project could host a global variables that could be accessed to template target infrastructure.
+Project represents a single scope for infrastructures within which they are stored and reconciled. The dependencies between different infrastructures can be used within the project scope. Project can host global variables that can be used to template target infrastructure.
 
 ### Project
 File: `project.yaml`. Required. 
-Contain global project variables, which can be used in other configuration objects such as backend or infrastructure (except `secrets`). File `project.conf` is not renders with template, you cannot use template units in it. 
+Contains global project variables that can be used in other configuration objects, such as backend or infrastructure (except `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it. 
 
 Example `project.yaml`:
 ```yaml
@@ -264,10 +318,10 @@ variables:
 ```
 - `name`: project name. *Required*.
 - `kind`: object kind. Must be `project`. *Required*.
-- `variables`: a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the name of the organization will look like this: `{{ .project.variables.organization }}`
+- `variables`: a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the organization name will look like this: `{{ .project.variables.organization }}`
 ### Infrastructures
 File: searching in `./*.yaml`. *Required at least one*.
-Infrastructure object (`kind: infrastructure`) contain reference to template, variables to render that template and backend for states. 
+Infrastructure object (`kind: infrastructure`) contains reference to a template, variables to render the template and backend for states. 
 
 Example: 
 ```yaml
@@ -286,13 +340,13 @@ variables:
 ```
 - `name`: infrastructure name. *Required*.
 - `kind`: object kind. `infrastructure`. *Required*.
-- `backend`: name of [backend](#Backends), which will be used to store the states of this infrastructure. *Required*
+- `backend`: name of the [backend](#Backends) that will be used to store the states of this infrastructure. *Required*
 - `variables`: data set for [template rendering](#Template-configuration). 
 
 ### Backends
 File: searching in `./*.yaml`. *Required at least one*.
-An object that describes a backend storage for terraform and cdev states.
-In backends configuration you can use any options of appropriate terraform backend. They will be converted as is.
+An object that describes a backend storage for Terraform and cdev states.
+In backends' configuration you can use any options of appropriate Terraform backend. They will be converted as is.
 Currently 4 types of backends are supported:
 
 - `s3` AWS S3 backend:
@@ -337,34 +391,34 @@ spec:
 
 ### Secrets
 
-There are to way use secrets:
+There are two ways to use secrets:
 #### SOPS secret
-Secrets are encoded/decoded with [sops](https://github.com/mozilla/sops) utility which could support AWS KMS, GCP KMS, Azure Key Vault and PGP keys.
+Secrets are encoded/decoded with [SOPS](https://github.com/mozilla/sops) utility that supports AWS KMS, GCP KMS, Azure Key Vault and PGP keys.
 How to use: 
-1. Use console client cdev to create new secret from scratch:
+1. Use console client cdev to create a new secret from scratch:
 ```bash
 $ cdev secret create sops my_local_secret
 ```
-2. Use interactive menu to create secret.
-3. Edit secret and set secret data in `encrypted_data:` section.
-4. Use references to secret's data it infrastructure template (examples you can find in generated secret file). 
+2. Use interactive menu to create a secret.
+3. Edit the secret and set secret data in `encrypted_data:` section.
+4. Use references to the secret's data in infrastructure template (you can find the examples in the generated secret file). 
 
 
 #### Amazon secret manager
-cdev client could use aws ssm as secret storage. 
+cdev client can use AWS SSM as a secret storage. 
 
 How to use: 
-1. create new secret in aws secret manager using aws cli or web console. Both data format raw and JSON structure are supported.
+1. create a new secret in AWS secret manager using AWS cli or web console. Both raw and JSON data formats are supported.
 
-2. Use console client cdev to create new secret from scratch:
+2. Use the console client cdev to create a new secret from scratch:
 ```bash
 $ cdev secret create
 ```
-3. Answer the questions. For `Name of secret in AWS Secrets manager` enter name of aws secret, created above.
-4. Use references to secret's data it infrastructure template (examples you can find in generated secret file). 
+3. Answer the questions. For `Name of secret in AWS Secrets manager` enter the name of the AWS secret created above.
+4. Use references to the secret's data in infrastructure template (you can find the examples in the generated secret file). 
 
 
-To list and edit any secret use commands:
+To list and edit any secret, use the commands:
 ```bash
 $ cdev secret ls
 ```
@@ -374,7 +428,7 @@ $ cdev secret edit secret_name
 ```
 ## Template configuration
 ### Basics
-Template represents yaml structure with array of different invocation [modules](#Modules)
+Template represents yaml structure with the array of different invocation [modules](#Modules)
 Common view:
 ```yaml
 modules: 
@@ -384,12 +438,12 @@ modules:
   ...
 ```
 
-Template could utilize all kind of go-template and sprig functions (similar to Helm). Along that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
+Template can utilize all kinds of go-templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
 
 ### Functions
 1) [Base go-template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
 2) [Sprig functions](https://masterminds.github.io/sprig/).
-3) Enhanced functions: all functions described above allow you to modify the template text. Besides these, some special enhanced functions are available. They may not be used everywhere. They are integrated with the functionality of the program and with the yaml syntax:
+3) Enhanced functions: all functions described above allow you to modify the template text. Apart from these, some special enhanced functions are available. They cannot be used everywhere. The functions are integrated within the functionality of the program and with the yaml syntax:
   - `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block.
   **Allowed use**: only as full yaml value, in module `inputs`. Example:
 source yaml:
@@ -423,7 +477,7 @@ modules:
       max_size: 2
       type: spot
 ```
-  - `remoteState` - used for passing data between modules and infrastructures. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: as yaml value , only in module `inputs`.
+  - `remoteState` - is used for passing data between modules and infrastructures. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: as yaml value, only in module `inputs`.
  
 
 ### Modules
@@ -450,8 +504,8 @@ All modules described below have a common format and common fields. Base example
 ```
 - `name` - module name. *Required*.
 - `type` - module type. One of: `terraform`, `helm`, `kubernetes`, `printer`. See below.
-- `depends_on` - *string* or *list of strings*. One or multiple dependencies of module in format "infra_name.module_name". Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"` 
-- `pre_hook` and `post_hook` blocks: describes the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. All environment variables will be available between them.
+- `depends_on` - *string* or *list of strings*. One or multiple module dependencies in the format "infra_name.module_name". Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"` 
+- `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the module execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the module. 
     - `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
     - `script` - *string* path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
     - `on_apply` *bool*, *optional* turn off/on when module applying. **Default: "true"**
@@ -476,7 +530,7 @@ modules:
 In addition to common options, the following are available:
 - `source` - *string*, *required*. Terraform module [source](https://www.terraform.io/docs/language/modules/syntax.html#source). **It is not allowed to use local folders in source!** 
 - `version` - *string*, *optional*. Module [version](https://www.terraform.io/docs/language/modules/syntax.html#version).
-- `inputs` - *map of any*, *required*. Map, which correspond to [input variables](https://www.terraform.io/docs/language/values/variables.html) defined by the module. This block allows to use functions `remoteState` and `insertYAML`
+- `inputs` - *map of any*, *required*. A map that corresponds to [input variables](https://www.terraform.io/docs/language/values/variables.html) defined by the module. This block allows to use functions `remoteState` and `insertYAML`
 #### Helm module
 Describes [Terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
 
@@ -504,10 +558,10 @@ modules:
 ```
 In addition to common options, the following are available:
 - `source` - *map*, *required*. Block describes helm chart source. 
-    - `chart`, `repository`, `version` - correspond to options of the same name of helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
-    - `kubeconfig` - *string*, *required*. Path to kubeconfig file which is relative to directory where the module was executed.
-    - `additional_options` - *map of any*, *optional*. Corresponds to [helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be pass as is.
-    - `inputs` - *map of any*, *optional*. Map, which represents [helm release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`.
+    - `chart`, `repository`, `version` - correspond to options with the same name from helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
+    - `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
+    - `additional_options` - *map of any*, *optional*. Corresponds to [Helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be pass as is.
+    - `inputs` - *map of any*, *optional*. A map that represents [Helm release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`.
     
     For example: 
     ```yaml
@@ -539,10 +593,10 @@ modules:
     depends_on: this.argocd
 ```
 
-- `source` - *string*, *required*. Path to kubernetes manifest, which will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with template, and also allows to use of functions `remoteState` and `insertYAML`**
-- `kubeconfig` - *string*, *required*. Path to kubeconfig file which is relative to directory where the module was executed.
+- `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the template, and also allows to use the functions `remoteState` and `insertYAML`**
+- `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
 #### Printer module 
-Module is mainly used to see the outputs of other modules in the console logs.
+The module is mainly used to see the outputs of other modules in the console logs.
 
 Example:
 ```yaml
@@ -553,5 +607,5 @@ modules:
       cluster_name: {{ .name }}
       worker_iam_role_arn: {{ remoteState "this.eks.worker_iam_role_arn" }}
 ```
-`inputs` - *any*, *requited* - map, represents data to be printed in the log. This block **allows to use of functions `remoteState` and `insertYAML`**
+`inputs` - *any*, *required* - a map that represents data to be printed in the log. The block **allows to use the functions `remoteState` and `insertYAML`**
 
