@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/apex/log"
 	"github.com/aws/aws-sdk-go/aws"
@@ -58,4 +59,74 @@ func GetSecret(region string, secretName string) (interface{}, error) {
 		return nil, fmt.Errorf("aws get secret: JSON secret must be a map, not array")
 	}
 	return parsed, nil
+}
+
+func CreateSecret(region string, secretName string, secretData interface{}) (err error) {
+
+	kind := reflect.TypeOf(secretData).Kind()
+	var secretDataStr string
+
+	if kind == reflect.Map {
+		secretDataByte, err := json.Marshal(secretData)
+		if err != nil {
+			return err
+		}
+		secretDataStr = string(secretDataByte)
+	} else {
+		secretDataStr = fmt.Sprintf("%v", secretData)
+	}
+
+	if kind == reflect.Slice {
+		return fmt.Errorf("create secret: array is not allowed")
+	}
+
+	svc := secretsmanager.New(session.New(),
+		aws.NewConfig().WithRegion(region))
+	input := &secretsmanager.CreateSecretInput{
+		Name:         aws.String(secretName),
+		SecretString: aws.String(secretDataStr),
+	}
+
+	result, err := svc.CreateSecret(input)
+	if err != nil {
+		return
+	}
+
+	fmt.Println(result)
+	return
+}
+
+func UpdateSecret(region string, secretName string, secretData interface{}) (err error) {
+
+	kind := reflect.TypeOf(secretData).Kind()
+	var secretDataStr string
+
+	if kind == reflect.Map {
+		secretDataByte, err := json.Marshal(secretData)
+		if err != nil {
+			return err
+		}
+		secretDataStr = string(secretDataByte)
+	} else {
+		secretDataStr = fmt.Sprintf("%v", secretData)
+	}
+
+	if kind == reflect.Slice {
+		return fmt.Errorf("create secret: array is not allowed")
+	}
+
+	svc := secretsmanager.New(session.New(),
+		aws.NewConfig().WithRegion(region))
+	input := &secretsmanager.CreateSecretInput{
+		Name:         aws.String(secretName),
+		SecretString: aws.String(secretDataStr),
+	}
+
+	result, err := svc.CreateSecret(input)
+	if err != nil {
+		return
+	}
+
+	fmt.Println(result)
+	return
 }

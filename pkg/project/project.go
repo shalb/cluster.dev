@@ -189,28 +189,17 @@ func (p *Project) checkGraph() error {
 func (p *Project) readModules() error {
 	// Read modules from all infrastructures.
 	for infraName, infra := range p.Infrastructures {
-		infrastructureTemplate := make(map[string]interface{})
-		err := yaml.Unmarshal(infra.Template, &infrastructureTemplate)
-		if err != nil {
-			log.Debugf("Can't unmarshal infrastructure template: %v", string(infra.Template))
-			return err
-		}
-		// log.Debugf("%+v\n", infrastructureTemplate)
-		modulesSliceIf, ok := infrastructureTemplate["modules"]
-		if !ok {
-			return fmt.Errorf("Incorrect template in infra '%v'", infraName)
-		}
-		modulesSlice, ok := modulesSliceIf.([]interface{})
-		if !ok {
-			return fmt.Errorf("Incorrect template in infra '%v'", infraName)
-		}
-		for _, moduleData := range modulesSlice {
-			mod, err := NewModule(moduleData.(map[string]interface{}), infra)
-			if err != nil {
-				log.Debugf("module '%v',%v", moduleData, err.Error())
-				return err
+		for _, infraTmpl := range infra.Templates {
+			for _, moduleData := range infraTmpl.Modules {
+				mod, err := NewModule(moduleData, infra)
+				if err != nil {
+					return fmt.Errorf("infra '%v', reading modules: %v", infraName, err.Error())
+				}
+				if _, exists := p.Modules[mod.Key()]; exists {
+					return fmt.Errorf("infra '%v', reading modules: duplicate module name: %v", infraName, mod.Name())
+				}
+				p.Modules[mod.Key()] = mod
 			}
-			p.Modules[mod.Key()] = mod
 		}
 	}
 	return nil

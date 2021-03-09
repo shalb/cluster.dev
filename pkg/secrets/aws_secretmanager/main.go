@@ -20,8 +20,9 @@ const secretmanagerKey = "aws_secretmanager"
 type smDriver struct{}
 
 type secretmanagerSpec struct {
-	Region     string `yaml:"region"`
-	SecretName string `yaml:"aws_secret_name"`
+	Region     string      `yaml:"region"`
+	SecretName string      `yaml:"aws_secret_name"`
+	Data       interface{} `yaml:"secret_data,omitempty"`
 }
 
 func (s *smDriver) Read(rawData []byte) (name string, data interface{}, err error) {
@@ -60,6 +61,7 @@ func (s *smDriver) Read(rawData []byte) (name string, data interface{}, err erro
 	if err != nil {
 		return "", nil, err
 	}
+
 	log.Debugf("%+v", data)
 	return
 }
