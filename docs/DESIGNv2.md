@@ -545,7 +545,7 @@ modules:
 Module is mainly used to see the outputs of other modules in the console logs.
 
 Example:
-```
+```yaml
 modules:
   - name: print_outputs
     type: printer
