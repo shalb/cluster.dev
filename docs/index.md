@@ -1,16 +1,10 @@
-# Cluster.dev - Kubernetes infrastructures in minutes!
+# Cluster.dev - Cloud infrastructures' management tool
 
 ## What is it?
 
-Cluster.dev is the cloud native infrastructure orchestration framework. It is an open source system delivered as a runtime inside Docker container.  
+Cluster.dev is an open-source tool designed to manage Cloud Native Infrastructures with simple declarative manifests - infrastructure templates. It allows you to describe a whole infrastructure and deploy it with a single tool. 
 
-It is used for creating and managing Kubernetes clusters along with cloud resources like networks, domains and users with pre-defined Terraform modules.
-The orchestration is performed with simple manifests by GitOps approach and is designed to run inside the GitHub/GitLab/BitBucket pipelines.  
-
-Resulting infrastructures have a "ready to use" Continuous Deployment systems that could deploy manifests, Helm charts and Kustomize using ArgoCD.  
-
-Best-in-class automation and proven practices guarantee availability, scalability, and compliance with the most demanding data security and privacy standards.
-Designed for developers who are bored to configure cloud-native stack and just need infrastructure in code, kubeconfig, CD, dashboard, logging and monitoring out-of-the-box.
+The infrastructure templates could be based on Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc.. Cluster.dev sticks those components together so that you could deploy, test and distribute a whole set of components with pinned versions. 
 
 ## Principle diagram
 
