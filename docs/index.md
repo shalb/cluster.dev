@@ -4,29 +4,19 @@
 
 Cluster.dev is an open-source tool designed to manage Cloud Native Infrastructures with simple declarative manifests - infrastructure templates. It allows you to describe a whole infrastructure and deploy it with a single tool. 
 
-The infrastructure templates could be based on Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc.. Cluster.dev sticks those components together so that you could deploy, test and distribute a whole set of components with pinned versions. 
+The infrastructure templates could be based on Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc. Cluster.dev sticks those components together so that you could deploy, test and distribute a whole set of components with pinned versions. 
 
-## Principle diagram
+## How does it work?
 
-![cluster.dev diagram](images/cluster-dev-diagram.png)
+With cluster.dev you create or download a predefined template, set the variables, then render and deploy a whole infra set.
 
-## How it works
+Capabilities:
 
-In the background:
-
-- Infrastructures are described as simple [infrastructure manifests](https://github.com/shalb/cluster.dev/tree/master/.cluster.dev) and are stored in a Git repository.
-- Infrastructure changes are watched by GitHub/GitLab/Bitbucket pipeline and trigger the launch of the reconciler tool.
-- Reconciler tool generates Terraform variables files and performs ordered invoking for the modules.
-- Terraform creates a "state bucket" in your Cloud Provider account where all infrastructure objects and configs are stored. Typically it is defined on Cloud Object Storage like AWS S3.
-- Terraform modules create Minikube/EKS/GKE/etc.. cluster, VPC and DNS zone within your Cloud Provider.
-- Kubernetes addons module deploys: Ingress controller, Cert-Manager, External DNS, ArgoCD, Keycloak, etc..
-- ArgoCD continuous deployment system watches remote Git repositories and deploys your applications from raw manifests, Helm charts or Kustomize yamls.
-
-You receive:
-
-- Automatically generated kubeconfig, ArgoCD UI URL's.
-- Pre-configured: VPC, Networks, Domains, Security groups, Users, etc..
-- Deployed inside Kubernetes: Ingress Load Balancers, Kubernetes Dashboard, Logging (ELK), Monitoring (Prometheus/Grafana).
+- Re-using all existing Terraform private and public modules and Helm Charts.
+- Applying parallel changes in multiple infrastructures concurrently.
+- Using the same global variables and secrets across different infrastructures, clouds and technologies.
+- Templating anything with Go-template function, even Terraform modules in Helm style templates.
+- Rendering GitOps configuration for applications and pushing it to the repos connected to a target infrastructure.
 
 ## Features
 
