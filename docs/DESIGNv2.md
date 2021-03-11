@@ -115,7 +115,7 @@ Also see [Secrets section](SOPS-secret) in this documentation.
 
 ### Download from release
 
-Binaries of the latest stable release are available at [releases page](https://github.com/shalb/cluster.dev/releases). This documentation is suitable for **v0.4.0 or higher**
+Binaries of the latest stable release are available on the [releases page](https://github.com/shalb/cluster.dev/releases). This documentation is suitable for **v0.4.0 or higher**
 cluster.dev client.
 
 Installation example for linux amd64:
