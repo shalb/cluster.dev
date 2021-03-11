@@ -33,6 +33,7 @@ type Project struct {
 	configDataFile   []byte
 	objects          map[string][]ObjectData
 	objectsFiles     map[string][]byte
+	codeDir          string
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
@@ -58,8 +59,11 @@ func NewEmptyProject() *Project {
 func LoadProjectBase() (*Project, error) {
 
 	project := NewEmptyProject()
-
-	err := project.readManifests()
+	err := project.MkBuildDir()
+	if err != nil {
+		log.Fatalf("Loading project: creating working dir: '%v'.", err.Error())
+	}
+	err = project.readManifests()
 	if project.configDataFile == nil {
 		log.Fatalf("Loading project: loading project config: file '%v', empty configuration	.", ConfigFileName)
 	}
@@ -225,8 +229,7 @@ func (p *Project) prepareModules() error {
 	return nil
 }
 
-// Build generate all terraform code for project.
-func (p *Project) Build() error {
+func (p *Project) MkBuildDir() error {
 	baseOutDir := config.Global.TmpDir
 	if _, err := os.Stat(baseOutDir); os.IsNotExist(err) {
 		err := os.Mkdir(baseOutDir, 0755)
@@ -251,8 +254,14 @@ func (p *Project) Build() error {
 			return err
 		}
 	}
+	p.codeDir = codeDir
+	return nil
+}
+
+// Build generate all terraform code for project.
+func (p *Project) Build() error {
 	for _, module := range p.Modules {
-		if err := module.Build(codeDir); err != nil {
+		if err := module.Build(p.codeDir); err != nil {
 			return err
 		}
 	}

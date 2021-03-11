@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"text/template"
 
@@ -60,6 +61,7 @@ func (p *Project) readInfrastructureObj(infraSpec ObjectData) error {
 	infra := Infrastructure{
 		ProjectPtr: p,
 		ConfigData: infraSpec.data,
+		Name:       name,
 	}
 
 	infra.ConfigData["secret"], _ = p.configData["secret"]
@@ -87,7 +89,6 @@ func (p *Project) readInfrastructureObj(infraSpec ObjectData) error {
 		return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
 	}
 	infra.Backend = bPtr
-	infra.Name = name
 	p.Infrastructures[name] = &infra
 	log.Infof("Infrastructure '%v' added", name)
 	return nil
@@ -103,7 +104,7 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 		} else {
 			templatesDir = filepath.Join(config.Global.WorkingDir, src)
 		}
-		isDir, err := utils.IsDir(templatesDir)
+		isDir, err := utils.CheckDir(templatesDir)
 		if err != nil {
 			return err
 		}
@@ -111,14 +112,22 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 			return fmt.Errorf("reading templates: local source should be a dir")
 		}
 		i.TemplateDir = templatesDir
+	} else {
+		templatesDownloadDir := filepath.Join(i.ProjectPtr.codeDir, "templates")
+		os.Mkdir(templatesDownloadDir, os.ModePerm)
+		dr, err := utils.GetTemplate(src, templatesDownloadDir, i.Name)
+		if err != nil {
+			return fmt.Errorf("download template: %v", err.Error())
+		}
+		i.TemplateDir = dr
 	}
 
-	templatesFilesList, err := filepath.Glob(templatesDir + "/*.yaml")
+	templatesFilesList, err := filepath.Glob(i.TemplateDir + "/*.yaml")
 	if err != nil {
 		return err
 	}
-	i.Templates = make([]InfraTemplate, len(templatesFilesList))
-	for ind, fn := range templatesFilesList {
+	i.Templates = []InfraTemplate{}
+	for _, fn := range templatesFilesList {
 		tmplData, err := ioutil.ReadFile(fn)
 		if err != nil {
 			return err
@@ -135,7 +144,10 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 			log.Debugf("reading templates: %v", err.Error())
 			return err
 		}
-		i.Templates[ind] = *infraTemplate
+		i.Templates = append(i.Templates, *infraTemplate)
+	}
+	if len(i.Templates) < 1 {
+		return fmt.Errorf("reading templates: no templates found")
 	}
 	i.TemplateSrc = src
 	return nil

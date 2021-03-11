@@ -30,7 +30,7 @@ func IsAbsolutePath(path string) bool {
 	return false
 }
 
-func IsDir(path string) (bool, error) {
+func CheckDir(path string) (bool, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
 		return false, err
@@ -39,6 +39,17 @@ func IsDir(path string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func IsDir(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	if fileInfo.IsDir() {
+		return true
+	}
+	return false
 }
 
 // fileInfo, err := os.Stat(absSource)

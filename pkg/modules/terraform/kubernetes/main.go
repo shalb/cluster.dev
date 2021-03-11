@@ -64,7 +64,7 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
 	if !ok {
 		return fmt.Errorf("Incorrect module source")
 	}
-	tmplDir := filepath.Dir(m.InfraPtr().TemplateSrc)
+	tmplDir := m.InfraPtr().TemplateDir
 	var absSource string
 	if source[1:2] == "/" {
 		absSource = filepath.Join(tmplDir, source)
