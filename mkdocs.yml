@@ -13,7 +13,7 @@ nav:
     - Install:
       - Prerequisites: prerequisites.md
       - Download from release: download-from-release.md
-      `- Build from source: build-from-source.md
+      - Build from source: build-from-source.md
   - Quick Start:
     - Getting started on AWS: getting-started-aws.md
     - Getting started on DigitalOcean: getting-started-digitalocean.md
