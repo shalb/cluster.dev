@@ -8,7 +8,12 @@ site_url: 'https://cluster.dev'
 nav:
   - Home:
     - Welcome: index.md
-    - Design: DESIGN.md
+    - Concept:
+     - Common infrastructure project structure: common-infra-project-structure.md
+    - Install:
+     - Prerequisites: prerequisites.md
+     - Download from release: download-from-release.md
+     - Build from source: build-from-source.md
   - Quick Start:
     - Getting started on AWS: getting-started-aws.md
     - Getting started on DigitalOcean: getting-started-digitalocean.md
