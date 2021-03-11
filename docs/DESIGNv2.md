@@ -111,7 +111,7 @@ For **creating** and **editing** SOPS secrets, cdev uses SOPS binary. But the SO
 
 See [SOPS installation instructions](https://github.com/mozilla/sops#download) in official repo.
 
-Also see [Secrets section](SOPS-secret) in this documentation.
+Also see [Secrets section](#sops-secret) in this documentation.
 
 ### Download from release
 
@@ -444,7 +444,7 @@ How to use:
 1. Use console client cdev to create a new secret from scratch:
 
 ```bash
-cdev secret create sops my_local_secret
+cdev secret create
 ```
 
 2. Use interactive menu to create a secret.
