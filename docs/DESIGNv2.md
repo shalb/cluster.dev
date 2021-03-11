@@ -703,8 +703,12 @@ modules:
 The module is mainly used to see the outputs of other modules in the console logs.
 
 Example:
+<<<<<<< HEAD
 
 ```
+=======
+```yaml
+>>>>>>> c4dceda8df2f418e3bf085853ad31165772786c7
 modules:
   - name: print_outputs
     type: printer

@@ -102,7 +102,7 @@ func (m *helm) ReadConfig(spec map[string]interface{}) error {
 	m.helmOpts["name"] = spec["name"]
 	valuesFile, ok := spec["values_file"].(string)
 	if ok {
-		vfPath := filepath.Join(filepath.Dir(m.InfraPtr().TemplateSrc), valuesFile)
+		vfPath := filepath.Join(m.InfraPtr().TemplateDir, valuesFile)
 		valuesFileContent, err := ioutil.ReadFile(vfPath)
 		if err != nil {
 			log.Debugf(err.Error())

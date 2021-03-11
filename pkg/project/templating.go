@@ -11,6 +11,7 @@ import (
 	"github.com/Masterminds/sprig"
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // CheckContainsMarkers - check if string contains any template markers.
@@ -58,6 +59,7 @@ var templateFunctionsMap = template.FuncMap{
 	"ReconcilerVersionTag": printVersion,
 	"reqEnv":               getEnv,
 	"workDir":              workDir,
+	"bcrypt":               BcryptString,
 }
 
 func init() {
@@ -105,4 +107,13 @@ func (p *Project) tmplWithMissingKey(data []byte, missingKey string) (res []byte
 	templatedConf := bytes.Buffer{}
 	err = tmpl.Execute(&templatedConf, p.configData)
 	return templatedConf.Bytes(), err
+}
+
+func BcryptString(pwd []byte) (string, error) {
+
+	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
 }

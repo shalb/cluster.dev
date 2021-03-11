@@ -64,7 +64,7 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
 	if !ok {
 		return fmt.Errorf("Incorrect module source")
 	}
-	tmplDir := filepath.Dir(m.InfraPtr().TemplateSrc)
+	tmplDir := m.InfraPtr().TemplateDir
 	var absSource string
 	if source[1:2] == "/" {
 		absSource = filepath.Join(tmplDir, source)
@@ -89,9 +89,13 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
 		if err != nil {
 			return err
 		}
-		manifest, err := m.InfraPtr().DoTemplate(file)
+		manifest, errIsWarn, err := m.InfraPtr().TemplateTry(file)
 		if err != nil {
-			return err
+			if errIsWarn {
+				log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
+			} else {
+				log.Fatal(err.Error())
+			}
 		}
 		manifests, err := config.ReadYAMLObjects(manifest)
 		if err != nil {

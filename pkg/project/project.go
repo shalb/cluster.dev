@@ -33,6 +33,7 @@ type Project struct {
 	configDataFile   []byte
 	objects          map[string][]ObjectData
 	objectsFiles     map[string][]byte
+	codeDir          string
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
@@ -58,8 +59,11 @@ func NewEmptyProject() *Project {
 func LoadProjectBase() (*Project, error) {
 
 	project := NewEmptyProject()
-
-	err := project.readManifests()
+	err := project.MkBuildDir()
+	if err != nil {
+		log.Fatalf("Loading project: creating working dir: '%v'.", err.Error())
+	}
+	err = project.readManifests()
 	if project.configDataFile == nil {
 		log.Fatalf("Loading project: loading project config: file '%v', empty configuration	.", ConfigFileName)
 	}
@@ -189,28 +193,17 @@ func (p *Project) checkGraph() error {
 func (p *Project) readModules() error {
 	// Read modules from all infrastructures.
 	for infraName, infra := range p.Infrastructures {
-		infrastructureTemplate := make(map[string]interface{})
-		err := yaml.Unmarshal(infra.Template, &infrastructureTemplate)
-		if err != nil {
-			log.Debugf("Can't unmarshal infrastructure template: %v", string(infra.Template))
-			return err
-		}
-		// log.Debugf("%+v\n", infrastructureTemplate)
-		modulesSliceIf, ok := infrastructureTemplate["modules"]
-		if !ok {
-			return fmt.Errorf("Incorrect template in infra '%v'", infraName)
-		}
-		modulesSlice, ok := modulesSliceIf.([]interface{})
-		if !ok {
-			return fmt.Errorf("Incorrect template in infra '%v'", infraName)
-		}
-		for _, moduleData := range modulesSlice {
-			mod, err := NewModule(moduleData.(map[string]interface{}), infra)
-			if err != nil {
-				log.Debugf("module '%v',%v", moduleData, err.Error())
-				return err
+		for _, infraTmpl := range infra.Templates {
+			for _, moduleData := range infraTmpl.Modules {
+				mod, err := NewModule(moduleData, infra)
+				if err != nil {
+					return fmt.Errorf("infra '%v', reading modules: %v", infraName, err.Error())
+				}
+				if _, exists := p.Modules[mod.Key()]; exists {
+					return fmt.Errorf("infra '%v', reading modules: duplicate module name: %v", infraName, mod.Name())
+				}
+				p.Modules[mod.Key()] = mod
 			}
-			p.Modules[mod.Key()] = mod
 		}
 	}
 	return nil
@@ -236,8 +229,7 @@ func (p *Project) prepareModules() error {
 	return nil
 }
 
-// Build generate all terraform code for project.
-func (p *Project) Build() error {
+func (p *Project) MkBuildDir() error {
 	baseOutDir := config.Global.TmpDir
 	if _, err := os.Stat(baseOutDir); os.IsNotExist(err) {
 		err := os.Mkdir(baseOutDir, 0755)
@@ -262,8 +254,14 @@ func (p *Project) Build() error {
 			return err
 		}
 	}
+	p.codeDir = codeDir
+	return nil
+}
+
+// Build generate all terraform code for project.
+func (p *Project) Build() error {
 	for _, module := range p.Modules {
-		if err := module.Build(codeDir); err != nil {
+		if err := module.Build(p.codeDir); err != nil {
 			return err
 		}
 	}

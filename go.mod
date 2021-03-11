@@ -11,6 +11,7 @@ require (
 	github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59
 	github.com/buger/goterm v0.0.0-20200322175922-2f3e71b85129 // indirect
 	github.com/gookit/color v1.3.7 // indirect
+	github.com/hashicorp/go-getter v1.5.2 // indirect
 	github.com/hashicorp/hcl/v2 v2.8.2
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
@@ -21,5 +22,6 @@ require (
 	github.com/tj/go-spin v1.1.0
 	github.com/zclconf/go-cty v1.7.1
 	go.mozilla.org/sops/v3 v3.6.1
+	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
