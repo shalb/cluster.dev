@@ -6,18 +6,8 @@ import (
 	"strings"
 
 	"github.com/apex/log"
-	getter "github.com/hashicorp/go-getter"
 	"github.com/shalb/cluster.dev/pkg/executor"
 )
-
-var goGetterDetectors = []getter.Detector{
-	new(getter.GitHubDetector),
-	new(getter.GitDetector),
-	new(getter.BitBucketDetector),
-	new(getter.GCSDetector),
-	new(getter.S3Detector),
-	new(getter.FileDetector),
-}
 
 type gitRepo struct {
 	URL     string
