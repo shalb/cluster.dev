@@ -83,7 +83,7 @@ Running the command will:
  2. Template infrastructure variables with global project variables and secrets.
  3. Pull and diff project state and build a dependency graph.
  4. Invoke all required modules in a parralel manner.
-    ex: `sops decode`, `terraform apply`, `helm install`, etc..
+    ex: `sops decode`, `terraform apply`, `helm install`, etc.
 
 ### Demo Video
 
