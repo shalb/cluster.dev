@@ -33,5 +33,5 @@ Running the command will:
 
 3. Pull and diff project state and build a dependency graph.
 
-4. Invoke all required modules in a parallel manner.
+4. Invoke all required modules in a parallel manner,
    ex: `sops decode`, `terraform apply`, `helm install`, etc.
