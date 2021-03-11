@@ -3,6 +3,7 @@ package cdev
 import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/project/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +17,7 @@ func init() {
 	rootCmd.AddCommand(secretCmd)
 	secretCmd.AddCommand(secretLs)
 	secretCmd.AddCommand(secretEdit)
+	secretCmd.AddCommand(secretCreate)
 }
 
 // secretsCmd represents the plan command
@@ -45,6 +47,21 @@ var secretEdit = &cobra.Command{
 		err = p.Edit(args[0])
 		if err != nil {
 			log.Fatal(err.Error())
+		}
+	},
+}
+
+var secretCreate = &cobra.Command{
+	Use:   "create",
+	Short: "Generate new secret from template in curent project. Directory must contain the project",
+	Run: func(cmd *cobra.Command, args []string) {
+		_, err := project.LoadProjectBase()
+		if err != nil {
+			log.Fatalf("secret creating: check project: %v", err)
+		}
+		err = ui.CreateSecret()
+		if err != nil {
+			log.Fatalf("Create project: %v", err.Error())
 		}
 	},
 }
