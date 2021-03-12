@@ -21,7 +21,8 @@ nav:
     - DigitalOcean: digital-ocean-cloud-provider.md
   - Quick Start: quick-start.md
   - Configuration:
-    - Options List for Cluster Manifests: OPTIONS.md
+    - Project configuration: project-configuration.md
+    - Template configuration: template-configuration.md
   - Reference:
     - CLI commands: cli-commands.md
     - CLI options: cli-options.md
