@@ -32,8 +32,8 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
   * [DigitalOcean Authentication](#digitalocean-authentication)
 * [Quick start](#quick-start)
 * [Reference](#reference)
-  * [Cli commands](#cli-commands)
-  * [Cli options](#cli-options)
+  * [CLI commands](#cli-commands)
+  * [CLI options](#cli-options)
 * [Project configuration](#project-configuration)
   * [Project](#project)
   * [Infrastructures](#infrastructures)
@@ -196,7 +196,7 @@ export AWS_PROFILE=cluster-dev
 
 #### Install AWS client and check access
 
-See how to install AWS cli in [official installation guide](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html), or use commands from example:
+See how to install AWS CLI in [official installation guide](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html), or use commands from example:
 
 ```bash
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -261,7 +261,7 @@ cdev new project
 
 4. Choose one from the available projects. Check out the description of the example. Enter the data required for the generator.
 
-5. After finished working with the generator, check the project:
+5. Having finished working with the generator, check the project:
 
 ```bash
 cdev project info
@@ -283,7 +283,7 @@ cdev apply -l debug
 
 ## Reference
 
-### Cli commands
+### CLI commands
 
 Available Commands:
 
@@ -308,7 +308,7 @@ Available Commands:
   * `edit`      Edit secret by name. Usage: `cdev secret edit secret-name`.
   * `create`    Creates new 'secret' from template in interactive mode.
 
-### Cli options
+### CLI options
 
 Available global flags:
 
@@ -378,11 +378,12 @@ variables:
 
 * `variables`: data set for [template rendering](#Template-configuration).
 
-* `template`: its either the path to a local directory containing the template's configuration files, or a remote git repository as a template source. A local path must begin with either `/` - for absolute path, `./` or `../` for relative path. For git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
+* `template`: its either the path to a local directory containing the template's configuration files, or a remote git repository as a template source. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
   * `<GIT_URL>` - *required*. Standard git repo url. See details on [official git page](https://git-scm.com/docs/git-clone#_git_urls)
-  * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it, if template configuration is not in root of repo. 
+  * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if template configuration is not in root of repo.
   * `<BRANCH_OR_TAG>`- git branch or tag.
   Examples:
+
   ```yaml
   template: /path/to/dir # absolute local path
   template: ./template/ # relative local path
@@ -478,7 +479,7 @@ cdev client can use AWS SSM as a secret storage.
 
 How to use:
 
-1. create a new secret in AWS secret manager using AWS cli or web console. Both raw and JSON data formats are supported.
+1. create a new secret in AWS secret manager using AWS CLI or web console. Both raw and JSON data formats are supported.
 
 2. Use the console client cdev to create a new secret from scratch:
 
