@@ -1,4 +1,6 @@
-# DigitalOcean
+# Deploying to DigitalOcean
+
+The feature is in the process of development. More information on how to set up access to DO will be added as soon as the work is finished.
 
 ## Authentication
 

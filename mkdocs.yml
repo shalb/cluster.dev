@@ -8,26 +8,22 @@ site_url: 'https://cluster.dev'
 nav:
   - Home:
     - Welcome: index.md
-    - Concept:
-      - Common infrastructure project structure: common-infra-project-structure.md
-    - Install:
-      - Prerequisites: prerequisites.md
-      - Download from release: download-from-release.md
-      - Build from source: build-from-source.md
-  - Cloud Providers:
-    - AWS: aws-cloud-provider.md
-    - Google Cloud: google-cloud-provider.md
-    - Azure: azure-cloud-provider.md
-    - DigitalOcean: digital-ocean-cloud-provider.md
-  - Quick Start: quick-start.md
-  - Configuration:
-    - Project configuration: project-configuration.md
-    - Template configuration: template-configuration.md
-  - Reference:
-    - CLI commands: cli-commands.md
-    - CLI options: cli-options.md
-  - Releases:
-    - Roadmap: ROADMAP.md
+  - Quick Start:
+    - Prerequisites: prerequisites.md
+    - Installing cdev: installation.md
+    - Configuring Cloud Providers:
+      - Deploying to AWS: aws-cloud-provider.md
+      - Deploying to DigitalOcean: digital-ocean-cloud-provider.md
+      - Deploying to GCE: google-cloud-provider.md
+      - Deploying to Azure: azure-cloud-provider.md
+    - Downloading Sample Project: get-sample-project.md
+    - Applying Infrastructure: apply-infrastructure.md
+  - Usage:
+    - Project Configuration: project-configuration.md
+    - CLI Reference:
+      - CLI Commands: cli-commands.md
+      - CLI Options: cli-options.md
+  - Template Development: template-development.md
 
 
 markdown_extensions:

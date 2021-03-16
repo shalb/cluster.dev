@@ -1,4 +1,13 @@
-# Project configuration
+# Project Configuration
+
+Common project files:
+
+```bash
+project.yaml # Contains global project variables that can be used in other configuration objects.
+<infra_name>.yaml # Contains reference to a template, variables to render the template and backend for states.
+<backend_name>.yaml # Describes a backend storage for Terraform and cdev states.
+<secret_name>.yaml # Contains secrets, one per file.
+```
 
 `cdev` reads configuration from current directory, i.e. all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them with "---". The exception is the project.yaml configuration file and files with secrets.
 
@@ -7,7 +16,7 @@ Project represents a single scope for infrastructures within which they are stor
 ## Project
 
 File: `project.yaml`. *Required*.
-Contains global project variables that can be used in other configuration objects, such as backend or infrastructure (except `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it.
+Contains global project variables that can be used in other configuration objects, such as backend or infrastructure (except of `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it.
 
 Example `project.yaml`:
 
@@ -56,26 +65,26 @@ variables:
 
 * `variables`: data set for template rendering.
 
-* `template`: it's either a path to a local directory containing the template's configuration files, or a remote git repository as a template source. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
-  * `<GIT_URL>` - *required*. Standard git repo url. See details on [official git page](https://git-scm.com/docs/git-clone#_git_urls)
+* `template`: it's either a path to a local directory containing the template's configuration files, or a remote git repository as a template source. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
+  * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls)
   * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if template configuration is not in root of repo.
   * `<BRANCH_OR_TAG>`- git branch or tag.
 
 Examples:
 
- ```yaml
-  template: /path/to/dir # absolute local path
-  template: ./template/ # relative local path
-  template: ../../template/ # relative local path
-  template: https://github.com/shalb/cdev-k8s # https git url
-  template: https://github.com/shalb/cdev-k8s//some/dir/ # subdirectory
-  template: https://github.com/shalb/cdev-k8s//some/dir/?ref=branch-name # branch
-  template: https://github.com/shalb/cdev-k8s?ref=v1.1.1 # tag
-  template: git@github.com:shalb/cdev-k8s.git # ssh git url
-  template: git@github.com:shalb/cdev-k8s.git//some/dir/ # subdirectory
-  template: git@github.com:shalb/cdev-k8s.git//some/dir/?ref=branch-name # branch
-  template: git@github.com:shalb/cdev-k8s.git?ref=v1.1.1 # tag
-  ```
+```yaml
+template: /path/to/dir # absolute local path
+template: ./template/ # relative local path
+template: ../../template/ # relative local path
+template: https://github.com/shalb/cdev-k8s # https Git url
+template: https://github.com/shalb/cdev-k8s//some/dir/ # subdirectory
+template: https://github.com/shalb/cdev-k8s//some/dir/?ref=branch-name # branch
+template: https://github.com/shalb/cdev-k8s?ref=v1.1.1 # tag
+template: git@github.com:shalb/cdev-k8s.git # ssh Git url
+template: git@github.com:shalb/cdev-k8s.git//some/dir/ # subdirectory
+template: git@github.com:shalb/cdev-k8s.git//some/dir/?ref=branch-name # branch
+template: git@github.com:shalb/cdev-k8s.git?ref=v1.1.1 # tag
+```
 
 ## Backends
 
@@ -141,9 +150,9 @@ Secrets are encoded/decoded with [SOPS](https://github.com/mozilla/sops) utility
 
 1. Use console client cdev to create a new secret from scratch:
 
-```bash
-cdev secret create
-```
+   ```bash
+   cdev secret create
+   ```
 
 2. Use interactive menu to create a secret.
 
@@ -159,9 +168,9 @@ cdev client can use AWS SSM as a secret storage. How to use:
 
 2. Use the console client cdev to create a new secret from scratch:
 
-```bash
-cdev secret create
-```
+   ```bash
+   cdev secret create
+   ```
 
 3. Answer the questions. For `Name of secret in AWS Secrets manager` enter the name of the AWS secret created above.
 

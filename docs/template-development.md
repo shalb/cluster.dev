@@ -1,8 +1,8 @@
-# Template configuration
+# Template Development
 
 ## Basics
 
-Template represents yaml structure with an array of different invocation modules. Common view:
+Template represents a yaml structure with an array of different invocation modules. Common view:
 
 ```yaml
 modules:
@@ -24,7 +24,7 @@ Template can utilize all kinds of go-templates and Sprig functions (similar to H
 
 * `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block. **Allowed use**: only as full yaml value, in module `inputs`. Example:
 
-source yaml:
+Source yaml:
 
 ```yaml
 values:
@@ -37,7 +37,7 @@ values:
       type: spot
 ```
 
-target yaml template:
+Target yaml template:
 
 ```yaml
 modules:
@@ -46,7 +46,7 @@ modules:
     node_groups: {{ insertYAML .values.node_groups }}
 ```
 
-rendered template:
+Rendered template:
 
 ```yaml
 modules:

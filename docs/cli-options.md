@@ -1,4 +1,4 @@
-# CLI options
+# CLI Options
 
 Available global flags:
 
