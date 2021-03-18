@@ -59,7 +59,12 @@ func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
+func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+	err := m.ReadConfigCommon(spec, infra)
+	if err != nil {
+		log.Debug(err.Error())
+		return err
+	}
 	source, ok := spec["source"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect module source")
@@ -138,7 +143,7 @@ func (m *kubernetes) ReplaceMarkers() error {
 func (m *kubernetes) Build(codeDir string) error {
 	m.BuildCommon()
 	var err error
-	m.FilesList["main.tf"], err = m.genMainCodeBlock()
+	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err

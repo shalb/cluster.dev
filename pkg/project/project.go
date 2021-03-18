@@ -11,6 +11,7 @@ import (
 	"github.com/apex/log"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -33,7 +34,7 @@ type Project struct {
 	configDataFile   []byte
 	objects          map[string][]ObjectData
 	objectsFiles     map[string][]byte
-	codeDir          string
+	codeCacheDir     string
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
@@ -47,6 +48,7 @@ func NewEmptyProject() *Project {
 		objects:          map[string][]ObjectData{},
 		configData:       map[string]interface{}{},
 		secrets:          map[string]Secret{},
+		codeCacheDir:     config.Global.CacheDir,
 	}
 	for _, drv := range TemplateDriversMap {
 		drv.AddTemplateFunctions(project)
@@ -220,8 +222,6 @@ func (p *Project) prepareModules() error {
 			return err
 		}
 	}
-
-	log.Info("Check modules dependencies...")
 	if err := p.checkGraph(); err != nil {
 		return err
 	}
@@ -237,34 +237,34 @@ func (p *Project) MkBuildDir() error {
 			return err
 		}
 	}
-	codeDir := filepath.Join(baseOutDir, p.name)
-	relPath, _ := filepath.Rel(config.Global.WorkingDir, codeDir)
+	relPath, _ := filepath.Rel(config.Global.WorkingDir, p.codeCacheDir)
 	log.Debugf("Creates code directory: './%v'", relPath)
-	if _, err := os.Stat(codeDir); os.IsNotExist(err) {
-		err := os.Mkdir(codeDir, 0755)
+	if _, err := os.Stat(p.codeCacheDir); os.IsNotExist(err) {
+		err := os.Mkdir(p.codeCacheDir, 0755)
 		if err != nil {
 			return err
 		}
 	}
 	if !config.Global.UseCache {
 		log.Debugf("Remove all old content: './%s'", relPath)
-		err := removeDirContent(codeDir)
+		err := removeDirContent(p.codeCacheDir)
 		if err != nil {
 			log.Debug(err.Error())
 			return err
 		}
 	}
-	p.codeDir = codeDir
 	return nil
 }
 
 // Build generate all terraform code for project.
 func (p *Project) Build() error {
 	for _, module := range p.Modules {
-		if err := module.Build(p.codeDir); err != nil {
+		if err := module.Build(p.codeCacheDir); err != nil {
 			return err
 		}
 	}
+
+	//return p.SaveState()
 	return nil
 }
 
@@ -278,7 +278,7 @@ func (p *Project) Destroy() error {
 		if grph.Len() == 0 {
 			return nil
 		}
-		md, fn, err := grph.GetNext()
+		md, fn, err := grph.GetNextAsync()
 		if err != nil {
 			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
 			grph.Wait()
@@ -304,7 +304,7 @@ func (p *Project) Apply() error {
 		if grph.Len() == 0 {
 			return nil
 		}
-		md, fn, err := grph.GetNext()
+		md, fn, err := grph.GetNextAsync()
 		if err != nil {
 			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
 			grph.Wait()
@@ -322,6 +322,11 @@ func (p *Project) Apply() error {
 
 // Plan and output result.
 func (p *Project) Plan() error {
+	fProject, err := p.LoadState()
+
+	if err != nil {
+		return err
+	}
 
 	grph := grapher{}
 	grph.Init(p, 1, false)
@@ -330,7 +335,7 @@ func (p *Project) Plan() error {
 		if grph.Len() == 0 {
 			return nil
 		}
-		md, fn, err := grph.GetNext()
+		md, err := grph.GetNextSync()
 		if err != nil {
 			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
 			grph.Wait()
@@ -339,10 +344,26 @@ func (p *Project) Plan() error {
 		if md == nil {
 			return nil
 		}
-		go func(mod Module, finFunc func(error)) {
-			res := mod.Plan()
-			finFunc(res)
-		}(md, fn)
+		loadedState := make(map[string]interface{})
+		curState := make(map[string]interface{})
+		stateMod, exists := fProject.Modules[md.Key()]
+		if exists {
+			err = utils.JSONInteffaceToType(stateMod.GetDiffData(), &loadedState)
+			if err != nil {
+				return err
+			}
+		}
+		err = utils.JSONInteffaceToType(md.GetDiffData(), &curState)
+		if err != nil {
+			return err
+		}
+		diff := utils.Diff(loadedState, curState, true)
+		log.Infof("Diff module %v:", md.Key())
+		if len(diff) > 0 {
+			fmt.Printf("%v\n", diff)
+		} else {
+			fmt.Printf("\033[1;32m%s\033[0m\n", "no changed")
+		}
 	}
 }
 

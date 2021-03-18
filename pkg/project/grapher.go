@@ -98,7 +98,7 @@ func (g *grapher) updateReverseQueue() int {
 	return count
 }
 
-func (g *grapher) GetNext() (Module, func(error), error) {
+func (g *grapher) GetNextAsync() (Module, func(error), error) {
 	g.mux.Lock()
 	defer g.mux.Unlock()
 	for {
@@ -121,6 +121,18 @@ func (g *grapher) GetNext() (Module, func(error), error) {
 			return doneMod.Mod, nil, doneMod.Error
 		}
 	}
+}
+
+func (g *grapher) GetNextSync() (Module, error) {
+	if g.Len() == 0 {
+		return nil, nil
+	}
+	modElem := g.queue.Front()
+	mod := modElem.Value.(Module)
+	g.queue.Remove(modElem)
+	g.inProgress[mod.Key()] = mod
+	g.setModuleDone(modResult{mod, nil})
+	return mod, nil
 }
 
 func (g *grapher) setModuleDone(doneMod modResult) {

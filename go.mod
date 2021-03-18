@@ -15,6 +15,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.8.2
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/paulrademacher/climenu v0.0.0-20151110221007-a1afbb4e378b // indirect
 	github.com/pkg/term v1.1.0 // indirect

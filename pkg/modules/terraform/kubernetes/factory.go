@@ -14,12 +14,18 @@ func (f *Factory) New(spec map[string]interface{}, infra *project.Infrastructure
 	mod := kubernetes{
 		inputs: map[string]interface{}{},
 	}
-	err := mod.ReadConfigCommon(spec, infra)
+	err := mod.ReadConfig(spec, infra)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	err = mod.ReadConfig(spec)
+	return &mod, nil
+}
+
+// NewFromState creates new module from state data.
+func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.Project) (project.Module, error) {
+	mod := kubernetes{}
+	err := mod.LoadState(spec, modKey, p)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err

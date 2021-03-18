@@ -55,7 +55,7 @@ func (m *Module) CreateCodeDir(projectCodeDir string) error {
 	log.Infof("Generating code for module module '%v'", m.Key())
 	err := os.Mkdir(modDir, 0755)
 
-	for fn, f := range m.FilesList {
+	for fn, f := range m.FilesList() {
 		filePath := filepath.Join(modDir, fn)
 		relPath, _ := filepath.Rel(config.Global.WorkingDir, filePath)
 		log.Debugf(" file: './%v'", relPath)
@@ -76,7 +76,7 @@ func (m *Module) CreateCodeDir(projectCodeDir string) error {
 func (m *Module) BuildCommon() error {
 	var err error
 
-	m.FilesList["init.tf"], err = m.genBackendCodeBlock()
+	m.filesList["init.tf"], err = m.genBackendCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
@@ -87,7 +87,7 @@ func (m *Module) BuildCommon() error {
 			log.Debug(err.Error())
 			return err
 		}
-		m.FilesList["init.tf"] = append(m.FilesList["init.tf"], providers.Bytes()...)
+		m.filesList["init.tf"] = append(m.filesList["init.tf"], providers.Bytes()...)
 	}
 
 	// Create remote_state.tf
@@ -97,7 +97,7 @@ func (m *Module) BuildCommon() error {
 		return err
 	}
 	if len(remoteStates) > 0 {
-		m.FilesList["remote_states.tf"], err = m.genDepsRemoteStates()
+		m.filesList["remote_states.tf"], err = m.genDepsRemoteStates()
 	}
 	if err != nil {
 		log.Debug(err.Error())
@@ -105,10 +105,10 @@ func (m *Module) BuildCommon() error {
 	}
 
 	if m.preHook != nil {
-		m.FilesList["pre_hook.sh"] = m.preHook.command
+		m.filesList["pre_hook.sh"] = []byte(m.preHook.Command)
 	}
 	if m.postHook != nil {
-		m.FilesList["post_hook.sh"] = m.postHook.command
+		m.filesList["post_hook.sh"] = []byte(m.postHook.Command)
 	}
 	return nil
 }

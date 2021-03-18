@@ -53,19 +53,10 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 		return nil, fmt.Errorf("Error in %s config, use one of 'script' or 'command' option", hookType)
 	}
 	ScriptData := hookSpec{
-		command:   nil,
+		Command:   "",
 		OnDestroy: false,
 		OnApply:   true,
 		OnPlan:    false,
-	}
-	var err error
-	if cmdExists {
-		ScriptData.command = []byte(fmt.Sprintf("#!/usr/bin/env bash\nset -e\n\n%s", cmd))
-	} else {
-		ScriptData.command, err = ioutil.ReadFile(filepath.Join(config.Global.WorkingDir, script))
-		if err != nil {
-			return nil, fmt.Errorf("can't load %s script: %v", hookType, err.Error())
-		}
 	}
 	ymlTmp, err := yaml.Marshal(hookData)
 	if err != nil {
@@ -76,6 +67,15 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
+	}
+	if cmdExists {
+		ScriptData.Command = fmt.Sprintf("#!/usr/bin/env bash\nset -e\n\n%s", cmd)
+	} else {
+		cmdTmp, err := ioutil.ReadFile(filepath.Join(config.Global.WorkingDir, script))
+		ScriptData.Command = string(cmdTmp)
+		if err != nil {
+			return nil, fmt.Errorf("can't load %s script: %v", hookType, err.Error())
+		}
 	}
 	return &ScriptData, nil
 

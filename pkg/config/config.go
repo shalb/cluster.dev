@@ -42,6 +42,9 @@ type ConfSpec struct {
 	PluginsCacheDir    string
 	UseCache           bool
 	OptFooTest         bool
+	StateFileName      string
+	StateCacheDir      string
+	CacheDir           string
 }
 
 // Global config for executor.
@@ -59,7 +62,9 @@ func InitConfig() {
 	logging.InitLogLevel(Global.LogLevel, Global.TraceLog)
 	Global.ClusterConfigsPath = curPath
 	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
-
+	Global.CacheDir = filepath.Join(Global.TmpDir, "cache")
+	Global.StateCacheDir = filepath.Join(Global.TmpDir, "state")
+	Global.StateFileName = filepath.Join(curPath, "cdev.state")
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err.Error())

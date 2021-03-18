@@ -16,10 +16,10 @@ var planCmd = &cobra.Command{
 			log.Fatal(err.Error())
 		}
 		log.Info("Planing...")
-		err = project.Build()
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+		// err = project.Build()
+		// if err != nil {
+		// 	log.Fatal(err.Error())
+		// }
 		err = project.Plan()
 		if err != nil {
 			log.Fatal(err.Error())

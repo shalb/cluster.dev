@@ -22,7 +22,6 @@ type Infrastructure struct {
 	BackendName string
 	TemplateSrc string
 	TemplateDir string
-	Template    []byte
 	Templates   []InfraTemplate
 	Variables   map[string]interface{}
 	ConfigData  map[string]interface{}
@@ -35,7 +34,7 @@ func (p *Project) readInfrastructures() error {
 	// Read and parse infrastructures.
 	infras, exists := p.objects[infraObjKindKey]
 	if !exists {
-		err := fmt.Errorf("no infrastructures found, at least one backend needed")
+		err := fmt.Errorf("no infrastructures found, at least one needed")
 		log.Debug(err.Error())
 		return err
 	}
@@ -55,7 +54,7 @@ func (p *Project) readInfrastructureObj(infraSpec ObjectData) error {
 	}
 	// Check if infra with this name is already exists in project.
 	if _, ok = p.Infrastructures[name]; ok {
-		return fmt.Errorf("Duplicate infrastructure name '%s'", name)
+		return fmt.Errorf("duplicate infrastructure name '%s'", name)
 	}
 
 	infra := Infrastructure{
@@ -86,7 +85,7 @@ func (p *Project) readInfrastructureObj(infraSpec ObjectData) error {
 	}
 	bPtr, exists := p.Backends[infra.BackendName]
 	if !exists {
-		return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
+		return fmt.Errorf("backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
 	}
 	infra.Backend = bPtr
 	p.Infrastructures[name] = &infra
@@ -113,7 +112,7 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 		}
 		i.TemplateDir = templatesDir
 	} else {
-		templatesDownloadDir := filepath.Join(i.ProjectPtr.codeDir, "templates")
+		templatesDownloadDir := filepath.Join(config.Global.TmpDir, "templates")
 		os.Mkdir(templatesDownloadDir, os.ModePerm)
 		dr, err := utils.GetTemplate(src, templatesDownloadDir, i.Name)
 		if err != nil {
@@ -153,12 +152,14 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 	return nil
 }
 
-// TemplateMust do template
+// TemplateTry apply infrastructure variables to template data.
+// If template has unresolved variables - function will return an error.
 func (i *Infrastructure) TemplateMust(data []byte) (res []byte, err error) {
 	return i.tmplWithMissingKey(data, "error")
 }
 
-// TemplateTry do template
+// TemplateTry apply infrastructure variables to template data.
+// If template has unresolved variables - warn will be set to true.
 func (i *Infrastructure) TemplateTry(data []byte) (res []byte, warn bool, err error) {
 	res, err = i.tmplWithMissingKey(data, "default")
 	if err != nil {

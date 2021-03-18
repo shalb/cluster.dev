@@ -29,7 +29,7 @@ func (m *helm) KindKey() string {
 func (m *helm) genMainCodeBlock() ([]byte, error) {
 	var marker string
 	if len(m.valuesFileContent) > 0 {
-		m.FilesList["values.yaml"] = m.valuesFileContent
+		m.FilesList()["values.yaml"] = m.valuesFileContent
 		marker = project.CreateMarker("func")
 		m.helmOpts["values"] = []string{string(marker)}
 	}
@@ -74,7 +74,12 @@ func (m *helm) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *helm) ReadConfig(spec map[string]interface{}) error {
+func (m *helm) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+	err := m.ReadConfigCommon(spec, infra)
+	if err != nil {
+		log.Debug(err.Error())
+		return err
+	}
 	source, ok := spec["source"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("Incorrect module source, %v", m.Key())
@@ -139,7 +144,7 @@ func (m *helm) ReplaceMarkers() error {
 func (m *helm) Build(codeDir string) error {
 	m.BuildCommon()
 	var err error
-	m.FilesList["main.tf"], err = m.genMainCodeBlock()
+	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err

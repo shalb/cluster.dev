@@ -17,10 +17,10 @@ const remoteStateMarkerName = "RemoteStateMarkers"
 const insertYAMLMarkerName = "insertYAMLMarkers"
 
 type hookSpec struct {
-	command   []byte
-	OnDestroy bool `yaml:"on_destroy,omitempty"`
-	OnApply   bool `yaml:"on_apply,omitempty"`
-	OnPlan    bool `yaml:"on_plan,omitempty"`
+	Command   string `json:"command"`
+	OnDestroy bool   `yaml:"on_destroy,omitempty" json:"on_destroy,omitempty"`
+	OnApply   bool   `yaml:"on_apply,omitempty" json:"on_apply,omitempty"`
+	OnPlan    bool   `yaml:"on_plan,omitempty" json:"on_plan,omitempty"`
 }
 
 // Module describe cluster.dev module to deploy/destroy terraform modules.
@@ -34,7 +34,7 @@ type Module struct {
 	preHook         *hookSpec
 	postHook        *hookSpec
 	codeDir         string
-	FilesList       map[string][]byte
+	filesList       map[string][]byte
 	providers       interface{}
 	specRaw         map[string]interface{}
 	markers         map[string]string
@@ -43,6 +43,10 @@ type Module struct {
 
 func (m *Module) Markers() map[string]string {
 	return m.markers
+}
+
+func (m *Module) FilesList() map[string][]byte {
+	return m.filesList
 }
 
 func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.Infrastructure) error {
@@ -71,7 +75,7 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	m.dependencies = modDeps
 	m.backendPtr = bPtr
 	m.expectedOutputs = map[string]bool{}
-	m.FilesList = map[string][]byte{}
+	m.filesList = map[string][]byte{}
 	m.specRaw = spec
 	m.markers = map[string]string{}
 
