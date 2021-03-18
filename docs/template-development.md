@@ -2,6 +2,8 @@
 
 ## Basics
 
+A template is a directory, either local or located in a Git repo that contains template config files. cdev reads all ./*.yaml files from the directory (non-recursively), renders a template with the project's data, parse the yaml file and loads modules. Modules may contain reference to other files that are required for work. These files should be located inside the current directory (template context). As some of the files will also be rendered with the project's data, you can use Go-templates in them. For more details please see [modules configuration](#modules) below.
+
 Template represents a yaml structure with an array of different invocation modules. Common view:
 
 ```yaml
@@ -12,11 +14,11 @@ modules:
   ...
 ```
 
-Template can utilize all kinds of go-templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
+Template can utilize all kinds of Go-templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
 
 ## Functions
 
-1) [Base go-template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
+1) [Base Go-template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
 
 2) [Sprig functions](https://masterminds.github.io/sprig/).
 
@@ -96,15 +98,15 @@ All modules described below have a common format and common fields. Base example
 
 * `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the module execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the module.
 
-  * `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
+    * `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
 
-  * `script` - *string* path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
+    * `script` - *string* path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
 
-  * `on_apply` *bool*, *optional* turn off/on when module applying. **Default: "true"**.
+    * `on_apply` *bool*, *optional* turn off/on when module applying. **Default: "true"**.
 
-  * `on_destroy` - *bool*, *optional* turn off/on when module destroying. **Default: "false"**.
+    * `on_destroy` - *bool*, *optional* turn off/on when module destroying. **Default: "false"**.
 
-  * `on_plan` - *bool*, *optional* turn off/on when module plan executing. **Default: "false"**.
+    * `on_plan` - *bool*, *optional* turn off/on when module plan executing. **Default: "false"**.
 
 ### Terraform module
 
@@ -126,7 +128,7 @@ modules:
 
 In addition to common options the following are available:
 
-* `source` - *string*, *required*. Terraform module [source](https://www.terraform.io/docs/language/modules/syntax.html#source). **It is not allowed to use local folders in source!**.
+* `source` - *string*, *required*. Terraform module [source](https://www.terraform.io/docs/language/modules/syntax.html#source). **It is not allowed to use local folders in source!**
 
 * `version` - *string*, *optional*. Module [version](https://www.terraform.io/docs/language/modules/syntax.html#version).
 
@@ -134,7 +136,7 @@ In addition to common options the following are available:
 
 ### Helm module
 
-Describes [Terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
+Describes [Terraform Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
 
 Example:
 
@@ -168,9 +170,9 @@ In addition to common options the following are available:
 
   * `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
 
-  * `additional_options` - *map of any*, *optional*. Corresponds to [Helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
+  * `additional_options` - *map of any*, *optional*. Corresponds to [Terraform helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
 
-  * `inputs` - *map of any*, *optional*. A map that represents [Helm release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`. For example:
+  * `inputs` - *map of any*, *optional*. A map that represents [Terraform helm_release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`. For example:
 
    ```yaml
     inputs:

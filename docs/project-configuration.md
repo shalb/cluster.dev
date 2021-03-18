@@ -4,7 +4,7 @@ Common project files:
 
 ```bash
 project.yaml # Contains global project variables that can be used in other configuration objects.
-<infra_name>.yaml # Contains reference to a template, variables to render the template and backend for states.
+<infra_name>.yaml # Contains reference to a template, variables to render a template and backend for states.
 <backend_name>.yaml # Describes a backend storage for Terraform and cdev states.
 <secret_name>.yaml # Contains secrets, one per file.
 ```
@@ -65,10 +65,10 @@ variables:
 
 * `variables`: data set for template rendering.
 
-* `template`: it's either a path to a local directory containing the template's configuration files, or a remote git repository as a template source. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
-  * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls)
-  * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if template configuration is not in root of repo.
-  * `<BRANCH_OR_TAG>`- git branch or tag.
+* `template`: it's either a path to a local directory containing the template's configuration files, or a remote Git repository as a template source. For more details on templates please see the [Template Development](https://cluster.dev/template-development/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
+    * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls).
+    * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if template configuration is not in root of repo.
+    * `<BRANCH_OR_TAG>`- Git branch or tag.
 
 Examples:
 
@@ -150,9 +150,9 @@ Secrets are encoded/decoded with [SOPS](https://github.com/mozilla/sops) utility
 
 1. Use console client cdev to create a new secret from scratch:
 
-   ```bash
-   cdev secret create
-   ```
+     ```bash
+     cdev secret create
+     ```
 
 2. Use interactive menu to create a secret.
 
@@ -168,9 +168,9 @@ cdev client can use AWS SSM as a secret storage. How to use:
 
 2. Use the console client cdev to create a new secret from scratch:
 
-   ```bash
-   cdev secret create
-   ```
+     ```bash
+     cdev secret create
+     ```
 
 3. Answer the questions. For `Name of secret in AWS Secrets manager` enter the name of the AWS secret created above.
 
@@ -187,3 +187,7 @@ and
 ```bash
 cdev secret edit secret_name
 ```
+
+## Templates
+
+For the detailed information on templates, please see the section [Template Development](https://cluster.dev/template-development/).

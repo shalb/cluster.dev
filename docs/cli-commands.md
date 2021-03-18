@@ -16,11 +16,11 @@ Available commands:
 
 * `project`     Manage projects:
 
-  * `info`      Read project and info message.
-  * `create`    Creates new 'project' from template in an interactive mode.
+    * `info`      Read project and info message.
+    * `create`    Creates new 'project' from template in an interactive mode.
 
 * `secret`      Manage secrets:
 
-  * `ls`        List secrets in current project.
-  * `edit`      Edit secret by name. Usage: `cdev secret edit secret-name`.
-  * `create`    Creates new 'secret' from template in an interactive mode.
+    * `ls`        List secrets in current project.
+    * `edit`      Edit secret by name. Usage: `cdev secret edit secret-name`.
+    * `create`    Creates new 'secret' from template in an interactive mode.

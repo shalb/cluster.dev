@@ -8,9 +8,9 @@ To start using cdev please make sure that you have the following software instal
 
 * Bash
 
-* [Terraform](#Terraform)
+* [Terraform](#terraform)
 
-* [SOPS](#SOPS)
+* [SOPS](#sops)
 
 ## Terraform
 
