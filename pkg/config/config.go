@@ -42,6 +42,8 @@ type ConfSpec struct {
 	PluginsCacheDir    string
 	UseCache           bool
 	OptFooTest         bool
+	IgnoreState        bool
+	ShowTerraformPlan  bool
 	StateFileName      string
 	StateCacheDir      string
 	CacheDir           string

@@ -30,8 +30,6 @@ func (m *helm) genMainCodeBlock() ([]byte, error) {
 	var marker string
 	if len(m.valuesFileContent) > 0 {
 		m.FilesList()["values.yaml"] = m.valuesFileContent
-		marker = project.CreateMarker("func")
-		m.helmOpts["values"] = []string{string(marker)}
 	}
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
@@ -115,7 +113,10 @@ func (m *helm) ReadConfig(spec map[string]interface{}, infra *project.Infrastruc
 		}
 		m.valuesFileContent = valuesFileContent
 	}
-
+	pv, ok := spec["provider_version"].(string)
+	if ok {
+		m.AddRequiredProvider("helm", "hashicorp/helm", pv)
+	}
 	return nil
 }
 

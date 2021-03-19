@@ -4,6 +4,8 @@ import (
 	"container/list"
 	"fmt"
 	"sync"
+
+	"github.com/apex/log"
 )
 
 type modResult struct {
@@ -73,6 +75,9 @@ func (g *grapher) updateDirectQueue() int {
 		}
 		if isReady {
 			// log.Debugf("Graph: mod added %v\n deps: %v", mod.Key(), mod.Dependencies())
+			// for _, d := range *mod.Dependencies() {
+			// 	log.Debugf("   Dep: %v", d.ModuleName)
+			// }
 			g.queue.PushBack(mod)
 			delete(g.modules, key)
 			count++
@@ -123,16 +128,28 @@ func (g *grapher) GetNextAsync() (Module, func(error), error) {
 	}
 }
 
-func (g *grapher) GetNextSync() (Module, error) {
+func (g *grapher) GetNextSync() Module {
 	if g.Len() == 0 {
-		return nil, nil
+		return nil
 	}
 	modElem := g.queue.Front()
 	mod := modElem.Value.(Module)
 	g.queue.Remove(modElem)
-	g.inProgress[mod.Key()] = mod
 	g.setModuleDone(modResult{mod, nil})
-	return mod, nil
+	return mod
+}
+
+func (g *grapher) GetSequenceSet() []Module {
+	res := make([]Module, g.Len())
+	mCount := g.Len()
+	for i := 0; i < mCount; i++ {
+		md := g.GetNextSync()
+		if md == nil {
+			log.Fatal("Building apply modules set: geting nil module, undefined behavior")
+		}
+		res[i] = md
+	}
+	return res
 }
 
 func (g *grapher) setModuleDone(doneMod modResult) {

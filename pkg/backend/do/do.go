@@ -39,8 +39,17 @@ type backendConfigSpec struct {
 	Region string `hcl:"region"`
 }
 
+// GetBackendBytes generate terraform backend config.
+func (b *BackendDo) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
+	f, err := b.GetBackendHCL(infraName, moduleName)
+	if err != nil {
+		return nil, err
+	}
+	return f.Bytes(), nil
+}
+
 // GetBackendHCL generate terraform backend config.
-func (b *BackendDo) GetBackendHCL(infraName, moduleName string) ([]byte, error) {
+func (b *BackendDo) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
@@ -57,7 +66,7 @@ func (b *BackendDo) GetBackendHCL(infraName, moduleName string) ([]byte, error) 
 		backendBody.SetAttributeValue("secret_key", cty.StringVal(b.SecretKey))
 	}
 	terraformBlock.Body().SetAttributeValue("required_version", cty.StringVal("~> 0.13"))
-	return f.Bytes(), nil
+	return f, nil
 
 }
 

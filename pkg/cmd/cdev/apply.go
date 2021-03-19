@@ -2,6 +2,7 @@ package cdev
 
 import (
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/spf13/cobra"
 )
@@ -16,10 +17,6 @@ var applyCmd = &cobra.Command{
 			log.Fatal(err.Error())
 		}
 		log.Info("Applying...")
-		err = project.Build()
-		if err != nil {
-			log.Fatal(err.Error())
-		}
 		err = project.Apply()
 		if err != nil {
 			log.Fatal(err.Error())
@@ -29,4 +26,5 @@ var applyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
+	applyCmd.Flags().BoolVar(&config.Global.IgnoreState, "ignore-state", false, "Apply even if the state has not changed.")
 }

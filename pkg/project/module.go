@@ -20,7 +20,7 @@ type Module interface {
 	ExpectedOutputs() map[string]bool
 	GetState() interface{}
 	GetDiffData() interface{}
-	LoadState(interface{}, string, *Project) error
+	LoadState(interface{}, string, *StateProject) error
 	KindKey() string
 }
 
@@ -31,7 +31,7 @@ type ModuleDriver interface {
 
 type ModuleFactory interface {
 	New(map[string]interface{}, *Infrastructure) (Module, error)
-	NewFromState(map[string]interface{}, string, *Project) (Module, error)
+	NewFromState(map[string]interface{}, string, *StateProject) (Module, error)
 }
 
 func RegisterModuleFactory(f ModuleFactory, modType string) error {

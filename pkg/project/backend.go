@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/apex/log"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"gopkg.in/yaml.v3"
 )
 
@@ -13,7 +14,8 @@ const backendObjKindKey = "backend"
 type Backend interface {
 	Name() string
 	Provider() string
-	GetBackendHCL(string, string) ([]byte, error)
+	GetBackendHCL(string, string) (*hclwrite.File, error)
+	GetBackendBytes(string, string) ([]byte, error)
 	GetRemoteStateHCL(string, string) ([]byte, error)
 	State() map[string]interface{}
 }

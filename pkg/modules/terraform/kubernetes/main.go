@@ -19,9 +19,10 @@ import (
 
 type kubernetes struct {
 	common.Module
-	source     string
-	kubeconfig string
-	inputs     map[string]interface{}
+	source          string
+	kubeconfig      string
+	inputs          map[string]interface{}
+	providerVersion string
 }
 
 func (m *kubernetes) KindKey() string {
@@ -121,6 +122,10 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infr
 		m.kubeconfig = kubeconfig
 	} else {
 		m.kubeconfig = "~/.kube/config"
+	}
+	pv, ok := spec["provider_version"].(string)
+	if ok {
+		m.AddRequiredProvider("kubernetes-alpha", "hashicorp/kubernetes-alpha", pv)
 	}
 	m.source = source
 	return nil

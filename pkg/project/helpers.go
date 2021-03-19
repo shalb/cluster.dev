@@ -12,6 +12,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -26,10 +27,9 @@ func randSeq(n int) string {
 }
 
 // CreateMarker generate hash string for template markers.
-func CreateMarker(markerType string) string {
-	const markerLen = 10
-	hash := randSeq(markerLen)
-	return fmt.Sprintf("%s.%s.%s", hash, markerType, hash)
+func CreateMarker(markerPath, dataForHash string) string {
+	hash := utils.Md5(dataForHash)
+	return fmt.Sprintf("%s.%s.%s", hash, markerPath, hash)
 }
 
 func printVersion() string {

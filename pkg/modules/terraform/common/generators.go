@@ -1,12 +1,12 @@
 package common
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
@@ -14,12 +14,25 @@ import (
 // genBackendCodeBlock generate backend code block for this module.
 func (m *Module) genBackendCodeBlock() ([]byte, error) {
 
-	res, err := m.backendPtr.GetBackendHCL(m.InfraName(), m.Name())
+	f, err := m.backendPtr.GetBackendHCL(m.InfraName(), m.Name())
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	return res, nil
+	if len(m.requiredProviders) < 1 {
+		return f.Bytes(), nil
+	}
+	tb := f.Body().Blocks()[0]
+	tfBlock := tb.Body().AppendNewBlock("required_providers", []string{})
+	for name, prov := range m.requiredProviders {
+
+		reqProvs, err := hcltools.InterfaceToCty(prov)
+		if err != nil {
+			return nil, err
+		}
+		tfBlock.Body().SetAttributeValue(name, reqProvs)
+	}
+	return f.Bytes(), nil
 }
 
 // genDepsRemoteStates generate terraform remote states for all dependencies of this module.
@@ -52,16 +65,14 @@ func (m *Module) genDepsRemoteStates() ([]byte, error) {
 func (m *Module) CreateCodeDir(projectCodeDir string) error {
 
 	modDir := filepath.Join(projectCodeDir, m.Key())
-	log.Infof("Generating code for module module '%v'", m.Key())
 	err := os.Mkdir(modDir, 0755)
 
 	for fn, f := range m.FilesList() {
 		filePath := filepath.Join(modDir, fn)
-		relPath, _ := filepath.Rel(config.Global.WorkingDir, filePath)
-		log.Debugf(" file: './%v'", relPath)
+		// relPath, _ := filepath.Rel(config.Global.WorkingDir, filePath)
 		if m.projectPtr.CheckContainsMarkers(string(f)) {
 			log.Debugf("Unprocessed markers:\n %+v", string(f))
-			log.Fatalf("Unprocessed remote marker found in module '%s.%s' (backend block). Check documentation.", m.infraPtr.Name, m.name)
+			return fmt.Errorf("misuse of functions in a template: module: '%s.%s'", m.infraPtr.Name, m.name)
 		}
 		err = ioutil.WriteFile(filePath, f, 0777)
 		if err != nil {

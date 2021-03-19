@@ -67,7 +67,7 @@ func (m *Module) GetStateDiffCommon() StateSpecDiffCommon {
 	return st
 }
 
-func (m *Module) LoadStateBase(spec StateCommon, modKey string, p *project.Project) error {
+func (m *Module) LoadStateBase(spec StateCommon, modKey string, p *project.StateProject) error {
 
 	mkSplitted := strings.Split(modKey, ".")
 	if len(mkSplitted) != 2 {
@@ -80,14 +80,14 @@ func (m *Module) LoadStateBase(spec StateCommon, modKey string, p *project.Proje
 		return fmt.Errorf("loading module state common: can't convert state data, internal error")
 	}
 
-	backend, exists := p.Backends[mState.BackendName]
+	backend, exists := p.LoaderProjectPtr.Backends[mState.BackendName]
 	if !exists {
 		return fmt.Errorf("load module from state: backend '%v' does not exists in curent project", mState.BackendName)
 	}
 	infra, exists := p.Infrastructures[infraName]
 	if !exists {
 		infra = &project.Infrastructure{
-			ProjectPtr:  p,
+			ProjectPtr:  &p.Project,
 			Backend:     backend,
 			Name:        infraName,
 			BackendName: mState.BackendName,
@@ -107,7 +107,7 @@ func (m *Module) LoadStateBase(spec StateCommon, modKey string, p *project.Proje
 	}
 	m.name = modName
 	m.infraPtr = infra
-	m.projectPtr = p
+	m.projectPtr = &p.Project
 	m.dependencies = modDeps
 	m.backendPtr = bPtr
 	m.expectedOutputs = map[string]bool{}
@@ -129,7 +129,7 @@ func (m *Module) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	inJSONstr := string(inJSON)
 	depMarkers, ok := m.ProjectPtr().Markers[RemoteStateMarkerCatName]
 	if !ok {
-		return nil
+		return utils.JSONDecode([]byte(inJSONstr), out)
 	}
 	for key, marker := range depMarkers.(map[string]*project.Dependency) {
 		if strings.Contains(inJSONstr, key) {

@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
@@ -16,6 +17,15 @@ const moduleTypeKeyHelm = "helm"
 const remoteStateMarkerName = "RemoteStateMarkers"
 const insertYAMLMarkerName = "insertYAMLMarkers"
 
+var terraformBin = "terraform"
+
+func init() {
+	envTfBin, exists := os.LookupEnv("CDEV_TF_BINARY")
+	if exists {
+		terraformBin = envTfBin
+	}
+}
+
 type hookSpec struct {
 	Command   string `json:"command"`
 	OnDestroy bool   `yaml:"on_destroy,omitempty" json:"on_destroy,omitempty"`
@@ -23,22 +33,38 @@ type hookSpec struct {
 	OnPlan    bool   `yaml:"on_plan,omitempty" json:"on_plan,omitempty"`
 }
 
+type requiredProvider struct {
+	Source  string `json:"source"`
+	Version string `json:"version"`
+}
+
 // Module describe cluster.dev module to deploy/destroy terraform modules.
 type Module struct {
-	infraPtr        *project.Infrastructure
-	projectPtr      *project.Project
-	backendPtr      project.Backend
-	name            string
-	dependencies    []*project.Dependency
-	expectedOutputs map[string]bool
-	preHook         *hookSpec
-	postHook        *hookSpec
-	codeDir         string
-	filesList       map[string][]byte
-	providers       interface{}
-	specRaw         map[string]interface{}
-	markers         map[string]string
-	applyOutput     []byte
+	infraPtr          *project.Infrastructure
+	projectPtr        *project.Project
+	backendPtr        project.Backend
+	name              string
+	dependencies      []*project.Dependency
+	expectedOutputs   map[string]bool
+	preHook           *hookSpec
+	postHook          *hookSpec
+	codeDir           string
+	filesList         map[string][]byte
+	providers         interface{}
+	specRaw           map[string]interface{}
+	markers           map[string]string
+	applyOutput       []byte
+	requiredProviders map[string]requiredProvider
+}
+
+func (m *Module) AddRequiredProvider(name, source, version string) {
+	if m.requiredProviders == nil {
+		m.requiredProviders = make(map[string]requiredProvider)
+	}
+	m.requiredProviders[name] = requiredProvider{
+		Version: version,
+		Source:  source,
+	}
 }
 
 func (m *Module) Markers() map[string]string {
@@ -168,7 +194,7 @@ func (m *Module) ApplyDefault() error {
 	if m.preHook != nil && m.preHook.OnApply {
 		cmd = "./pre_hook.sh && "
 	}
-	cmd += "terraform init && terraform apply -auto-approve"
+	cmd += fmt.Sprintf("%[1]s init && %[1]s apply -auto-approve", terraformBin)
 	if m.postHook != nil && m.postHook.OnApply {
 		cmd += " && ./post_hook.sh"
 	}
@@ -194,7 +220,7 @@ func (m *Module) Outputs() (string, error) {
 	}
 
 	var cmd = ""
-	cmd += "terraform output"
+	cmd += fmt.Sprintf("%s output", terraformBin)
 
 	var errMsg []byte
 	res, errMsg, err := rn.Run(cmd)
@@ -221,7 +247,7 @@ func (m *Module) Plan() error {
 	if m.preHook != nil && m.preHook.OnPlan {
 		cmd = "./pre_hook.sh && "
 	}
-	cmd += "terraform init && terraform plan"
+	cmd += fmt.Sprintf("%[1]s init && %[1]s plan", terraformBin)
 
 	if m.postHook != nil && m.postHook.OnPlan {
 		cmd += " && ./post_hook.sh"
@@ -231,7 +257,7 @@ func (m *Module) Plan() error {
 		log.Debug(err.Error())
 		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
 	}
-	log.Infof("Module '%v', plan output:\v%v", m.Key(), string(planOutput))
+	fmt.Printf("%v\n", string(planOutput))
 	return nil
 }
 
@@ -252,7 +278,7 @@ func (m *Module) Destroy() error {
 	if m.preHook != nil && m.preHook.OnDestroy {
 		cmd = "./pre_hook.sh && "
 	}
-	cmd += "terraform init && terraform destroy -auto-approve"
+	cmd += fmt.Sprintf("%[1]s init && %[1]s destroy -auto-approve", terraformBin)
 
 	if m.postHook != nil && m.postHook.OnDestroy {
 		cmd += " && ./post_hook.sh"

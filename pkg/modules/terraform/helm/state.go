@@ -51,7 +51,7 @@ func (m *helm) GetDiffData() interface{} {
 	}
 	diffData := map[string]interface{}{}
 	res := map[string]interface{}{}
-	utils.JSONInteffaceToType(stTf, &diffData)
+	utils.JSONInterfaceToType(stTf, &diffData)
 	m.ReplaceRemoteStatesForDiff(diffData, &res)
 	return res
 }
@@ -60,9 +60,9 @@ func (s *State) GetType() string {
 	return s.ModType
 }
 
-func (m *helm) LoadState(stateData interface{}, modKey string, p *project.Project) error {
+func (m *helm) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	s := State{}
-	err := utils.JSONInteffaceToType(stateData, &s)
+	err := utils.JSONInterfaceToType(stateData, &s)
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}

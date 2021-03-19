@@ -2,6 +2,7 @@ package cdev
 
 import (
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/spf13/cobra"
 )
@@ -16,10 +17,6 @@ var planCmd = &cobra.Command{
 			log.Fatal(err.Error())
 		}
 		log.Info("Planing...")
-		// err = project.Build()
-		// if err != nil {
-		// 	log.Fatal(err.Error())
-		// }
 		err = project.Plan()
 		if err != nil {
 			log.Fatal(err.Error())
@@ -29,4 +26,5 @@ var planCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(planCmd)
+	planCmd.Flags().BoolVar(&config.Global.ShowTerraformPlan, "tf-plan", false, "Also show modules terraform plan if possible.")
 }

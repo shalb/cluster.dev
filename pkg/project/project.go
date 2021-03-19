@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"text/template"
 
 	"github.com/apex/log"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/config"
-	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,6 +35,7 @@ type Project struct {
 	objects          map[string][]ObjectData
 	objectsFiles     map[string][]byte
 	codeCacheDir     string
+	mux              sync.Mutex
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
@@ -254,117 +255,6 @@ func (p *Project) MkBuildDir() error {
 		}
 	}
 	return nil
-}
-
-// Build generate all terraform code for project.
-func (p *Project) Build() error {
-	for _, module := range p.Modules {
-		if err := module.Build(p.codeCacheDir); err != nil {
-			return err
-		}
-	}
-
-	//return p.SaveState()
-	return nil
-}
-
-// Destroy all modules.
-func (p *Project) Destroy() error {
-
-	grph := grapher{}
-	grph.Init(p, 1, true)
-
-	for {
-		if grph.Len() == 0 {
-			return nil
-		}
-		md, fn, err := grph.GetNextAsync()
-		if err != nil {
-			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
-			grph.Wait()
-			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
-		}
-		if md == nil {
-			return nil
-		}
-		go func(mod Module, finFunc func(error)) {
-			res := mod.Destroy()
-			finFunc(res)
-		}(md, fn)
-	}
-}
-
-// Apply all modules.
-func (p *Project) Apply() error {
-
-	grph := grapher{}
-	grph.Init(p, config.Global.MaxParallel, false)
-
-	for {
-		if grph.Len() == 0 {
-			return nil
-		}
-		md, fn, err := grph.GetNextAsync()
-		if err != nil {
-			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
-			grph.Wait()
-			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
-		}
-		if md == nil {
-			return nil
-		}
-		go func(mod Module, finFunc func(error)) {
-			res := mod.Apply()
-			finFunc(res)
-		}(md, fn)
-	}
-}
-
-// Plan and output result.
-func (p *Project) Plan() error {
-	fProject, err := p.LoadState()
-
-	if err != nil {
-		return err
-	}
-
-	grph := grapher{}
-	grph.Init(p, 1, false)
-
-	for {
-		if grph.Len() == 0 {
-			return nil
-		}
-		md, err := grph.GetNextSync()
-		if err != nil {
-			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
-			grph.Wait()
-			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
-		}
-		if md == nil {
-			return nil
-		}
-		loadedState := make(map[string]interface{})
-		curState := make(map[string]interface{})
-		stateMod, exists := fProject.Modules[md.Key()]
-		if exists {
-			err = utils.JSONInteffaceToType(stateMod.GetDiffData(), &loadedState)
-			if err != nil {
-				return err
-			}
-		}
-		err = utils.JSONInteffaceToType(md.GetDiffData(), &curState)
-		if err != nil {
-			return err
-		}
-		diff := utils.Diff(loadedState, curState, true)
-		log.Infof("Diff module %v:", md.Key())
-		if len(diff) > 0 {
-			fmt.Printf("%v\n", diff)
-		} else {
-			fmt.Printf("\033[1;32m%s\033[0m\n", "no changed")
-		}
-	}
 }
 
 // Name return project name.

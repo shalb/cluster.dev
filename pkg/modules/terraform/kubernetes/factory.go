@@ -23,7 +23,7 @@ func (f *Factory) New(spec map[string]interface{}, infra *project.Infrastructure
 }
 
 // NewFromState creates new module from state data.
-func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.Project) (project.Module, error) {
+func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Module, error) {
 	mod := kubernetes{}
 	err := mod.LoadState(spec, modKey, p)
 	if err != nil {

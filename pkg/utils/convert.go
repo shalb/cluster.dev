@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 )
 
-// JSONInteffaceToType - convert interface data in to type of out with JSON tags.
-func JSONInteffaceToType(in, out interface{}) error {
+// JSONInterfaceToType - convert interface data in to type of out with JSON tags.
+func JSONInterfaceToType(in, out interface{}) error {
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)

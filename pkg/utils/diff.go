@@ -7,7 +7,15 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 )
 
+type emptyStruct struct{}
+
 func Diff(structA, structB interface{}, colored bool) string {
+	if structA == nil {
+		structA = emptyStruct{}
+	}
+	if structB == nil {
+		structB = emptyStruct{}
+	}
 	GreenColor := "%s"
 	RedColor := "%s"
 	if colored {

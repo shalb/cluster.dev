@@ -13,7 +13,26 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
+func (sp *StateProject) UpdateModule(mod Module) {
+	sp.mux.Lock()
+	defer sp.mux.Unlock()
+	sp.Modules[mod.Key()] = mod
+	sp.ChangedModules[mod.Key()] = mod
+}
+
+func (sp *StateProject) DeleteModule(mod Module) {
+	delete(sp.Modules, mod.Key())
+}
+
+type StateProject struct {
+	Project
+	LoaderProjectPtr *Project
+	ChangedModules   map[string]Module
+}
+
 func (p *Project) SaveState() error {
+	p.mux.Lock()
+	defer p.mux.Unlock()
 	st := stateData{
 		Markers: p.Markers,
 		Modules: map[string]interface{}{},
@@ -35,10 +54,6 @@ func (p *Project) SaveState() error {
 type stateData struct {
 	Markers map[string]interface{} `json:"markers"`
 	Modules map[string]interface{} `json:"modules"`
-}
-
-type StateProject struct {
-	Project
 }
 
 func (p *Project) LoadState() (*StateProject, error) {
@@ -75,6 +90,15 @@ func (p *Project) LoadState() (*StateProject, error) {
 			Backends:        p.Backends,
 			codeCacheDir:    config.Global.StateCacheDir,
 		},
+		LoaderProjectPtr: p,
+		ChangedModules:   make(map[string]Module),
+	}
+
+	if statePrj.Markers == nil {
+		statePrj.Markers = make(map[string]interface{})
+	}
+	for key, m := range p.Markers {
+		statePrj.Markers[key] = m
 	}
 
 	for mName, mState := range stateD.Modules {
@@ -84,7 +108,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 		if !exists {
 			return nil, fmt.Errorf("loading state: internal error: bad module type in state")
 		}
-		mod, err := ModuleFactoriesMap[key.(string)].NewFromState(mState.(map[string]interface{}), mName, p)
+		mod, err := ModuleFactoriesMap[key.(string)].NewFromState(mState.(map[string]interface{}), mName, &statePrj)
 		if err != nil {
 			return nil, fmt.Errorf("loading state: error loading module from state: %v", err.Error())
 		}
@@ -95,4 +119,52 @@ func (p *Project) LoadState() (*StateProject, error) {
 		return nil, err
 	}
 	return &statePrj, nil
+}
+
+func (sp *StateProject) CheckModuleChanges(module Module) string {
+	// log.Debugf("Check module: %v %+v", module.Key(), sp.Modules)
+	moddInState, exists := sp.Modules[module.Key()]
+	if !exists {
+		return utils.Diff(nil, module.GetDiffData(), true)
+	}
+	var diffData interface{}
+	if module != nil {
+		diffData = module.GetDiffData()
+	}
+	df := utils.Diff(moddInState.GetDiffData(), diffData, true)
+	if len(df) > 0 {
+		return df
+	}
+	for _, dep := range *module.Dependencies() {
+		if sp.checkModuleChangesRecursive(dep.Module) {
+			return fmt.Sprintf("+/- There are changes in the module dependencies.")
+		}
+	}
+	return ""
+}
+
+func (sp *StateProject) checkModuleChangesRecursive(module Module) bool {
+	// log.Debugf("Check module recu: %v deps: %v", module.Key(), *module.Dependencies())
+	modNew, exists := sp.Modules[module.Key()]
+	if !exists {
+		return true
+	}
+	var diffData interface{}
+	if module != nil {
+		diffData = module.GetDiffData()
+	}
+	df := utils.Diff(diffData, modNew.GetDiffData(), true)
+	if len(df) > 0 {
+		return true
+	}
+	// log.Debugf("Check module recu: %v deps: %v", module.Key(), *module.Dependencies())
+	for _, dep := range *module.Dependencies() {
+		if _, exists := sp.ChangedModules[dep.Module.Key()]; exists {
+			return true
+		}
+		if sp.checkModuleChangesRecursive(dep.Module) {
+			return true
+		}
+	}
+	return false
 }
