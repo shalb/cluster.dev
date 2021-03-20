@@ -26,5 +26,5 @@ var applyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
-	applyCmd.Flags().BoolVar(&config.Global.IgnoreState, "ignore-state", false, "Apply even if the state has not changed.")
+	applyCmd.Flags().BoolVar(&config.Global.IgnoreState, "force", false, "Apply even if the state has not changed.")
 }

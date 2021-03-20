@@ -203,6 +203,7 @@ func (m *Module) ApplyDefault() error {
 	if err != nil {
 		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
 	}
+	// log.Info(colors.LightWhiteBold.Sprint("successfully applied"))
 	return nil
 }
 
@@ -288,6 +289,7 @@ func (m *Module) Destroy() error {
 	if err != nil {
 		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
 	}
+	// log.Info(colors.LightWhiteBold.Sprint("successfully destroyed"))
 	return nil
 }
 

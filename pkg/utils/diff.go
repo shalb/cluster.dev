@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/shalb/cluster.dev/pkg/colors"
 )
 
 type emptyStruct struct{}
@@ -19,8 +20,8 @@ func Diff(structA, structB interface{}, colored bool) string {
 	GreenColor := "%s"
 	RedColor := "%s"
 	if colored {
-		GreenColor = "\033[1;32m%s\033[0m"
-		RedColor = "\033[1;31m%s\033[0m"
+		GreenColor = colors.Green.Sprint("%s")
+		RedColor = colors.Red.Sprint("%s")
 	}
 	diffs := make([]string, 0)
 	// Compare, join result to string and add colors.

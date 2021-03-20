@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
@@ -34,6 +35,7 @@ func (p *Project) Destroy() error {
 	}
 
 	for _, md := range grph.GetSequenceSet() {
+		log.Infof(colors.LightWhiteBold.Sprintf("Destroying module '%v'", md.Key()))
 		err := md.Build(md.ProjectPtr().codeCacheDir)
 		if err != nil {
 			log.Errorf("project destroy: destroying deleted module: %v", err.Error())
@@ -47,6 +49,7 @@ func (p *Project) Destroy() error {
 		if err != nil {
 			return fmt.Errorf("project destroy: saving state: %v", err.Error())
 		}
+		// log.Infof(colors.LightWhiteBold.Sprintf("Module '%v' is destroyed", md.Key()))
 	}
 	os.Remove(config.Global.StateFileName)
 	return nil
@@ -109,7 +112,7 @@ func (p *Project) Apply() error {
 			diff := stateP.CheckModuleChanges(mod)
 			var res error
 			if len(diff) > 0 || config.Global.IgnoreState {
-				log.Infof("\033[1;37m======== Applying module '%v' =========\033[0m", md.Key())
+				log.Infof(colors.LightWhiteBold.Sprintf("Applying module '%v'", md.Key()))
 				err := mod.Build(mod.ProjectPtr().codeCacheDir)
 				if err != nil {
 					log.Errorf("project apply: module build error: %v", err.Error())
@@ -118,6 +121,7 @@ func (p *Project) Apply() error {
 				if res == nil {
 					stateP.UpdateModule(mod)
 					err := stateP.SaveState()
+					// log.Infof(colors.LightWhiteBold.Sprintf("Module '%v' is applied", md.Key()))
 					if err != nil {
 						finFunc(err)
 						return
@@ -126,7 +130,7 @@ func (p *Project) Apply() error {
 				finFunc(res)
 				return
 			}
-			log.Infof("\033[1;37mModule '%v' has not changed. Skip applying.\033[0m", md.Key())
+			log.Infof(colors.LightWhiteBold.Sprintf("Module '%v' has not changed. Skip applying.", md.Key()))
 			finFunc(res)
 		}(md, fn, fProject)
 	}
@@ -150,24 +154,24 @@ func (p *Project) Plan() error {
 	if err != nil {
 		return err
 	}
-
+	log.Infof(colors.LightWhiteBold.Sprintf("Checking modules in state"))
 	for _, md := range StateGrph.GetSequenceSet() {
 		_, exists := p.Modules[md.Key()]
 		if exists {
 			continue
 		}
 		diff := utils.Diff(md.GetDiffData(), nil, true)
-		log.Infof("Module '%v' will be destroyed:", md.Key())
+		log.Info(colors.Red.Sprintf("Module '%v' will be destroyed:", md.Key()))
 		fmt.Printf("%v\n", diff)
 	}
 
 	for _, md := range CurrentGrph.GetSequenceSet() {
 
 		diff := fProject.CheckModuleChanges(md)
-		log.Infof("\033[1;37m======== Planing module '%v' =========\033[0m", md.Key())
+
+		log.Infof(colors.LightWhiteBold.Sprintf("Planing module '%v'", md.Key()))
 		if len(diff) > 0 {
 			fmt.Printf("%v\n", diff)
-			log.Debugf("%v", config.Global.ShowTerraformPlan)
 			if config.Global.ShowTerraformPlan {
 				allDepsDeployed := true
 				for _, planModDep := range *md.Dependencies() {
@@ -192,7 +196,7 @@ func (p *Project) Plan() error {
 				}
 			}
 		} else {
-			fmt.Printf("\033[1;32m%s\033[0m\n", "no changed")
+			log.Infof(colors.GreenBold.Sprint(" not changed"))
 		}
 	}
 	return nil

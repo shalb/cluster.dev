@@ -11,16 +11,18 @@ import (
 	"time"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/logging"
 )
 
 // BashRunner - runs shell commands.
 type BashRunner struct {
-	workingDir string
-	Env        []string
-	Timeout    time.Duration
-	LogLabels  []string
+	workingDir         string
+	Env                []string
+	Timeout            time.Duration
+	LogLabels          []string
+	ShowSuccessMessage bool
 }
 
 // Env - global list of environment variables.
@@ -46,7 +48,7 @@ func NewBashRunner(workingDir string, envVariables ...string) (*BashRunner, erro
 	runner.workingDir = workingDir
 	runner.Env = envVariables
 	runner.Timeout = 0
-
+	runner.ShowSuccessMessage = true
 	return &runner, nil
 }
 
@@ -120,13 +122,14 @@ func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, err
 	errOutput := &bytes.Buffer{}
 
 	bannerStopChan := make(chan struct{})
+	var bannerPrefix string
+	for _, str := range b.LogLabels {
+		bannerPrefix = fmt.Sprintf("%s[%s]", bannerPrefix, str)
+	}
 	if config.Global.LogLevel != "debug" {
-		var banner string
-		for _, str := range b.LogLabels {
-			banner = fmt.Sprintf("%s[%s]", banner, str)
-		}
+
 		// banner = fmt.Sprintf("%s[dir='%s'][cmd='%s']", banner, "./"+dir, command)
-		banner = fmt.Sprintf("%s executing in progress...", banner)
+		banner := fmt.Sprintf("%s executing in progress...", bannerPrefix)
 		go showBanner(banner, bannerStopChan)
 
 		defer func(stop chan struct{}) {
@@ -136,6 +139,9 @@ func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, err
 	}
 	logCollector := newCollector(logWriter)
 	err = b.commandExecCommon(command, logCollector, errOutput)
+	if b.ShowSuccessMessage {
+		log.Infof("%s %-7s", bannerPrefix, colors.LightWhiteBold.Sprint("Success!"))
+	}
 	return logCollector.Data(), errOutput.Bytes(), err
 }
 

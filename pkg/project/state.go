@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
@@ -137,7 +138,7 @@ func (sp *StateProject) CheckModuleChanges(module Module) string {
 	}
 	for _, dep := range *module.Dependencies() {
 		if sp.checkModuleChangesRecursive(dep.Module) {
-			return fmt.Sprintf("+/- There are changes in the module dependencies.")
+			return colors.Yellow.Sprintf("+/- There are changes in the module dependencies.")
 		}
 	}
 	return ""

@@ -25,5 +25,5 @@ var destroyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(destroyCmd)
-	destroyCmd.Flags().BoolVar(&config.Global.IgnoreState, "ignore-state", false, "Destroy curent configuration and ignore state.")
+	destroyCmd.Flags().BoolVar(&config.Global.IgnoreState, "force", false, "Destroy curent configuration and ignore state.")
 }

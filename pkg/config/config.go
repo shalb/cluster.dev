@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/logging"
 	"gopkg.in/yaml.v3"
 )
@@ -47,6 +48,7 @@ type ConfSpec struct {
 	StateFileName      string
 	StateCacheDir      string
 	CacheDir           string
+	NoColor            bool
 }
 
 // Global config for executor.
@@ -61,6 +63,10 @@ func InitConfig() {
 	Global.WorkingDir = curPath
 	Global.Version = Version
 	Global.Build = BuildTimestamp
+	if Global.NoColor {
+		// Turn off colored output.
+		colors.InitColors(false)
+	}
 	logging.InitLogLevel(Global.LogLevel, Global.TraceLog)
 	Global.ClusterConfigsPath = curPath
 	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
@@ -81,6 +87,7 @@ func InitConfig() {
 			log.Fatal(err.Error())
 		}
 	}
+
 }
 
 // getEnv Helper for args parse.
