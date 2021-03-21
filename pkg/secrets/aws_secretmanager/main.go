@@ -12,6 +12,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/executor"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -26,7 +27,7 @@ type secretmanagerSpec struct {
 }
 
 func (s *smDriver) Read(rawData []byte) (name string, data interface{}, err error) {
-	secretSpec, err := project.ReadYAML(rawData)
+	secretSpec, err := utils.ReadYAML(rawData)
 	if err != nil {
 		return
 	}

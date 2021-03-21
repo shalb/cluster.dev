@@ -19,13 +19,6 @@ const insertYAMLMarkerName = "insertYAMLMarkers"
 
 var terraformBin = "terraform"
 
-func init() {
-	envTfBin, exists := os.LookupEnv("CDEV_TF_BINARY")
-	if exists {
-		terraformBin = envTfBin
-	}
-}
-
 type hookSpec struct {
 	Command   string `json:"command"`
 	OnDestroy bool   `yaml:"on_destroy,omitempty" json:"on_destroy,omitempty"`
@@ -76,40 +69,45 @@ func (m *Module) FilesList() map[string][]byte {
 }
 
 func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.Infrastructure) error {
+	// Check if CDEV_TF_BINARY is set to change terraform binary name.
+	envTfBin, exists := os.LookupEnv("CDEV_TF_BINARY")
+	if exists {
+		terraformBin = envTfBin
+	}
 	mName, ok := spec["name"]
 	if !ok {
 		return fmt.Errorf("Incorrect module name")
-	}
-	var modDeps []*project.Dependency
-	var err error
-	dependsOn, ok := spec["depends_on"]
-	if ok {
-		modDeps, err = readDeps(dependsOn, infra)
-		if err != nil {
-			log.Debug(err.Error())
-			return err
-		}
-	}
-	bPtr, exists := infra.ProjectPtr.Backends[infra.BackendName]
-	if !exists {
-		return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
 	}
 
 	m.infraPtr = infra
 	m.projectPtr = infra.ProjectPtr
 	m.name = mName.(string)
-	m.dependencies = modDeps
-	m.backendPtr = bPtr
 	m.expectedOutputs = map[string]bool{}
 	m.filesList = map[string][]byte{}
 	m.specRaw = spec
 	m.markers = map[string]string{}
 
-	if err != nil {
-		log.Debug(err.Error())
-		return err
+	// Process dependencies.
+	var modDeps []*project.Dependency
+	var err error
+	dependsOn, ok := spec["depends_on"]
+	if ok {
+		modDeps, err = m.readDeps(dependsOn)
+		if err != nil {
+			log.Debug(err.Error())
+			return err
+		}
 	}
+	m.dependencies = modDeps
 
+	// Check and set backend.
+	bPtr, exists := infra.ProjectPtr.Backends[infra.BackendName]
+	if !exists {
+		return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
+	}
+	m.backendPtr = bPtr
+
+	// Process hooks.
 	modPreHook, ok := spec["pre_hook"]
 	if ok {
 		m.preHook, err = readHook(modPreHook, "pre_hook")
@@ -126,6 +124,7 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 			return err
 		}
 	}
+	// Set providers.
 	providers, exists := spec["providers"]
 	if exists {
 		m.providers = providers
@@ -219,7 +218,12 @@ func (m *Module) Outputs() (string, error) {
 		log.Debug(err.Error())
 		return "", err
 	}
-
+	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
+	rn.LogLabels = []string{
+		m.InfraName(),
+		m.Name(),
+		"plan",
+	}
 	var cmd = ""
 	cmd += fmt.Sprintf("%s output", terraformBin)
 

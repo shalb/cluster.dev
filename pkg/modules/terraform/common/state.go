@@ -23,10 +23,10 @@ type StateSpecCommon struct {
 }
 
 type StateSpecDiffCommon struct {
-	BackendName string      `json:"backend_name"`
-	PreHook     *hookSpec   `json:"pre_hook,omitempty"`
-	PostHook    *hookSpec   `json:"post_hook,omitempty"`
-	Providers   interface{} `json:"providers,omitempty"`
+	// BackendName string      `json:"backend_name"`
+	PreHook   *hookSpec   `json:"pre_hook,omitempty"`
+	PostHook  *hookSpec   `json:"post_hook,omitempty"`
+	Providers interface{} `json:"providers,omitempty"`
 }
 
 type StateCommon interface {
@@ -59,10 +59,10 @@ func (m *Module) GetStateDiffCommon() StateSpecDiffCommon {
 		deps[i].Module = dep.ModuleName
 	}
 	st := StateSpecDiffCommon{
-		BackendName: m.backendPtr.Name(),
-		PreHook:     m.preHook,
-		PostHook:    m.postHook,
-		Providers:   m.providers,
+		//BackendName: m.backendPtr.Name(),
+		PreHook:   m.preHook,
+		PostHook:  m.postHook,
+		Providers: m.providers,
 	}
 	return st
 }

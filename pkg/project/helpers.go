@@ -1,7 +1,6 @@
 package project
 
 import (
-	"bytes"
 	"fmt"
 	"math/rand"
 	"os"
@@ -13,7 +12,6 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
-	"gopkg.in/yaml.v3"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -152,30 +150,6 @@ func BuildModuleDeps(m Module) error {
 		}
 	}
 	return nil
-}
-
-func ReadYAMLObjects(objData []byte) ([]map[string]interface{}, error) {
-	objects := []map[string]interface{}{}
-	dec := yaml.NewDecoder(bytes.NewReader(objData))
-	for {
-		var parsedConf = make(map[string]interface{})
-		err := dec.Decode(&parsedConf)
-		if err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
-			log.Debugf("can't decode config to yaml: %s", err.Error())
-			return nil, fmt.Errorf("can't decode config to yaml: %s", err.Error())
-		}
-		objects = append(objects, parsedConf)
-	}
-	return objects, nil
-}
-
-// ReadYAML same as ReadYAMLObjects but parse only data with 1 yaml object.
-func ReadYAML(objData []byte) (res map[string]interface{}, err error) {
-	err = yaml.Unmarshal(objData, &res)
-	return
 }
 
 func ProjectsFilesExists() bool {

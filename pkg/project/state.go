@@ -138,7 +138,7 @@ func (sp *StateProject) CheckModuleChanges(module Module) string {
 	}
 	for _, dep := range *module.Dependencies() {
 		if sp.checkModuleChangesRecursive(dep.Module) {
-			return colors.Yellow.Sprintf("+/- There are changes in the module dependencies.")
+			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the module dependencies.")
 		}
 	}
 	return ""

@@ -2,8 +2,8 @@ package cdev
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/spf13/cobra"
 )
@@ -28,6 +28,6 @@ func init() {
 func Run() {
 	err := rootCmd.Execute()
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("Fatal error: %v", err.Error())
 	}
 }

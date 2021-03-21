@@ -12,6 +12,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/executor"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/sopstools"
+	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 const sopsKey = "sops"
@@ -25,7 +26,7 @@ func (s *sopsDriver) Read(rawData []byte) (name string, data interface{}, err er
 		err = fmt.Errorf("decrypting sops secret: %v", err.Error())
 		return
 	}
-	secretSpec, err := project.ReadYAML(decryptedRaw)
+	secretSpec, err := utils.ReadYAML(decryptedRaw)
 	if err != nil {
 		err = fmt.Errorf("sops: secret must contain string field 'name'")
 		return

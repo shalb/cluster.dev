@@ -20,8 +20,8 @@ func Diff(structA, structB interface{}, colored bool) string {
 	GreenColor := "%s"
 	RedColor := "%s"
 	if colored {
-		GreenColor = colors.Green.Sprint("%s")
-		RedColor = colors.Red.Sprint("%s")
+		GreenColor = colors.Fmt(colors.Green).Sprint("%s")
+		RedColor = colors.Fmt(colors.Red).Sprint("%s")
 	}
 	diffs := make([]string, 0)
 	// Compare, join result to string and add colors.

@@ -89,7 +89,7 @@ func (p *Project) readInfrastructureObj(infraSpec ObjectData) error {
 	}
 	infra.Backend = bPtr
 	p.Infrastructures[name] = &infra
-	log.Infof("Infrastructure '%v' added", name)
+	log.Debugf("Infrastructure added: %v", name)
 	return nil
 }
 

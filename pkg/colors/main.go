@@ -4,57 +4,78 @@ import (
 	"github.com/gookit/color"
 )
 
-type Color interface {
+// ColoredFmt colored formater interface with base functions.
+type ColoredFmt interface {
 	Sprint(a ...interface{}) string
 	Sprintf(format string, a ...interface{}) string
+	Print(a ...interface{})
+	Println(a ...interface{})
+	Printf(format string, a ...interface{})
 }
 
-var Default Color = color.New(color.FgDefault, color.BgDefault)
-var Green Color = color.New(color.FgGreen, color.BgDefault)
-var Red Color = color.New(color.FgRed, color.BgDefault)
-var Yellow Color = color.New(color.FgYellow, color.BgDefault)
-var White Color = color.New(color.FgWhite, color.BgDefault)
-var Blue Color = color.New(color.FgBlue, color.BgDefault)
-var Cyan Color = color.New(color.FgCyan, color.BgDefault)
-var Magenta Color = color.New(color.FgMagenta, color.BgDefault)
-var LightWhite Color = color.New(color.FgLightWhite, color.BgDefault)
-var LightRed Color = color.New(color.FgLightRed, color.BgDefault)
-var Purple Color = color.RGB(186, 85, 211)
+// Color implementation.
+type Color uint8
 
-// color.RGB(186, 85, 211)
+const (
+	Default Color = iota
+	Green
+	Red
+	Yellow
+	White
+	Blue
+	Cyan
+	Magenta
+	LightWhite
+	LightRed
+	Purple
+	DefaultBold
+	GreenBold
+	RedBold
+	YellowBold
+	WhiteBold
+	BlueBold
+	CyanBold
+	MagentaBold
+	LightWhiteBold
+	LightRedBold
+	PurpleBold
+)
 
-var GreenBold Color = color.New(color.FgGreen, color.BgDefault, color.OpBold)
-var RedBold Color = color.New(color.FgRed, color.BgDefault, color.OpBold)
-var YellowBold Color = color.New(color.FgYellow, color.BgDefault, color.OpBold)
-var WhiteBold Color = color.New(color.FgWhite, color.BgDefault, color.OpBold)
-var BlueBold Color = color.New(color.FgBlue, color.BgDefault, color.OpBold)
-var CyanBold Color = color.New(color.FgCyan, color.BgDefault, color.OpBold)
-var MagentaBold Color = color.New(color.FgMagenta, color.BgDefault, color.OpBold)
-var LightWhiteBold Color = color.New(color.FgLightWhite, color.BgDefault, color.OpBold)
-var LightRedBold Color = color.New(color.FgLightRed, color.BgDefault, color.OpBold)
-var PurpleBold Color = color.NewRGBStyle(color.RGB(186, 85, 211)).SetOpts(color.Opts{color.OpBold})
+var colored = true
+var colorsMap map[Color]ColoredFmt = map[Color]ColoredFmt{
+	Default:        color.New(color.FgDefault, color.BgDefault),
+	DefaultBold:    color.New(color.FgDefault, color.BgDefault, color.OpBold),
+	Blue:           color.New(color.FgBlue, color.BgDefault),
+	BlueBold:       color.New(color.FgBlue, color.BgDefault, color.OpBold),
+	Cyan:           color.New(color.FgCyan, color.BgDefault),
+	CyanBold:       color.New(color.FgCyan, color.BgDefault, color.OpBold),
+	Green:          color.New(color.FgGreen, color.BgDefault),
+	GreenBold:      color.New(color.FgGreen, color.BgDefault, color.OpBold),
+	LightRed:       color.New(color.FgLightRed, color.BgDefault),
+	LightRedBold:   color.New(color.FgLightRed, color.BgDefault, color.OpBold),
+	LightWhite:     color.New(color.FgLightWhite, color.BgDefault),
+	LightWhiteBold: color.New(color.FgLightWhite, color.BgDefault, color.OpBold),
+	Magenta:        color.New(color.FgMagenta, color.BgDefault),
+	MagentaBold:    color.New(color.FgMagenta, color.BgDefault, color.OpBold),
+	Purple:         color.RGB(186, 85, 211),
+	PurpleBold:     color.NewRGBStyle(color.RGB(186, 85, 211)).SetOpts(color.Opts{color.OpBold}),
+	Red:            color.New(color.FgRed, color.BgDefault),
+	RedBold:        color.New(color.FgRed, color.BgDefault, color.OpBold),
+	White:          color.New(color.FgWhite, color.BgDefault),
+	WhiteBold:      color.New(color.FgWhite, color.BgDefault, color.OpBold),
+	Yellow:         color.New(color.FgYellow, color.BgDefault),
+	YellowBold:     color.New(color.FgYellow, color.BgDefault, color.OpBold),
+}
 
-func InitColors(colored bool) {
+// SetColored set all colors to default, if colored == false.
+func SetColored(isColored bool) {
+	colored = isColored
+}
+
+// Fmt return colored formater.
+func Fmt(c Color) ColoredFmt {
 	if !colored {
-		Green = Default
-		Red = Default
-		Yellow = Default
-		White = Default
-		Blue = Default
-		Cyan = Default
-		Magenta = Default
-		LightWhite = Default
-		LightRed = Default
-		Purple = Default
-		GreenBold = Default
-		RedBold = Default
-		YellowBold = Default
-		WhiteBold = Default
-		BlueBold = Default
-		CyanBold = Default
-		MagentaBold = Default
-		LightWhiteBold = Default
-		LightRedBold = Default
-		PurpleBold = Default
+		return colorsMap[Default]
 	}
+	return colorsMap[c]
 }

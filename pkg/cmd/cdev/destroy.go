@@ -13,17 +13,17 @@ var destroyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		project, err := project.LoadProjectFull()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: destroy: %v", err.Error())
 		}
 		log.Info("Destroying...")
 		err = project.Destroy()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: destroy: %v", err.Error())
 		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(destroyCmd)
-	destroyCmd.Flags().BoolVar(&config.Global.IgnoreState, "force", false, "Destroy curent configuration and ignore state.")
+	destroyCmd.Flags().BoolVar(&config.Global.Force, "force", false, "Destroy curent configuration and ignore state.")
 }

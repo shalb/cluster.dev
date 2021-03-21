@@ -41,11 +41,11 @@ func InitLogLevel(ll string, trace bool) {
 	log.SetLevel(lvl)
 	traceLog = trace
 	Colors = []colorFunc{
-		log.DebugLevel: colors.Purple.Sprintf,
-		log.InfoLevel:  colors.Cyan.Sprintf,
-		log.WarnLevel:  colors.Yellow.Sprintf,
-		log.ErrorLevel: colors.LightRed.Sprintf,
-		log.FatalLevel: colors.Red.Sprintf,
+		log.DebugLevel: colors.Fmt(colors.Purple).Sprintf,
+		log.InfoLevel:  colors.Fmt(colors.Cyan).Sprintf,
+		log.WarnLevel:  colors.Fmt(colors.Yellow).Sprintf,
+		log.ErrorLevel: colors.Fmt(colors.LightRed).Sprintf,
+		log.FatalLevel: colors.Fmt(colors.Red).Sprintf,
 	}
 }
 
@@ -57,16 +57,16 @@ func logFormatter(e *log.Entry) string {
 	// ts := time.Since(utilStartTime) / time.Second
 	tsR := time.Now().Format("15:04:05")
 
-	output := fmt.Sprintf("%s %s", colors.LightWhite.Sprint(tsR), color("[%s]", level))
+	output := fmt.Sprintf("%s %s", colors.Fmt(colors.LightWhite).Sprint(tsR), color("[%s]", level))
 
 	if len(names) > 0 {
 		output += " "
 	}
 	for _, name := range names {
-		output += colors.Default.Sprintf("[%v]", e.Fields.Get(name))
+		output += fmt.Sprintf("[%v]", e.Fields.Get(name))
 	}
 	if traceLog {
-		traceMsg := colors.LightWhite.Sprintf("<%s>", formatCallpath(6, 15))
+		traceMsg := colors.Fmt(colors.LightWhite).Sprintf("<%s>", formatCallpath(6, 15))
 		output = fmt.Sprintf("%s %s", output, traceMsg)
 	}
 	output = fmt.Sprintf("%s %-25s", output, e.Message)

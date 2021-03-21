@@ -41,14 +41,14 @@ func (p *Project) readBackends() error {
 	// Read and parse backends.
 	bks, exists := p.objects[backendObjKindKey]
 	if !exists {
-		err := fmt.Errorf("no backend found, at least one backend needed")
+		err := fmt.Errorf("reading backend: no backend found, at least one backend needed")
 		log.Debug(err.Error())
 		return err
 	}
 	for _, bk := range bks {
 		err := p.readBackendObj(bk)
 		if err != nil {
-			return fmt.Errorf("loading backend: %v", err.Error())
+			return fmt.Errorf("reading backend: %v", err.Error())
 		}
 	}
 	return nil
@@ -57,15 +57,15 @@ func (p *Project) readBackends() error {
 func (p *Project) readBackendObj(obj ObjectData) error {
 	name, ok := obj.data["name"].(string)
 	if !ok {
-		return fmt.Errorf("backend object must contain field 'name'")
+		return fmt.Errorf("config must contain field 'name'")
 	}
 	spec, ok := obj.data["spec"]
 	if !ok {
-		return fmt.Errorf("backend object must contain field 'spec'")
+		return fmt.Errorf("'%v': config must contain field 'spec'", name)
 	}
 	provider, ok := obj.data["provider"].(string)
 	if !ok {
-		return fmt.Errorf("backend object must contain field 'provider'")
+		return fmt.Errorf("'%v': must contain field 'provider'", name)
 	}
 	rawSpec, err := yaml.Marshal(&spec)
 	if err != nil {
@@ -73,13 +73,13 @@ func (p *Project) readBackendObj(obj ObjectData) error {
 	}
 	factory, exists := BackendsFactories[provider]
 	if !exists {
-		return fmt.Errorf("backend provider '%s' not found", provider)
+		return fmt.Errorf("'%v': provider does not found: %v", name, provider)
 	}
 	b, err := factory.New(rawSpec, name)
 	if err != nil {
 		return err
 	}
 	p.Backends[name] = b
-	log.Infof("Backend '%v' added", name)
+	log.Debugf("Backend added: %v", name)
 	return nil
 }

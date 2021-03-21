@@ -10,10 +10,10 @@ import (
 	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
 )
 
@@ -103,7 +103,7 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infr
 				log.Fatal(err.Error())
 			}
 		}
-		manifests, err := config.ReadYAMLObjects(manifest)
+		manifests, err := utils.ReadYAMLObjects(manifest)
 		if err != nil {
 			return err
 		}

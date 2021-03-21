@@ -1,8 +1,6 @@
 package config
 
 import (
-	"bytes"
-	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -10,7 +8,6 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/logging"
-	"gopkg.in/yaml.v3"
 )
 
 // Version - git tag from compiller
@@ -43,7 +40,7 @@ type ConfSpec struct {
 	PluginsCacheDir    string
 	UseCache           bool
 	OptFooTest         bool
-	IgnoreState        bool
+	Force              bool
 	ShowTerraformPlan  bool
 	StateFileName      string
 	StateCacheDir      string
@@ -65,7 +62,7 @@ func InitConfig() {
 	Global.Build = BuildTimestamp
 	if Global.NoColor {
 		// Turn off colored output.
-		colors.InitColors(false)
+		colors.SetColored(false)
 	}
 	logging.InitLogLevel(Global.LogLevel, Global.TraceLog)
 	Global.ClusterConfigsPath = curPath
@@ -96,22 +93,4 @@ func getEnv(key string, defaultVal string) string {
 		return envVal
 	}
 	return defaultVal
-}
-
-func ReadYAMLObjects(objData []byte) ([]map[string]interface{}, error) {
-	objects := []map[string]interface{}{}
-	dec := yaml.NewDecoder(bytes.NewReader(objData))
-	for {
-		var parsedConf = make(map[string]interface{})
-		err := dec.Decode(&parsedConf)
-		if err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
-			log.Debugf("can't decode config to yaml: %s", err.Error())
-			return nil, fmt.Errorf("can't decode config to yaml: %s", err.Error())
-		}
-		objects = append(objects, parsedConf)
-	}
-	return objects, nil
 }

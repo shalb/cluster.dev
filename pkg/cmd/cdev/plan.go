@@ -14,12 +14,12 @@ var planCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		project, err := project.LoadProjectFull()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: plan: %v", err.Error())
 		}
 		log.Info("Planing...")
 		err = project.Plan()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: plan: %v", err.Error())
 		}
 	},
 }
@@ -27,4 +27,5 @@ var planCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(planCmd)
 	planCmd.Flags().BoolVar(&config.Global.ShowTerraformPlan, "tf-plan", false, "Also show modules terraform plan if possible.")
+	planCmd.Flags().BoolVar(&config.Global.Force, "force", false, "Show plan (if set tf-plan) even if the state has not changed.")
 }

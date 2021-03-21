@@ -12,6 +12,7 @@ import (
 	"github.com/apex/log"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -151,7 +152,7 @@ func (p *Project) readObjects(objData []byte, filename string) error {
 	if p.fileIsSecret(filename) {
 		return nil
 	}
-	objs, err := ReadYAMLObjects(objData)
+	objs, err := utils.ReadYAMLObjects(objData)
 	if err != nil {
 		return err
 	}
@@ -349,6 +350,7 @@ func (p *Project) ProcessExport(ex interface{}) error {
 		return fmt.Errorf("exports: malformed exports configuration")
 	}
 	for key, val := range exports {
+		log.Debugf("Exports: %v", key)
 		valStr := fmt.Sprintf("%v", val)
 		os.Setenv(key, valStr)
 	}

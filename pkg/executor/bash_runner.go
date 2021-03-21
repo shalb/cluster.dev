@@ -108,9 +108,15 @@ func (b *BashRunner) RunWithTty(command string) error {
 
 // Run - exec command and hide secrets in log output.
 func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, error) {
+
+	var logPrefix string
+	for _, str := range b.LogLabels {
+		logPrefix = fmt.Sprintf("%s[%s]", logPrefix, str)
+	}
+	log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("In progress..."))
 	// Mask secrets with ***
 	hiddenCommand := stringHideSecrets(command, secrets...)
-	log.Debugf("Executing command \"%s\"", hiddenCommand)
+	log.Debugf("%s Executing command '%s':", logPrefix, hiddenCommand)
 
 	// Create log writer.
 	logWriter, err := logging.NewLogWriter(log.DebugLevel, logging.SliceFielder{Flds: b.LogLabels})
@@ -122,14 +128,10 @@ func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, err
 	errOutput := &bytes.Buffer{}
 
 	bannerStopChan := make(chan struct{})
-	var bannerPrefix string
-	for _, str := range b.LogLabels {
-		bannerPrefix = fmt.Sprintf("%s[%s]", bannerPrefix, str)
-	}
 	if config.Global.LogLevel != "debug" {
 
 		// banner = fmt.Sprintf("%s[dir='%s'][cmd='%s']", banner, "./"+dir, command)
-		banner := fmt.Sprintf("%s executing in progress...", bannerPrefix)
+		banner := fmt.Sprintf("%s executing in progress...", logPrefix)
 		go showBanner(banner, bannerStopChan)
 
 		defer func(stop chan struct{}) {
@@ -140,18 +142,22 @@ func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, err
 	logCollector := newCollector(logWriter)
 	err = b.commandExecCommon(command, logCollector, errOutput)
 	if b.ShowSuccessMessage {
-		log.Infof("%s %-7s", bannerPrefix, colors.LightWhiteBold.Sprint("Success!"))
+		log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("Success"))
 	}
 	return logCollector.Data(), errOutput.Bytes(), err
 }
 
 // RunMutely - exec command and hide secrets in output. Return command output and errors output.
 func (b *BashRunner) RunMutely(command string, secrets ...string) (string, string, error) {
+	var logPrefix string
+	for _, str := range b.LogLabels {
+		logPrefix = fmt.Sprintf("%s[%s]", logPrefix, str)
+	}
 	output := &bytes.Buffer{}
 	runerr := &bytes.Buffer{}
 	// Mask secrets with ***
 	hiddenCommand := stringHideSecrets(command, secrets...)
-	log.Debugf("Executing command \"%s\"", hiddenCommand)
+	log.Debugf("Executing command '%s':", hiddenCommand)
 	err := b.commandExecCommon(command, output, runerr)
 	return output.String(), runerr.String(), err
 }

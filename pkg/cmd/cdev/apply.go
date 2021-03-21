@@ -14,17 +14,17 @@ var applyCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		project, err := project.LoadProjectFull()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: apply: %v", err.Error())
 		}
 		log.Info("Applying...")
 		err = project.Apply()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: apply: %v", err.Error())
 		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
-	applyCmd.Flags().BoolVar(&config.Global.IgnoreState, "force", false, "Apply even if the state has not changed.")
+	applyCmd.Flags().BoolVar(&config.Global.Force, "force", false, "Apply even if the state has not changed.")
 }

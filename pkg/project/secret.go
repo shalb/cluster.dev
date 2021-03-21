@@ -9,6 +9,7 @@ import (
 	"github.com/apex/log"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 type secretDriver int
@@ -62,7 +63,7 @@ func (p *Project) fileIsSecret(fn string) bool {
 }
 
 func getRwaSecretInfo(data []byte, p *Project) (res SecretDriver, err error) {
-	objects, err := ReadYAMLObjects(data)
+	objects, err := utils.ReadYAMLObjects(data)
 	if err != nil {
 		return
 	}
