@@ -29,8 +29,17 @@ func (b *BackendAzureRm) Provider() string {
 	return "azurerm"
 }
 
+// GetBackendBytes generate terraform backend config.
+func (b *BackendAzureRm) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
+	f, err := b.GetBackendHCL(infraName, moduleName)
+	if err != nil {
+		return nil, err
+	}
+	return f.Bytes(), nil
+}
+
 // GetBackendHCL generate terraform backend config.
-func (b *BackendAzureRm) GetBackendHCL(infraName, moduleName string) ([]byte, error) {
+func (b *BackendAzureRm) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
 	b.state["key"] = fmt.Sprintf("%s-%s.state", infraName, moduleName)
 
 	f := hclwrite.NewEmptyFile()
@@ -41,7 +50,7 @@ func (b *BackendAzureRm) GetBackendHCL(infraName, moduleName string) ([]byte, er
 	for key, value := range b.state {
 		backendBody.SetAttributeValue(key, cty.StringVal(value.(string)))
 	}
-	return f.Bytes(), nil
+	return f, nil
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.

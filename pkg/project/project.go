@@ -6,11 +6,13 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sync"
 	"text/template"
 
 	"github.com/apex/log"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -33,7 +35,8 @@ type Project struct {
 	configDataFile   []byte
 	objects          map[string][]ObjectData
 	objectsFiles     map[string][]byte
-	codeDir          string
+	codeCacheDir     string
+	mux              sync.Mutex
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
@@ -47,6 +50,7 @@ func NewEmptyProject() *Project {
 		objects:          map[string][]ObjectData{},
 		configData:       map[string]interface{}{},
 		secrets:          map[string]Secret{},
+		codeCacheDir:     config.Global.CacheDir,
 	}
 	for _, drv := range TemplateDriversMap {
 		drv.AddTemplateFunctions(project)
@@ -148,7 +152,7 @@ func (p *Project) readObjects(objData []byte, filename string) error {
 	if p.fileIsSecret(filename) {
 		return nil
 	}
-	objs, err := ReadYAMLObjects(objData)
+	objs, err := utils.ReadYAMLObjects(objData)
 	if err != nil {
 		return err
 	}
@@ -220,8 +224,6 @@ func (p *Project) prepareModules() error {
 			return err
 		}
 	}
-
-	log.Info("Check modules dependencies...")
 	if err := p.checkGraph(); err != nil {
 		return err
 	}
@@ -237,113 +239,23 @@ func (p *Project) MkBuildDir() error {
 			return err
 		}
 	}
-	codeDir := filepath.Join(baseOutDir, p.name)
-	relPath, _ := filepath.Rel(config.Global.WorkingDir, codeDir)
+	relPath, _ := filepath.Rel(config.Global.WorkingDir, p.codeCacheDir)
 	log.Debugf("Creates code directory: './%v'", relPath)
-	if _, err := os.Stat(codeDir); os.IsNotExist(err) {
-		err := os.Mkdir(codeDir, 0755)
+	if _, err := os.Stat(p.codeCacheDir); os.IsNotExist(err) {
+		err := os.Mkdir(p.codeCacheDir, 0755)
 		if err != nil {
 			return err
 		}
 	}
 	if !config.Global.UseCache {
 		log.Debugf("Remove all old content: './%s'", relPath)
-		err := removeDirContent(codeDir)
+		err := removeDirContent(p.codeCacheDir)
 		if err != nil {
 			log.Debug(err.Error())
 			return err
 		}
 	}
-	p.codeDir = codeDir
 	return nil
-}
-
-// Build generate all terraform code for project.
-func (p *Project) Build() error {
-	for _, module := range p.Modules {
-		if err := module.Build(p.codeDir); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Destroy all modules.
-func (p *Project) Destroy() error {
-
-	grph := grapher{}
-	grph.Init(p, 1, true)
-
-	for {
-		if grph.Len() == 0 {
-			return nil
-		}
-		md, fn, err := grph.GetNext()
-		if err != nil {
-			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
-			grph.Wait()
-			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
-		}
-		if md == nil {
-			return nil
-		}
-		go func(mod Module, finFunc func(error)) {
-			res := mod.Destroy()
-			finFunc(res)
-		}(md, fn)
-	}
-}
-
-// Apply all modules.
-func (p *Project) Apply() error {
-
-	grph := grapher{}
-	grph.Init(p, config.Global.MaxParallel, false)
-
-	for {
-		if grph.Len() == 0 {
-			return nil
-		}
-		md, fn, err := grph.GetNext()
-		if err != nil {
-			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
-			grph.Wait()
-			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
-		}
-		if md == nil {
-			return nil
-		}
-		go func(mod Module, finFunc func(error)) {
-			res := mod.Apply()
-			finFunc(res)
-		}(md, fn)
-	}
-}
-
-// Plan and output result.
-func (p *Project) Plan() error {
-
-	grph := grapher{}
-	grph.Init(p, 1, false)
-
-	for {
-		if grph.Len() == 0 {
-			return nil
-		}
-		md, fn, err := grph.GetNext()
-		if err != nil {
-			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
-			grph.Wait()
-			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
-		}
-		if md == nil {
-			return nil
-		}
-		go func(mod Module, finFunc func(error)) {
-			res := mod.Plan()
-			finFunc(res)
-		}(md, fn)
-	}
 }
 
 // Name return project name.
@@ -438,6 +350,7 @@ func (p *Project) ProcessExport(ex interface{}) error {
 		return fmt.Errorf("exports: malformed exports configuration")
 	}
 	for key, val := range exports {
+		log.Debugf("Exports: %v", key)
 		valStr := fmt.Sprintf("%v", val)
 		os.Setenv(key, valStr)
 	}

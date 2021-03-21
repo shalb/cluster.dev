@@ -5,55 +5,14 @@ import (
 	"time"
 
 	"github.com/apex/log"
-	"github.com/aybabtme/rgbterm"
+	"github.com/shalb/cluster.dev/pkg/colors"
 )
 
 // color function.
-type colorFunc func(string) string
-
-// purple string.
-func purple(s string) string {
-	return rgbterm.FgString(s, 186, 85, 211)
-}
-
-// gray string.
-func gray(s string) string {
-	return rgbterm.FgString(s, 150, 150, 150)
-}
-
-// blue string.
-func blue(s string) string {
-	return rgbterm.FgString(s, 77, 173, 247)
-}
-
-// cyan string.
-func cyan(s string) string {
-	return rgbterm.FgString(s, 34, 184, 207)
-}
-
-// green string.
-func green(s string) string {
-	return rgbterm.FgString(s, 0, 200, 255)
-}
-
-// red string.
-func red(s string) string {
-	return rgbterm.FgString(s, 194, 37, 92)
-}
-
-// yellow string.
-func yellow(s string) string {
-	return rgbterm.FgString(s, 252, 196, 25)
-}
+type colorFunc func(string, ...interface{}) string
 
 // Colors mapping.
-var Colors = [...]colorFunc{
-	log.DebugLevel: purple,
-	log.InfoLevel:  blue,
-	log.WarnLevel:  yellow,
-	log.ErrorLevel: red,
-	log.FatalLevel: red,
-}
+var Colors []colorFunc
 
 // Strings mapping.
 var Strings = [...]string{
@@ -81,6 +40,13 @@ func InitLogLevel(ll string, trace bool) {
 	}
 	log.SetLevel(lvl)
 	traceLog = trace
+	Colors = []colorFunc{
+		log.DebugLevel: colors.Fmt(colors.Purple).Sprintf,
+		log.InfoLevel:  colors.Fmt(colors.Cyan).Sprintf,
+		log.WarnLevel:  colors.Fmt(colors.Yellow).Sprintf,
+		log.ErrorLevel: colors.Fmt(colors.LightRed).Sprintf,
+		log.FatalLevel: colors.Fmt(colors.Red).Sprintf,
+	}
 }
 
 func logFormatter(e *log.Entry) string {
@@ -89,18 +55,18 @@ func logFormatter(e *log.Entry) string {
 	names := e.Fields.Names()
 
 	// ts := time.Since(utilStartTime) / time.Second
-	tsR := time.Now().Format("15:04:05.000")
+	tsR := time.Now().Format("15:04:05")
 
-	output := fmt.Sprintf("%s %s", rgbterm.FgString(tsR, 204, 204, 204), color(fmt.Sprintf("[%s]", level)))
+	output := fmt.Sprintf("%s %s", colors.Fmt(colors.LightWhite).Sprint(tsR), color("[%s]", level))
 
 	if len(names) > 0 {
 		output += " "
 	}
 	for _, name := range names {
-		output += rgbterm.FgString(fmt.Sprintf("[%v]", e.Fields.Get(name)), 225, 225, 225)
+		output += fmt.Sprintf("[%v]", e.Fields.Get(name))
 	}
 	if traceLog {
-		traceMsg := rgbterm.FgString(fmt.Sprintf("<%s>", formatCallpath(6, 15)), 255, 255, 255)
+		traceMsg := colors.Fmt(colors.LightWhite).Sprintf("<%s>", formatCallpath(6, 15))
 		output = fmt.Sprintf("%s %s", output, traceMsg)
 	}
 	output = fmt.Sprintf("%s %-25s", output, e.Message)

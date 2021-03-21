@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func readDeps(depsData interface{}, infra *project.Infrastructure) ([]*project.Dependency, error) {
+func (m *Module) readDeps(depsData interface{}) ([]*project.Dependency, error) {
 	rawDepsList := []string{}
 	switch depsData.(type) {
 	case string:
@@ -28,13 +28,13 @@ func readDeps(depsData interface{}, infra *project.Infrastructure) ([]*project.D
 		}
 		infNm := splDep[0]
 		if infNm == "this" {
-			infNm = infra.Name
+			infNm = m.InfraName()
 		}
 		res = append(res, &project.Dependency{
 			InfraName:  infNm,
 			ModuleName: splDep[1],
 		})
-		log.Debugf("Dep added: %v.%v", infNm, splDep[1])
+		log.Debugf("Dependency added: %v --> %v.%v", m.Key(), infNm, splDep[1])
 	}
 	return res, nil
 }
@@ -53,19 +53,10 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 		return nil, fmt.Errorf("Error in %s config, use one of 'script' or 'command' option", hookType)
 	}
 	ScriptData := hookSpec{
-		command:   nil,
+		Command:   "",
 		OnDestroy: false,
 		OnApply:   true,
 		OnPlan:    false,
-	}
-	var err error
-	if cmdExists {
-		ScriptData.command = []byte(fmt.Sprintf("#!/usr/bin/env bash\nset -e\n\n%s", cmd))
-	} else {
-		ScriptData.command, err = ioutil.ReadFile(filepath.Join(config.Global.WorkingDir, script))
-		if err != nil {
-			return nil, fmt.Errorf("can't load %s script: %v", hookType, err.Error())
-		}
 	}
 	ymlTmp, err := yaml.Marshal(hookData)
 	if err != nil {
@@ -76,6 +67,15 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
+	}
+	if cmdExists {
+		ScriptData.Command = fmt.Sprintf("#!/usr/bin/env bash\nset -e\n\n%s", cmd)
+	} else {
+		cmdTmp, err := ioutil.ReadFile(filepath.Join(config.Global.WorkingDir, script))
+		ScriptData.Command = string(cmdTmp)
+		if err != nil {
+			return nil, fmt.Errorf("can't load %s script: %v", hookType, err.Error())
+		}
 	}
 	return &ScriptData, nil
 

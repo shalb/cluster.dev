@@ -2,8 +2,8 @@ package cdev
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/spf13/cobra"
 )
@@ -22,11 +22,12 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&config.Global.UseCache, "cache", false, "Use previously cached build directory")
 	rootCmd.PersistentFlags().IntVar(&config.Global.MaxParallel, "parallelism", 3, "Max parallel threads for module applying")
 	rootCmd.PersistentFlags().BoolVar(&config.Global.TraceLog, "trace", false, "Print functions trace info in logs")
+	rootCmd.PersistentFlags().BoolVar(&config.Global.NoColor, "no-color", false, "Turn off colored output")
 }
 
 func Run() {
 	err := rootCmd.Execute()
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("Fatal error: %v", err.Error())
 	}
 }

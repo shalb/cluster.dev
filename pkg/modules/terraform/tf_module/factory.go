@@ -9,15 +9,21 @@ import (
 type Factory struct {
 }
 
-// New creates new module driver factory.
+// New creates new module.
 func (f *Factory) New(spec map[string]interface{}, infra *project.Infrastructure) (project.Module, error) {
 	mod := tfModule{}
-	err := mod.ReadConfigCommon(spec, infra)
+	err := mod.ReadConfig(spec, infra)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	err = mod.ReadConfig(spec)
+	return &mod, nil
+}
+
+// NewFromState creates new module from state data.
+func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Module, error) {
+	mod := tfModule{}
+	err := mod.LoadState(spec, modKey, p)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err

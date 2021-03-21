@@ -67,7 +67,12 @@ func (m *tfModule) genOutputs() ([]byte, error) {
 
 }
 
-func (m *tfModule) ReadConfig(spec map[string]interface{}) error {
+func (m *tfModule) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+	err := m.ReadConfigCommon(spec, infra)
+	if err != nil {
+		log.Debug(err.Error())
+		return err
+	}
 	modType, ok := spec["type"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect module type")
@@ -111,14 +116,14 @@ func (m *tfModule) Build(codeDir string) error {
 	if err != nil {
 		return err
 	}
-	m.FilesList["main.tf"], err = m.genMainCodeBlock()
+	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
 
 	if len(m.ExpectedOutputs()) > 0 {
-		m.FilesList["outputs.tf"], err = m.genOutputs()
+		m.FilesList()["outputs.tf"], err = m.genOutputs()
 		if err != nil {
 			log.Debug(err.Error())
 			return err

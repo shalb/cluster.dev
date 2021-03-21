@@ -36,8 +36,17 @@ func (b *BackendGCS) Provider() string {
 	return "gcs"
 }
 
+// GetBackendBytes generate terraform backend config.
+func (b *BackendGCS) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
+	f, err := b.GetBackendHCL(infraName, moduleName)
+	if err != nil {
+		return nil, err
+	}
+	return f.Bytes(), nil
+}
+
 // GetBackendHCL generate terraform backend config.
-func (b *BackendGCS) GetBackendHCL(infraName, moduleName string) ([]byte, error) {
+func (b *BackendGCS) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
 	bConfigTmpl, err := getStateMap(*b)
 	if err != nil {
 		return nil, err
@@ -51,7 +60,7 @@ func (b *BackendGCS) GetBackendHCL(infraName, moduleName string) ([]byte, error)
 	for key, value := range bConfigTmpl {
 		backendBody.SetAttributeValue(key, cty.StringVal(value.(string)))
 	}
-	return f.Bytes(), nil
+	return f, nil
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.

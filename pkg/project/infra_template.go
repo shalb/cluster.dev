@@ -14,7 +14,6 @@ type InfraTemplate struct {
 
 func NewInfraTemplate(data []byte) (*InfraTemplate, error) {
 	iTmpl := InfraTemplate{}
-
 	err := yaml.Unmarshal(data, &iTmpl)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal template data: %v", err.Error())

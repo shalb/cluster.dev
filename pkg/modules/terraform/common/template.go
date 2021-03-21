@@ -55,7 +55,7 @@ func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, 
 		ModuleName: splittedPath[1],
 		Output:     splittedPath[2],
 	}
-	marker := project.CreateMarker("remoteState")
+	marker := project.CreateMarker("remoteState", fmt.Sprintf("%s.%s.%s", splittedPath[0], splittedPath[1], splittedPath[2]))
 	m.projectPtr.Markers[RemoteStateMarkerCatName].(map[string]*project.Dependency)[marker] = &dep
 	return fmt.Sprintf("%s", marker), nil
 }
@@ -66,7 +66,7 @@ func (m *terraformTemplateFunctions) addYAMLBlockMarker(data interface{}) (strin
 	if !ok {
 		m.projectPtr.Markers[InsertYAMLMarkerCatName] = map[string]interface{}{}
 	}
-	marker := project.CreateMarker("YAML")
+	marker := project.CreateMarker("YAML", fmt.Sprintf("%v", data))
 	m.projectPtr.Markers[InsertYAMLMarkerCatName].(map[string]interface{})[marker] = data
 	return fmt.Sprintf("%s", marker), nil
 }

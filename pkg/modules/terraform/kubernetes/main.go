@@ -10,18 +10,19 @@ import (
 	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
-	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
 )
 
 type kubernetes struct {
 	common.Module
-	source     string
-	kubeconfig string
-	inputs     map[string]interface{}
+	source          string
+	kubeconfig      string
+	inputs          map[string]interface{}
+	providerVersion string
 }
 
 func (m *kubernetes) KindKey() string {
@@ -59,7 +60,12 @@ func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
+func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+	err := m.ReadConfigCommon(spec, infra)
+	if err != nil {
+		log.Debug(err.Error())
+		return err
+	}
 	source, ok := spec["source"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect module source")
@@ -97,7 +103,7 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
 				log.Fatal(err.Error())
 			}
 		}
-		manifests, err := config.ReadYAMLObjects(manifest)
+		manifests, err := utils.ReadYAMLObjects(manifest)
 		if err != nil {
 			return err
 		}
@@ -116,6 +122,10 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}) error {
 		m.kubeconfig = kubeconfig
 	} else {
 		m.kubeconfig = "~/.kube/config"
+	}
+	pv, ok := spec["provider_version"].(string)
+	if ok {
+		m.AddRequiredProvider("kubernetes-alpha", "hashicorp/kubernetes-alpha", pv)
 	}
 	m.source = source
 	return nil
@@ -138,7 +148,7 @@ func (m *kubernetes) ReplaceMarkers() error {
 func (m *kubernetes) Build(codeDir string) error {
 	m.BuildCommon()
 	var err error
-	m.FilesList["main.tf"], err = m.genMainCodeBlock()
+	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err

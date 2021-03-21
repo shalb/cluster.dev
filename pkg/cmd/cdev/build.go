@@ -12,12 +12,12 @@ var buildCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		project, err := project.LoadProjectFull()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: build: %v", err.Error())
 		}
 		err = project.Build()
 		log.Info("Building...")
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: build: %v", err.Error())
 		}
 	},
 }

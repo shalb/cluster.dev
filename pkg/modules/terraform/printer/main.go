@@ -39,7 +39,12 @@ func (m *printer) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *printer) ReadConfig(spec map[string]interface{}) error {
+func (m *printer) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+	err := m.ReadConfigCommon(spec, infra)
+	if err != nil {
+		log.Debug(err.Error())
+		return err
+	}
 	modType, ok := spec["type"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect module type")
@@ -75,7 +80,7 @@ func (m *printer) Build(codeDir string) error {
 	if err != nil {
 		return err
 	}
-	m.FilesList["main.tf"], err = m.genMainCodeBlock()
+	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
@@ -85,7 +90,7 @@ func (m *printer) Build(codeDir string) error {
 		return fmt.Errorf("module type 'printer' cannot have outputs, don't use remote state to it")
 	}
 	// Remove backend for printer.
-	delete(m.FilesList, "init.tf")
+	delete(m.FilesList(), "init.tf")
 	return m.CreateCodeDir(codeDir)
 }
 

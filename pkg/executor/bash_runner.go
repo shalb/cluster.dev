@@ -11,16 +11,18 @@ import (
 	"time"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/logging"
 )
 
 // BashRunner - runs shell commands.
 type BashRunner struct {
-	workingDir string
-	Env        []string
-	Timeout    time.Duration
-	LogLabels  []string
+	workingDir         string
+	Env                []string
+	Timeout            time.Duration
+	LogLabels          []string
+	ShowSuccessMessage bool
 }
 
 // Env - global list of environment variables.
@@ -46,7 +48,7 @@ func NewBashRunner(workingDir string, envVariables ...string) (*BashRunner, erro
 	runner.workingDir = workingDir
 	runner.Env = envVariables
 	runner.Timeout = 0
-
+	runner.ShowSuccessMessage = true
 	return &runner, nil
 }
 
@@ -106,9 +108,15 @@ func (b *BashRunner) RunWithTty(command string) error {
 
 // Run - exec command and hide secrets in log output.
 func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, error) {
+
+	var logPrefix string
+	for _, str := range b.LogLabels {
+		logPrefix = fmt.Sprintf("%s[%s]", logPrefix, str)
+	}
+	log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("In progress..."))
 	// Mask secrets with ***
 	hiddenCommand := stringHideSecrets(command, secrets...)
-	log.Debugf("Executing command \"%s\"", hiddenCommand)
+	log.Debugf("%s Executing command '%s':", logPrefix, hiddenCommand)
 
 	// Create log writer.
 	logWriter, err := logging.NewLogWriter(log.DebugLevel, logging.SliceFielder{Flds: b.LogLabels})
@@ -121,12 +129,9 @@ func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, err
 
 	bannerStopChan := make(chan struct{})
 	if config.Global.LogLevel != "debug" {
-		var banner string
-		for _, str := range b.LogLabels {
-			banner = fmt.Sprintf("%s[%s]", banner, str)
-		}
+
 		// banner = fmt.Sprintf("%s[dir='%s'][cmd='%s']", banner, "./"+dir, command)
-		banner = fmt.Sprintf("%s executing in progress...", banner)
+		banner := fmt.Sprintf("%s executing in progress...", logPrefix)
 		go showBanner(banner, bannerStopChan)
 
 		defer func(stop chan struct{}) {
@@ -136,16 +141,23 @@ func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, err
 	}
 	logCollector := newCollector(logWriter)
 	err = b.commandExecCommon(command, logCollector, errOutput)
+	if b.ShowSuccessMessage {
+		log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("Success"))
+	}
 	return logCollector.Data(), errOutput.Bytes(), err
 }
 
 // RunMutely - exec command and hide secrets in output. Return command output and errors output.
 func (b *BashRunner) RunMutely(command string, secrets ...string) (string, string, error) {
+	var logPrefix string
+	for _, str := range b.LogLabels {
+		logPrefix = fmt.Sprintf("%s[%s]", logPrefix, str)
+	}
 	output := &bytes.Buffer{}
 	runerr := &bytes.Buffer{}
 	// Mask secrets with ***
 	hiddenCommand := stringHideSecrets(command, secrets...)
-	log.Debugf("Executing command \"%s\"", hiddenCommand)
+	log.Debugf("Executing command '%s':", hiddenCommand)
 	err := b.commandExecCommon(command, output, runerr)
 	return output.String(), runerr.String(), err
 }

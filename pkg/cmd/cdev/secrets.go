@@ -27,7 +27,7 @@ var secretLs = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		p, err := project.LoadProjectBase()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: secret ls: %v", err.Error())
 		}
 		p.PrintSecretsList()
 	},
@@ -39,14 +39,14 @@ var secretEdit = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		p, err := project.LoadProjectBase()
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: secret edit: %v", err.Error())
 		}
 		if len(args) != 1 {
-			log.Fatalf("Secret name is required")
+			log.Fatal("Fatal error: secret edit: secret name is required")
 		}
 		err = p.Edit(args[0])
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Fatalf("Fatal error: secret edit: %v", err.Error())
 		}
 	},
 }
@@ -57,11 +57,11 @@ var secretCreate = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		_, err := project.LoadProjectBase()
 		if err != nil {
-			log.Fatalf("secret creating: check project: %v", err)
+			log.Fatalf("Fatal error: secret create: ", err.Error())
 		}
 		err = ui.CreateSecret()
 		if err != nil {
-			log.Fatalf("Create project: %v", err.Error())
+			log.Fatalf("Fatal error: secret create: ", err.Error())
 		}
 	},
 }
