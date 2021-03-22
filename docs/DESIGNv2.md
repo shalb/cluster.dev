@@ -278,7 +278,7 @@ This guide describes how to quickly create your first project and deploy it. To 
 
 ```bash
 mkdir my-cdev-project && cd my-cdev-project
-cdev new project
+cdev project create
 ```
 
 4. Choose one from the available projects. Check out the description of the example. Enter the data required for the generator.
