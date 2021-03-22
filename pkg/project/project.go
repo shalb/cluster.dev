@@ -248,7 +248,7 @@ func (p *Project) MkBuildDir() error {
 		}
 	}
 	if !config.Global.UseCache {
-		log.Debugf("Remove all old content: './%s'", relPath)
+		log.Debugf("Removes all old content: './%s'", relPath)
 		err := removeDirContent(p.codeCacheDir)
 		if err != nil {
 			log.Debug(err.Error())
