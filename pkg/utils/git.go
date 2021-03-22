@@ -30,7 +30,10 @@ func GetTemplate(gitURL, targetDir, templateName string) (string, error) {
 		}
 		command := fmt.Sprintf("git pull")
 		_, errOutput, err := shell.RunMutely(command)
-		return pulledTempplatePath, fmt.Errorf("get template: %v\n%v", err.Error(), errOutput)
+		if err != nil {
+			return pulledTempplatePath, fmt.Errorf("get template: %v\n%v", err.Error(), errOutput)
+		}
+		return pulledTempplatePath, nil
 	}
 	shell, err := executor.NewBashRunner(targetDir)
 	if err != nil {

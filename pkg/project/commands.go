@@ -167,7 +167,7 @@ func (p *Project) Plan() error {
 
 		diff := fProject.CheckModuleChanges(md)
 
-		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planing module '%v':", md.Key()))
+		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning module '%v':", md.Key()))
 		if len(diff) > 0 || config.Global.Force {
 			if len(diff) == 0 {
 				diff = colors.Fmt(colors.GreenBold).Sprint("Not changed.")
