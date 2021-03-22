@@ -236,13 +236,38 @@ See [Terraform Azure provider documentation](https://registry.terraform.io/provi
 ### DigitalOcean Authentication
 
 Create [an access token](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/).
-Export variable:
 
+
+1) Install `doctl`. [Details](https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/)
 ```bash
-export DIGITALOCEAN_TOKEN="MyToken"
+cd ~
+wget https://github.com/digitalocean/doctl/releases/download/v1.57.0/doctl-1.57.0-linux-amd64.tar.gz
+tar xf ~/doctl-1.57.0-linux-amd64.tar.gz
+sudo mv ~/doctl /usr/local/bin
+```
+2) Clone repo and chdir to example dir:
+```bash
+git clone https://github.com/shalb/cluster.dev.git
+cd cluster.dev/examples/do_k8s/
+```
+3) Export your DIGITALOCEAN_TOKEN. [Details](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/)
+```bash
+export DIGITALOCEAN_TOKEN="MyDIGITALOCEANToken" 
+```
+4) Export SPACES_ACCESS_KEY_ID and SPACES_SECRET_ACCESS_KEY environment variables. [Details](https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key)
+```bash
+export SPACES_SECRET_ACCESS_KEY="dSUGdbJqa6xwJ6Fo8qV2DSksdjh..."
+export SPACES_SECRET_ACCESS_KEY="TEaKjdj8DSaJl7EnOdsa..."
+```
+5) Create spaces bucket (in example used 'cdev-data' bucket name) for terraform states in the chosen region. (https://www.digitalocean.com/docs/spaces/quickstart/#create-a-space)
+6) Create domain (in example used 'k8s.cluster.dev' zone, change it) in DigitalOcean domains service. (https://www.digitalocean.com/docs/networking/dns/how-to/add-domains/)
+7) Use `cdev` to deploy infrastructure:
+```bash
+cdev plan
+cdev apply
 ```
 
-For details on using DO spaces bucket as a backend, see [here](https://www.digitalocean.com/community/questions/spaces-as-terraform-backend)
+
 
 ## Quick start
 

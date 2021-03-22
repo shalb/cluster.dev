@@ -23,6 +23,6 @@ help_message: |
   Before your begin:                                           
   1) Export your DIGITALOCEAN_TOKEN. (https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/)
   2) Export SPACES_ACCESS_KEY_ID and SPACES_SECRET_ACCESS_KEY. (https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key)
-  3) Create spaces bucket for terrraform states in the chosen region. (https://www.digitalocean.com/docs/spaces/quickstart/#create-a-space)
+  3) Create spaces bucket for terraform states in the chosen region. (https://www.digitalocean.com/docs/spaces/quickstart/#create-a-space)
   4) Create domain in DigitalOcean domains service. (https://www.digitalocean.com/docs/networking/dns/how-to/add-domains/)
   5) Use cdev command to plan and apply project infrastructure.
