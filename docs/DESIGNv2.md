@@ -29,7 +29,7 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
   * [Google cloud](#google-cloud)
     * [Auth](#auth)
   * [Azure Authentication](#azure-authentication)
-  * [DigitalOcean Authentication](#digitalocean)
+  * [DigitalOcean](#digitalocean)
 * [Quick start](#quick-start)
 * [Reference](#reference)
   * [CLI commands](#cli-commands)
