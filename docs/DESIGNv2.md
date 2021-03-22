@@ -233,7 +233,7 @@ See [Terraform Google cloud provider documentation](https://registry.terraform.i
 
 See [Terraform Azure provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure)
 
-### DigitalOcean Authentication
+### DigitalOcean
 
 Create [an access token](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/).
 
