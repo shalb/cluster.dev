@@ -235,9 +235,6 @@ See [Terraform Azure provider documentation](https://registry.terraform.io/provi
 
 ### DigitalOcean
 
-Create [an access token](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/).
-
-
 1) Install `doctl`. [Details](https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/)
 ```bash
 cd ~
