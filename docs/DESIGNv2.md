@@ -87,7 +87,7 @@ Running the command will:
 
 ### Demo Video
 
-video will be uploaded soon.
+Video will be uploaded soon.
 
 ## Install
 
@@ -95,7 +95,7 @@ video will be uploaded soon.
 
 #### Terraform
 
-Cdev client uses the Terraform binary. The required Terraform version is ~13 or higher. Refer to the [Terraform installation instructions](https://www.terraform.io/downloads.html) to install Terraform.
+cdev client uses the Terraform binary. The required Terraform version is ~13 or higher. Refer to the [Terraform installation instructions](https://www.terraform.io/downloads.html) to install Terraform.
 
 Terraform installation example for linux amd64:
 
@@ -129,7 +129,7 @@ cdev --help
 
 ### Build from source
 
-Go version 16 or higher is required. [Golang installation instructions](https://golang.org/doc/install)
+Go version 16 or higher is required, see [Golang installation instructions](https://golang.org/doc/install).
 
 To build cluster.dev client from src:
 
@@ -160,43 +160,43 @@ This section contains guidelines on cloud settings required for `cdev` to start 
 
 #### Authentication
 
-First, you need to configure access to the AWS cloud provider.
+First, you need to configure access to AWS cloud provider.
 There are several ways to do this:
 
 * **Environment variables**: provide your credentials via the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, the environment variables that represent your AWS Access Key and AWS Secret Key. You can also use the `AWS_DEFAULT_REGION` or `AWS_REGION` environment variable to set region, if needed. Example usage:
 
-```bash
-export AWS_ACCESS_KEY_ID="MYACCESSKEY"
-export AWS_SECRET_ACCESS_KEY="MYSECRETKEY"
-export AWS_DEFAULT_REGION="eu-central-1"
-```
+  ```bash
+  export AWS_ACCESS_KEY_ID="MYACCESSKEY"
+  export AWS_SECRET_ACCESS_KEY="MYSECRETKEY"
+  export AWS_DEFAULT_REGION="eu-central-1"
+  ```
 
 * **Shared Credentials File (recommended)**: set up an [AWS configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials.
 
-Credentials file `~/.aws/credentials` example:
+  Credentials file `~/.aws/credentials` example:
 
-```bash
-[cluster-dev]
-aws_access_key_id = MYACCESSKEY
-aws_secret_access_key = MYSECRETKEY
-```
+  ```bash
+  [cluster-dev]
+  aws_access_key_id = MYACCESSKEY
+  aws_secret_access_key = MYSECRETKEY
+  ```
 
-Config: `~/.aws/config` example:
+  Config: `~/.aws/config` example:
 
-```bash
-[profile cluster-dev]
-region = eu-central-1
-```
+  ```bash
+  [profile cluster-dev]
+  region = eu-central-1
+  ```
 
-Then export `AWS_PROFILE` environment variable.
+  Then export `AWS_PROFILE` environment variable.
 
-```bash
-export AWS_PROFILE=cluster-dev
-```
+  ```bash
+  export AWS_PROFILE=cluster-dev
+  ```
 
 #### Install AWS client and check access
 
-See how to install AWS CLI in [official installation guide](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html), or use commands from example:
+For details on how to install AWS CLI see the [official installation guide](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html), or use commands from the example:
 
 ```bash
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -219,7 +219,7 @@ For the built-in AWS example, you need to define a Route 53 hosted zone. Options
 
 1) You already have a Route 53 hosted zone.
 
-2) Create a new hosted zone using a [Route 53 documentation example](https://docs.aws.amazon.com/cli/latest/reference/route53/create-hosted-zone.html#examples).
+2) Create a new hosted zone using the [Route 53 documentation example](https://docs.aws.amazon.com/cli/latest/reference/route53/create-hosted-zone.html#examples).
 
 3) Use "cluster.dev" domain for zone delegation.
 
@@ -235,40 +235,49 @@ See [Terraform Azure provider documentation](https://registry.terraform.io/provi
 
 ### DigitalOcean
 
-1) Install `doctl`. [Details](https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/)
-```bash
-cd ~
-wget https://github.com/digitalocean/doctl/releases/download/v1.57.0/doctl-1.57.0-linux-amd64.tar.gz
-tar xf ~/doctl-1.57.0-linux-amd64.tar.gz
-sudo mv ~/doctl /usr/local/bin
-```
-2) Clone repo and chdir to example dir:
-```bash
-git clone https://github.com/shalb/cluster.dev.git
-cd cluster.dev/examples/do_k8s/
-```
-3) Export your DIGITALOCEAN_TOKEN. [Details](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/)
-```bash
-export DIGITALOCEAN_TOKEN="MyDIGITALOCEANToken" 
-```
-4) Export SPACES_ACCESS_KEY_ID and SPACES_SECRET_ACCESS_KEY environment variables. [Details](https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key)
-```bash
-export SPACES_SECRET_ACCESS_KEY="dSUGdbJqa6xwJ6Fo8qV2DSksdjh..."
-export SPACES_SECRET_ACCESS_KEY="TEaKjdj8DSaJl7EnOdsa..."
-```
-5) Create spaces bucket (in example used 'cdev-data' bucket name) for terraform states in the chosen region. (https://www.digitalocean.com/docs/spaces/quickstart/#create-a-space)
-6) Create domain (in example used 'k8s.cluster.dev' zone, change it) in DigitalOcean domains service. (https://www.digitalocean.com/docs/networking/dns/how-to/add-domains/)
+1) Install `doctl`. For details see [here](https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/).
+
+  ```bash
+  cd ~
+  wget https://github.com/digitalocean/doctl/releases/download/v1.57.0/doctl-1.57.0-linux-amd64.tar.gz
+  tar xf ~/doctl-1.57.0-linux-amd64.tar.gz
+  sudo mv ~/doctl /usr/local/bin
+  ```
+
+2) Clone the repo and change directory to example dir:
+
+  ```bash
+  git clone https://github.com/shalb/cluster.dev.git
+  cd cluster.dev/examples/do_k8s/
+  ```
+
+3) Export your DIGITALOCEAN_TOKEN, for details see [here](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/).
+
+  ```bash
+  export DIGITALOCEAN_TOKEN="MyDIGITALOCEANToken" 
+  ```
+
+4) Export SPACES_ACCESS_KEY_ID and SPACES_SECRET_ACCESS_KEY environment variables, for details see [here](https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key).
+
+  ```bash
+  export SPACES_SECRET_ACCESS_KEY="dSUGdbJqa6xwJ6Fo8qV2DSksdjh..."
+  export SPACES_SECRET_ACCESS_KEY="TEaKjdj8DSaJl7EnOdsa..."
+  ```
+
+5) Create a spaces bucket for Terraform states in the chosen region (in the example we used the 'cdev-data' bucket name). (https://www.digitalocean.com/docs/spaces/quickstart/#create-a-space)
+
+6) Create a domain in DigitalOcean domains service (in the example we used 'k8s.cluster.dev' zone, you can change it). (https://www.digitalocean.com/docs/networking/dns/how-to/add-domains/)
+
 7) Use `cdev` to deploy infrastructure:
-```bash
-cdev plan
-cdev apply
-```
 
-
+  ```bash
+  cdev plan
+  cdev apply
+  ```
 
 ## Quick start
 
-This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev cli](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for the chosen cloud provider.
+This guide describes how to quickly create your first project and deploy it. To get started, you need to install the [cdev CLI](#Download-from-release) and [required software](#Prerequisites). It is also recommended to install a console client for the chosen cloud provider.
 
 1. [Install cdev and required software](#Install).
 
@@ -276,32 +285,32 @@ This guide describes how to quickly create your first project and deploy it. To 
 
 3. Create a new empty dir for the project and use [cdev generators](#Generators) to create the new project from a template:
 
-```bash
-mkdir my-cdev-project && cd my-cdev-project
-cdev project create
-```
+  ```bash
+  mkdir my-cdev-project && cd my-cdev-project
+  cdev project create
+  ```
 
 4. Choose one from the available projects. Check out the description of the example. Enter the data required for the generator.
 
 5. Having finished working with the generator, check the project:
 
-```bash
-cdev project info
-```
+  ```bash
+  cdev project info
+  ```
 
 6. Edit [project](#Project-configuration) and [template](#Template-configuration) configuration, if needed.
 
-```bash
-vim project.yaml
-vim infra.yaml
-vim templates/aws-k3s.yaml # (the name depends on chosen option in step 4)
-```
+  ```bash
+  vim project.yaml
+  vim infra.yaml
+  vim templates/aws-k3s.yaml # (the name depends on chosen option in step 4)
+  ```
 
 7. Apply the project:
 
-```bash
-cdev apply -l debug
-```
+  ```bash
+  cdev apply -l debug
+  ```
 
 ## Reference
 
@@ -343,6 +352,15 @@ Available global flags:
 * `--trace`              Print functions trace info in logs (Mainly used for development).
 
 ## Project configuration
+
+Common project files:
+
+```bash
+project.yaml # Contains global project variables that can be used in other configuration objects.
+<infra_name>.yaml # Contains reference to a template, variables to render a template and backend for states.
+<backend_name>.yaml # Describes a backend storage for Terraform and cdev states.
+<secret_name>.yaml # Contains secrets, one per file.
+```
 
 `cdev` reads configuration from current directory, i.e. all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them with "---". The exception is the project.yaml configuration file and files with secrets.
 
@@ -400,10 +418,10 @@ variables:
 
 * `variables`: data set for [template rendering](#Template-configuration).
 
-* `template`: its either the path to a local directory containing the template's configuration files, or a remote git repository as a template source. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
-  * `<GIT_URL>` - *required*. Standard git repo url. See details on [official git page](https://git-scm.com/docs/git-clone#_git_urls)
+* `template`: it's either the path to a local directory containing the template's configuration files, or a remote Git repository as a template source. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For a Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
+  * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls).
   * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if template configuration is not in root of repo.
-  * `<BRANCH_OR_TAG>`- git branch or tag.
+  * `<BRANCH_OR_TAG>`- Git branch or tag.
   Examples:
 
   ```yaml
@@ -429,50 +447,50 @@ Currently 4 types of backends are supported:
 
 * `s3` AWS S3 backend:
 
-```yaml
-name: aws-backend
-kind: backend
-provider: s3
-spec:
-  bucket: cdev-states
-  region: {{ .project.variables.region }}
-```
+  ```yaml
+  name: aws-backend
+  kind: backend
+  provider: s3
+  spec:
+    bucket: cdev-states
+    region: {{ .project.variables.region }}
+  ```
 
 * `do` DigitalOcean spaces backend:
 
-```yaml
-name: do-backend
-kind: backend
-provider: do
-spec:
-  bucket: cdev-states
-  region: {{ .project.variables.region }}
-  access_key: {{ env "SPACES_ACCESS_KEY_ID" }}
-  secret_key: {{ env "SPACES_SECRET_ACCESS_KEY" }}
-```
+  ```yaml
+  name: do-backend
+  kind: backend
+  provider: do
+  spec:
+    bucket: cdev-states
+    region: {{ .project.variables.region }}
+    access_key: {{ env "SPACES_ACCESS_KEY_ID" }}
+    secret_key: {{ env "SPACES_SECRET_ACCESS_KEY" }}
+  ```
 
-* `azurerm` Microsoft azurem:
+* `azurerm` Microsoft azurerm:
 
-```yaml
-name: gcs-b
-kind: backend
-provider: azurerm
-spec:
-  resource_group_name: "StorageAccount-ResourceGroup"
-  storage_account_name: "example"
-  container_name: "cdev-states"
-```
+  ```yaml
+  name: gcs-b
+  kind: backend
+  provider: azurerm
+  spec:
+    resource_group_name: "StorageAccount-ResourceGroup"
+    storage_account_name: "example"
+    container_name: "cdev-states"
+  ```
 
 * `gcs` Google Cloud backend:
 
-```yaml
-name: do-backend
-kind: backend
-provider: gcs
-spec:
-  bucket: cdev-states
-  prefix: pref
-```
+  ```yaml
+  name: do-backend
+  kind: backend
+  provider: gcs
+  spec:
+    bucket: cdev-states
+    prefix: pref
+  ```
 
 ### Secrets
 
@@ -485,9 +503,9 @@ How to use:
 
 1. Use console client cdev to create a new secret from scratch:
 
-```bash
-cdev secret create
-```
+  ```bash
+  cdev secret create
+  ```
 
 2. Use interactive menu to create a secret.
 
@@ -501,13 +519,13 @@ cdev client can use AWS SSM as a secret storage.
 
 How to use:
 
-1. create a new secret in AWS secret manager using AWS CLI or web console. Both raw and JSON data formats are supported.
+1. Create a new secret in AWS secret manager using AWS CLI or web console. Both raw and JSON data formats are supported.
 
 2. Use the console client cdev to create a new secret from scratch:
 
-```bash
-cdev secret create
-```
+  ```bash
+  cdev secret create
+  ```
 
 3. Answer the questions. For `Name of secret in AWS Secrets manager` enter the name of the AWS secret created above.
 
@@ -529,8 +547,9 @@ cdev secret edit secret_name
 
 ### Basics
 
-Template represents yaml structure with the array of different invocation [modules](#Modules)
-Common view:
+A template is a directory, either local or located in a Git repo that contains template config files. cdev reads all ./*.yaml files from the directory (non-recursively), renders a template with the project's data, parse the yaml file and loads modules. Modules may contain reference to other files that are required for work. These files should be located inside the current directory (template context). As some of the files will also be rendered with the project's data, you can use Go-templates in them. For more details see [modules configuration](#Modules) below.
+
+A template represents yaml structure with the array of different invocation modules. Common view:
 
 ```yaml
 modules:
@@ -540,11 +559,11 @@ modules:
   ...
 ```
 
-Template can utilize all kinds of go-templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
+Template can utilize all kinds of Go-templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
 
 ### Functions
 
-1) [Base go-template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
+1) [Base Go-template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
 
 2) [Sprig functions](https://masterminds.github.io/sprig/).
 
@@ -553,42 +572,42 @@ Template can utilize all kinds of go-templates and Sprig functions (similar to H
 * `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block.
   **Allowed use**: only as full yaml value, in module `inputs`. Example:
 
-source yaml:
+  Source yaml:
 
-```yaml
-values:
-  node_groups:
-    - name: ng1
-      min_size: 1
-      max_size: 5
-    - name: ng2
-      max_size: 2
-      type: spot
-```
-
-target yaml template:
-
-```yaml
-modules:
-  - name: k3s
-    type: terraform
-    node_groups: {{ insertYAML .values.node_groups }}
-```
-
-rendered template:
-
-```yaml
-modules:
-  - name: k3s
-    type: terraform
+  ```yaml
+  values:
     node_groups:
-    - name: ng1
-      min_size: 1
-      max_size: 5
-    - name: ng2
-      max_size: 2
-      type: spot
-```
+      - name: ng1
+        min_size: 1
+        max_size: 5
+      - name: ng2
+        max_size: 2
+        type: spot
+  ```
+
+  Target yaml template:
+
+  ```yaml
+  modules:
+    - name: k3s
+      type: terraform
+      node_groups: {{ insertYAML .values.node_groups }}
+  ```
+
+  Rendered template:
+
+  ```yaml
+  modules:
+    - name: k3s
+      type: terraform
+      node_groups:
+      - name: ng1
+        min_size: 1
+        max_size: 5
+      - name: ng2
+        max_size: 2
+        type: spot
+  ```
 
 * `remoteState` - is used for passing data between modules and infrastructures. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: as yaml value, only in module `inputs`.
 
@@ -655,7 +674,7 @@ modules:
 
 In addition to common options, the following are available:
 
-* `source` - *string*, *required*. Terraform module [source](https://www.terraform.io/docs/language/modules/syntax.html#source). **It is not allowed to use local folders in source!**.
+* `source` - *string*, *required*. Terraform module [source](https://www.terraform.io/docs/language/modules/syntax.html#source). **It is not allowed to use local folders in source!**
 
 * `version` - *string*, *optional*. Module [version](https://www.terraform.io/docs/language/modules/syntax.html#version).
 
@@ -663,7 +682,7 @@ In addition to common options, the following are available:
 
 #### Helm module
 
-Describes [Terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
+Describes [Terraform Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
 
 Example:
 
@@ -697,7 +716,7 @@ In addition to common options, the following are available:
 
   * `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
 
-  * `additional_options` - *map of any*, *optional*. Corresponds to [Helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be pass as is.
+  * `additional_options` - *map of any*, *optional*. Corresponds to [Helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
 
   * `inputs` - *map of any*, *optional*. A map that represents [Helm release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`.
     For example:
