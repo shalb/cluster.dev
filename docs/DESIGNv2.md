@@ -422,6 +422,7 @@ variables:
   * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls).
   * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if template configuration is not in root of repo.
   * `<BRANCH_OR_TAG>`- Git branch or tag.
+  
   Examples:
 
   ```yaml
@@ -503,9 +504,9 @@ How to use:
 
 1. Use console client cdev to create a new secret from scratch:
 
-  ```bash
-  cdev secret create
-  ```
+    ```bash
+    cdev secret create
+   ```
 
 2. Use interactive menu to create a secret.
 
@@ -523,9 +524,9 @@ How to use:
 
 2. Use the console client cdev to create a new secret from scratch:
 
-  ```bash
-  cdev secret create
-  ```
+    ```bash
+    cdev secret create
+    ```
 
 3. Answer the questions. For `Name of secret in AWS Secrets manager` enter the name of the AWS secret created above.
 
