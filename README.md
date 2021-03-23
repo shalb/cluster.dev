@@ -1,4 +1,4 @@
-# Cluster.dev - Kubernetes-based Dev Environment in Minutes
+# Cluster.dev - Cloud Infrastructures' Management Tool
 
 Cluster.dev is an open-source tool designed to manage Cloud Native Infrastructures with simple declarative manifests - infrastructure templates. It allows you to describe a whole infrastructure and deploy it with a single tool.
 
