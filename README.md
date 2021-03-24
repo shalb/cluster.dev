@@ -1,12 +1,8 @@
-# Cluster.dev: Cloud infrastructures' management tool
+# Cluster.dev - Cloud Infrastructures' Management Tool
 
-Cluster.dev helps you manage Cloud Native Infrastructures with simple declarative manifests - Infra Templates.
+Cluster.dev is an open-source tool designed to manage Cloud Native Infrastructures with simple declarative manifests - infrastructure templates. It allows you to describe a whole infrastructure and deploy it with a single tool.
 
-So you can describe a whole infrastructure and deploy it with a single tool.
-
-Infra Template could contain different technology patterns, such as Terraform modules, Shell scripts, Kubernetes manifests, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc.
-
-You can store, test, and distribute your infrastructure pattern as a complete versioned set of technologies.
+The infrastructure templates could be based on Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc. Cluster.dev sticks those components together so that you could deploy, test and distribute a whole set of components with pinned versions.
 
 **Table of contents:**
 
@@ -26,9 +22,8 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
     * [Install AWS client and check access](#install-aws-client-and-check-access)
     * [Create S3 bucket for states](#create-s3-bucket-for-states)
     * [DNS Zone](#dns-zone)
-  * [Google cloud](#google-cloud)
-    * [Auth](#auth)
-  * [Azure Authentication](#azure-authentication)
+  * [Google Cloud authentication](#google-cloud-authentication)
+  * [Azure authentication](#azure-authentication)
   * [DigitalOcean](#digitalocean)
 * [Quick start](#quick-start)
 * [Reference](#reference)
@@ -49,6 +44,7 @@ You can store, test, and distribute your infrastructure pattern as a complete ve
     * [Helm module](#helm-module)
     * [Kubernetes module](#kubernetes-module)
     * [Printer module](#printer-module)
+* [Code of Conduct and License](#code-of-conduct-and-license)
 
 ## Concept
 
@@ -82,7 +78,7 @@ Running the command will:
  1. Decode all required secrets.
  2. Template infrastructure variables with global project variables and secrets.
  3. Pull and diff project state and build a dependency graph.
- 4. Invoke all required modules in a parralel manner.
+ 4. Invoke all required modules in a parallel manner.
     ex: `sops decode`, `terraform apply`, `helm install`, etc.
 
 ### Demo Video
@@ -223,15 +219,15 @@ For the built-in AWS example, you need to define a Route 53 hosted zone. Options
 
 3) Use "cluster.dev" domain for zone delegation.
 
-### Google cloud
+### Google Cloud authentication
 
-#### Auth
+See [Terraform Google cloud provider documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication).
+Work on setting up access to Google Cloud is in progress, examples are coming soon!
 
-See [Terraform Google cloud provider documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#authentication)
+### Azure authentication
 
-### Azure Authentication
-
-See [Terraform Azure provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure)
+See [Terraform Azure provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#authenticating-to-azure).
+Work on setting up access to Azure is in progress, examples are coming soon!
 
 ### DigitalOcean
 
@@ -570,8 +566,7 @@ Template can utilize all kinds of Go-templates and Sprig functions (similar to H
 
 3) Enhanced functions: all functions described above allow you to modify the template text. Apart from these, some special enhanced functions are available. They cannot be used everywhere. The functions are integrated within the functionality of the program and with the yaml syntax:
 
-* `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block.
-  **Allowed use**: only as full yaml value, in module `inputs`. Example:
+* `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block. **Allowed use**: only as full yaml value, in module `inputs`. Example:
 
   Source yaml:
 
@@ -776,3 +771,9 @@ modules:
 ```
 
 * `inputs` - *any*, *required* - a map that represents data to be printed in the log. The block **allows to use the functions `remoteState` and `insertYAML`**.
+
+Example:
+
+Code of Conduct is described in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+
+The product is licensed under [Apache 2.0](./LICENSE).
