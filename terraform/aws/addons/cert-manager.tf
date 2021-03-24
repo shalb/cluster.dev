@@ -47,7 +47,7 @@ module "iam_assumable_role_cert_manager" {
   source                        = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
   version                       = "~> v2.6.0"
   create_role                   = var.eks ? true : false
-  role_name                     = "eks-cert-manager-${data.terraform_remote_state.k8s.outputs.cluster_id}-${random_id.random_role_id.hex}"
+  role_name                     = "eks-cert-manager-${var.k8s_cluster_id}-${random_id.random_role_id.hex}"
   provider_url                  = replace(data.terraform_remote_state.k8s.outputs.cluster_oidc_issuer_url, "https://", "")
   role_policy_arns              = [var.eks && length(aws_iam_policy.cert_manager) >= 1 ? aws_iam_policy.cert_manager.0.arn : ""]
   oidc_fully_qualified_subjects = ["system:serviceaccount:cert-manager:cert-manager"]
@@ -56,7 +56,7 @@ module "iam_assumable_role_cert_manager" {
 resource "aws_iam_policy" "cert_manager" {
   count = var.eks ? 1 : 0
 
-  name   = "AllowCertManagerUpdates-${data.terraform_remote_state.k8s.outputs.cluster_id}-${random_id.random_role_id.hex}"
+  name   = "AllowCertManagerUpdates-${var.k8s_cluster_id}-${random_id.random_role_id.hex}"
   policy = <<-EOF
 {
   "Version": "2012-10-17",
@@ -105,7 +105,7 @@ resource "null_resource" "cert_manager_issuers" {
 
   provisioner "local-exec" {
     when    = destroy
-    command = "kubectl delete --kubeconfig ${var.config_path} -n cert-manager -f -<<EOF\n${data.template_file.clusterissuers_production.rendered}\nEOF"
+    command = "exit 0"
   }
 
   triggers = {

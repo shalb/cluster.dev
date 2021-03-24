@@ -1,0 +1,29 @@
+name: do-backend
+kind: backend
+provider: do
+spec:
+  bucket: {{ .project.variables.bucket_name }}
+  region: {{ .project.variables.region }}
+  access_key: {{ reqEnv "SPACES_ACCESS_KEY_ID" }}
+  secret_key: {{ reqEnv "SPACES_SECRET_ACCESS_KEY" }}
+---
+name: prod_kubernetes
+template: https://github.com/shalb/cdev-do-k8s
+kind: infrastructure
+backend: do-backend
+variables:
+  do_token: {{ reqEnd "DIGITALOCEAN_TOKEN" }}
+  bucket: {{ .project.variables.bucket_name }}
+  region: {{ .project.variables.region }}
+  vpc: default
+  provider:
+    region: {{ .project.variables.region }}
+  main_node_group:
+    name: "default"
+    min_nodes: 1
+    max_nodes: 2
+    auto_scale: true
+    node_type: "s-1vcpu-2gb"
+  k8s_version: "1.19"
+  domain: /{ .domain }/ # You should create dns zone in DigitalOcean domains.
+  argo_password: "$2y$12$r474GzwwJ.pskdhS.FAM2uc/OOJL0sHrv6pcdSlm1.sGiQdrhX.Xu" # bcrypted "password" 

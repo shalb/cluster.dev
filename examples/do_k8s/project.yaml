@@ -1,0 +1,6 @@
+name: k8s-cluster
+kind: project
+variables:
+  organization: cluster-dev
+  region: ams3
+  bucket_name: cdev-data # You should create the bucket 'cdev-data' before deploying the project.

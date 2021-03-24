@@ -1,7 +1,8 @@
 data "template_file" "k8s_userdata" {
-  template = file("k8s-userdata.tpl.sh")
+  template = file("${path.module}/k8s-userdata.tpl.sh")
   vars = {
     cluster_name = var.cluster_name
+    bucket_name  = var.bucket_name
     private_key  = tls_private_key.bastion_key.private_key_pem
   }
 }
@@ -11,7 +12,7 @@ module "minikube" {
   cluster_name        = var.cluster_name
   aws_instance_type   = var.aws_instance_type
   aws_region          = var.region
-  aws_subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[0]
+  aws_subnet_id       = var.aws_subnet_id
   hosted_zone         = var.hosted_zone
   additional_userdata = data.template_file.k8s_userdata.rendered
   ssh_public_key      = tls_private_key.bastion_key.public_key_openssh # generated in bastion.tf

@@ -1,5 +1,5 @@
 terraform {
-  required_version = "~> 0.12.20"
+  required_version = "~> 0.13.00"
   backend "s3" {}
 
   required_providers {
@@ -13,19 +13,4 @@ terraform {
 
 provider "aws" {
   region = var.region
-}
-
-data "terraform_remote_state" "vpc" {
-  backend = "s3"
-  config = {
-    bucket = var.cluster_name
-    key    = "states/terraform-vpc.state"
-    region = var.region
-  }
-  defaults = {
-    private_subnets = []
-    public_subnets  = []
-    vpc_id          = ""
-    vpc_cidr        = ""
-  }
 }
