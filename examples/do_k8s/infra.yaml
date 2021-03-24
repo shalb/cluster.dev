@@ -12,7 +12,7 @@ template: https://github.com/shalb/cdev-do-k8s
 kind: infrastructure
 backend: do-backend
 variables:
-  do_token: {{ reqEnd "DIGITALOCEAN_TOKEN" }}
+  do_token: {{ reqEnv "DIGITALOCEAN_TOKEN" }}
   bucket: {{ .project.variables.bucket_name }}
   region: {{ .project.variables.region }}
   vpc: default
