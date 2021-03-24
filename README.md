@@ -772,7 +772,7 @@ modules:
 
 * `inputs` - *any*, *required* - a map that represents data to be printed in the log. The block **allows to use the functions `remoteState` and `insertYAML`**.
 
-Example:
+## Code of Conduct and License
 
 Code of Conduct is described in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 
