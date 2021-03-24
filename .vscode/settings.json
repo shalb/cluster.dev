@@ -140,5 +140,6 @@
     "workdir",
     "xlarge",
     "yaml's"
-  ]
+  ],
+  "workbench.list.automaticKeyboardNavigation": false
 }

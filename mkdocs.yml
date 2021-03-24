@@ -8,27 +8,22 @@ site_url: 'https://cluster.dev'
 nav:
   - Home:
     - Welcome: index.md
-    - Design: DESIGN.md
   - Quick Start:
-    - Getting started on AWS: getting-started-aws.md
-    - Getting started on DigitalOcean: getting-started-digitalocean.md
-    - Cleanup: cleanup.md
-  - Configuration Options:
-    - Options List for Cluster Manifests: OPTIONS.md
-  - Operations:
-    - Git Provider Support: git-provider-support.md
-    - Enable GitHub auth in ArgoCD: argocd-github-auth.md
-  - Development:
-    - Contributing: CONTRIBUTING.md
-    - Style-guide: style-guide.md
-    - Terraform modules structure: terraform-code-structure.md
-    - AWS IAM Permissions: aws-iam-permissions.md
-    - How to add a new Provider or Provisioner: add-provider-provisioner.md
-    - How to add a new docs: add-new-docs.md
-    - How to create a new Release: release-new-version.md
-    - How to run reconciler locally: run-reconciler-locally.md
-  - Releases:
-    - Roadmap: ROADMAP.md
+    - Prerequisites: prerequisites.md
+    - Installing cdev: installation.md
+    - Configuring Cloud Providers:
+      - Deploying to AWS: aws-cloud-provider.md
+      - Deploying to DigitalOcean: digital-ocean-cloud-provider.md
+      - Deploying to GCE: google-cloud-provider.md
+      - Deploying to Azure: azure-cloud-provider.md
+    - Downloading Sample Project: get-sample-project.md
+    - Applying Infrastructure: apply-infrastructure.md
+  - Usage:
+    - Project Configuration: project-configuration.md
+    - CLI Reference:
+      - CLI Commands: cli-commands.md
+      - CLI Options: cli-options.md
+  - Template Development: template-development.md
 
 
 markdown_extensions:
