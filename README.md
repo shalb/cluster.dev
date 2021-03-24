@@ -117,8 +117,8 @@ cluster.dev client.
 Installation example for linux amd64:
 
 ```bash
-wget https://github.com/shalb/cluster.dev/releases/download/v0.4.0-rc1/cluster.dev_v0.4.0-rc1_linux_amd64.tgz
-tar -xzvf cluster.dev_v0.4.0-rc1_linux_amd64.tgz -C /usr/local/bin
+wget https://github.com/shalb/cluster.dev/releases/download/v0.4.0-rc3/cluster.dev_v0.4.0-rc3_linux_amd64.tgz
+tar -xzvf cluster.dev_v0.4.0-rc3_linux_amd64.tgz -C /usr/local/bin
 
 cdev --help
 ```
@@ -132,7 +132,7 @@ To build cluster.dev client from src:
 Clone cluster.dev git repo:
 
 ```bash
-git clone --depth 1 --branch v0.4.0-rc1 https://github.com/shalb/cluster.dev/
+git clone --depth 1 --branch v0.4.0-rc3 https://github.com/shalb/cluster.dev/
 ```
 
 Build binary:
@@ -606,6 +606,8 @@ Template can utilize all kinds of Go-templates and Sprig functions (similar to H
   ```
 
 * `remoteState` - is used for passing data between modules and infrastructures. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: as yaml value, only in module `inputs`.
+
+* `reqEnv` - the same as the [sprig env](http://masterminds.github.io/sprig/os.html), but return an error, if environment variable does not exists.
 
 ### Modules
 
