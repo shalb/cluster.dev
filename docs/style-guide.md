@@ -4,7 +4,7 @@ For better experience, we recommend using [VS Code](https://code.visualstudio.co
 
 We use [.editorconfig](https://editorconfig.org/). It fixes basic mistakes on every file saving.
 
-And please install [pre-commit-terraform](https://github.com/antonbabenko/pre-commit-terraform#how-to-install) with all its dependencies. It checks all changed files when you run `git commit` for more complex problems and tries to fix them for you.
+Please make sure to install [pre-commit-terraform](https://github.com/antonbabenko/pre-commit-terraform#how-to-install) with all its dependencies. It checks all changed files when you run `git commit` for more complex problems and tries to fix them for you.
 
 ## Bash
 
@@ -30,6 +30,4 @@ It is needed for [terraform-docs](https://github.com/antonbabenko/pre-commit-ter
 
 Then run `pre-commit run --all-files` or make some changes in any `.tf` file in the same dir (for ex. `variable "name" {` -> `variable "name"{`).
 
-### Terraform code structure
 
-If you'd like to know how we prefer to structure the tf-code, please see [this article](terraform-code-structure.md).
