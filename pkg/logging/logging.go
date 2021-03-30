@@ -12,7 +12,13 @@ import (
 type colorFunc func(string, ...interface{}) string
 
 // Colors mapping.
-var Colors []colorFunc
+var Colors = []colorFunc{
+	log.DebugLevel: colors.Fmt(colors.Purple).Sprintf,
+	log.InfoLevel:  colors.Fmt(colors.Cyan).Sprintf,
+	log.WarnLevel:  colors.Fmt(colors.Yellow).Sprintf,
+	log.ErrorLevel: colors.Fmt(colors.LightRed).Sprintf,
+	log.FatalLevel: colors.Fmt(colors.Red).Sprintf,
+}
 
 // Strings mapping.
 var Strings = [...]string{

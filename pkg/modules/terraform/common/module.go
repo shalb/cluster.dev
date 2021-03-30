@@ -26,7 +26,7 @@ type hookSpec struct {
 	OnPlan    bool   `yaml:"on_plan,omitempty" json:"on_plan,omitempty"`
 }
 
-type requiredProvider struct {
+type RequiredProvider struct {
 	Source  string `json:"source"`
 	Version string `json:"version"`
 }
@@ -47,14 +47,14 @@ type Module struct {
 	specRaw           map[string]interface{}
 	markers           map[string]string
 	applyOutput       []byte
-	requiredProviders map[string]requiredProvider
+	requiredProviders map[string]RequiredProvider
 }
 
 func (m *Module) AddRequiredProvider(name, source, version string) {
 	if m.requiredProviders == nil {
-		m.requiredProviders = make(map[string]requiredProvider)
+		m.requiredProviders = make(map[string]RequiredProvider)
 	}
-	m.requiredProviders[name] = requiredProvider{
+	m.requiredProviders[name] = RequiredProvider{
 		Version: version,
 		Source:  source,
 	}

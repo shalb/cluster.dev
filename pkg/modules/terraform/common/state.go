@@ -14,12 +14,13 @@ type StateDep struct {
 }
 
 type StateSpecCommon struct {
-	BackendName  string            `json:"backend_name"`
-	PreHook      *hookSpec         `json:"pre_hook,omitempty"`
-	PostHook     *hookSpec         `json:"post_hook,omitempty"`
-	Providers    interface{}       `json:"providers,omitempty"`
-	Markers      map[string]string `json:"markers,omitempty"`
-	Dependencies []StateDep        `json:"dependencies,omitempty"`
+	BackendName      string                      `json:"backend_name"`
+	PreHook          *hookSpec                   `json:"pre_hook,omitempty"`
+	PostHook         *hookSpec                   `json:"post_hook,omitempty"`
+	Providers        interface{}                 `json:"providers,omitempty"`
+	Markers          map[string]string           `json:"markers,omitempty"`
+	Dependencies     []StateDep                  `json:"dependencies,omitempty"`
+	RequiredProvider map[string]RequiredProvider `json:"required_providers,omitempty"`
 }
 
 type StateSpecDiffCommon struct {
@@ -39,12 +40,13 @@ func (m *Module) GetStateCommon() StateSpecCommon {
 		deps[i].Module = dep.ModuleName
 	}
 	st := StateSpecCommon{
-		BackendName:  m.backendPtr.Name(),
-		PreHook:      m.preHook,
-		PostHook:     m.postHook,
-		Providers:    m.providers,
-		Markers:      m.markers,
-		Dependencies: deps,
+		BackendName:      m.backendPtr.Name(),
+		PreHook:          m.preHook,
+		PostHook:         m.postHook,
+		Providers:        m.providers,
+		Markers:          m.markers,
+		Dependencies:     deps,
+		RequiredProvider: m.requiredProviders,
 	}
 	if len(m.dependencies) == 0 {
 		st.Dependencies = []StateDep{}
@@ -84,7 +86,7 @@ func (m *Module) LoadStateBase(spec StateCommon, modKey string, p *project.State
 	if !exists {
 		return fmt.Errorf("load module from state: backend '%v' does not exists in curent project", mState.BackendName)
 	}
-	infra, exists := p.Infrastructures[infraName]
+	infra, exists := p.LoaderProjectPtr.Infrastructures[infraName]
 	if !exists {
 		infra = &project.Infrastructure{
 			ProjectPtr:  &p.Project,
@@ -117,7 +119,7 @@ func (m *Module) LoadStateBase(spec StateCommon, modKey string, p *project.State
 	m.preHook = mState.PreHook
 	m.postHook = mState.PostHook
 	m.providers = mState.Providers
-
+	m.requiredProviders = mState.RequiredProvider
 	return nil
 }
 

@@ -17,10 +17,9 @@ import (
 
 type tfModule struct {
 	common.Module
-	source           string
-	version          string
-	tfModuleLocalDir string
-	inputs           map[string]interface{}
+	source  string
+	version string
+	inputs  map[string]interface{}
 }
 
 func (m *tfModule) KindKey() string {
@@ -46,8 +45,9 @@ func (m *tfModule) genMainCodeBlock() ([]byte, error) {
 		}
 		moduleBody.SetAttributeValue(key, ctyVal)
 	}
-	if m.tfModuleLocalDir != "" {
-		moduleBody.SetAttributeValue("source", cty.StringVal(m.tfModuleLocalDir))
+	if utils.IsLocalPath(m.source) {
+		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, m.InfraPtr().TemplateDir, m.source)
+		moduleBody.SetAttributeValue("source", cty.StringVal(tfModuleLocalDir))
 	}
 	for hash, ref := range m.Markers() {
 		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, ref)
@@ -96,9 +96,6 @@ func (m *tfModule) ReadConfig(spec map[string]interface{}, infra *project.Infras
 		m.version = fmt.Sprintf("%v", version)
 	}
 	m.source = source
-	if utils.IsLocalPath(source) {
-		m.tfModuleLocalDir = filepath.Join(config.Global.WorkingDir, m.InfraPtr().TemplateDir, source)
-	}
 	mInputs, ok := spec["inputs"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("Incorrect module inputs")

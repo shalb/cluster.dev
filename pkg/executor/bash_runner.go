@@ -18,11 +18,11 @@ import (
 
 // BashRunner - runs shell commands.
 type BashRunner struct {
-	workingDir         string
-	Env                []string
-	Timeout            time.Duration
-	LogLabels          []string
-	ShowSuccessMessage bool
+	workingDir        string
+	Env               []string
+	Timeout           time.Duration
+	LogLabels         []string
+	ShowResultMessage bool
 }
 
 // Env - global list of environment variables.
@@ -48,7 +48,7 @@ func NewBashRunner(workingDir string, envVariables ...string) (*BashRunner, erro
 	runner.workingDir = workingDir
 	runner.Env = envVariables
 	runner.Timeout = 0
-	runner.ShowSuccessMessage = true
+	runner.ShowResultMessage = true
 	return &runner, nil
 }
 
@@ -141,8 +141,12 @@ func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, err
 	}
 	logCollector := newCollector(logWriter)
 	err = b.commandExecCommon(command, logCollector, errOutput)
-	if b.ShowSuccessMessage {
-		log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("Success"))
+	if b.ShowResultMessage {
+		if err == nil {
+			log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("Success"))
+		} else {
+			log.Errorf("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("Error"))
+		}
 	}
 	return logCollector.Data(), errOutput.Bytes(), err
 }
