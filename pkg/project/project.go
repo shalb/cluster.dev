@@ -88,7 +88,7 @@ func LoadProjectBase() (*Project, error) {
 	}
 
 	if exports, ok := prjConfParsed["exports"]; ok {
-		err = project.ProcessExport(exports)
+		err = project.ExportEnvs(exports)
 		if err != nil {
 			log.Fatalf("Loading project: %v", err.Error())
 		}
@@ -344,7 +344,7 @@ func (p *Project) PrintInfo() error {
 	return nil
 }
 
-func (p *Project) ProcessExport(ex interface{}) error {
+func (p *Project) ExportEnvs(ex interface{}) error {
 	exports, correct := ex.(map[string]interface{})
 	if !correct {
 		return fmt.Errorf("exports: malformed exports configuration")

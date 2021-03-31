@@ -166,7 +166,6 @@ func (p *Project) Plan() error {
 	for _, md := range CurrentGrph.GetSequenceSet() {
 
 		diff := fProject.CheckModuleChanges(md)
-
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning module '%v':", md.Key()))
 		if len(diff) > 0 || config.Global.Force {
 			if len(diff) == 0 {
