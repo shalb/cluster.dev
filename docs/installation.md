@@ -1,23 +1,28 @@
 # Installing cdev
 
-## Installing cdev with a single command
+## From script
+
+cdev has an installer script that takes the latest version of cdev and installs it for you locally. You can fetch the script and execute it locally:
 
 ```bash
-export CDEV_VERSION=$(curl -s https://api.github.com/repos/shalb/cluster.dev/releases/latest | grep tag_name | cut -d '"' -f 4) && curl -Lo cdev.tgz https://github.com/shalb/cluster.dev/releases/download/${CDEV_VERSION}/cluster.dev_${CDEV_VERSION}_linux_amd64.tgz && tar -xzvf cdev.tgz -C /usr/local/bin
+curl -fsSL https://raw.githubusercontent.com/shalb/cluster.dev/master/scripts/get_cdev.sh | bash
 ```
 
-## Downloading from release
+## Download from release
 
-Binaries of the latest stable release are available on the [releases page](https://github.com/shalb/cluster.dev/releases). The documentation is suitable for **v0.4.0 or higher** of cluster.dev client.
+Each stable version of cdev has a binary that can be downloaded and installed manually. The documentation is suitable for **v0.4.0 or higher** of cluster.dev client.
 
 Installation example for Linux amd64:
 
-```bash
-wget https://github.com/shalb/cluster.dev/releases/download/v0.4.0-rc1/cluster.dev_v0.4.0-rc1_linux_amd64.tgz
-tar -xzvf cluster.dev_v0.4.0-rc1_linux_amd64.tgz -C /usr/local/bin
+1. Download your desired version from the [releases page](https://github.com/shalb/cluster.dev/releases) (as an example we'll have v0.4.0):
 
-cdev --help
-```
+    ```bash
+    export CDEV_VERSION=v0.4.0-rc1
+    ```
+
+2. Unpack it (tar -xzvf cdev.tgz)
+
+3. Move the cdev binary to its desired destination (-C /usr/local/bin)
 
 ## Building from source
 
@@ -25,7 +30,7 @@ Go version 16 or higher is required, see [Golang installation instructions](http
 
 To build cluster.dev client from source:
 
-1. Clone cluster.dev git repo:
+1. Clone cluster.dev Git repo:
 
      ```bash
      git clone --depth 1 --branch v0.4.0-rc1 https://github.com/shalb/cluster.dev/
