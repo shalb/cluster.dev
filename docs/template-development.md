@@ -144,6 +144,7 @@ Example:
 modules:
   - name: argocd
     type: helm
+    provider_version: "2.0.3"
     source:
       repository: "https://argoproj.github.io/argo-helm"
       chart: "argo-cd"
@@ -168,11 +169,12 @@ In addition to common options the following are available:
 
   * `chart`, `repository`, `version` - correspond to options with the same name from helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
 
-  * `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
+* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
+* `provider_version` - *string*, *optional*. Version of terraform helm provider to use. Default - latest. See [terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest)  
 
-  * `additional_options` - *map of any*, *optional*. Corresponds to [Terraform helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
+* `additional_options` - *map of any*, *optional*. Corresponds to [Terraform helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
 
-  * `inputs` - *map of any*, *optional*. A map that represents [Terraform helm_release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`. For example:
+* `inputs` - *map of any*, *optional*. A map that represents [Terraform helm_release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`. For example:
 
    ```yaml
     inputs:
@@ -203,6 +205,7 @@ Example:
 modules:
   - name: argocd_apps
     type: kubernetes
+    provider_version: "0.2.1"
     source: ./argocd-apps/app1.yaml
     kubeconfig: ../kubeconfig
     depends_on: this.argocd
@@ -211,7 +214,7 @@ modules:
 * `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the template, and also allows to use the functions `remoteState` and `insertYAML`**.
 
 * `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
-
+* `provider_version` - *string*, *optional*. Version of terraform kubernetes-alpha provider to use. Default - latest. See [terraform kubernetes-alpha provider](https://registry.terraform.io/providers/hashicorp/kubernetes-alpha/latest) 
 ### Printer module
 
 The module is mainly used to see the outputs of other modules in the console logs.

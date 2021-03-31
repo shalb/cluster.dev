@@ -65,7 +65,7 @@ variables:
 
 * `variables`: data set for template rendering.
 
-* `template`: it's either a path to a local directory containing the template's configuration files, or a remote Git repository as a template source. For more details on templates please see the [Template Development](https://cluster.dev/template-development/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
+*  <a name="infra_options_template">`template`</a>: it's either a path to a local directory containing the template's configuration files, or a remote Git repository as a template source. For more details on templates please see the [Template Development](https://cluster.dev/template-development/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
     * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls).
     * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if template configuration is not in root of repo.
     * `<BRANCH_OR_TAG>`- Git branch or tag.
