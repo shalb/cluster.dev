@@ -6,6 +6,7 @@ CDEV_LATEST_VERSION=$(curl -s https://api.github.com/repos/shalb/cluster.dev/rel
 
 PROFILE_FILE=""
 
+
 TMP_DIR=$(mktemp -d)
 
 if [ -e "${HOME}/.bash_profile" ]; then
@@ -16,10 +17,8 @@ fi
 
 mkdir -p ${BIN_DIR}
 
-pushd ${TMP_DIR}
 curl -fLo ${TMP_DIR}/cdev.tgz https://github.com/shalb/cluster.dev/releases/download/${CDEV_LATEST_VERSION}/cluster.dev_${CDEV_LATEST_VERSION}_linux_amd64.tgz
 tar -xzvf ${TMP_DIR}/cdev.tgz -C ${BIN_DIR}
-popd
 
 if [ -n "${PROFILE_FILE}" ]; then
     ADD_CDEV_LINE="export PATH=\$PATH:\$HOME/.cluster.dev/bin"
