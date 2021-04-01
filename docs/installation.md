@@ -20,9 +20,17 @@ Installation example for Linux amd64:
     export CDEV_VERSION=v0.4.0-rc1
     ```
 
-2. Unpack it (tar -xzvf cdev.tgz)
+2. Unpack it:
 
-3. Move the cdev binary to its desired destination (-C /usr/local/bin)
+    ```bash
+    tar -xzvf cluster.dev_${CDEV_VERSION}_linux_amd64
+    ```
+
+3. Move the cdev binary to its desired destination:
+
+    ```bash
+    sudo mv cdev /usr/local/bin/
+    ```
 
 ## Building from source
 
