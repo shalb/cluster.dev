@@ -11,7 +11,7 @@ nav:
   - Quick Start:
     - Prerequisites: prerequisites.md
     - Installing cdev: installation.md
-    - Configuring Cloud Providers:
+    - Cloud Providers:
       - Deploying to AWS: aws-cloud-provider.md
       - Deploying to DigitalOcean: digital-ocean-cloud-provider.md
       - Deploying to GCE: google-cloud-provider.md
