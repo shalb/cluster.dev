@@ -11,6 +11,7 @@ import (
 	"github.com/Masterminds/sprig"
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -60,6 +61,7 @@ var templateFunctionsMap = template.FuncMap{
 	"reqEnv":               getEnv,
 	"workDir":              workDir,
 	"bcrypt":               BcryptString,
+	"cidrSubnet":           utils.CidrSubnet,
 }
 
 func init() {
