@@ -118,7 +118,10 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 		if err != nil {
 			return fmt.Errorf("download template: %v\n   See details about infrastructure template reference: https://github.com/shalb/cluster.dev#infra_options_template", err.Error())
 		}
-		i.TemplateDir = dr
+		i.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, dr)
+		if err != nil {
+			return fmt.Errorf("reading templates: error parsing tmpl dir")
+		}
 	}
 
 	templatesFilesList, err := filepath.Glob(i.TemplateDir + "/*.yaml")
