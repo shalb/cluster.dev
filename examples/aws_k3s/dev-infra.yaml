@@ -26,7 +26,8 @@ variables:
   azs:
     - "{{ .project.variables.region }}a"
     - "{{ .project.variables.region }}b"
-  public_key: "ssh-rsa AAAAB3NzaC1yc2EA......" # Set your public key here.  public_key_name: arti
+  public_key: "ssh-rsa AAAAB3NzaC1yc2EA......" # Set your public key here.  
+  public_key_name: sam
   master_node_count: 1
   worker_node_groups:
     - name: "node_pool"
