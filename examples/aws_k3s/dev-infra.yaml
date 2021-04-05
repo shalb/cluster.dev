@@ -26,8 +26,7 @@ variables:
   azs:
     - "{{ .project.variables.region }}a"
     - "{{ .project.variables.region }}b"
-  public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC872U0xIGtOQRXhOXHITkSDBhHsk5jxYX8YvXqsYh86AjONbHf/dvukJdUoTErmc9EcWJ3NshHlZbc+EMXULzuGlgQDGqwTQxKBXFbMX4u9p3ZCwDtQJqL15JTpIJ7UjWAlSbnOeqidLEIG1K7aiY+hbVSg/dIZ6od0RtJCicZrP0LSGnqR6OJZOlKN9ryFJ51z2V+OIPjyOpjfVZQXoO8KYBBFF8OhfDHUBFR/VolNEQedj9hLfd+rIuEwSlAPBnx6GQkgwp1JwOGXIlizklBHdOHqUB3QAPdt5mILNgwDvon0eb38jjapV6nJgSH1BASBt8l64LA6SGUSAOENCv3"
-  public_key_name: arti
+  public_key: "ssh-rsa AAAAB3NzaC1yc2EA......" # Set your public key here.  public_key_name: arti
   master_node_count: 1
   worker_node_groups:
     - name: "node_pool"
