@@ -46,6 +46,10 @@ func InterfaceToCty(in interface{}) (cty.Value, error) {
 
 // ReplaceStingMarkerInBody replace all substrings in TokenQuotedLit tokens to value as terraform expression.
 func ReplaceStingMarkerInBody(body *hclwrite.Body, marker, value string) {
+
+	for _, bl := range body.Blocks() {
+		ReplaceStingMarkerInBody(bl.Body(), marker, value)
+	}
 	attrs := body.Attributes()
 	for name, attr := range attrs {
 		var cleanedExprTokens hclwrite.Tokens
