@@ -1,6 +1,6 @@
 # Deploying to Azure
 
-The feature is in the process of development. Detailed information on how to set up access to Azure will be added as soon as the work is finished.
+Work on setting up access to Azure is in progress, examples are coming soon!
 
 ## Authentication
 

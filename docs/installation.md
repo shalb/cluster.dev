@@ -14,23 +14,13 @@ Each stable version of cdev has a binary that can be downloaded and installed ma
 
 Installation example for Linux amd64:
 
-1. Download your desired version from the [releases page](https://github.com/shalb/cluster.dev/releases) (as an example we'll have v0.4.0):
+1. Download your desired version from the [releases page](https://github.com/shalb/cluster.dev/releases).
 
-    ```bash
-    export CDEV_VERSION=v0.4.0-rc1
-    ```
+2. Unpack it.
 
-2. Unpack it:
+3. Find the cdev binary in the unpacked directory.
 
-    ```bash
-    tar -xzvf cluster.dev_${CDEV_VERSION}_linux_amd64
-    ```
-
-3. Move the cdev binary to its desired destination:
-
-    ```bash
-    sudo mv cdev /usr/local/bin/
-    ```
+4. Move the cdev binary to bin folder (/usr/local/bin/).
 
 ## Building from source
 
@@ -41,7 +31,7 @@ To build cluster.dev client from source:
 1. Clone cluster.dev Git repo:
 
      ```bash
-     git clone --depth 1 --branch v0.4.0-rc1 https://github.com/shalb/cluster.dev/
+     git clone https://github.com/shalb/cluster.dev/
      ```
 
 2. Build the binary:

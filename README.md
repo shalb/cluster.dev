@@ -14,6 +14,7 @@ The infrastructure templates could be based on Terraform modules, Kubernetes man
   * [Prerequisites](#prerequisites)
     * [Terraform](#terraform)
     * [SOPS](#sops)
+  * [Download from script](#download-from-script)
   * [Download from release](#download-from-release)
   * [Build from source](#build-from-source)
 * [Cloud providers](#cloud-providers)
@@ -109,19 +110,27 @@ See [SOPS installation instructions](https://github.com/mozilla/sops#download) i
 
 Also see [Secrets section](#sops-secret) in this documentation.
 
-### Download from release
+### Download from script
 
-Binaries of the latest stable release are available on the [releases page](https://github.com/shalb/cluster.dev/releases). This documentation is suitable for **v0.4.0 or higher**
-cluster.dev client.
-
-Installation example for linux amd64:
+cdev has an installer script that takes the latest version of cdev and installs it for you locally. You can fetch the script and execute it locally:
 
 ```bash
-wget https://github.com/shalb/cluster.dev/releases/download/v0.4.0-rc3/cluster.dev_v0.4.0-rc3_linux_amd64.tgz
-tar -xzvf cluster.dev_v0.4.0-rc3_linux_amd64.tgz -C /usr/local/bin
-
-cdev --help
+curl -fsSL https://raw.githubusercontent.com/shalb/cluster.dev/master/scripts/get_cdev.sh | bash
 ```
+
+### Download from release
+
+Each stable version of cdev has a binary that can be downloaded and installed manually. The documentation is suitable for **v0.4.0 or higher** of cluster.dev client.
+
+Installation example for Linux amd64:
+
+1. Download your desired version from the [releases page](https://github.com/shalb/cluster.dev/releases).
+
+2. Unpack it.
+
+3. Find the cdev binary in the unpacked directory.
+
+4. Move the cdev binary to bin folder (/usr/local/bin/).
 
 ### Build from source
 
@@ -129,10 +138,10 @@ Go version 16 or higher is required, see [Golang installation instructions](http
 
 To build cluster.dev client from src:
 
-Clone cluster.dev git repo:
+Clone cluster.dev Git repo:
 
 ```bash
-git clone --depth 1 --branch v0.4.0-rc3 https://github.com/shalb/cluster.dev/
+git clone https://github.com/shalb/cluster.dev/
 ```
 
 Build binary:
@@ -233,32 +242,32 @@ Work on setting up access to Azure is in progress, examples are coming soon!
 
 1) Install `doctl`. For details see [here](https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/).
 
-  ```bash
-  cd ~
-  wget https://github.com/digitalocean/doctl/releases/download/v1.57.0/doctl-1.57.0-linux-amd64.tar.gz
-  tar xf ~/doctl-1.57.0-linux-amd64.tar.gz
-  sudo mv ~/doctl /usr/local/bin
-  ```
+    ```bash
+    cd ~
+    wget https://github.com/digitalocean/doctl/releases/download/v1.57.0/doctl-1.57.0-linux-amd64.tar.gz
+    tar xf ~/doctl-1.57.0-linux-amd64.tar.gz
+    sudo mv ~/doctl /usr/local/bin
+    ```
 
 2) Clone the repo and change directory to example dir:
 
-  ```bash
-  git clone https://github.com/shalb/cluster.dev.git
-  cd cluster.dev/examples/do_k8s/
-  ```
+    ```bash
+    git clone https://github.com/shalb/cluster.dev.git
+    cd cluster.dev/examples/do_k8s/
+    ```
 
 3) Export your DIGITALOCEAN_TOKEN, for details see [here](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/).
 
-  ```bash
-  export DIGITALOCEAN_TOKEN="MyDIGITALOCEANToken" 
-  ```
+    ```bash
+    export DIGITALOCEAN_TOKEN="MyDIGITALOCEANToken" 
+    ```
 
 4) Export SPACES_ACCESS_KEY_ID and SPACES_SECRET_ACCESS_KEY environment variables, for details see [here](https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key).
 
-  ```bash
-  export SPACES_SECRET_ACCESS_KEY="dSUGdbJqa6xwJ6Fo8qV2DSksdjh..."
-  export SPACES_SECRET_ACCESS_KEY="TEaKjdj8DSaJl7EnOdsa..."
-  ```
+    ```bash
+    export SPACES_SECRET_ACCESS_KEY="dSUGdbJqa6xwJ6Fo8qV2DSksdjh..."
+    export SPACES_SECRET_ACCESS_KEY="TEaKjdj8DSaJl7EnOdsa..."
+    ```
 
 5) Create a spaces bucket for Terraform states in the chosen region (in the example we used the 'cdev-data' bucket name). (https://www.digitalocean.com/docs/spaces/quickstart/#create-a-space)
 
@@ -266,10 +275,10 @@ Work on setting up access to Azure is in progress, examples are coming soon!
 
 7) Use `cdev` to deploy infrastructure:
 
-  ```bash
-  cdev plan
-  cdev apply
-  ```
+    ```bash
+    cdev plan
+    cdev apply
+    ```
 
 ## Quick start
 
