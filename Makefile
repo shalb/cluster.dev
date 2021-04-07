@@ -1,30 +1,44 @@
-BINDIR      := $(CURDIR)/bin
-BINNAME     ?= cdev
+BINDIR       := $(CURDIR)/bin
+BINNAME      ?= cdev
 
-GOPATH        = $(shell go env GOPATH)
-GOIMPORTS     = $(GOPATH)/bin/goimports
-ARCH          = $(shell uname -p)
+LINUX_AMD64  := linux-amd64
+LINUX_ARM64  := linux-arm64
+DARWIN_AMD64 := darwin-amd64
 
-SRC        := $(shell find . -type f -name '*.go' -print)
+CUR_GOOS     := $(shell go env GOOS)
+CUR_GOARCH   := $(shell go env GOARCH)
 
-VERSION=`git describe --tags`
-BUILD=`date +%FT%T%z`
-CONFIG_PKG="github.com/shalb/cluster.dev/pkg/config"
+GOPATH       := $(shell go env GOPATH)
+GOIMPORTS    := $(GOPATH)/bin/goimports
+ARCH         := $(shell uname -p)
+
+SRC        	 := $(shell find . -type f -name '*.go' -print)
+
+VERSION      = `git describe --tag --abbrev=0`
+BUILD        = `date +%FT%T%z`
+CONFIG_PKG   = "github.com/shalb/cluster.dev/pkg/config"
 
 # Required for globs to work correctly
 SHELL      = /usr/bin/env bash
 
-.PHONY: all
-all: build
+all: clean build
 
-.PHONY: build
-build:
-	GO111MODULE=on CGO_ENABLED=0 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(BINNAME) ./cmd/$(BINNAME)
+darwin_amd64: 
+	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(DARWIN_AMD64)/$(BINNAME) ./cmd/$(BINNAME)
 
-.PHONY: install
+linux_amd64: 
+	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(LINUX_AMD64)/$(BINNAME) ./cmd/$(BINNAME)
+
+linux_arm64: 
+	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(LINUX_ARM64)/$(BINNAME) ./cmd/$(BINNAME)
+
+build: darwin_amd64 linux_amd64 linux_arm64
+	@echo version: $(VERSION)
+
 install:
-	GO111MODULE=on CGO_ENABLED=0 go install -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" ./cmd/$(BINNAME)
+	GO111MODULE=on CGO_ENABLED=0 GOOS=$(CUR_GOOS) GOARCH=$(CUR_GOARCH) go install -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" ./cmd/$(BINNAME)
 
-.PHONY: clean
 clean:
-	rm $(BINDIR)/$(BINNAME)
+	rm -rf $(BINDIR)/*
+
+.PHONY: all clean

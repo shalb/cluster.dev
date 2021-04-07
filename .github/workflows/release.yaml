@@ -16,15 +16,10 @@ jobs:
       with:
         fetch-depth: 2
 
-    - name: Build
+    - name: Relese
       run: |
         git fetch --prune --unshallow --tags
-        make && mv bin/cdev ./
-      env:
-        CGO_ENABLED: 0
-
-    - name: Relese
-      run: cp .github/release.sh ./ && ./release.sh
+        ./scripts/release.sh
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

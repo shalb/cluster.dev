@@ -110,7 +110,10 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 		if !isDir {
 			return fmt.Errorf("reading templates: local source should be a dir")
 		}
-		i.TemplateDir = templatesDir
+		i.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, templatesDir)
+		if err != nil {
+			return fmt.Errorf("reading templates: error parsing tmpl dir")
+		}
 	} else {
 		templatesDownloadDir := filepath.Join(config.Global.TmpDir, "templates")
 		os.Mkdir(templatesDownloadDir, os.ModePerm)

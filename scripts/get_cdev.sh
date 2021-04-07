@@ -9,6 +9,29 @@ PROFILE_FILE=""
 
 TMP_DIR=$(mktemp -d)
 
+OS=""
+case $(uname) in
+    "Linux") OS="linux";;
+    "Darwin") OS="darwin";;
+    *)
+        echo "Unsupported os type $(uname)"
+        exit 1
+        ;;
+esac
+
+ARCH=""
+case $(uname -m) in
+    "x86_64") ARCH="amd64";;
+    "arm64") ARCH="arm64";;
+    *)
+        echo "Unsupported arch $(uname -m)"
+        exit 1
+        ;;
+esac
+
+echo ${GOOS}
+exit 0
+
 if [ -e "${HOME}/.bash_profile" ]; then
     PROFILE_FILE="${HOME}/.bash_profile"
 elif [ -e "${HOME}/.bashrc" ]; then
@@ -17,7 +40,7 @@ fi
 
 mkdir -p ${BIN_DIR}
 
-curl -fLo ${TMP_DIR}/cdev.tgz https://github.com/shalb/cluster.dev/releases/download/${CDEV_LATEST_VERSION}/cluster.dev_${CDEV_LATEST_VERSION}_linux_amd64.tgz
+curl -fLo ${TMP_DIR}/cdev.tgz https://github.com/shalb/cluster.dev/releases/download/${CDEV_LATEST_VERSION}/cdev-${CDEV_LATEST_VERSION}-${OS}-${ARCH}.tar.gz
 tar -xzvf ${TMP_DIR}/cdev.tgz -C ${BIN_DIR}
 
 if [ -n "${PROFILE_FILE}" ]; then

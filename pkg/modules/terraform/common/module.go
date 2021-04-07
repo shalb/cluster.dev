@@ -176,6 +176,33 @@ func (m *Module) Dependencies() *[]*project.Dependency {
 	return &m.dependencies
 }
 
+func (m *Module) InitDefault() error {
+	rn, err := executor.NewBashRunner(m.codeDir)
+	if err != nil {
+		log.Debug(err.Error())
+		return err
+	}
+	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
+	rn.LogLabels = []string{
+		m.InfraName(),
+		m.Name(),
+		"apply",
+	}
+
+	var cmd = ""
+	cmd += fmt.Sprintf("%[1]s init && %[1]s apply -auto-approve", terraformBin)
+	if m.postHook != nil && m.postHook.OnApply {
+		cmd += " && ./post_hook.sh"
+	}
+	var errMsg []byte
+	m.applyOutput, errMsg, err = rn.Run(cmd)
+	if err != nil {
+		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+	}
+	// log.Info(colors.LightWhiteBold.Sprint("successfully applied"))
+	return nil
+}
+
 func (m *Module) ApplyDefault() error {
 	rn, err := executor.NewBashRunner(m.codeDir)
 	if err != nil {
