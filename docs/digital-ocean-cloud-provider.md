@@ -10,7 +10,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
 1) Install `doctl`. For details see [here](https://www.digitalocean.com/docs/apis-clis/doctl/how-to/install/).
 
-    ```bash
+    ```
     cd ~
     wget https://github.com/digitalocean/doctl/releases/download/v1.57.0/doctl-1.57.0-linux-amd64.tar.gz
     tar xf ~/doctl-1.57.0-linux-amd64.tar.gz
@@ -19,20 +19,20 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
 2) Clone the repo and change directory to example dir:
 
-    ```bash
+    ```
     git clone https://github.com/shalb/cluster.dev.git
     cd cluster.dev/examples/do_k8s/
     ```
 
 3) Export your DIGITALOCEAN_TOKEN, for details see [here](https://www.digitalocean.com/docs/apis-clis/api/create-personal-access-token/).
 
-    ```bash
+    ```
     export DIGITALOCEAN_TOKEN="MyDIGITALOCEANToken" 
     ```
 
 4) Export SPACES_ACCESS_KEY_ID and SPACES_SECRET_ACCESS_KEY environment variables, for details see [here](https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key).
 
-    ```bash
+    ```
     export SPACES_SECRET_ACCESS_KEY="dSUGdbJqa6xwJ6Fo8qV2DSksdjh..."
     export SPACES_SECRET_ACCESS_KEY="TEaKjdj8DSaJl7EnOdsa..."
     ```
@@ -43,7 +43,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
 7) Use `cdev` to deploy infrastructure:
 
-    ```bash
+    ```
     cdev plan
     cdev apply
     ```
