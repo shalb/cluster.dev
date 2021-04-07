@@ -9,7 +9,8 @@ The sample project which deploys k3s cluster in AWS, using existing or created V
 
 1. Terraform 13+
 2. AWS account.
-3. cdev installed.
+3. kubectl installed.
+4. cdev installed.
 
 ## Quick Start
 
