@@ -30,7 +30,6 @@ case $(uname -m) in
 esac
 
 echo ${GOOS}
-exit 0
 
 if [ -e "${HOME}/.bash_profile" ]; then
     PROFILE_FILE="${HOME}/.bash_profile"
