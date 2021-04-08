@@ -44,6 +44,7 @@ type ConfSpec struct {
 	ShowTerraformPlan  bool
 	StateFileName      string
 	StateCacheDir      string
+	TemplatesCacheDir  string
 	CacheDir           string
 	NoColor            bool
 }
@@ -70,6 +71,7 @@ func InitConfig() {
 	Global.CacheDir = filepath.Join(Global.TmpDir, "cache")
 	Global.StateCacheDir = filepath.Join(Global.TmpDir, "state")
 	Global.StateFileName = filepath.Join(curPath, "cdev.state")
+	Global.TemplatesCacheDir = filepath.Join(Global.TmpDir, "templates")
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err.Error())

@@ -37,7 +37,7 @@ func GetTemplate(gitURL, targetDir, templateName string) (string, error) {
 	}
 	shell, err := executor.NewBashRunner(targetDir)
 	if err != nil {
-		return "", fmt.Errorf("get template: %v\n%v", err.Error())
+		return "", fmt.Errorf("get template: %v", err.Error())
 	}
 	command := fmt.Sprintf("git clone --single-branch --depth=1 ")
 	if parsedGitURL.Version != "" {

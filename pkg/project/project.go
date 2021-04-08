@@ -254,6 +254,7 @@ func (p *Project) MkBuildDir() error {
 			log.Debug(err.Error())
 			return err
 		}
+		err = removeDirContent(config.Global.TemplatesCacheDir)
 	}
 	return nil
 }
