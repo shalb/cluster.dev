@@ -56,11 +56,11 @@ type Dependency struct {
 func NewModule(spec map[string]interface{}, infra *Infrastructure) (Module, error) {
 	mType, ok := spec["type"].(string)
 	if !ok {
-		return nil, fmt.Errorf("Incorrect module type")
+		return nil, fmt.Errorf("incorrect module type")
 	}
 	modDrv, exists := ModuleFactoriesMap[mType]
 	if !exists {
-		return nil, fmt.Errorf("Incorrect module type '%v'", mType)
+		return nil, fmt.Errorf("incorrect module type '%v'", mType)
 	}
 
 	return modDrv.New(spec, infra)

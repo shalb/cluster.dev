@@ -29,12 +29,18 @@ case $(uname -m) in
         ;;
 esac
 
-echo ${GOOS}
-
-if [ -e "${HOME}/.bash_profile" ]; then
-    PROFILE_FILE="${HOME}/.bash_profile"
-elif [ -e "${HOME}/.bashrc" ]; then
-    PROFILE_FILE="${HOME}/.bashrc"
+if [ "$(uname)" != "Darwin" ]; then
+    if [ -e "${HOME}/.bashrc" ]; then
+        PROFILE_FILE="${HOME}/.bashrc"
+    elif [ -e "${HOME}/.bash_profile" ]; then
+        PROFILE_FILE="${HOME}/.bash_profile"
+    fi
+else
+    if [ -e "${HOME}/.bash_profile" ]; then
+        PROFILE_FILE="${HOME}/.bash_profile"
+    elif [ -e "${HOME}/.bashrc" ]; then
+        PROFILE_FILE="${HOME}/.bashrc"
+    fi
 fi
 
 mkdir -p ${BIN_DIR}

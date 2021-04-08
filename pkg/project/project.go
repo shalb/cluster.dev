@@ -201,7 +201,11 @@ func (p *Project) readModules() error {
 			for _, moduleData := range infraTmpl.Modules {
 				mod, err := NewModule(moduleData, infra)
 				if err != nil {
-					return fmt.Errorf("infra '%v', reading modules: %v", infraName, err.Error())
+					traceModuleView, errYaml := yaml.Marshal(moduleData)
+					if errYaml != nil {
+						traceModuleView = []byte{}
+					}
+					return fmt.Errorf("infra '%v', reading modules: %v\nModule data:\n%v", infraName, err.Error(), string(traceModuleView))
 				}
 				if _, exists := p.Modules[mod.Key()]; exists {
 					return fmt.Errorf("infra '%v', reading modules: duplicate module name: %v", infraName, mod.Name())
