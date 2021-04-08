@@ -18,6 +18,7 @@ import (
 
 // ConfigFileName name of required project config file.
 const ConfigFileName = "project.yaml"
+const projectObjKindKey = "Project"
 
 // MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
 type MarkerScanner func(data reflect.Value, module Module) (reflect.Value, error)
@@ -83,7 +84,7 @@ func LoadProjectBase() (*Project, error) {
 		project.name = name
 	}
 
-	if kn, ok := prjConfParsed["kind"].(string); !ok || kn != "project" {
+	if kn, ok := prjConfParsed["kind"].(string); !ok || kn != projectObjKindKey {
 		log.Fatal("Loading project: error in project config: kind is required.")
 	}
 

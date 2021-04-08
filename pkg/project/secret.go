@@ -14,7 +14,7 @@ import (
 
 type secretDriver int
 
-const secretObjKindKey = "secret"
+const secretObjKindKey = "Secret"
 
 type Secret struct {
 	Filename  string

@@ -13,7 +13,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-const infraObjKindKey = "infrastructure"
+const infraObjKindKey = "Infrastructure"
 
 type Infrastructure struct {
 	ProjectPtr  *Project

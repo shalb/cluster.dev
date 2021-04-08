@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const backendObjKindKey = "backend"
+const backendObjKindKey = "Backend"
 
 // Backend interface for backend provider.
 type Backend interface {
