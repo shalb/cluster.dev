@@ -115,9 +115,8 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 			return fmt.Errorf("reading templates: error parsing tmpl dir")
 		}
 	} else {
-		templatesDownloadDir := filepath.Join(config.Global.TmpDir, "templates")
-		os.Mkdir(templatesDownloadDir, os.ModePerm)
-		dr, err := utils.GetTemplate(src, templatesDownloadDir, i.Name)
+		os.Mkdir(config.Global.TemplatesCacheDir, os.ModePerm)
+		dr, err := utils.GetTemplate(src, config.Global.TemplatesCacheDir, i.Name)
 		if err != nil {
 			return fmt.Errorf("download template: %v\n   See details about infrastructure template reference: https://github.com/shalb/cluster.dev#infra_options_template", err.Error())
 		}
