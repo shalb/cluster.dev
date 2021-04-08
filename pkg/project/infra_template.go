@@ -55,7 +55,7 @@ func NewInfraTemplate(data []byte) (*InfraTemplate, error) {
 			for _, msg := range messages {
 				errReasons += fmt.Sprintf("%v\n", msg)
 			}
-			return nil, fmt.Errorf("cdev template version validatin error: \n%v", errReasons)
+			return nil, fmt.Errorf("cdev template version validation error: \n%v", errReasons)
 		}
 	}
 	// i.TemplateSrc = src
