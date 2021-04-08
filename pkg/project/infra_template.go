@@ -3,6 +3,8 @@ package project
 import (
 	"fmt"
 
+	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,6 +18,9 @@ func NewInfraTemplate(data []byte) (*InfraTemplate, error) {
 	iTmpl := InfraTemplate{}
 	err := yaml.Unmarshal(data, &iTmpl)
 	if err != nil {
+		if config.Global.TraceLog {
+			log.Debug(string(data))
+		}
 		return nil, fmt.Errorf("unmarshal template data: %v", err.Error())
 	}
 	if len(iTmpl.Modules) < 1 {

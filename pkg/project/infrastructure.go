@@ -110,9 +110,10 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 		if !isDir {
 			return fmt.Errorf("reading templates: local source should be a dir")
 		}
+		log.Debugf("Template dir: %v", templatesDir)
 		i.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, templatesDir)
 		if err != nil {
-			return fmt.Errorf("reading templates: error parsing tmpl dir")
+			i.TemplateDir = templatesDir
 		}
 	} else {
 		os.Mkdir(config.Global.TemplatesCacheDir, os.ModePerm)
@@ -120,6 +121,7 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 		if err != nil {
 			return fmt.Errorf("download template: %v\n   See details about infrastructure template reference: https://github.com/shalb/cluster.dev#infra_options_template", err.Error())
 		}
+		log.Debugf("Template dir: %v", dr)
 		i.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, dr)
 		if err != nil {
 			return fmt.Errorf("reading templates: error parsing tmpl dir")

@@ -63,12 +63,11 @@ func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
 func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
 	err := m.ReadConfigCommon(spec, infra)
 	if err != nil {
-		log.Debug(err.Error())
-		return err
+		return fmt.Errorf("reading kubernetes module: %v", err.Error())
 	}
 	source, ok := spec["source"].(string)
 	if !ok {
-		return fmt.Errorf("Incorrect module source")
+		return fmt.Errorf("reading kubernetes module '%v': malformed module source", m.Key())
 	}
 	tmplDir := m.InfraPtr().TemplateDir
 	var absSource string
@@ -79,13 +78,13 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infr
 	}
 	fileInfo, err := os.Stat(absSource)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading kubernetes module '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 	}
 	var filesList []string
 	if fileInfo.IsDir() {
 		filesList, err = filepath.Glob(absSource + "/*.yaml")
 		if err != nil {
-			return err
+			return fmt.Errorf("reading kubernetes module '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 		}
 	} else {
 		filesList = append(filesList, absSource)
@@ -93,7 +92,7 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infr
 	for _, fileName := range filesList {
 		file, err := ioutil.ReadFile(fileName)
 		if err != nil {
-			return err
+			return fmt.Errorf("reading kubernetes module '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 		}
 		manifest, errIsWarn, err := m.InfraPtr().TemplateTry(file)
 		if err != nil {
@@ -105,7 +104,7 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infr
 		}
 		manifests, err := utils.ReadYAMLObjects(manifest)
 		if err != nil {
-			return err
+			return fmt.Errorf("reading kubernetes module '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 		}
 
 		for i, manifest := range manifests {
