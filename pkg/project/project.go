@@ -37,7 +37,8 @@ type Project struct {
 	objects          map[string][]ObjectData
 	objectsFiles     map[string][]byte
 	codeCacheDir     string
-	mux              sync.Mutex
+	StateLock        sync.Mutex
+	InitLock         sync.Mutex
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.

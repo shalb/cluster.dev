@@ -95,7 +95,7 @@ func (m *printer) Build(codeDir string) error {
 }
 
 func (m *printer) Apply() (err error) {
-	err = m.ApplyDefault()
+	err = m.ApplyCommon()
 	if err != nil {
 		return
 	}

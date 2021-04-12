@@ -2,19 +2,19 @@ description: DigitalOcean cloud, k8s kubernetes cluster with argocd
 options:
   - name: name
     description: Project name
-    regex: "^[a-zA-Z][a-zA-Z_0-9]{0,32}$"
+    regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,32}$"
   - name: organization
     description: Organization name
-    regex: "^[a-zA-Z][a-zA-Z_0-9]{0,64}$"
+    regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,64}$"
   - name: region
-    description: DigitalOcean region
-    regex: "^[a-zA-Z][a-zA-Z_0-9]{0,32}$"
+    description: AWS region
+    regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,32}$"
   - name: domain
     description: DigitalOcean DNS zone domain name
-    regex: "^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}"
+    regex: "^[a-zA-Z0-9][a-zA-Z0-9-\\.]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$"
   - name: bucket_name
     description: DigitalOcean spaces bucket name for states
-    regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,64}$"
+    regex: "^[a-zA-Z][a-zA-Z0-9\\-]{0,64}$"
 help_message: | 
   ###############################################################################
   # Cluster.dev project generation for DigitalOcean cloud.                      #
