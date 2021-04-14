@@ -13,7 +13,7 @@ import (
 // Build generate all terraform code for project.
 func (p *Project) Build() error {
 	for _, module := range p.Modules {
-		if err := module.Build(p.codeCacheDir); err != nil {
+		if err := module.Build(); err != nil {
 			return err
 		}
 	}
@@ -36,7 +36,7 @@ func (p *Project) Destroy() error {
 
 	for _, md := range grph.GetSequenceSet() {
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Destroying module '%v'", md.Key()))
-		err := md.Build(md.ProjectPtr().codeCacheDir)
+		err := md.Build()
 		if err != nil {
 			log.Errorf("project destroy: destroying deleted module: %v", err.Error())
 		}
@@ -76,7 +76,7 @@ func (p *Project) Apply() error {
 		if exists {
 			continue
 		}
-		err := md.Build(md.ProjectPtr().codeCacheDir)
+		err := md.Build()
 		if err != nil {
 			log.Errorf("project apply: destroying deleted module: %v", err.Error())
 		}
@@ -112,7 +112,7 @@ func (p *Project) Apply() error {
 			var res error
 			if len(diff) > 0 || config.Global.Force {
 				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying module '%v':", md.Key()))
-				err := mod.Build(mod.ProjectPtr().codeCacheDir)
+				err := mod.Build()
 				if err != nil {
 					log.Errorf("project apply: module build error: %v", err.Error())
 				}
@@ -183,7 +183,7 @@ func (p *Project) Plan() error {
 					}
 				}
 				if allDepsDeployed {
-					err := md.Build(md.ProjectPtr().codeCacheDir)
+					err := md.Build()
 					if err != nil {
 						log.Errorf("terraform plan: module build error: %v", err.Error())
 					}

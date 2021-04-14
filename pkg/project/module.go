@@ -12,7 +12,7 @@ type Module interface {
 	InfraName() string
 	ReplaceMarkers() error
 	Dependencies() *[]*Dependency
-	Build(string) error
+	Build() error
 	Apply() error
 	Plan() error
 	Destroy() error
@@ -22,6 +22,7 @@ type Module interface {
 	GetDiffData() interface{}
 	LoadState(interface{}, string, *StateProject) error
 	KindKey() string
+	CodeDir() string
 }
 
 type ModuleDriver interface {

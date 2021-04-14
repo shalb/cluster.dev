@@ -144,7 +144,7 @@ func (m *kubernetes) ReplaceMarkers() error {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *kubernetes) Build(codeDir string) error {
+func (m *kubernetes) Build() error {
 	m.BuildCommon()
 	var err error
 	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
@@ -152,5 +152,5 @@ func (m *kubernetes) Build(codeDir string) error {
 		log.Debug(err.Error())
 		return err
 	}
-	return m.CreateCodeDir(codeDir)
+	return m.CreateCodeDir()
 }

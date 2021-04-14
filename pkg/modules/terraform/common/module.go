@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
@@ -129,6 +130,7 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	if exists {
 		m.providers = providers
 	}
+	m.codeDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
 	return nil
 }
 
@@ -165,11 +167,6 @@ func (m *Module) InfraName() string {
 func (m *Module) Backend() project.Backend {
 	return m.infraPtr.Backend
 }
-
-// // ReplaceMarkers replace all templated markers with values.
-// func (m *Module) ReplaceMarkers() error {
-// 	return fmt.Errorf("internal error")
-// }
 
 // Dependencies return slice of module dependencies.
 func (m *Module) Dependencies() *[]*project.Dependency {
@@ -329,4 +326,9 @@ func (m *Module) Destroy() error {
 // Key return uniq module index (string key for maps).
 func (m *Module) Key() string {
 	return fmt.Sprintf("%v.%v", m.InfraName(), m.name)
+}
+
+// CodeDir return path to module code directory.
+func (m *Module) CodeDir() string {
+	return m.codeDir
 }

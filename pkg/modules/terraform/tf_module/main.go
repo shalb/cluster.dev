@@ -17,9 +17,10 @@ import (
 
 type tfModule struct {
 	common.Module
-	source  string
-	version string
-	inputs  map[string]interface{}
+	source      string
+	version     string
+	inputs      map[string]interface{}
+	localModule map[string][]byte
 }
 
 func (m *tfModule) KindKey() string {
@@ -46,8 +47,12 @@ func (m *tfModule) genMainCodeBlock() ([]byte, error) {
 		moduleBody.SetAttributeValue(key, ctyVal)
 	}
 	if utils.IsLocalPath(m.source) {
-		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, m.InfraPtr().TemplateDir, m.source)
-		moduleBody.SetAttributeValue("source", cty.StringVal(tfModuleLocalDir))
+		log.Debugf("Writing local tf module files to %v module dir", m.Key())
+		err := utils.WriteFilesFromList(m.CodeDir(), m.localModule)
+		if err != nil {
+			return nil, fmt.Errorf("%v, reading local module: %v", m.Key(), err.Error())
+		}
+		moduleBody.SetAttributeValue("source", cty.StringVal(m.source))
 	}
 	for hash, ref := range m.Markers() {
 		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, ref)
@@ -92,6 +97,16 @@ func (m *tfModule) ReadConfig(spec map[string]interface{}, infra *project.Infras
 	if !ok {
 		return fmt.Errorf("Incorrect module source")
 	}
+	if utils.IsLocalPath(source) {
+		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, m.InfraPtr().TemplateDir, source)
+		tfModuleBasePath := filepath.Join(config.Global.WorkingDir, m.InfraPtr().TemplateDir)
+		var err error
+		log.Debugf("Reading local tf module files %v %v ", tfModuleLocalDir, tfModuleBasePath)
+		m.localModule, err = utils.ReadFilesToList(tfModuleLocalDir, tfModuleBasePath)
+		if err != nil {
+			return fmt.Errorf("%v, reading local module: %v", m.Key(), err.Error())
+		}
+	}
 	if version, ok := spec["version"]; ok {
 		m.version = fmt.Sprintf("%v", version)
 	}
@@ -118,7 +133,7 @@ func (m *tfModule) ReplaceMarkers() error {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *tfModule) Build(codeDir string) error {
+func (m *tfModule) Build() error {
 	var err error
 	err = m.BuildCommon()
 	if err != nil {
@@ -137,5 +152,5 @@ func (m *tfModule) Build(codeDir string) error {
 			return err
 		}
 	}
-	return m.CreateCodeDir(codeDir)
+	return m.CreateCodeDir()
 }

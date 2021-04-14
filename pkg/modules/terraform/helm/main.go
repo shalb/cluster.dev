@@ -142,7 +142,7 @@ func (m *helm) ReplaceMarkers() error {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *helm) Build(codeDir string) error {
+func (m *helm) Build() error {
 	m.BuildCommon()
 	var err error
 	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
@@ -151,5 +151,5 @@ func (m *helm) Build(codeDir string) error {
 		return err
 	}
 	//	log.Debugf("VALUES: %v", string(m.valuesFileContent))
-	return m.CreateCodeDir(codeDir)
+	return m.CreateCodeDir()
 }

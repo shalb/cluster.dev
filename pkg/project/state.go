@@ -89,7 +89,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			Markers:         stateD.Markers,
 			Infrastructures: make(map[string]*Infrastructure),
 			Backends:        p.Backends,
-			codeCacheDir:    config.Global.StateCacheDir,
+			CodeCacheDir:    config.Global.StateCacheDir,
 		},
 		LoaderProjectPtr: p,
 		ChangedModules:   make(map[string]Module),
