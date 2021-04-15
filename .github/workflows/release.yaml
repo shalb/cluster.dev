@@ -1,4 +1,4 @@
-name: Bin-release
+name: Release
 on: 
   release:
     types: [published]
@@ -9,7 +9,7 @@ env:
 
 jobs:
   release:
-    name: Release version
+    name: Release bin version
     runs-on: ubuntu-latest
     container: golang:1.16.0-alpine
     steps:
