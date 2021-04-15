@@ -1,6 +1,9 @@
 name: Bin-release
 on: release
-
+env:
+  IMAGE: cluster.dev
+  REGISTRY: docker.io/clusterdev
+  
 jobs:
   release:
     name: Build
@@ -47,6 +50,7 @@ jobs:
       - name: Push image for release
         if: github.event_name == 'release'
         run: |
+
           VERSION=$(git describe --tag --abbrev=0)
 
           echo IMAGE=$IMAGE
