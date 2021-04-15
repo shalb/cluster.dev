@@ -9,3 +9,4 @@
 !Makefile
 !go.mod
 !go.sum
+!.git/
