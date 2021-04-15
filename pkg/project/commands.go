@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/apex/log"
+	"github.com/paulrademacher/climenu"
 	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -28,13 +29,27 @@ func (p *Project) Destroy() error {
 		return err
 	}
 	grph := grapher{}
-	if config.Global.Force {
+	if config.Global.IgnoreState {
 		grph.Init(p, 1, true)
 	} else {
 		grph.Init(&fProject.Project, 1, true)
 	}
-
-	for _, md := range grph.GetSequenceSet() {
+	destSeq := grph.GetSequenceSet()
+	if grph.Len() < 1 {
+		log.Info("Nothing to destroy, exiting")
+		return nil
+	}
+	if !config.Global.Force {
+		destList := planDestroy(destSeq, nil)
+		showPlanResults(nil, nil, destList, nil)
+		respond := climenu.GetText("Continue?(yes/no)", "no")
+		if respond != "yes" {
+			log.Info("Destroying cancelled")
+			return nil
+		}
+	}
+	log.Info("Destroying...")
+	for _, md := range destSeq {
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Destroying module '%v'", md.Key()))
 		err := md.Build()
 		if err != nil {
@@ -56,7 +71,15 @@ func (p *Project) Destroy() error {
 
 // Apply all modules.
 func (p *Project) Apply() error {
-
+	if !config.Global.Force {
+		p.Plan()
+		respond := climenu.GetText("Continue?(yes/no)", "no")
+		if respond != "yes" {
+			log.Info("Cancelled")
+			return nil
+		}
+	}
+	log.Info("Applying...")
 	grph := grapher{}
 	grph.Init(p, config.Global.MaxParallel, false)
 
@@ -110,7 +133,7 @@ func (p *Project) Apply() error {
 		go func(mod Module, finFunc func(error), stateP *StateProject) {
 			diff := stateP.CheckModuleChanges(mod)
 			var res error
-			if len(diff) > 0 || config.Global.Force {
+			if len(diff) > 0 || config.Global.IgnoreState {
 				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying module '%v':", md.Key()))
 				err := mod.Build()
 				if err != nil {
@@ -152,26 +175,28 @@ func (p *Project) Plan() error {
 	if err != nil {
 		return err
 	}
+	stateModsSeq := StateGrph.GetSequenceSet()
+	curModsSeq := CurrentGrph.GetSequenceSet()
+	modsForApply := []string{}
+	modsForUpdate := []string{}
+	modsUnchanged := []string{}
 	log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Checking modules in state"))
-	for _, md := range StateGrph.GetSequenceSet() {
-		_, exists := p.Modules[md.Key()]
-		if exists {
-			continue
-		}
-		diff := utils.Diff(md.GetDiffData(), nil, true)
-		log.Info(colors.Fmt(colors.Red).Sprintf("Module '%v' will be destroyed:", md.Key()))
-		fmt.Printf("%v\n", diff)
-	}
+	modsForDestroy := planDestroy(stateModsSeq, curModsSeq)
 
-	for _, md := range CurrentGrph.GetSequenceSet() {
-
+	for _, md := range curModsSeq {
+		_, exists := fProject.Modules[md.Key()]
 		diff := fProject.CheckModuleChanges(md)
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning module '%v':", md.Key()))
-		if len(diff) > 0 || config.Global.Force {
+		if len(diff) > 0 || config.Global.IgnoreState {
 			if len(diff) == 0 {
 				diff = colors.Fmt(colors.GreenBold).Sprint("Not changed.")
 			}
 			fmt.Printf("%v\n", diff)
+			if exists {
+				modsForUpdate = append(modsForUpdate, md.Key())
+			} else {
+				modsForApply = append(modsForApply, md.Key())
+			}
 
 			if config.Global.ShowTerraformPlan {
 				allDepsDeployed := true
@@ -196,8 +221,37 @@ func (p *Project) Plan() error {
 				}
 			}
 		} else {
+			modsUnchanged = append(modsUnchanged, md.Key())
 			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
 		}
 	}
+	showPlanResults(modsForApply, modsForUpdate, modsForDestroy, modsUnchanged)
 	return nil
+}
+
+// planDestroy collect and show modules for destroying.
+func planDestroy(stateList, projList []Module) []string {
+	modsForDestroy := []string{}
+	for _, md := range stateList {
+		if i := findMod(projList, md); i >= 0 {
+			continue
+		}
+		diff := utils.Diff(md.GetDiffData(), nil, true)
+		log.Info(colors.Fmt(colors.Red).Sprintf("Module '%v' will be destroyed:", md.Key()))
+		fmt.Printf("%v\n", diff)
+		modsForDestroy = append(modsForDestroy, md.Key())
+	}
+	return modsForDestroy
+}
+
+func findMod(list []Module, mod Module) int {
+	if len(list) < 1 {
+		return -1
+	}
+	for index, m := range list {
+		if mod.Key() == m.Key() {
+			return index
+		}
+	}
+	return -1
 }

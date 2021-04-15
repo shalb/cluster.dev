@@ -16,7 +16,6 @@ var applyCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Fatal error: apply: %v", err.Error())
 		}
-		log.Info("Applying...")
 		err = project.Apply()
 		if err != nil {
 			log.Fatalf("Fatal error: apply: %v", err.Error())
@@ -26,5 +25,6 @@ var applyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
-	applyCmd.Flags().BoolVar(&config.Global.Force, "force", false, "Apply even if the state has not changed.")
+	applyCmd.Flags().BoolVar(&config.Global.IgnoreState, "ignore-state", false, "Apply even if the state has not changed.")
+	applyCmd.Flags().BoolVar(&config.Global.Force, "force", false, "Skip interactive approval.")
 }

@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/olekukonko/tablewriter"
+	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
@@ -159,4 +161,57 @@ func ProjectsFilesExists() bool {
 		return true
 	}
 	return false
+}
+
+func showPlanResults(deployList, updateList, destroyList, unchangedList []string) {
+	fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("Plan results:"))
+	table := tablewriter.NewWriter(os.Stdout)
+
+	headers := []string{}
+	modulesTable := []string{}
+
+	var deployString, updateString, destroyString, unchangedString string
+	for i, modName := range deployList {
+		if i != 0 {
+			deployString += "\n"
+		}
+		deployString += colors.Fmt(colors.Green).Sprint(modName)
+	}
+	for i, modName := range updateList {
+		if i != 0 {
+			updateString += "\n"
+		}
+		updateString += colors.Fmt(colors.Yellow).Sprint(modName)
+	}
+	for i, modName := range destroyList {
+		if i != 0 {
+			destroyString += "\n"
+		}
+		destroyString += colors.Fmt(colors.Red).Sprint(modName)
+	}
+	for i, modName := range unchangedList {
+		if i != 0 {
+			unchangedString += "\n"
+		}
+		unchangedString += colors.Fmt(colors.White).Sprint(modName)
+	}
+	if len(deployList) > 0 {
+		headers = append(headers, "Will be deployed")
+		modulesTable = append(modulesTable, deployString)
+	}
+	if len(updateList) > 0 {
+		headers = append(headers, "Will be updated")
+		modulesTable = append(modulesTable, updateString)
+	}
+	if len(destroyList) > 0 {
+		headers = append(headers, "Will be destroyed")
+		modulesTable = append(modulesTable, destroyString)
+	}
+	if len(unchangedList) > 0 {
+		headers = append(headers, "Unchanged")
+		modulesTable = append(modulesTable, unchangedString)
+	}
+	table.SetHeader(headers)
+	table.Append(modulesTable)
+	table.Render()
 }
