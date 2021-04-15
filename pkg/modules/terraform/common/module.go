@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
@@ -129,6 +130,7 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	if exists {
 		m.providers = providers
 	}
+	m.codeDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
 	return nil
 }
 
@@ -166,17 +168,12 @@ func (m *Module) Backend() project.Backend {
 	return m.infraPtr.Backend
 }
 
-// // ReplaceMarkers replace all templated markers with values.
-// func (m *Module) ReplaceMarkers() error {
-// 	return fmt.Errorf("internal error")
-// }
-
 // Dependencies return slice of module dependencies.
 func (m *Module) Dependencies() *[]*project.Dependency {
 	return &m.dependencies
 }
 
-func (m *Module) InitDefault() error {
+func (m *Module) InitCommon() error {
 	rn, err := executor.NewBashRunner(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -186,24 +183,22 @@ func (m *Module) InitDefault() error {
 	rn.LogLabels = []string{
 		m.InfraName(),
 		m.Name(),
-		"apply",
+		"init",
 	}
 
 	var cmd = ""
-	cmd += fmt.Sprintf("%[1]s init && %[1]s apply -auto-approve", terraformBin)
-	if m.postHook != nil && m.postHook.OnApply {
-		cmd += " && ./post_hook.sh"
-	}
+	cmd += fmt.Sprintf("%[1]s init", terraformBin)
 	var errMsg []byte
+	m.projectPtr.InitLock.Lock()
+	defer m.projectPtr.InitLock.Unlock()
 	m.applyOutput, errMsg, err = rn.Run(cmd)
 	if err != nil {
-		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+		return fmt.Errorf("terraform init: %v, error output:\n %v", err.Error(), string(errMsg))
 	}
-	// log.Info(colors.LightWhiteBold.Sprint("successfully applied"))
 	return nil
 }
 
-func (m *Module) ApplyDefault() error {
+func (m *Module) ApplyCommon() error {
 	rn, err := executor.NewBashRunner(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -235,7 +230,11 @@ func (m *Module) ApplyDefault() error {
 
 // Apply module.
 func (m *Module) Apply() error {
-	return m.ApplyDefault()
+	err := m.InitCommon()
+	if err != nil {
+		return err
+	}
+	return m.ApplyCommon()
 }
 
 // Outputs module.
@@ -327,4 +326,9 @@ func (m *Module) Destroy() error {
 // Key return uniq module index (string key for maps).
 func (m *Module) Key() string {
 	return fmt.Sprintf("%v.%v", m.InfraName(), m.name)
+}
+
+// CodeDir return path to module code directory.
+func (m *Module) CodeDir() string {
+	return m.codeDir
 }

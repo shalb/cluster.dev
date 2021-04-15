@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/shalb/cluster.dev/pkg/project"
@@ -120,6 +121,7 @@ func (m *Module) LoadStateBase(spec StateCommon, modKey string, p *project.State
 	m.postHook = mState.PostHook
 	m.providers = mState.Providers
 	m.requiredProviders = mState.RequiredProvider
+	m.codeDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
 	return nil
 }
 

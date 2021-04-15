@@ -11,7 +11,7 @@ RUN make
 
 FROM hashicorp/terraform:${TERRAFORM_VERSION} as terraform
 
-COPY --from=builder /workspace/cluster-dev/bin/cdev /bin/cdev
+COPY --from=builder /workspace/cluster-dev/bin/linux-amd64/cdev /bin/cdev
 
 WORKDIR /workspace/cluster-dev
 

@@ -19,6 +19,7 @@ var buildCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Fatal error: build: %v", err.Error())
 		}
+		log.Infof("The project was built successfully. Build directory: %v", project.CodeCacheDir)
 	},
 }
 

@@ -62,13 +62,11 @@ func (m *Module) genDepsRemoteStates() ([]byte, error) {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *Module) CreateCodeDir(projectCodeDir string) error {
-
-	modDir := filepath.Join(projectCodeDir, m.Key())
-	err := os.Mkdir(modDir, 0755)
+func (m *Module) CreateCodeDir() error {
+	err := os.Mkdir(m.codeDir, 0755)
 
 	for fn, f := range m.FilesList() {
-		filePath := filepath.Join(modDir, fn)
+		filePath := filepath.Join(m.codeDir, fn)
 		// relPath, _ := filepath.Rel(config.Global.WorkingDir, filePath)
 		if m.projectPtr.CheckContainsMarkers(string(f)) {
 			log.Debugf("Unprocessed markers:\n %+v", string(f))
@@ -80,7 +78,6 @@ func (m *Module) CreateCodeDir(projectCodeDir string) error {
 			return err
 		}
 	}
-	m.codeDir = modDir
 	return nil
 }
 

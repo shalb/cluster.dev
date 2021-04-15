@@ -36,8 +36,9 @@ type Project struct {
 	configDataFile   []byte
 	objects          map[string][]ObjectData
 	objectsFiles     map[string][]byte
-	codeCacheDir     string
-	mux              sync.Mutex
+	CodeCacheDir     string
+	StateLock        sync.Mutex
+	InitLock         sync.Mutex
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
@@ -51,7 +52,7 @@ func NewEmptyProject() *Project {
 		objects:          map[string][]ObjectData{},
 		configData:       map[string]interface{}{},
 		secrets:          map[string]Secret{},
-		codeCacheDir:     config.Global.CacheDir,
+		CodeCacheDir:     config.Global.CacheDir,
 	}
 	for _, drv := range TemplateDriversMap {
 		drv.AddTemplateFunctions(project)
@@ -244,17 +245,17 @@ func (p *Project) MkBuildDir() error {
 			return err
 		}
 	}
-	relPath, _ := filepath.Rel(config.Global.WorkingDir, p.codeCacheDir)
+	relPath, _ := filepath.Rel(config.Global.WorkingDir, p.CodeCacheDir)
 	log.Debugf("Creates code directory: './%v'", relPath)
-	if _, err := os.Stat(p.codeCacheDir); os.IsNotExist(err) {
-		err := os.Mkdir(p.codeCacheDir, 0755)
+	if _, err := os.Stat(p.CodeCacheDir); os.IsNotExist(err) {
+		err := os.Mkdir(p.CodeCacheDir, 0755)
 		if err != nil {
 			return err
 		}
 	}
 	if !config.Global.UseCache {
 		log.Debugf("Removes all old content: './%s'", relPath)
-		err := removeDirContent(p.codeCacheDir)
+		err := removeDirContent(p.CodeCacheDir)
 		if err != nil {
 			log.Debug(err.Error())
 			return err

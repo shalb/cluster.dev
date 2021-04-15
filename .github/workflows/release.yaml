@@ -1,9 +1,15 @@
-name: Bin-release
-on: release
+name: Release
+on: 
+  release:
+    types: [published]
+
+env:
+  IMAGE: cluster.dev
+  REGISTRY: docker.io/clusterdev
 
 jobs:
-  build:
-    name: Build
+  release:
+    name: Release bin version
     runs-on: ubuntu-latest
     container: golang:1.16.0-alpine
     steps:
@@ -11,7 +17,7 @@ jobs:
     - name: Install make
       run: apk add make bash jq curl git
 
-    - name: Check out code into the Go module directory
+    - name: Code checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 2
@@ -23,3 +29,29 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  push:
+    name: Release docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v2
+
+      - name: Build image
+        run: docker build -t $IMAGE .
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USER }}" --password "${{ secrets.DOCKER_PASS }}"
+
+      - name: Push image for release
+        run: |
+
+          VERSION=$(git describe --tag --abbrev=0)
+
+          echo IMAGE=$IMAGE
+          echo VERSION=$VERSION
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:$VERSION"
+          docker push "$REGISTRY/$IMAGE:$VERSION"
+
+          docker tag "$IMAGE" "$REGISTRY/$IMAGE:latest"
+          docker push "$REGISTRY/$IMAGE:latest"

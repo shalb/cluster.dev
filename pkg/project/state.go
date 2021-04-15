@@ -15,8 +15,8 @@ import (
 )
 
 func (sp *StateProject) UpdateModule(mod Module) {
-	sp.mux.Lock()
-	defer sp.mux.Unlock()
+	sp.StateLock.Lock()
+	defer sp.StateLock.Unlock()
 	sp.Modules[mod.Key()] = mod
 	sp.ChangedModules[mod.Key()] = mod
 }
@@ -32,8 +32,8 @@ type StateProject struct {
 }
 
 func (p *Project) SaveState() error {
-	p.mux.Lock()
-	defer p.mux.Unlock()
+	p.StateLock.Lock()
+	defer p.StateLock.Unlock()
 	st := stateData{
 		Markers: p.Markers,
 		Modules: map[string]interface{}{},
@@ -89,7 +89,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			Markers:         stateD.Markers,
 			Infrastructures: make(map[string]*Infrastructure),
 			Backends:        p.Backends,
-			codeCacheDir:    config.Global.StateCacheDir,
+			CodeCacheDir:    config.Global.StateCacheDir,
 		},
 		LoaderProjectPtr: p,
 		ChangedModules:   make(map[string]Module),

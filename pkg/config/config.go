@@ -40,13 +40,14 @@ type ConfSpec struct {
 	PluginsCacheDir    string
 	UseCache           bool
 	OptFooTest         bool
-	Force              bool
+	IgnoreState        bool
 	ShowTerraformPlan  bool
 	StateFileName      string
 	StateCacheDir      string
 	TemplatesCacheDir  string
 	CacheDir           string
 	NoColor            bool
+	Force              bool
 }
 
 // Global config for executor.
