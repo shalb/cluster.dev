@@ -29,6 +29,17 @@ env:
   IMAGE: cluster.dev
   REGISTRY: docker.io/clusterdev
 
+# jobs:
+#   # Run tests
+#   test:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v2
+
+#       - name: Run tests
+#         run: docker build .
+
   # Push image to Docker Hub
   push:
     # Ensure test job passes before pushing image.
