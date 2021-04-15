@@ -2,7 +2,7 @@ name: Bin-release
 on: 
   release:
     types: [published]
-    
+
 env:
   IMAGE: cluster.dev
   REGISTRY: docker.io/clusterdev
@@ -23,13 +23,6 @@ jobs:
         fetch-depth: 2
 
     - name: Release
-      run: |
-        git fetch --prune --unshallow --tags
-        ./scripts/release.sh
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Publish docker image
       run: |
         git fetch --prune --unshallow --tags
         ./scripts/release.sh
