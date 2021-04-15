@@ -21,7 +21,7 @@ Prior to getting started make sure that you have [cdev installed](https://cluste
       3: DigitalOcean cloud, k8s Kubernetes cluster with ArgoCD
     ```
 
-4. Follow prompt messages of cdev console generator and specify the values of variables needed to create project.yaml and infra-name.yaml files in your local project directory.
+4. Follow prompt messages of cdev console generator and specify the values of variables needed to create project files in your local project directory.
 
 5. Run ```cdev plan``` to build the project. In the output you will see an infrastructure that will be created after running ```cdev apply```.
 
@@ -34,4 +34,4 @@ Prior to getting started make sure that you have [cdev installed](https://cluste
     ```
 
 7. Run ```cdev apply``` to bring the planned infrastructure into existence.
-`
+
