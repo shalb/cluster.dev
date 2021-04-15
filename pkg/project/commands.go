@@ -34,11 +34,11 @@ func (p *Project) Destroy() error {
 	} else {
 		grph.Init(&fProject.Project, 1, true)
 	}
-	destSeq := grph.GetSequenceSet()
 	if grph.Len() < 1 {
 		log.Info("Nothing to destroy, exiting")
 		return nil
 	}
+	destSeq := grph.GetSequenceSet()
 	if !config.Global.Force {
 		destList := planDestroy(destSeq, nil)
 		showPlanResults(nil, nil, destList, nil)
