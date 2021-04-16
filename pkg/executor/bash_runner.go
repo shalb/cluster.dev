@@ -7,7 +7,9 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/apex/log"
@@ -54,7 +56,9 @@ func NewBashRunner(workingDir string, envVariables ...string) (*BashRunner, erro
 
 func (b *BashRunner) commandExecCommon(command string, outputBuff io.Writer, errBuff io.Writer) error {
 	// Prepere command, set outputs, run.
-
+	if config.Interupted {
+		return fmt.Errorf("interrupted")
+	}
 	var ctx context.Context
 	var cancel context.CancelFunc
 	if b.Timeout == 0 {
@@ -76,7 +80,13 @@ func (b *BashRunner) commandExecCommon(command string, outputBuff io.Writer, err
 	// Add environments of curent innstance.
 	cmd.Env = append(envTmp, b.Env...)
 	// Run command.
-	err := cmd.Run()
+
+	stopChan := make(chan struct{})
+	sigChan := StartSigTrap(cmd, stopChan)
+	defer sigChan.Close()
+	cmd.Start()
+	err := cmd.Wait()
+	stopChan <- struct{}{}
 	if ctx.Err() == context.DeadlineExceeded {
 		return fmt.Errorf("bash runner: command timeout '%s'", command)
 	}
@@ -107,16 +117,14 @@ func (b *BashRunner) RunWithTty(command string) error {
 }
 
 // Run - exec command and hide secrets in log output.
-func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, error) {
+func (b *BashRunner) Run(command string) ([]byte, []byte, error) {
 
 	var logPrefix string
 	for _, str := range b.LogLabels {
 		logPrefix = fmt.Sprintf("%s[%s]", logPrefix, str)
 	}
 	log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("In progress..."))
-	// Mask secrets with ***
-	hiddenCommand := stringHideSecrets(command, secrets...)
-	log.Debugf("%s Executing command '%s':", logPrefix, hiddenCommand)
+	log.Debugf("%s Executing command '%s':", logPrefix, command)
 
 	// Create log writer.
 	logWriter, err := logging.NewLogWriter(log.DebugLevel, logging.SliceFielder{Flds: b.LogLabels})
@@ -145,7 +153,7 @@ func (b *BashRunner) Run(command string, secrets ...string) ([]byte, []byte, err
 		if err == nil {
 			log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("Success"))
 		} else {
-			log.Errorf("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("Error"))
+			log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("Error"))
 		}
 	}
 	return logCollector.Data(), errOutput.Bytes(), err
@@ -187,4 +195,37 @@ func showBanner(banner string, done chan struct{}) {
 			return
 		}
 	}
+}
+
+type SigTrap chan os.Signal
+
+func StartSigTrap(cmd *exec.Cmd, stop chan struct{}) SigTrap {
+	sChan := make(chan os.Signal, 1)
+	signals := []os.Signal{syscall.SIGTERM, syscall.SIGINT}
+	signal.Notify(sChan, signals...)
+	go func() {
+		for {
+			select {
+			case s := <-sChan:
+				config.Interupted = true
+				config.Global.LogLevel = "debug"
+				logging.InitLogLevel(config.Global.LogLevel, config.Global.TraceLog)
+				log.Debugf("executor: forward signal %v", s)
+				err := cmd.Process.Signal(s)
+				if err != nil {
+					log.Debugf("Error forwarding signal: %v", err)
+				}
+			case <-stop:
+				return
+			}
+		}
+	}()
+	return sChan
+}
+
+func (signalChannel *SigTrap) Close() error {
+	signal.Stop(*signalChannel)
+	*signalChannel <- nil
+	close(*signalChannel)
+	return nil
 }

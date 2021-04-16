@@ -26,6 +26,7 @@ func init() {
 }
 
 func Run() {
+
 	err := rootCmd.Execute()
 	if err != nil {
 		log.Fatalf("Fatal error: %v", err.Error())

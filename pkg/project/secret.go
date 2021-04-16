@@ -83,7 +83,7 @@ func getSecretInfo(obj map[string]interface{}) (res SecretDriver, err error) {
 	if !ok {
 		return
 	}
-	if kind != "secret" {
+	if kind != secretObjKindKey {
 		return
 	}
 	driver, ok := obj["driver"].(string)

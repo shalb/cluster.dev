@@ -28,17 +28,18 @@ func (p *Project) Destroy() error {
 	if err != nil {
 		return err
 	}
-	grph := grapher{}
+	graph := grapher{}
 	if config.Global.IgnoreState {
-		grph.Init(p, 1, true)
+		graph.Init(p, 1, true)
 	} else {
-		grph.Init(&fProject.Project, 1, true)
+		graph.Init(&fProject.Project, 1, true)
 	}
-	if grph.Len() < 1 {
+	defer graph.Close()
+	if graph.Len() < 1 {
 		log.Info("Nothing to destroy, exiting")
 		return nil
 	}
-	destSeq := grph.GetSequenceSet()
+	destSeq := graph.GetSequenceSet()
 	if !config.Global.Force {
 		destList := planDestroy(destSeq, nil)
 		showPlanResults(nil, nil, destList, nil)
@@ -80,21 +81,24 @@ func (p *Project) Apply() error {
 		}
 	}
 	log.Info("Applying...")
-	grph := grapher{}
-	grph.Init(p, config.Global.MaxParallel, false)
-
+	gr := grapher{}
+	err := gr.Init(p, config.Global.MaxParallel, false)
+	if err != nil {
+		return err
+	}
+	defer gr.Close()
 	fProject, err := p.LoadState()
 	if err != nil {
 		return err
 	}
 
-	StateDestroyGrph := grapher{}
-	err = StateDestroyGrph.Init(&fProject.Project, 1, true)
+	StateDestroyGraph := grapher{}
+	err = StateDestroyGraph.Init(&fProject.Project, 1, true)
 	if err != nil {
 		return err
 	}
-
-	for _, md := range StateDestroyGrph.GetSequenceSet() {
+	defer StateDestroyGraph.Close()
+	for _, md := range StateDestroyGraph.GetSequenceSet() {
 		_, exists := p.Modules[md.Key()]
 		if exists {
 			continue
@@ -115,15 +119,18 @@ func (p *Project) Apply() error {
 	}
 
 	for {
-		if grph.Len() == 0 {
+		if gr.Len() == 0 {
 			p.SaveState()
 			return nil
 		}
-		md, fn, err := grph.GetNextAsync()
+		md, fn, err := gr.GetNextAsync()
 		if err != nil {
 			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
-			grph.Wait()
-			return fmt.Errorf("error in module %v:\n%v", md.Key(), err.Error())
+			gr.Wait()
+			for modKey, e := range gr.Errors() {
+				log.Errorf("Module: '%v':\n%v", modKey, e.Error())
+			}
+			return fmt.Errorf("applying error")
 		}
 		if md == nil {
 			p.SaveState()
@@ -164,19 +171,20 @@ func (p *Project) Plan() error {
 		return err
 	}
 
-	CurrentGrph := grapher{}
-	err = CurrentGrph.Init(p, 1, false)
+	CurrentGraph := grapher{}
+	err = CurrentGraph.Init(p, 1, false)
 	if err != nil {
 		return err
 	}
-
-	StateGrph := grapher{}
-	err = StateGrph.Init(&fProject.Project, 1, true)
+	defer CurrentGraph.Close()
+	StateGraph := grapher{}
+	err = StateGraph.Init(&fProject.Project, 1, true)
 	if err != nil {
 		return err
 	}
-	stateModsSeq := StateGrph.GetSequenceSet()
-	curModsSeq := CurrentGrph.GetSequenceSet()
+	defer StateGraph.Close()
+	stateModsSeq := StateGraph.GetSequenceSet()
+	curModsSeq := CurrentGraph.GetSequenceSet()
 	modsForApply := []string{}
 	modsForUpdate := []string{}
 	modsUnchanged := []string{}

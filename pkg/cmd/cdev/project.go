@@ -18,6 +18,7 @@ func init() {
 	rootCmd.AddCommand(projectCmd)
 	projectCmd.AddCommand(projectLs)
 	projectCmd.AddCommand(projectCreate)
+	projectCreate.Flags().BoolVar(&config.Global.Interactive, "interactive", false, "Use intteractive mode to for project generation")
 }
 
 // projectsCmd represents the plan command
@@ -43,7 +44,7 @@ var projectCreate = &cobra.Command{
 		if project.ProjectsFilesExists() {
 			log.Fatalf("project creating: some project's data (yaml files) found in current directory, use command in empty dir")
 		}
-		err := ui.CreteProject(config.Global.WorkingDir)
+		err := ui.CreteProject(config.Global.WorkingDir, args...)
 		if err != nil {
 			log.Fatalf("Create project: %v", err.Error())
 		}
