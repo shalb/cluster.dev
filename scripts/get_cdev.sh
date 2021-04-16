@@ -38,8 +38,12 @@ if [ "$(uname)" != "Darwin" ]; then
 else
     if [ -e "${HOME}/.bash_profile" ]; then
         PROFILE_FILE="${HOME}/.bash_profile"
-    elif [ -e "${HOME}/.bashrc" ]; then
+    fi
+    if [ -e "${HOME}/.bashrc" ]; then
         PROFILE_FILE="${HOME}/.bashrc"
+    fi
+    if [ -e "${HOME}/.zshrc" ]; then
+        PROFILE_FILE="${HOME}/.zshrc"
     fi
 fi
 
@@ -53,7 +57,6 @@ if [ -n "${PROFILE_FILE}" ]; then
     if ! grep -q "# add cdev to the PATH" "${PROFILE_FILE}"; then
         printf "\\n# add cdev to the PATH\\n%s\\n" "${ADD_CDEV_LINE}" >> "${PROFILE_FILE}"
     fi
-    
     echo "Please restart your shell or add $HOME/.cluster.dev/bin to your \$PATH"
 else
     echo "Please add $HOME/.cluster.dev/bin to your \$PATH"
