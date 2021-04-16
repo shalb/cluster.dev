@@ -3,18 +3,23 @@ options:
   - name: name
     description: Project name
     regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,32}$"
+    default: "demo-project"
   - name: organization
     description: Organization name
     regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,64}$"
+    default: "my-organization"
   - name: region
     description: AWS region
     regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,32}$"
+    default: "eu-central-1"
   - name: domain
     description: Route53 DNS zone domain name
     regex: "^[a-zA-Z0-9][a-zA-Z0-9-\\.]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$"
+    default: "cluster.dev"
   - name: bucket_name
     description: AWS s3 bucket name for states
     regex: "^[a-zA-Z][a-zA-Z0-9\\-]{0,64}$"
+    default: "cdev-state"
 help_message: | 
   ###############################################################################
   # Cluster.dev project generation for AWS cloud.                                #

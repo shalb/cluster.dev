@@ -13,6 +13,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/paulrademacher/climenu"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"gopkg.in/yaml.v3"
 )
@@ -27,6 +28,7 @@ type Generator struct {
 	dataForTmpl          map[string]interface{}
 	templateConfig       templateConfSpec
 	categoryConfig       categoryConfSpec
+	interactive          bool
 }
 
 //go:embed templates/*
@@ -62,6 +64,7 @@ func CreateSecret() error {
 	if err != nil {
 		return fmt.Errorf("new secret: %v", err.Error())
 	}
+	generator.SetInteractive()
 	escaped, err := generator.RunMainMenu()
 	if err != nil {
 		return fmt.Errorf("new secret: %v", err.Error())
@@ -85,12 +88,15 @@ func CreateSecret() error {
 	return nil
 }
 
-func CreteProject(dir string) error {
+func CreteProject(dir string, args ...string) error {
 	generator, err := NewGenerator("project")
 	if err != nil {
 		return fmt.Errorf("new project: %v", err.Error())
 	}
-	escaped, err := generator.RunMainMenu()
+	if config.Global.Interactive {
+		generator.SetInteractive()
+	}
+	escaped, err := generator.RunMainMenu(args...)
 	if err != nil {
 		return fmt.Errorf("new project: %v", err.Error())
 	}
@@ -142,11 +148,16 @@ func NewGenerator(categoryName string) (*Generator, error) {
 		categoryConfig: categoryConf,
 		renderedFiles:  make(map[string][]byte),
 		dataForTmpl:    make(map[string]interface{}),
+		interactive:    false,
 	}
 	return &generator, nil
 }
 
-func (g *Generator) RunMainMenu() (escaped bool, err error) {
+func (g *Generator) SetInteractive() {
+	g.interactive = true
+}
+
+func (g *Generator) RunMainMenu(subCategory ...string) (escaped bool, err error) {
 	categoryTmplList, err := getDirSubCats(g.categoryDir)
 	if err != nil {
 		return
@@ -161,14 +172,35 @@ func (g *Generator) RunMainMenu() (escaped bool, err error) {
 		menu.AddMenuItem(sp.Description, tmplName)
 		generatorSpecs[tmplName] = sp
 	}
-	g.selectedTemplateName, escaped = menu.Run()
-	if escaped {
-		return
+	var keysList string
+	i := 0
+	for k, _ := range generatorSpecs {
+		if i != 0 {
+			keysList += "\n"
+		}
+		keysList += k
+		i++
 	}
-	g.templateConfig = generatorSpecs[g.selectedTemplateName]
+	if g.interactive {
+		g.selectedTemplateName, escaped = menu.Run()
+		if escaped {
+			return
+		}
+	} else {
+		if len(subCategory) != 1 {
+			return false, fmt.Errorf("generator: unexpected category param %v, expected 1 string, use one of: \n%v", len(subCategory), keysList)
+		}
+		g.selectedTemplateName = subCategory[0]
+	}
+
+	var exists bool
+	g.templateConfig, exists = generatorSpecs[g.selectedTemplateName]
+	if !exists {
+		return false, fmt.Errorf("generator: template '%v' does not found, use one of: \n%v", g.selectedTemplateName, keysList)
+	}
 	g.templateDir = filepath.Join(g.categoryDir, g.selectedTemplateName)
 	g.templateDataDir = filepath.Join(g.templateDir, "data")
-	if g.templateConfig.HelpMessage != "" {
+	if g.templateConfig.HelpMessage != "" && g.interactive {
 		ClearScreen()
 		fmt.Println(g.templateConfig.HelpMessage)
 		respond := climenu.GetText("Continue?(yes/no)", "yes")
@@ -185,6 +217,10 @@ func (g *Generator) RunTemplate() (err error) {
 	for _, opt := range g.templateConfig.Options {
 		if opt.Regex == "" {
 			opt.Regex = ".*"
+		}
+		if !g.interactive {
+			g.dataForTmpl[opt.Name] = opt.Default
+			continue
 		}
 		for {
 			respond := climenu.GetText(opt.Description, "")

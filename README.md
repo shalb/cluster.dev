@@ -1,5 +1,22 @@
 # Cluster.dev - Cloud Infrastructures' Management Tool
 
+<p align="center">
+    <img src="https://raw.githubusercontent.com/shalb/cluster.dev/master/docs/images/cluster-dev-logo-site.png?sanitize=true"
+        width="540">
+</p>
+<p align="center">
+    <a href="https://join.slack.com/t/cluster-dev/shared_invite/zt-eg4q6jae-v0~zgrBLYTTXt~CjnjmprA" alt="Join Slack">
+        <img src="https://img.shields.io/static/v1?label=SLACK&message=JOIN&color=4A154B&style=for-the-badge&logo=slack" /></a>
+    <a href="https://twitter.com/intent/follow?screen_name=shalbcom">
+        <img src="https://img.shields.io/static/v1?label=TWITTER&message=FOLLOW&color=1DA1F2&style=for-the-badge&logo=twitter"
+            alt="follow on Twitter"></a>
+    <a href="https://www.facebook.com/shalb/">
+        <img src="https://img.shields.io/static/v1?label=FACEBOOK&message=FOLLOW&color=1877F2&style=for-the-badge&logo=facebook"
+            alt="follow on Facebook"></a>
+
+
+</p>
+
 Cluster.dev is an open-source tool designed to manage Cloud Native Infrastructures with simple declarative manifests - infrastructure templates. It allows you to describe a whole infrastructure and deploy it with a single tool.
 
 The infrastructure templates could be based on Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc. Cluster.dev sticks those components together so that you could deploy, test and distribute a whole set of components with pinned versions.
@@ -36,7 +53,6 @@ The infrastructure templates could be based on Terraform modules, Kubernetes man
   * [Backends](#backends)
   * [Secrets](#secrets)
     * [SOPS secret](#sops-secret)
-    * [Amazon secret manager](#amazon-secret-manager)
 * [Template configuration](#template-configuration)
   * [Basics](#basics)
   * [Functions](#functions)
@@ -84,7 +100,7 @@ Running the command will:
 
 ### Demo Video
 
-Video will be uploaded soon.
+![demo video cdev](./docs/images/demo.gif)
 
 ## Install
 

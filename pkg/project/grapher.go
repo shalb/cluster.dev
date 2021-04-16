@@ -3,9 +3,13 @@ package project
 import (
 	"container/list"
 	"fmt"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/config"
 )
 
 type modResult struct {
@@ -24,6 +28,9 @@ type grapher struct {
 	maxParallel    int
 	hasError       bool
 	reverse        bool
+	modulesErrors  map[string]error
+	sigTrap        chan os.Signal
+	stopChan       chan struct{}
 }
 
 func (g *grapher) Init(project *Project, maxParallel int, reverse bool) error {
@@ -33,20 +40,23 @@ func (g *grapher) Init(project *Project, maxParallel int, reverse bool) error {
 	if maxParallel < 1 {
 		return fmt.Errorf("maxParallel should be greater then 0")
 	}
-	g.modules = map[string]Module{}
-	g.unFinished = map[string]Module{}
+	g.modules = make(map[string]Module)
+	g.modulesErrors = make(map[string]error)
+	g.unFinished = make(map[string]Module)
 	for key, mod := range project.Modules {
 		g.modules[key] = mod
 		g.unFinished[key] = mod
 	}
 	g.maxParallel = maxParallel
 	g.queue.Init()
-	g.inProgress = map[string]Module{}
-	g.finished = map[string]modResult{}
+	g.inProgress = make(map[string]Module)
+	g.finished = make(map[string]modResult)
 	g.waitForModDone = make(chan modResult)
 	g.hasError = false
 	g.reverse = reverse
 	g.updateQueue()
+	g.stopChan = make(chan struct{})
+	g.listenHupSig()
 	return nil
 }
 
@@ -74,10 +84,6 @@ func (g *grapher) updateDirectQueue() int {
 			}
 		}
 		if isReady {
-			// log.Debugf("Graph: mod added %v\n deps: %v", mod.Key(), mod.Dependencies())
-			// for _, d := range *mod.Dependencies() {
-			// 	log.Debugf("   Dep: %v", d.ModuleName)
-			// }
 			g.queue.PushBack(mod)
 			delete(g.modules, key)
 			count++
@@ -107,6 +113,12 @@ func (g *grapher) GetNextAsync() (Module, func(error), error) {
 	g.mux.Lock()
 	defer g.mux.Unlock()
 	for {
+		if config.Interupted {
+			g.queue.Init()
+			g.modules = make(map[string]Module)
+			g.updateQueue()
+			return nil, nil, fmt.Errorf("interupted")
+		}
 		if g.queue.Len() > 0 && len(g.inProgress) < g.maxParallel {
 			modElem := g.queue.Front()
 			mod := modElem.Value.(Module)
@@ -123,7 +135,7 @@ func (g *grapher) GetNextAsync() (Module, func(error), error) {
 		doneMod := <-g.waitForModDone
 		g.setModuleDone(doneMod)
 		if doneMod.Error != nil {
-			return doneMod.Mod, nil, doneMod.Error
+			return doneMod.Mod, nil, fmt.Errorf("error while module running")
 		}
 	}
 }
@@ -157,9 +169,14 @@ func (g *grapher) setModuleDone(doneMod modResult) {
 	delete(g.inProgress, doneMod.Mod.Key())
 	delete(g.unFinished, doneMod.Mod.Key())
 	if doneMod.Error != nil {
+		g.modulesErrors[doneMod.Mod.Key()] = doneMod.Error
 		g.hasError = true
 	}
 	g.updateQueue()
+}
+
+func (g *grapher) Errors() map[string]error {
+	return g.modulesErrors
 }
 
 func (g *grapher) Wait() {
@@ -210,4 +227,31 @@ func findDependedModules(modList map[string]Module, targetMod Module) map[string
 	}
 	//log.Debugf("Searching depended from module: %v\n Result: %v", targetMod.Name(), res)
 	return res
+}
+
+func (g *grapher) listenHupSig() {
+	signals := []os.Signal{syscall.SIGTERM, syscall.SIGINT}
+	g.sigTrap = make(chan os.Signal, 1)
+	signal.Notify(g.sigTrap, signals...)
+	// log.Warn("Listening signals...")
+	go func() {
+		for {
+			select {
+			case <-g.sigTrap:
+				config.Interupted = true
+			case <-g.stopChan:
+				// log.Warn("Stop listening")
+				signal.Stop(g.sigTrap)
+				g.sigTrap <- nil
+				close(g.sigTrap)
+				return
+			}
+		}
+	}()
+	return
+}
+
+func (g *grapher) Close() error {
+	g.stopChan <- struct{}{}
+	return nil
 }
