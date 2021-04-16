@@ -16,6 +16,8 @@ var Version string
 // BuildTimestamp - build date from compiller
 var BuildTimestamp string
 
+var Interupted bool
+
 type SubCmd int
 
 const (
@@ -28,9 +30,9 @@ const (
 
 // ConfSpec type for global config.
 type ConfSpec struct {
-	ClusterConfigsPath string
+	ProjectConfigsPath string
 	LogLevel           string
-	ClusterConfig      string
+	ProjectConfig      string
 	Version            string
 	Build              string
 	TmpDir             string
@@ -48,6 +50,7 @@ type ConfSpec struct {
 	CacheDir           string
 	NoColor            bool
 	Force              bool
+	Interactive        bool
 }
 
 // Global config for executor.
@@ -67,7 +70,7 @@ func InitConfig() {
 		colors.SetColored(false)
 	}
 	logging.InitLogLevel(Global.LogLevel, Global.TraceLog)
-	Global.ClusterConfigsPath = curPath
+	Global.ProjectConfigsPath = curPath
 	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
 	Global.CacheDir = filepath.Join(Global.TmpDir, "cache")
 	Global.StateCacheDir = filepath.Join(Global.TmpDir, "state")
@@ -87,7 +90,7 @@ func InitConfig() {
 			log.Fatal(err.Error())
 		}
 	}
-
+	Interupted = false
 }
 
 // getEnv Helper for args parse.

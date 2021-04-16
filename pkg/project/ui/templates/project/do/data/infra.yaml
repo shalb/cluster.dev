@@ -1,5 +1,5 @@
 name: do-backend
-kind: backend
+kind: Backend
 provider: do
 spec:
   bucket: {{ .project.variables.bucket_name }}
@@ -9,7 +9,7 @@ spec:
 ---
 name: prod_kubernetes
 template: https://github.com/shalb/cdev-do-k8s
-kind: infrastructure
+kind: Infrastructure
 backend: do-backend
 variables:
   do_token: {{ reqEnv "DIGITALOCEAN_TOKEN" }}

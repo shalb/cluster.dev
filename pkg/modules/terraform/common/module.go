@@ -193,9 +193,11 @@ func (m *Module) InitCommon() error {
 	defer m.projectPtr.InitLock.Unlock()
 	m.applyOutput, errMsg, err = rn.Run(cmd)
 	if err != nil {
-		return fmt.Errorf("terraform init: %v, error output:\n %v", err.Error(), string(errMsg))
+		if len(errMsg) > 1 {
+			return fmt.Errorf("%v, error output:\n %v", err.Error(), string(errMsg))
+		}
 	}
-	return nil
+	return err
 }
 
 func (m *Module) ApplyCommon() error {
@@ -222,10 +224,11 @@ func (m *Module) ApplyCommon() error {
 	var errMsg []byte
 	m.applyOutput, errMsg, err = rn.Run(cmd)
 	if err != nil {
-		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+		if len(errMsg) > 1 {
+			return fmt.Errorf("%v, error output:\n %v", err.Error(), string(errMsg))
+		}
 	}
-	// log.Info(colors.LightWhiteBold.Sprint("successfully applied"))
-	return nil
+	return err
 }
 
 // Apply module.
@@ -255,10 +258,13 @@ func (m *Module) Outputs() (string, error) {
 
 	var errMsg []byte
 	res, errMsg, err := rn.Run(cmd)
+
 	if err != nil {
-		return "", fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+		if len(errMsg) > 1 {
+			return "", fmt.Errorf("%v, error output:\n %v", err.Error(), string(errMsg))
+		}
 	}
-	return string(res), nil
+	return string(res), err
 }
 
 // Plan module.
@@ -285,8 +291,10 @@ func (m *Module) Plan() error {
 	}
 	planOutput, errMsg, err := rn.Run(cmd)
 	if err != nil {
-		log.Debug(err.Error())
-		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+		if len(errMsg) > 1 {
+			return fmt.Errorf("%v, error output:\n %v", err.Error(), string(errMsg))
+		}
+		return err
 	}
 	fmt.Printf("%v\n", string(planOutput))
 	return nil
@@ -317,10 +325,11 @@ func (m *Module) Destroy() error {
 
 	_, errMsg, err := rn.Run(cmd)
 	if err != nil {
-		return fmt.Errorf("err: %v, error output:\n %v", err.Error(), string(errMsg))
+		if len(errMsg) > 1 {
+			return fmt.Errorf("%v, error output:\n %v", err.Error(), string(errMsg))
+		}
 	}
-	// log.Info(colors.LightWhiteBold.Sprint("successfully destroyed"))
-	return nil
+	return err
 }
 
 // Key return uniq module index (string key for maps).
