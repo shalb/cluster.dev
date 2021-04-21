@@ -17,7 +17,7 @@ nav:
       - Deploying to GCE: google-cloud-provider.md
       - Deploying to Azure: azure-cloud-provider.md
     - Quick Start: quick-start.md
-    - Downloading Sample Project: get-sample-project.md
+    - Download Sample Project: get-sample-project.md
     - Applying Infrastructure: apply-infrastructure.md
   - Usage:
     - Project Configuration: project-configuration.md

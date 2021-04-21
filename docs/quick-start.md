@@ -1,6 +1,18 @@
 # Quick Start
 
-This guide will help you quickly create and deploy your first project.
+This guide explains how to quickly create and deploy your first project using code generator. You can also use ready-made [examples](https://github.com/shalb/cluster.dev/tree/master/examples) of project templates from the [cluster.dev](https://github.com/shalb/cluster.dev) repository.
+
+## Superquick start
+
+If you are in hurry, this option is just for you! Just type ```cdev project create``` and specify the [template type](https://cluster.dev/project-configuration/#templates), for example:
+
+  ```bash
+    cdev project create aws-k3s
+  ```
+
+For the extended menu, run ```cdev project create --interactive``` and follow the tips below.
+
+## Creating project workflow
 
 Prior to getting started make sure that you have [cdev installed](https://cluster.dev/installation/) and comply with all [preconditions](https://cluster.dev/prerequisites/) necessary to start using it.
 

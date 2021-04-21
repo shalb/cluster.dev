@@ -1,6 +1,6 @@
 # CLI Options
 
-Available global flags:
+## Global flags
 
 * `--cache`             Use previously cached build directory.
 
@@ -9,3 +9,19 @@ Available global flags:
 * `--parallelism int`    Max parallel threads for module applying (default - `3`).
 
 * `--trace`              Print functions trace info in logs (mainly used for development).
+
+## Apply flags
+
+* `--force`              Skip interactive approval.
+
+* `-h`, `--help`         Help for apply.
+
+* `--ignore-state`       Apply even if the state has not changed.
+
+## Destroy flags
+
+* `--force`              Skip interactive approval.
+
+* `-h`, `--help`         Help for destroy.
+
+* `--ignore-state`       Destroy current configuration and ignore state.
