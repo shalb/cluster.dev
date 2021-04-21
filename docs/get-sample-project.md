@@ -16,13 +16,13 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
 
 * k3s Kubernetes cluster with addons:
 
-  * cert-manager
+    * cert-manager
 
-  * ingress-nginx
+    * ingress-nginx
 
-  * external-dns
+    * external-dns
 
-  * argocd
+    * argocd
 
 ### Prerequisites
 
@@ -67,13 +67,13 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
 
 * EKS Kubernetes cluster with addons:
 
-  * cert-manager
+    * cert-manager
 
-  * ingress-nginx
+    * ingress-nginx
 
-  * external-dns
+    * external-dns
 
-  * argocd
+    * argocd
 
 ### Prerequisites
 
