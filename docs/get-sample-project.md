@@ -59,8 +59,6 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
 
 [AWS-EKS is a cdev template](https://github.com/shalb/cdev-aws-eks) that creates and provisions Kubernetes clusters in [AWS cloud](https://cluster.dev/aws-cloud-provider/) by means of Amazon Elastic Kubernetes Service (EKS). The resources to be created:
 
-* AWS Key Pair to access running instances of the cluster.
-
 * *(optional, if your use cluster.dev domain)* Route53 zone **<cluster-name>.cluster.dev**
 
 * *(optional, if vpc_id is not set)* VPC for EKS cluster
@@ -74,6 +72,8 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
     * external-dns
 
     * argocd
+
+* AWS IAM roles for EKS IRSA cert-manager and external-dns.
 
 ### Prerequisites
 
