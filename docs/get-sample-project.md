@@ -26,7 +26,7 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
 
 ### Prerequisites
 
-1. Terraform version 13+
+1. Terraform version 13+.
 
 2. AWS account.
 
@@ -77,7 +77,7 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
 
 ### Prerequisites
 
-1. Terraform version 13+
+1. Terraform version 13+.
 
 2. AWS account.
 
@@ -96,6 +96,44 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
     ```bash
       git clone https://github.com/shalb/cdev-aws-eks.git
       cd examples/
+    ```
+
+3. Edit variables in the example's files, if necessary.
+
+4. Run `cdev plan`.
+
+5. Run `cdev apply`.
+
+6. You can also use [code generator](https://cluster.dev/quick-start/) to create the same example.
+
+## DO-k8s
+
+[DO-k8s is a cdev template](https://github.com/shalb/cdev-do-k8s) that creates and provisions Kubernetes clusters in the DigitalOcean cloud. The resources to be created:
+
+* *(optional, if vpc_id is not set)* VPC for Kubernetes cluster
+* DO Kubernetes cluster with addons:
+    * cert-manager
+    * argocd
+
+## Prerequisites
+
+1. Terraform version 13+.
+
+2. DigitalOcean account.
+
+3. [doctl installed](https://docs.digitalocean.com/reference/doctl/how-to/install/).
+
+4. [cdev installed](https://cluster.dev/installation/).
+
+## Quick Start
+
+1. [Configure access to DO](https://cluster.dev/digital-ocean-cloud-provider/) and export required variables.
+
+2. Clone example project:
+
+    ```bash
+    git clone https://github.com/shalb/cdev-do-k8s.git
+    cd examples/
     ```
 
 3. Edit variables in the example's files, if necessary.
