@@ -80,6 +80,9 @@ func ReadFilesToExistentsList(filesPath, baseDir string, filesList map[string][]
 					return fmt.Errorf("the file '%v' already exists in the list", path)
 				}
 				relPath, err := filepath.Rel(baseDir, path)
+				if err != nil {
+					return err
+				}
 				filesList[relPath], err = ioutil.ReadFile(path)
 				if err != nil {
 					return err
