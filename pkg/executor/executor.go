@@ -18,8 +18,8 @@ import (
 	"github.com/shalb/cluster.dev/pkg/logging"
 )
 
-// BashRunner - runs shell commands.
-type BashRunner struct {
+// ShRunner - runs shell commands.
+type ShRunner struct {
 	workingDir        string
 	Env               []string
 	Timeout           time.Duration
@@ -33,17 +33,17 @@ var Env []string
 // DefaultLogWriter default logging driver to write stdout.
 var DefaultLogWriter io.Writer
 
-// NewBashRunner - create new bash runner.
-func NewBashRunner(workingDir string, envVariables ...string) (*BashRunner, error) {
+// NewExecutor - create new sh runner.
+func NewExecutor(workingDir string, envVariables ...string) (*ShRunner, error) {
 	// Create runner.
-	runner := BashRunner{}
+	runner := ShRunner{}
 	fi, err := os.Stat(workingDir)
 	if workingDir != "" {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("bash runner: directory %s does not exist", workingDir)
+			return nil, fmt.Errorf("executor: directory %s does not exist", workingDir)
 		}
 		if !fi.Mode().IsDir() {
-			return nil, fmt.Errorf("bash runner: %s is not dir", workingDir)
+			return nil, fmt.Errorf("executor: %s is not dir", workingDir)
 		}
 	}
 
@@ -54,7 +54,7 @@ func NewBashRunner(workingDir string, envVariables ...string) (*BashRunner, erro
 	return &runner, nil
 }
 
-func (b *BashRunner) commandExecCommon(command string, outputBuff io.Writer, errBuff io.Writer) error {
+func (b *ShRunner) commandExecCommon(outputBuff io.Writer, errBuff io.Writer, command string, args ...string) error {
 	// Prepere command, set outputs, run.
 	if config.Interupted {
 		return fmt.Errorf("interrupted")
@@ -68,7 +68,7 @@ func (b *BashRunner) commandExecCommon(command string, outputBuff io.Writer, err
 		defer cancel()
 	}
 
-	cmd := exec.CommandContext(ctx, "bash", "-c", command)
+	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Stdout = outputBuff
 	cmd.Stderr = errBuff
 
@@ -88,17 +88,57 @@ func (b *BashRunner) commandExecCommon(command string, outputBuff io.Writer, err
 	err := cmd.Wait()
 	stopChan <- struct{}{}
 	if ctx.Err() == context.DeadlineExceeded {
-		return fmt.Errorf("bash runner: command timeout '%s'", command)
+		return fmt.Errorf("executor: command timeout '%s'", command)
 	}
 
 	return err
 }
 
-func (b *BashRunner) RunWithTty(command string) error {
+func (b *ShRunner) commandExecCommonInShell(command string, outputBuff io.Writer, errBuff io.Writer) error {
+	// Prepere command, set outputs, run.
+	if config.Interupted {
+		return fmt.Errorf("interrupted")
+	}
+	var ctx context.Context
+	var cancel context.CancelFunc
+	if b.Timeout == 0 {
+		ctx = context.Background()
+	} else {
+		ctx, cancel = context.WithTimeout(context.Background(), b.Timeout)
+		defer cancel()
+	}
+
+	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	cmd.Stdout = outputBuff
+	cmd.Stderr = errBuff
+
+	if b.workingDir != "" {
+		cmd.Dir = b.workingDir
+	}
+	// Add global environments.
+	envTmp := append(os.Environ(), Env...)
+	// Add environments of curent innstance.
+	cmd.Env = append(envTmp, b.Env...)
+	// Run command.
+
+	stopChan := make(chan struct{})
+	sigChan := StartSigTrap(cmd, stopChan)
+	defer sigChan.Close()
+	cmd.Start()
+	err := cmd.Wait()
+	stopChan <- struct{}{}
+	if ctx.Err() == context.DeadlineExceeded {
+		return fmt.Errorf("sh runner: command timeout '%s'", command)
+	}
+
+	return err
+}
+
+func (b *ShRunner) RunWithTty(command string) error {
 	var ctx context.Context
 	ctx = context.Background()
 
-	cmd := exec.CommandContext(ctx, "bash", "-c", command)
+	cmd := exec.CommandContext(ctx, "sh", "-c", command)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -117,7 +157,7 @@ func (b *BashRunner) RunWithTty(command string) error {
 }
 
 // Run - exec command and hide secrets in log output.
-func (b *BashRunner) Run(command string) ([]byte, []byte, error) {
+func (b *ShRunner) Run(command string) ([]byte, []byte, error) {
 
 	var logPrefix string
 	for _, str := range b.LogLabels {
@@ -129,7 +169,7 @@ func (b *BashRunner) Run(command string) ([]byte, []byte, error) {
 	// Create log writer.
 	logWriter, err := logging.NewLogWriter(log.DebugLevel, logging.SliceFielder{Flds: b.LogLabels})
 	if err != nil {
-		return nil, nil, fmt.Errorf("bash runner: can't init logging: %v", err)
+		return nil, nil, fmt.Errorf("executor: can't init logging: %v", err)
 	}
 
 	// errOutput - error text.
@@ -148,7 +188,7 @@ func (b *BashRunner) Run(command string) ([]byte, []byte, error) {
 		}(bannerStopChan)
 	}
 	logCollector := newCollector(logWriter)
-	err = b.commandExecCommon(command, logCollector, errOutput)
+	err = b.commandExecCommonInShell(command, logCollector, errOutput)
 	if b.ShowResultMessage {
 		if err == nil {
 			log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("Success"))
@@ -160,7 +200,7 @@ func (b *BashRunner) Run(command string) ([]byte, []byte, error) {
 }
 
 // RunMutely - exec command and hide secrets in output. Return command output and errors output.
-func (b *BashRunner) RunMutely(command string, secrets ...string) (string, string, error) {
+func (b *ShRunner) RunMutely(command string, secrets ...string) (string, string, error) {
 	var logPrefix string
 	for _, str := range b.LogLabels {
 		logPrefix = fmt.Sprintf("%s[%s]", logPrefix, str)
@@ -170,7 +210,7 @@ func (b *BashRunner) RunMutely(command string, secrets ...string) (string, strin
 	// Mask secrets with ***
 	hiddenCommand := stringHideSecrets(command, secrets...)
 	log.Debugf("Executing command '%s':", hiddenCommand)
-	err := b.commandExecCommon(command, output, runerr)
+	err := b.commandExecCommonInShell(command, output, runerr)
 	return output.String(), runerr.String(), err
 }
 
