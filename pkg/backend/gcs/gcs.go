@@ -77,6 +77,9 @@ func (b *BackendGCS) GetRemoteStateHCL(infraName, moduleName string) ([]byte, er
 	dataBody := dataBlock.Body()
 	dataBody.SetAttributeValue("backend", cty.StringVal("gcs"))
 	config, err := hcltools.InterfaceToCty(bConfigTmpl)
+	if err != nil {
+		return nil, err
+	}
 	dataBody.SetAttributeValue("config", config)
 	return f.Bytes(), nil
 }
