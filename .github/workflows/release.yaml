@@ -40,10 +40,16 @@ jobs:
         run: | 
           cp Dockerfile-alpine Dockerfile
           docker build -t ${IMAGE}-alpine  .
+          docker tag "${IMAGE}-alpine" "${REGISTRY}/${IMAGE}:${VERSION}-alpine"
+
           cp Dockerfile-debian Dockerfile
-          docker build -t ${IMAGE}-debian --build-arg CDEV_VERSION=${IMAGE}-alpine .
+          docker build -t ${IMAGE}-debian --build-arg CDEV_VERSION=${VERSION}-alpine .
+          docker tag "${IMAGE}-debian" "${REGISTRY}/${IMAGE}:${VERSION}-debian"
+
           cp Dockerfile-full Dockerfile
-          docker build -t ${IMAGE} --build-arg CDEV_VERSION=${IMAGE}-alpine .
+          docker build -t ${IMAGE} --build-arg CDEV_VERSION=${VERSION}-alpine .
+          docker tag "${IMAGE}" "${REGISTRY}/${IMAGE}:${VERSION}"
+          docker tag "${IMAGE}" "${REGISTRY}/${IMAGE}:latest"
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USER }}" --password "${{ secrets.DOCKER_PASS }}"
@@ -56,17 +62,8 @@ jobs:
           echo IMAGE=${IMAGE}
           echo VERSION=${VERSION}
 
-          docker tag "${IMAGE}-alpine" "${REGISTRY}/${IMAGE}:${VERSION}-alpine"
           docker push "$REGISTRY/$IMAGE:$VERSION-alpine"
-
-          cp Dockerfile-debian Dockerfile
-          docker tag "${IMAGE}-debian" "${REGISTRY}/${IMAGE}:${VERSION}-debian"
           docker push "${REGISTRY}/${IMAGE}:${VERSION}-debian"
-
-          cp Dockerfile-full Dockerfile
-          docker tag "${IMAGE}" "${REGISTRY}/${IMAGE}:${VERSION}"
           docker push "${REGISTRY}/${IMAGE}:${VERSION}"
-
-          docker tag "${IMAGE}" "${REGISTRY}/${IMAGE}:latest"
           docker push "${REGISTRY}/${IMAGE}:latest"
 
