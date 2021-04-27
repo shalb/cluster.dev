@@ -38,14 +38,13 @@ jobs:
 
       - name: Build image
         run: | 
+          set -x
           VERSION=$(git describe --tag --abbrev=0)
           cp Dockerfile-alpine Dockerfile
-          docker build -t ${IMAGE}-alpine  .
-          docker tag "${IMAGE}-alpine" "${REGISTRY}/${IMAGE}:${VERSION}-alpine"
+          docker build -t ${REGISTRY}/${IMAGE}:${VERSION}-alpine  .
 
           cp Dockerfile-debian Dockerfile
-          docker build -t ${IMAGE}-debian --build-arg CDEV_VERSION=${VERSION}-alpine .
-          docker tag "${IMAGE}-debian" "${REGISTRY}/${IMAGE}:${VERSION}-debian"
+          docker build -t ${REGISTRY}/${IMAGE}:${VERSION}-debian --build-arg CDEV_VERSION=${VERSION}-alpine .
 
           cp Dockerfile-full Dockerfile
           docker build -t ${IMAGE} --build-arg CDEV_VERSION=${VERSION}-alpine .
