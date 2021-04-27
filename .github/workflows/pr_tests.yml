@@ -1,0 +1,34 @@
+name: Pr Tests
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  tests:
+    name: Build and run tests
+    runs-on: ubuntu-latest
+    container: golang:1.16.0-alpine
+    steps:
+
+    - name: Install soft
+      run: | 
+        apk add make bash jq curl git zip
+        wget https://releases.hashicorp.com/terraform/0.15.1/terraform_0.15.1_linux_amd64.zip
+        unzip terraform_0.15.1_linux_amd64.zip
+        cp terraform /usr/local/bin/
+
+    - name: Code checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+
+    - name: Build
+      run: git fetch --prune --unshallow --tags && make && cp ./bin/linux-amd64/cdev /usr/local/bin/
+
+    - name: Run tests
+      run: cd tests/test-project/ && cdev plan --tf-plan -l debug && cdev apply --force -l debug && cdev destroy --force -l debug
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -219,10 +219,12 @@ func (p *Project) Plan() error {
 					err := md.Build()
 					if err != nil {
 						log.Errorf("terraform plan: module build error: %v", err.Error())
+						return err
 					}
 					err = md.Plan()
 					if err != nil {
 						log.Errorf("Module '%v' terraform plan return an error: %v", md.Key(), err.Error())
+						return err
 					}
 				} else {
 					log.Warnf("The module '%v' has dependencies that have not yet been deployed. Can't show terraform plan.", md.Key())
