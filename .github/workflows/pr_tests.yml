@@ -21,5 +21,7 @@ jobs:
         fetch-depth: 2
 
     - name: Build
-      run: make
+      run: git fetch --prune --unshallow --tags && make
 
+    - name: Run tests
+      run: ./bin/linux-amd64/cdev --help
