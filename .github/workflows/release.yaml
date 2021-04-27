@@ -39,11 +39,11 @@ jobs:
       - name: Build image
         run: | 
           cp Dockerfile-alpine Dockerfile
-          docker build -t ${IMAGE}-alpine .
+          docker build -t ${IMAGE}-alpine  .
           cp Dockerfile-debian Dockerfile
-          docker build -t ${IMAGE}-debian .
+          docker build -t ${IMAGE}-debian --build-arg CDEV_VERSION=${IMAGE}-alpine .
           cp Dockerfile-full Dockerfile
-          docker build -t ${IMAGE}
+          docker build -t ${IMAGE} --build-arg CDEV_VERSION=${IMAGE}-alpine .
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USER }}" --password "${{ secrets.DOCKER_PASS }}"
@@ -70,4 +70,3 @@ jobs:
           docker tag "${IMAGE}" "${REGISTRY}/${IMAGE}:latest"
           docker push "${REGISTRY}/${IMAGE}:latest"
 
-          
