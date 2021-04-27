@@ -21,7 +21,10 @@ jobs:
         fetch-depth: 2
 
     - name: Build
-      run: git fetch --prune --unshallow --tags && make
+      run: git fetch --prune --unshallow --tags && make && cp ./bin/linux-amd64/cdev /usr/local/bin/
 
     - name: Run tests
-      run: ./bin/linux-amd64/cdev --help
+      run: cd tests/test-project/ && cdev plan
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

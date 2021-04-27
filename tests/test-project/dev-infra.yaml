@@ -1,0 +1,13 @@
+name: aws-backend
+kind: backend
+provider: s3
+spec:
+  bucket: {{ .project.variables.state_bucket_name }}
+  region: {{ .project.variables.region }}
+---
+name: my-k3s-cluster
+template: https://github.com/shalb/cdev-test-template?ref=v0.0.1
+kind: infrastructure
+backend: aws-backend
+variables:
+  name: "cdev-gha-test"

@@ -1,0 +1,6 @@
+name: dev
+kind: project
+variables:
+  organization: cluster-dev
+  region: eu-central-1
+  state_bucket_name: cluster-dev-gha-tests
