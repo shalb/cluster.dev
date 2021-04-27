@@ -11,3 +11,4 @@ kind: Infrastructure
 backend: aws-backend
 variables:
   name: "cdev-gha-test"
+  region: {{ .project.variables.region }}
