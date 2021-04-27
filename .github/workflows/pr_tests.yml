@@ -1,0 +1,25 @@
+name: Pr Tests
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  tests:
+    name: Build and run tests
+    runs-on: ubuntu-latest
+    container: golang:1.16.0-alpine
+    steps:
+
+    - name: Install soft
+      run: apk add make bash jq curl git
+
+    - name: Code checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+
+    - name: Build
+      run: make
+
