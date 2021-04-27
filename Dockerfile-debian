@@ -1,0 +1,14 @@
+ARG CDEV_VERSION
+ARG DEBIAN_VERSION=10.9-slim
+
+FROM clusterdev/cluster.dev:${CDEV_VERSION} as clusterdev
+
+FROM debian:${DEBIAN_VERSION}
+
+RUN apt-get update -y && apt-get install -y git bash
+COPY --from=clusterdev /bin/terraform /bin/terraform
+COPY --from=clusterdev /bin/cdev /bin/cdev
+
+WORKDIR /workspace/cluster-dev
+
+ENTRYPOINT ["/bin/cdev"]

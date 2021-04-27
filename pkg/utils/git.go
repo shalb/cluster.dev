@@ -24,7 +24,7 @@ func GetTemplate(gitURL, targetDir, templateName string) (string, error) {
 	pulledTempplatePath := filepath.Join(targetDir, templateName)
 	if IsDir(pulledTempplatePath) {
 		log.Debugf("Template is already exists, updating...")
-		shell, err := executor.NewBashRunner(pulledTempplatePath)
+		shell, err := executor.NewExecutor(pulledTempplatePath)
 		if err != nil {
 			return "", fmt.Errorf("get template: %v", err.Error())
 		}
@@ -35,7 +35,7 @@ func GetTemplate(gitURL, targetDir, templateName string) (string, error) {
 		}
 		return pulledTempplatePath, nil
 	}
-	shell, err := executor.NewBashRunner(targetDir)
+	shell, err := executor.NewExecutor(targetDir)
 	if err != nil {
 		return "", fmt.Errorf("get template: %v", err.Error())
 	}

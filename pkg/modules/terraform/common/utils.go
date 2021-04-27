@@ -69,7 +69,7 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 		return nil, err
 	}
 	if cmdExists {
-		ScriptData.Command = fmt.Sprintf("#!/usr/bin/env bash\nset -e\n\n%s", cmd)
+		ScriptData.Command = fmt.Sprintf("#!/usr/bin/env sh\nset -e\n\n%s", cmd)
 	} else {
 		cmdTmp, err := ioutil.ReadFile(filepath.Join(config.Global.WorkingDir, script))
 		ScriptData.Command = string(cmdTmp)

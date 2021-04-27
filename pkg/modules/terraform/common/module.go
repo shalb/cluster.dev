@@ -174,7 +174,7 @@ func (m *Module) Dependencies() *[]*project.Dependency {
 }
 
 func (m *Module) InitCommon() error {
-	rn, err := executor.NewBashRunner(m.codeDir)
+	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
 		return err
@@ -201,7 +201,7 @@ func (m *Module) InitCommon() error {
 }
 
 func (m *Module) ApplyCommon() error {
-	rn, err := executor.NewBashRunner(m.codeDir)
+	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
 		return err
@@ -242,7 +242,7 @@ func (m *Module) Apply() error {
 
 // Outputs module.
 func (m *Module) Outputs() (string, error) {
-	rn, err := executor.NewBashRunner(m.codeDir)
+	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
 		return "", err
@@ -269,7 +269,7 @@ func (m *Module) Outputs() (string, error) {
 
 // Plan module.
 func (m *Module) Plan() error {
-	rn, err := executor.NewBashRunner(m.codeDir)
+	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
 		return err
@@ -302,7 +302,7 @@ func (m *Module) Plan() error {
 
 // Destroy module.
 func (m *Module) Destroy() error {
-	rn, err := executor.NewBashRunner(m.codeDir)
+	rn, err := executor.NewExecutor(m.codeDir)
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	if err != nil {
 		log.Debug(err.Error())

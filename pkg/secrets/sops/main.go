@@ -57,7 +57,7 @@ func init() {
 }
 
 func (s *sopsDriver) Edit(sec project.Secret) error {
-	runner, err := executor.NewBashRunner(config.Global.WorkingDir)
+	runner, err := executor.NewExecutor(config.Global.WorkingDir)
 	if err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (s *sopsDriver) Edit(sec project.Secret) error {
 }
 
 func (s *sopsDriver) Create(files map[string][]byte) error {
-	runner, err := executor.NewBashRunner(config.Global.WorkingDir)
+	runner, err := executor.NewExecutor(config.Global.WorkingDir)
 	if err != nil {
 		return err
 	}

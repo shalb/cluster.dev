@@ -79,7 +79,7 @@ func init() {
 }
 
 func (s *smDriver) Edit(sec project.Secret) error {
-	runner, err := executor.NewBashRunner(config.Global.WorkingDir)
+	runner, err := executor.NewExecutor(config.Global.WorkingDir)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (s *smDriver) Edit(sec project.Secret) error {
 }
 
 func (s *smDriver) Create(files map[string][]byte) error {
-	runner, err := executor.NewBashRunner(config.Global.WorkingDir)
+	runner, err := executor.NewExecutor(config.Global.WorkingDir)
 	if err != nil {
 		return fmt.Errorf("create  secret: %v", err.Error())
 	}

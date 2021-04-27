@@ -1,18 +1,20 @@
-ARG HELMFILE_VERSION=0.113.0
 ARG GO_VERSION=1.16.0-alpine
 ARG TERRAFORM_VERSION=0.14.7
+ARG ALPINE_VERSION=3.13.5
 
 FROM golang:${GO_VERSION} as builder
 
 RUN apk add --no-cache make git bash
 WORKDIR /workspace/cluster-dev
 COPY . /workspace/cluster-dev
-RUN make
+RUN make linux_amd64
 
 FROM hashicorp/terraform:${TERRAFORM_VERSION} as terraform
 
-COPY --from=builder /workspace/cluster-dev/bin/linux-amd64/cdev /bin/cdev
+FROM alpine:${ALPINE_VERSION}
 
-WORKDIR /workspace/cluster-dev
+RUN apk add --no-cache git bash
+COPY --from=terraform /bin/terraform /bin/terraform
+COPY --from=builder /workspace/cluster-dev/bin/linux-amd64/cdev /bin/cdev
 
 ENTRYPOINT ["/bin/cdev"]
