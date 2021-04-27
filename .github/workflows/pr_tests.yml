@@ -13,7 +13,11 @@ jobs:
     steps:
 
     - name: Install soft
-      run: apk add make bash jq curl git
+      run: | 
+        apk add make bash jq curl git zip
+        wget https://releases.hashicorp.com/terraform/0.15.1/terraform_0.15.1_linux_amd64.zip
+        unzip terraform_0.15.1_linux_amd64.zip
+        cp terraform /usr/local/bin/
 
     - name: Code checkout
       uses: actions/checkout@v2
