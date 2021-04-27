@@ -1,7 +1,7 @@
 ARG CDEV_VERSION=latest
 ARG PYTHON_VERSION=3.9.4-slim-buster
 
-FROM clusterdev/cdev:${CDEV_VERSION} as clusterdev
+FROM clusterdev/cluster.dev:${CDEV_VERSION} as clusterdev
 
 FROM python:${PYTHON_VERSION}
 

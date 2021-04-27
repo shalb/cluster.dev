@@ -4,7 +4,7 @@ on:
     types: [published]
 
 env:
-  IMAGE: cdev
+  IMAGE: cluster.dev
   REGISTRY: docker.io/clusterdev
 
 jobs:
