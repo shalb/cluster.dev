@@ -4,7 +4,7 @@ on:
     types: [published]
 
 env:
-  IMAGE: cluster.dev
+  IMAGE: cdev
   REGISTRY: docker.io/clusterdev
 
 jobs:
@@ -37,7 +37,13 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build image
-        run: docker build -t $IMAGE .
+        run: | 
+          cp Dockerfile-alpine Dockerfile
+          docker build -t ${IMAGE}-alpine .
+          cp Dockerfile-debian Dockerfile
+          docker build -t ${IMAGE}-debian .
+          cp Dockerfile-full Dockerfile
+          docker build -t ${IMAGE}
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USER }}" --password "${{ secrets.DOCKER_PASS }}"
@@ -47,11 +53,21 @@ jobs:
 
           VERSION=$(git describe --tag --abbrev=0)
 
-          echo IMAGE=$IMAGE
-          echo VERSION=$VERSION
+          echo IMAGE=${IMAGE}
+          echo VERSION=${VERSION}
 
-          docker tag "$IMAGE" "$REGISTRY/$IMAGE:$VERSION"
-          docker push "$REGISTRY/$IMAGE:$VERSION"
+          docker tag "${IMAGE}-alpine" "${REGISTRY}/${IMAGE}:${VERSION}-alpine"
+          docker push "$REGISTRY/$IMAGE:$VERSION-alpine"
 
-          docker tag "$IMAGE" "$REGISTRY/$IMAGE:latest"
-          docker push "$REGISTRY/$IMAGE:latest"
+          cp Dockerfile-debian Dockerfile
+          docker tag "${IMAGE}-debian" "${REGISTRY}/${IMAGE}:${VERSION}-debian"
+          docker push "${REGISTRY}/${IMAGE}:${VERSION}-debian"
+
+          cp Dockerfile-full Dockerfile
+          docker tag "${IMAGE}" "${REGISTRY}/${IMAGE}:${VERSION}"
+          docker push "${REGISTRY}/${IMAGE}:${VERSION}"
+
+          docker tag "${IMAGE}" "${REGISTRY}/${IMAGE}:latest"
+          docker push "${REGISTRY}/${IMAGE}:latest"
+
+          

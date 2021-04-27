@@ -1,0 +1,17 @@
+ARG CDEV_VERSION=latest
+ARG PYTHON_VERSION=3.9.4-slim-buster
+
+FROM clusterdev/cluster.dev:${CDEV_VERSION} as clusterdev
+
+FROM python:${PYTHON_VERSION}
+
+RUN pip3 install awscli gcloud azure-cli doctl
+
+RUN apt-get update -y && apt-get install -y git
+
+COPY --from=clusterdev /bin/terraform /bin/terraform
+COPY --from=clusterdev /bin/cdev /bin/cdev
+
+WORKDIR /workspace/cluster-dev
+
+ENTRYPOINT ["/bin/cdev"]
