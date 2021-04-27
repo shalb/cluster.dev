@@ -38,6 +38,7 @@ jobs:
 
       - name: Build image
         run: | 
+          VERSION=$(git describe --tag --abbrev=0)
           cp Dockerfile-alpine Dockerfile
           docker build -t ${IMAGE}-alpine  .
           docker tag "${IMAGE}-alpine" "${REGISTRY}/${IMAGE}:${VERSION}-alpine"
