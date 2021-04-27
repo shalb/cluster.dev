@@ -1,5 +1,5 @@
 name: k8s-cluster
-kind: project
+kind: Project
 variables:
   organization: cluster-dev
   region: ams3
