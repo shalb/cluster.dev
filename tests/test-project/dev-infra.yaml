@@ -5,7 +5,7 @@ spec:
   bucket: {{ .project.variables.state_bucket_name }}
   region: {{ .project.variables.region }}
 ---
-name: my-k3s-cluster
+name: cdev-tests
 template: https://github.com/shalb/cdev-test-template?ref=v0.0.1
 kind: Infrastructure
 backend: aws-backend
