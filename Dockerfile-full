@@ -7,7 +7,8 @@ FROM python:${PYTHON_VERSION}
 
 RUN pip3 install awscli gcloud azure-cli doctl
 
-RUN apt-get update -y && apt-get install -y git curl jq
+RUN apt-get update -y && apt-get install -y git curl jq \
+    && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 
 COPY --from=clusterdev /bin/terraform /bin/terraform
 COPY --from=clusterdev /bin/cdev /bin/cdev
