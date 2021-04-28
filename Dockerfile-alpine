@@ -14,7 +14,8 @@ FROM hashicorp/terraform:${TERRAFORM_VERSION} as terraform
 FROM alpine:${ALPINE_VERSION}
 
 RUN apk add --no-cache git bash curl jq \
-    && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
 
 COPY --from=terraform /bin/terraform /bin/terraform
 COPY --from=builder /workspace/cluster-dev/bin/linux-amd64/cdev /bin/cdev

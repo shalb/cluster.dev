@@ -6,7 +6,8 @@ FROM clusterdev/cluster.dev:${CDEV_VERSION} as clusterdev
 FROM debian:${DEBIAN_VERSION}
 
 RUN apt-get update -y && apt-get install -y git bash curl jq \
-    && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
 
 COPY --from=clusterdev /bin/terraform /bin/terraform
 COPY --from=clusterdev /bin/cdev /bin/cdev
