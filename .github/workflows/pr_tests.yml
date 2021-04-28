@@ -1,6 +1,5 @@
 name: Pr Tests
 on:
-  push:
   pull_request:
     branches:
       - master
