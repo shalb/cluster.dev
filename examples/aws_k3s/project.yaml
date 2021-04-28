@@ -1,5 +1,5 @@
 name: dev
-kind: project
+kind: Project
 variables:
   organization: shalb
   region: eu-central-1
