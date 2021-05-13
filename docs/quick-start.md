@@ -4,10 +4,18 @@ This guide explains how to quickly create and deploy your first project using co
 
 ## Superquick start
 
-If you are in hurry, this option is just for you! Just type ```cdev project create``` and specify the [template type](https://cluster.dev/project-configuration/#templates), for example:
+If you are in hurry, this option is just for you! Just type ```cdev project create``` and specify the [template type](https://cluster.dev/project-configuration/#templates):
 
   ```bash
     cdev project create aws-k3s
+  ```
+
+  ```bash
+    cdev project create aws-eks
+  ```
+
+  ```bash
+    cdev project create do-k8s
   ```
 
 For the extended menu, run ```cdev project create --interactive``` and follow the tips below.
