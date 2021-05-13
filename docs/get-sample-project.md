@@ -44,16 +44,28 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
 
     ```bash
       git clone https://github.com/shalb/cdev-aws-k3s.git
-      cd examples/
+      cd cdev-aws-k3s/examples/
     ```
 
-3. Edit variables in the example's files, if necessary.
+3. Edit variables in the example's files, if necessary:
 
-4. Run `cdev plan`.
+    * project.yaml - main project config. Sets common global variables for current project such as organization, region, state bucket name etc. See [project configuration docs](https://cluster.dev/project-configuration/#project).
 
-5. Run `cdev apply`.
+    * backend(s).yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://cluster.dev/project-configuration/#backends).
 
-6. You can also use [code generator](https://cluster.dev/quick-start/) to create the same example.
+    * infrastructure.yaml - describes infrastructure configuration. See [infrastructure docs](https://cluster.dev/project-configuration/#infrastructure).
+
+4. Run `cdev plan`
+
+5. Run `cdev apply` . We highly recommend to run `cdev apply` in a debug mode so that you could see cdev logging in the output: `cdev apply -l debug`
+
+6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the infrastructure.yaml.
+
+7. Displayed in the output will be also a command on how to get kubeconfig and connect to your Kubernetes cluster.
+
+8. Shut down the cluster with the command `cdev destroy`
+
+9. Alternatively, you can also use [code generator](https://cluster.dev/quick-start/) to create the same example.
 
 ## AWS-EKS
 
@@ -95,16 +107,28 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
 
     ```bash
       git clone https://github.com/shalb/cdev-aws-eks.git
-      cd examples/
+      cd cdev-aws-eks/examples/
     ```
 
-3. Edit variables in the example's files, if necessary.
+3. Edit variables in the example's files, if necessary:
 
-4. Run `cdev plan`.
+    * project.yaml - main project config. Sets common global variables for current project such as organization, region, state bucket name etc. See [project configuration docs](https://cluster.dev/project-configuration/#project).
 
-5. Run `cdev apply`.
+    * backend(s).yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://cluster.dev/project-configuration/#backends).
 
-6. You can also use [code generator](https://cluster.dev/quick-start/) to create the same example.
+    * infrastructure.yaml - describes infrastructure configuration. See [infrastructure docs](https://cluster.dev/project-configuration/#infrastructure).
+
+4. Run `cdev plan`
+
+5. Run `cdev apply` . We highly recommend to run `cdev apply` in a debug mode so that you could see cdev logging in the output: `cdev apply -l debug`
+
+6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the infrastructure.yaml.
+
+7. Displayed in the output will be also a command on how to get kubeconfig and connect to your Kubernetes cluster.
+
+8. Shut down the cluster with the command `cdev destroy`
+
+9. Alternatively, you can also use [code generator](https://cluster.dev/quick-start/) to create the same example.
 
 ## DO-k8s
 
@@ -115,7 +139,7 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
     * cert-manager
     * argocd
 
-## Prerequisites
+### Prerequisites
 
 1. Terraform version 13+.
 
@@ -125,7 +149,7 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
 
 4. [cdev installed](https://cluster.dev/installation/).
 
-## Quick Start
+### Quick Start
 
 1. [Configure access to DO](https://cluster.dev/digital-ocean-cloud-provider/) and export required variables.
 
@@ -133,13 +157,25 @@ cdev uses [project templates](https://cluster.dev/template-development/) to gene
 
     ```bash
     git clone https://github.com/shalb/cdev-do-k8s.git
-    cd examples/
+    cd cdev-do-k8s/examples/
     ```
 
-3. Edit variables in the example's files, if necessary.
+3. Edit variables in the example's files, if necessary:
 
-4. Run `cdev plan`.
+    * project.yaml - main project config. Sets common global variables for current project such as organization, region, state bucket name etc. See [project configuration docs](https://cluster.dev/project-configuration/#project).
 
-5. Run `cdev apply`.
+    * backend(s).yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://cluster.dev/project-configuration/#backends).
 
-6. You can also use [code generator](https://cluster.dev/quick-start/) to create the same example.
+    * infrastructure.yaml - describes infrastructure configuration. See [infrastructure docs](https://cluster.dev/project-configuration/#infrastructure).
+
+4. Run `cdev plan`
+
+5. Run `cdev apply` . We highly recommend to run `cdev apply` in a debug mode so that you could see cdev logging in the output: `cdev apply -l debug`
+
+6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the infrastructure.yaml.
+
+7. Displayed in the output will be also a command on how to get kubeconfig and connect to your Kubernetes cluster.
+
+8. Shut down the cluster with the command `cdev destroy`
+
+9. Alternatively, you can also use [code generator](https://cluster.dev/quick-start/) to create the same example.
