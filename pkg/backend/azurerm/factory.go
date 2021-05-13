@@ -11,7 +11,7 @@ type Factory struct{}
 
 // New creates the new backend.
 func (f *Factory) New(config []byte, name string) (project.Backend, error) {
-	bk := BackendAzureRm{name: name}
+	bk := Backend{name: name}
 	err := yaml.Unmarshal(config, &bk.state)
 	if err != nil {
 		return nil, err

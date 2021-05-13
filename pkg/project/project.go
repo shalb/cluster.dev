@@ -23,6 +23,16 @@ const projectObjKindKey = "Project"
 // MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
 type MarkerScanner func(data reflect.Value, module Module) (reflect.Value, error)
 
+// TODO:
+// // ProjectConfSpec type for project.yaml config.
+// type ProjectConfSpec struct {
+// 	Name      string                 `yaml:"name"`
+// 	Kind      string                 `yaml:"kind"`
+// 	Backend   string                 `yaml:"backend,omitempty"`
+// 	Exports   map[string]interface{} `yaml:"exports"`
+// 	Variables map[string]interface{} `yaml:"variables"`
+// }
+
 // Project describes main config with user-defined variables.
 type Project struct {
 	name             string
@@ -39,6 +49,7 @@ type Project struct {
 	CodeCacheDir     string
 	StateLock        sync.Mutex
 	InitLock         sync.Mutex
+	StateBackendName string
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
@@ -96,6 +107,10 @@ func LoadProjectBase() (*Project, error) {
 		}
 	}
 
+	if stateBackend, exists := prjConfParsed["backend"].(string); exists {
+		project.StateBackendName = stateBackend
+	}
+
 	project.configData["project"] = prjConfParsed
 
 	err = project.readSecrets()
@@ -128,6 +143,7 @@ func LoadProjectFull() (*Project, error) {
 			log.Fatalf("load project: %v", err.Error())
 		}
 	}
+
 	err = project.prepareObjects()
 	if err != nil {
 		return nil, err
@@ -139,6 +155,14 @@ func LoadProjectFull() (*Project, error) {
 	err = project.prepareModules()
 	if err != nil {
 		return nil, err
+	}
+	if project.StateBackendName != "" {
+		sBk, ok := project.Backends[project.StateBackendName]
+		if !ok {
+			log.Fatalf("load project: state backend '%v' does not found", project.StateBackendName)
+		}
+		err = sBk.LockState()
+		os.Exit(0)
 	}
 	return project, nil
 }
@@ -245,7 +269,10 @@ func (p *Project) MkBuildDir() error {
 			return err
 		}
 	}
-	relPath, _ := filepath.Rel(config.Global.WorkingDir, p.CodeCacheDir)
+	relPath, err := filepath.Rel(config.Global.WorkingDir, p.CodeCacheDir)
+	if err != nil {
+		return err
+	}
 	log.Debugf("Creates code directory: './%v'", relPath)
 	if _, err := os.Stat(p.CodeCacheDir); os.IsNotExist(err) {
 		err := os.Mkdir(p.CodeCacheDir, 0755)

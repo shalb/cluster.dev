@@ -3,41 +3,41 @@ package s3
 import (
 	"fmt"
 
-	"github.com/zclconf/go-cty/cty"
-
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/shalb/cluster.dev/pkg/aws"
+	"github.com/zclconf/go-cty/cty"
 )
 
-// BackendS3 - describe s3 backend for interface package.backend.
-type BackendS3 struct {
+// Backend - describe s3 backend for interface package.backend.
+type Backend struct {
 	name   string
 	Bucket string `yaml:"bucket"`
 	Region string `yaml:"region"`
 	state  map[string]interface{}
 }
 
-func (b *BackendS3) State() map[string]interface{} {
+func (b *Backend) State() map[string]interface{} {
 	return b.state
 }
 
 // Name return name.
-func (b *BackendS3) Name() string {
+func (b *Backend) Name() string {
 	return b.name
 }
 
 // Provider return name.
-func (b *BackendS3) Provider() string {
+func (b *Backend) Provider() string {
 	return "s3"
 }
 
-type backendConfigSpec struct {
-	Bucket string `hcl:"bucket"`
-	Key    string `hcl:"key"`
-	Region string `hcl:"region"`
-}
+// type backendConfigSpec struct {
+// 	Bucket string `hcl:"bucket"`
+// 	Key    string `hcl:"key"`
+// 	Region string `hcl:"region"`
+// }
 
 // GetBackendBytes generate terraform backend config.
-func (b *BackendS3) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
+func (b *Backend) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
 	f, err := b.GetBackendHCL(infraName, moduleName)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (b *BackendS3) GetBackendBytes(infraName, moduleName string) ([]byte, error
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *BackendS3) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
+func (b *Backend) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
@@ -62,7 +62,7 @@ func (b *BackendS3) GetBackendHCL(infraName, moduleName string) (*hclwrite.File,
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *BackendS3) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
+func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
@@ -76,4 +76,8 @@ func (b *BackendS3) GetRemoteStateHCL(infraName, moduleName string) ([]byte, err
 	}))
 
 	return f.Bytes(), nil
+}
+
+func (b *Backend) LockState() error {
+	return aws.S3Upload(b.Region, b.Bucket, "cdev.lock", "")
 }

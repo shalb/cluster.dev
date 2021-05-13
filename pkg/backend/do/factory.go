@@ -13,7 +13,7 @@ type Factory struct{}
 
 // New creates the new do backend.
 func (f *Factory) New(config []byte, name string) (project.Backend, error) {
-	bk := BackendDo{name: name}
+	bk := Backend{name: name}
 	state := map[string]interface{}{}
 	err := yaml.Unmarshal(config, &bk)
 	if err != nil {

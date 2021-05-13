@@ -18,6 +18,7 @@ type Backend interface {
 	GetBackendBytes(string, string) ([]byte, error)
 	GetRemoteStateHCL(string, string) ([]byte, error)
 	State() map[string]interface{}
+	LockState() error
 }
 
 // BackendsFactory - interface for backend provider factory. New() creates backend.

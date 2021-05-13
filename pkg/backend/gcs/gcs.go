@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 )
 
-// BackendGCS - describe s3 backend for interface package.backend.
-type BackendGCS struct {
+// Backend - describe s3 backend for interface package.backend.
+type Backend struct {
 	name                      string
 	Bucket                    string `yaml:"bucket"`
 	Credentials               string `yaml:"credentials,omitempty"`
@@ -22,22 +22,22 @@ type BackendGCS struct {
 	state                     map[string]interface{}
 }
 
-func (b *BackendGCS) State() map[string]interface{} {
+func (b *Backend) State() map[string]interface{} {
 	return b.state
 }
 
 // Name return name.
-func (b *BackendGCS) Name() string {
+func (b *Backend) Name() string {
 	return b.name
 }
 
 // Provider return name.
-func (b *BackendGCS) Provider() string {
+func (b *Backend) Provider() string {
 	return "gcs"
 }
 
 // GetBackendBytes generate terraform backend config.
-func (b *BackendGCS) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
+func (b *Backend) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
 	f, err := b.GetBackendHCL(infraName, moduleName)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (b *BackendGCS) GetBackendBytes(infraName, moduleName string) ([]byte, erro
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *BackendGCS) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
+func (b *Backend) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
 	bConfigTmpl, err := getStateMap(*b)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (b *BackendGCS) GetBackendHCL(infraName, moduleName string) (*hclwrite.File
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *BackendGCS) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
+func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
 	bConfigTmpl, err := getStateMap(*b)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (b *BackendGCS) GetRemoteStateHCL(infraName, moduleName string) ([]byte, er
 	return f.Bytes(), nil
 }
 
-func getStateMap(in BackendGCS) (res map[string]interface{}, err error) {
+func getStateMap(in Backend) (res map[string]interface{}, err error) {
 	tmpData, err := yaml.Marshal(in)
 	if err != nil {
 		return
@@ -92,4 +92,8 @@ func getStateMap(in BackendGCS) (res map[string]interface{}, err error) {
 	res = map[string]interface{}{}
 	err = yaml.Unmarshal(tmpData, &res)
 	return
+}
+
+func (b *Backend) LockState() error {
+	return fmt.Errorf("cdev state gcs not supported")
 }

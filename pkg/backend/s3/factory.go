@@ -11,7 +11,7 @@ type Factory struct{}
 
 // New creates the new s3 backend.
 func (f *Factory) New(config []byte, name string) (project.Backend, error) {
-	bk := BackendS3{name: name}
+	bk := Backend{name: name}
 	state := map[string]interface{}{}
 	err := yaml.Unmarshal(config, &bk)
 	if err != nil {
