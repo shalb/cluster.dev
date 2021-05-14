@@ -25,5 +25,5 @@ variables:
     auto_scale: true
     node_type: "s-1vcpu-2gb"
   k8s_version: "1.19"
-  domain: /{ .domain }/ # You should create dns zone in DigitalOcean domains.
-  argo_password: "$2y$12$r474GzwwJ.pskdhS.FAM2uc/OOJL0sHrv6pcdSlm1.sGiQdrhX.Xu" # bcrypted "password" 
+  domain: /{ .domain }/ # You should create a DNS zone in DigitalOcean domains.
+  argo_password: "$2y$12$r474GzwwJ.pskdhS.FAM2uc/OOJL0sHrv6pcdSlm1.sGiQdrhX.Xu" # This bcrypted "password" is for testing only. Make sure to change it! To bcrypt your own password, use this online tool: https://www.browserling.com/tools/bcrypt
