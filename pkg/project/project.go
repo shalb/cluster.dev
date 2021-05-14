@@ -47,7 +47,7 @@ type Project struct {
 	objects          map[string][]ObjectData
 	objectsFiles     map[string][]byte
 	CodeCacheDir     string
-	StateLock        sync.Mutex
+	StateMutex       sync.Mutex
 	InitLock         sync.Mutex
 	StateBackendName string
 }
@@ -155,14 +155,6 @@ func LoadProjectFull() (*Project, error) {
 	err = project.prepareModules()
 	if err != nil {
 		return nil, err
-	}
-	if project.StateBackendName != "" {
-		sBk, ok := project.Backends[project.StateBackendName]
-		if !ok {
-			log.Fatalf("load project: state backend '%v' does not found", project.StateBackendName)
-		}
-		err = sBk.LockState()
-		os.Exit(0)
 	}
 	return project, nil
 }

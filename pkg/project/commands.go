@@ -24,6 +24,7 @@ func (p *Project) Build() error {
 
 // Destroy all modules.
 func (p *Project) Destroy() error {
+
 	fProject, err := p.LoadState()
 	if err != nil {
 		return err
@@ -66,12 +67,13 @@ func (p *Project) Destroy() error {
 			return fmt.Errorf("project destroy: saving state: %v", err.Error())
 		}
 	}
-	os.Remove(config.Global.StateFileName)
+	os.Remove(config.Global.StateLocalFileName)
 	return nil
 }
 
 // Apply all modules.
 func (p *Project) Apply() error {
+
 	if !config.Global.Force {
 		p.Plan()
 		respond := climenu.GetText("Continue?(yes/no)", "no")

@@ -2,18 +2,22 @@ package s3
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/aws"
+	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
 )
 
 // Backend - describe s3 backend for interface package.backend.
 type Backend struct {
-	name   string
-	Bucket string `yaml:"bucket"`
-	Region string `yaml:"region"`
-	state  map[string]interface{}
+	name       string
+	Bucket     string `yaml:"bucket"`
+	Region     string `yaml:"region"`
+	ProjectPtr *project.Project
+	state      map[string]interface{}
 }
 
 func (b *Backend) State() map[string]interface{} {
@@ -79,5 +83,44 @@ func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error
 }
 
 func (b *Backend) LockState() error {
-	return aws.S3Upload(b.Region, b.Bucket, "cdev.lock", "")
+	// Check if state file exists.
+	lockKey := fmt.Sprintf("cdev.%s.lock", b.ProjectPtr.Name())
+	_, err := aws.S3Get(b.Region, b.Bucket, lockKey)
+	if err == nil {
+		return fmt.Errorf("lock state file found, the state is locked")
+	}
+
+	sessionID := utils.RandString(10)
+	err = aws.S3Put(b.Region, b.Bucket, lockKey, sessionID)
+	if err != nil {
+		return fmt.Errorf("can't save lock state file: %v", err.Error())
+	}
+	time.Sleep(time.Millisecond * 500)
+	id, err := aws.S3Get(b.Region, b.Bucket, lockKey)
+	if err != nil {
+		return fmt.Errorf("can't save lock state file. Internal error")
+	}
+	if id != sessionID {
+		return fmt.Errorf("state is locked by another process")
+	}
+	return nil
+}
+
+func (b *Backend) UnlockState() error {
+	lockKey := fmt.Sprintf("cdev.%s.lock", b.ProjectPtr.Name())
+	return aws.S3Delete(b.Region, b.Bucket, lockKey)
+}
+
+func (b *Backend) WriteState(stateData string) error {
+	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
+	err := aws.S3Put(b.Region, b.Bucket, stateKey, stateData)
+	if err != nil {
+		return fmt.Errorf("can't save state file: %v", err.Error())
+	}
+	return nil
+}
+
+func (b *Backend) ReadState() (string, error) {
+	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
+	return aws.S3Get(b.Region, b.Bucket, stateKey)
 }

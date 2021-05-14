@@ -7,16 +7,18 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
+	"github.com/shalb/cluster.dev/pkg/project"
 )
 
 // Backend - describe do spaces backend for interface package.backend.
 type Backend struct {
-	name      string
-	Bucket    string `yaml:"bucket"`
-	Region    string `yaml:"region"`
-	AccessKey string `yaml:"access_key,omitempty"`
-	SecretKey string `yaml:"secret_key,omitempty"`
-	state     map[string]interface{}
+	name       string
+	Bucket     string `yaml:"bucket"`
+	Region     string `yaml:"region"`
+	AccessKey  string `yaml:"access_key,omitempty"`
+	SecretKey  string `yaml:"secret_key,omitempty"`
+	state      map[string]interface{}
+	ProjectPtr *project.Project
 }
 
 func (b *Backend) State() map[string]interface{} {
@@ -100,5 +102,17 @@ func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error
 }
 
 func (b *Backend) LockState() error {
-	return fmt.Errorf("cdev state not supported")
+	return fmt.Errorf("cdev state do not supported")
+}
+
+func (b *Backend) UnlockState() error {
+	return fmt.Errorf("cdev state do not supported")
+}
+
+func (b *Backend) WriteState(stateData string) error {
+	return fmt.Errorf("cdev state do not supported")
+}
+
+func (b *Backend) ReadState() (string, error) {
+	return "", fmt.Errorf("cdev state do not supported")
 }

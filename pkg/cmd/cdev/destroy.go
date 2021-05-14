@@ -15,10 +15,16 @@ var destroyCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Fatal error: destroy: %v", err.Error())
 		}
+		err = project.LockState()
+		if err != nil {
+			log.Fatalf("Fatal error: destroy: lock state: %v", err.Error())
+		}
 		err = project.Destroy()
 		if err != nil {
+			project.UnLockState()
 			log.Fatalf("Fatal error: destroy: %v", err.Error())
 		}
+		project.UnLockState()
 	},
 }
 

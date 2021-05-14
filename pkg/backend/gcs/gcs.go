@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/shalb/cluster.dev/pkg/hcltools"
+	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
@@ -20,6 +21,7 @@ type Backend struct {
 	EncryptionKey             string `yaml:"encryption_key,omitempty"`
 	Prefix                    string `yaml:"prefix"`
 	state                     map[string]interface{}
+	ProjectPtr                *project.Project
 }
 
 func (b *Backend) State() map[string]interface{} {
@@ -96,4 +98,16 @@ func getStateMap(in Backend) (res map[string]interface{}, err error) {
 
 func (b *Backend) LockState() error {
 	return fmt.Errorf("cdev state gcs not supported")
+}
+
+func (b *Backend) UnlockState() error {
+	return fmt.Errorf("cdev state gcs not supported")
+}
+
+func (b *Backend) WriteState(stateData string) error {
+	return fmt.Errorf("cdev state gcs not supported")
+}
+
+func (b *Backend) ReadState() (string, error) {
+	return "", fmt.Errorf("cdev state gcs not supported")
 }

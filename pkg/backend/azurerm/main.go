@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/shalb/cluster.dev/pkg/hcltools"
+	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/zclconf/go-cty/cty"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -11,8 +12,9 @@ import (
 
 // Backend - describe s3 backend for interface package.backend.
 type Backend struct {
-	name  string
-	state map[string]interface{}
+	name       string
+	state      map[string]interface{}
+	ProjectPtr *project.Project
 }
 
 func (b *Backend) State() map[string]interface{} {
@@ -70,7 +72,18 @@ func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error
 	dataBody.SetAttributeValue("config", config)
 	return f.Bytes(), nil
 }
-
 func (b *Backend) LockState() error {
-	return fmt.Errorf("cdev state not supported")
+	return fmt.Errorf("cdev state azurerm not supported")
+}
+
+func (b *Backend) UnlockState() error {
+	return fmt.Errorf("cdev state azurerm not supported")
+}
+
+func (b *Backend) WriteState(stateData string) error {
+	return fmt.Errorf("cdev state azurerm not supported")
+}
+
+func (b *Backend) ReadState() (string, error) {
+	return "", fmt.Errorf("cdev state azurerm not supported")
 }
