@@ -1,12 +1,5 @@
-name: aws-backend
-kind: Backend
-provider: s3
-spec:
-  bucket: {{ .project.variables.state_bucket_name }}
-  region: {{ .project.variables.region }}
----
 name: my-k3s-cluster
-template: https://github.com/shalb/cdev-aws-k3s?ref=v0.0.1-rc2
+template: https://github.com/shalb/cdev-aws-k3s?ref=v0.0.2
 kind: Infrastructure
 backend: aws-backend
 variables:

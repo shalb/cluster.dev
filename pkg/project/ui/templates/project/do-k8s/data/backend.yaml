@@ -1,0 +1,8 @@
+name: do-backend
+kind: Backend
+provider: do
+spec:
+  bucket: {{ .project.variables.bucket_name }}
+  region: {{ .project.variables.region }}
+  access_key: {{ reqEnv "SPACES_ACCESS_KEY_ID" }}
+  secret_key: {{ reqEnv "SPACES_SECRET_ACCESS_KEY" }}

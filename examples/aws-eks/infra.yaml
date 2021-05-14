@@ -1,5 +1,5 @@
 name: eks-demo
-template: https://github.com/shalb/cdev-aws-eks?ref=v0.1.5
+template: https://github.com/shalb/cdev-aws-eks?ref=v0.1.6
 kind: Infrastructure
 backend: aws-backend
 variables:
