@@ -13,6 +13,10 @@ import (
 
 // Build generate all terraform code for project.
 func (p *Project) Build() error {
+	err := p.ClearCacheDir()
+	if err != nil {
+		return fmt.Errorf("build project: %v", err.Error())
+	}
 	for _, module := range p.Modules {
 		if err := module.Build(); err != nil {
 			return err
@@ -49,6 +53,10 @@ func (p *Project) Destroy() error {
 			log.Info("Destroying cancelled")
 			return nil
 		}
+	}
+	err = p.ClearCacheDir()
+	if err != nil {
+		return fmt.Errorf("project destroy: clear cache dir: %v", err.Error())
 	}
 	log.Info("Destroying...")
 	for _, md := range destSeq {
@@ -88,9 +96,13 @@ func (p *Project) Apply() error {
 			return nil
 		}
 	}
+	err := p.ClearCacheDir()
+	if err != nil {
+		return fmt.Errorf("project apply: clear cache dir: %v", err.Error())
+	}
 	log.Info("Applying...")
 	gr := grapher{}
-	err := gr.Init(p, config.Global.MaxParallel, false)
+	err = gr.Init(p, config.Global.MaxParallel, false)
 	if err != nil {
 		return err
 	}
@@ -215,6 +227,10 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 			}
 
 			if config.Global.ShowTerraformPlan {
+				err = p.ClearCacheDir()
+				if err != nil {
+					return false, fmt.Errorf("project plan: clear cache dir: %v", err.Error())
+				}
 				allDepsDeployed := true
 				for _, planModDep := range *md.Dependencies() {
 					_, exists := fProject.Modules[planModDep.Module.Key()]

@@ -272,14 +272,25 @@ func (p *Project) MkBuildDir() error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (p *Project) ClearCacheDir() error {
+	relPath, err := filepath.Rel(config.Global.WorkingDir, p.CodeCacheDir)
+	if err != nil {
+		return err
+	}
+	log.Debugf("Creates code directory: './%v'", relPath)
+	if _, err := os.Stat(p.CodeCacheDir); os.IsNotExist(err) {
+		return nil
+	}
 	if !config.Global.UseCache {
 		log.Debugf("Removes all old content: './%s'", relPath)
 		err := removeDirContent(p.CodeCacheDir)
 		if err != nil {
-			log.Debug(err.Error())
 			return err
 		}
-		err = removeDirContent(config.Global.TemplatesCacheDir)
+		return removeDirContent(config.Global.TemplatesCacheDir)
 	}
 	return nil
 }
