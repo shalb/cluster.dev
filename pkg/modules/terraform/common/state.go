@@ -135,7 +135,15 @@ func (m *Module) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	if !ok {
 		return utils.JSONDecode([]byte(inJSONstr), out)
 	}
-	for key, marker := range depMarkers.(map[string]*project.Dependency) {
+	markersList := map[string]*project.Dependency{}
+	markersList, ok = depMarkers.(map[string]*project.Dependency)
+	if !ok {
+		err := utils.JSONInterfaceToType(depMarkers, &markersList)
+		if err != nil {
+			fmt.Errorf("remote state scanner: read dependency: bad type")
+		}
+	}
+	for key, marker := range markersList {
 		if strings.Contains(inJSONstr, key) {
 			remoteStateRef := fmt.Sprintf("<remoteState %s.%s.%s>", marker.InfraName, marker.ModuleName, marker.Output)
 			replacer := strings.NewReplacer(key, remoteStateRef)

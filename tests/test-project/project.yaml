@@ -1,5 +1,6 @@
 name: dev
 kind: Project
+backend: aws-backend
 variables:
   organization: cluster-dev
   region: eu-central-1

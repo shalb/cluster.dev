@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/aws"
 	"github.com/shalb/cluster.dev/pkg/project"
@@ -84,6 +85,7 @@ func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error
 
 func (b *Backend) LockState() error {
 	// Check if state file exists.
+	log.Debugf("Locking s3 state. Project: '%v', bucket: '%v'", b.ProjectPtr.Name(), b.Bucket)
 	lockKey := fmt.Sprintf("cdev.%s.lock", b.ProjectPtr.Name())
 	_, err := aws.S3Get(b.Region, b.Bucket, lockKey)
 	if err == nil {
@@ -107,11 +109,13 @@ func (b *Backend) LockState() error {
 }
 
 func (b *Backend) UnlockState() error {
+	log.Debugf("Unlocking s3 state. Project: '%v', bucket: '%v'", b.ProjectPtr.Name(), b.Bucket)
 	lockKey := fmt.Sprintf("cdev.%s.lock", b.ProjectPtr.Name())
 	return aws.S3Delete(b.Region, b.Bucket, lockKey)
 }
 
 func (b *Backend) WriteState(stateData string) error {
+	log.Debugf("Updating s3 state. Project: '%v', bucket: '%v'", b.ProjectPtr.Name(), b.Bucket)
 	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
 	err := aws.S3Put(b.Region, b.Bucket, stateKey, stateData)
 	if err != nil {
@@ -121,6 +125,7 @@ func (b *Backend) WriteState(stateData string) error {
 }
 
 func (b *Backend) ReadState() (string, error) {
+	log.Debugf("Downloading s3 state. Project: '%v', bucket: '%v'", b.ProjectPtr.Name(), b.Bucket)
 	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
 	return aws.S3Get(b.Region, b.Bucket, stateKey)
 }

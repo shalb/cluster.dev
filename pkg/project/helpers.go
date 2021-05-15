@@ -154,6 +154,11 @@ func ProjectsFilesExists() bool {
 
 func showPlanResults(deployList, updateList, destroyList, unchangedList []string) {
 	fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("Plan results:"))
+
+	if len(deployList)+len(updateList)+len(destroyList) == 0 {
+		fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("No changes, nothing to do."))
+		return
+	}
 	table := tablewriter.NewWriter(os.Stdout)
 
 	headers := []string{}

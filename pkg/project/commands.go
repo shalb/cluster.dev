@@ -75,7 +75,13 @@ func (p *Project) Destroy() error {
 func (p *Project) Apply() error {
 
 	if !config.Global.Force {
-		p.Plan()
+		hasChanges, err := p.Plan()
+		if err != nil {
+			return err
+		}
+		if !hasChanges {
+			return nil
+		}
 		respond := climenu.GetText("Continue?(yes/no)", "no")
 		if respond != "yes" {
 			log.Info("Cancelled")
@@ -167,22 +173,22 @@ func (p *Project) Apply() error {
 }
 
 // Plan and output result.
-func (p *Project) Plan() error {
+func (p *Project) Plan() (hasChanges bool, err error) {
 	fProject, err := p.LoadState()
 	if err != nil {
-		return err
+		return
 	}
 
 	CurrentGraph := grapher{}
 	err = CurrentGraph.Init(p, 1, false)
 	if err != nil {
-		return err
+		return
 	}
 	defer CurrentGraph.Close()
 	StateGraph := grapher{}
 	err = StateGraph.Init(&fProject.Project, 1, true)
 	if err != nil {
-		return err
+		return
 	}
 	defer StateGraph.Close()
 	stateModsSeq := StateGraph.GetSequenceSet()
@@ -218,15 +224,15 @@ func (p *Project) Plan() error {
 					}
 				}
 				if allDepsDeployed {
-					err := md.Build()
+					err = md.Build()
 					if err != nil {
 						log.Errorf("terraform plan: module build error: %v", err.Error())
-						return err
+						return
 					}
 					err = md.Plan()
 					if err != nil {
 						log.Errorf("Module '%v' terraform plan return an error: %v", md.Key(), err.Error())
-						return err
+						return
 					}
 				} else {
 					log.Warnf("The module '%v' has dependencies that have not yet been deployed. Can't show terraform plan.", md.Key())
@@ -238,7 +244,8 @@ func (p *Project) Plan() error {
 		}
 	}
 	showPlanResults(modsForApply, modsForUpdate, modsForDestroy, modsUnchanged)
-	return nil
+	hasChanges = len(modsForApply)+len(modsForUpdate)+len(modsForDestroy) != 0
+	return
 }
 
 // planDestroy collect and show modules for destroying.
