@@ -2,7 +2,6 @@ package project
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -15,16 +14,6 @@ import (
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
-
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
 
 // CreateMarker generate hash string for template markers.
 func CreateMarker(markerPath, dataForHash string) string {
@@ -165,6 +154,11 @@ func ProjectsFilesExists() bool {
 
 func showPlanResults(deployList, updateList, destroyList, unchangedList []string) {
 	fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("Plan results:"))
+
+	if len(deployList)+len(updateList)+len(destroyList) == 0 {
+		fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("No changes, nothing to do."))
+		return
+	}
 	table := tablewriter.NewWriter(os.Stdout)
 
 	headers := []string{}

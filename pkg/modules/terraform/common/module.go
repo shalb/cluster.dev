@@ -83,10 +83,10 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	m.infraPtr = infra
 	m.projectPtr = infra.ProjectPtr
 	m.name = mName.(string)
-	m.expectedOutputs = map[string]bool{}
-	m.filesList = map[string][]byte{}
+	m.expectedOutputs = make(map[string]bool)
+	m.filesList = make(map[string][]byte)
 	m.specRaw = spec
-	m.markers = map[string]string{}
+	m.markers = make(map[string]string)
 
 	// Process dependencies.
 	var modDeps []*project.Dependency
@@ -340,4 +340,10 @@ func (m *Module) Key() string {
 // CodeDir return path to module code directory.
 func (m *Module) CodeDir() string {
 	return m.codeDir
+}
+
+// UpdateProjectRuntimeDataCommon update project runtime dataset, adds module outputs.
+// TODO: get module outputs and write to project runtime dataset. Now this function is only for printer's module interface.
+func (m *Module) UpdateProjectRuntimeDataCommon(p *project.Project) error {
+	return nil
 }

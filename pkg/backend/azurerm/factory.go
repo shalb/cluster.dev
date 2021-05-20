@@ -10,8 +10,11 @@ import (
 type Factory struct{}
 
 // New creates the new backend.
-func (f *Factory) New(config []byte, name string) (project.Backend, error) {
-	bk := BackendAzureRm{name: name}
+func (f *Factory) New(config []byte, name string, p *project.Project) (project.Backend, error) {
+	bk := Backend{
+		name:       name,
+		ProjectPtr: p,
+	}
 	err := yaml.Unmarshal(config, &bk.state)
 	if err != nil {
 		return nil, err

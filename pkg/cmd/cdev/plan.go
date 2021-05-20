@@ -17,7 +17,7 @@ var planCmd = &cobra.Command{
 			log.Fatalf("Fatal error: plan: %v", err.Error())
 		}
 		log.Info("Planning...")
-		err = project.Plan()
+		_, err = project.Plan()
 		if err != nil {
 			log.Fatalf("Fatal error: plan: %v", err.Error())
 		}

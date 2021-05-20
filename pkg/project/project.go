@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/apex/log"
+	"github.com/gookit/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -22,6 +23,25 @@ const projectObjKindKey = "Project"
 
 // MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
 type MarkerScanner func(data reflect.Value, module Module) (reflect.Value, error)
+
+// TODO:
+// // ProjectConfSpec type for project.yaml config.
+// type ProjectConfSpec struct {
+// 	Name      string                 `yaml:"name"`
+// 	Kind      string                 `yaml:"kind"`
+// 	Backend   string                 `yaml:"backend,omitempty"`
+// 	Exports   map[string]interface{} `yaml:"exports"`
+// 	Variables map[string]interface{} `yaml:"variables"`
+// }
+type PrinterOutput struct {
+	Name   string `json:"name"`
+	Output string `json:"output"`
+}
+
+type RuntimeData struct {
+	ModulesOutputs  map[string]interface{}
+	PrintersOutputs []PrinterOutput
+}
 
 // Project describes main config with user-defined variables.
 type Project struct {
@@ -37,22 +57,28 @@ type Project struct {
 	objects          map[string][]ObjectData
 	objectsFiles     map[string][]byte
 	CodeCacheDir     string
-	StateLock        sync.Mutex
+	StateMutex       sync.Mutex
 	InitLock         sync.Mutex
+	RuntimeDataset   RuntimeData
+	StateBackendName string
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
 func NewEmptyProject() *Project {
 	project := &Project{
-		Infrastructures:  map[string]*Infrastructure{},
-		Modules:          map[string]Module{},
-		Backends:         map[string]Backend{},
-		Markers:          map[string]interface{}{},
+		Infrastructures:  make(map[string]*Infrastructure),
+		Modules:          make(map[string]Module),
+		Backends:         make(map[string]Backend),
+		Markers:          make(map[string]interface{}),
 		TmplFunctionsMap: templateFunctionsMap,
-		objects:          map[string][]ObjectData{},
-		configData:       map[string]interface{}{},
-		secrets:          map[string]Secret{},
-		CodeCacheDir:     config.Global.CacheDir,
+		objects:          make(map[string][]ObjectData),
+		configData:       make(map[string]interface{}),
+		secrets:          make(map[string]Secret),
+		RuntimeDataset: RuntimeData{
+			ModulesOutputs:  make(map[string]interface{}),
+			PrintersOutputs: make([]PrinterOutput, 0),
+		},
+		CodeCacheDir: config.Global.CacheDir,
 	}
 	for _, drv := range TemplateDriversMap {
 		drv.AddTemplateFunctions(project)
@@ -96,6 +122,10 @@ func LoadProjectBase() (*Project, error) {
 		}
 	}
 
+	if stateBackend, exists := prjConfParsed["backend"].(string); exists {
+		project.StateBackendName = stateBackend
+	}
+
 	project.configData["project"] = prjConfParsed
 
 	err = project.readSecrets()
@@ -128,6 +158,7 @@ func LoadProjectFull() (*Project, error) {
 			log.Fatalf("load project: %v", err.Error())
 		}
 	}
+
 	err = project.prepareObjects()
 	if err != nil {
 		return nil, err
@@ -245,7 +276,10 @@ func (p *Project) MkBuildDir() error {
 			return err
 		}
 	}
-	relPath, _ := filepath.Rel(config.Global.WorkingDir, p.CodeCacheDir)
+	relPath, err := filepath.Rel(config.Global.WorkingDir, p.CodeCacheDir)
+	if err != nil {
+		return err
+	}
 	log.Debugf("Creates code directory: './%v'", relPath)
 	if _, err := os.Stat(p.CodeCacheDir); os.IsNotExist(err) {
 		err := os.Mkdir(p.CodeCacheDir, 0755)
@@ -253,14 +287,25 @@ func (p *Project) MkBuildDir() error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (p *Project) ClearCacheDir() error {
+	relPath, err := filepath.Rel(config.Global.WorkingDir, p.CodeCacheDir)
+	if err != nil {
+		return err
+	}
+	log.Debugf("Creates code directory: './%v'", relPath)
+	if _, err := os.Stat(p.CodeCacheDir); os.IsNotExist(err) {
+		return nil
+	}
 	if !config.Global.UseCache {
 		log.Debugf("Removes all old content: './%s'", relPath)
 		err := removeDirContent(p.CodeCacheDir)
 		if err != nil {
-			log.Debug(err.Error())
 			return err
 		}
-		err = removeDirContent(config.Global.TemplatesCacheDir)
+		return removeDirContent(config.Global.TemplatesCacheDir)
 	}
 	return nil
 }
@@ -360,6 +405,13 @@ func (p *Project) ExportEnvs(ex interface{}) error {
 		log.Debugf("Exports: %v", key)
 		valStr := fmt.Sprintf("%v", val)
 		os.Setenv(key, valStr)
+	}
+	return nil
+}
+
+func (p *Project) PrintOutputs() error {
+	for _, o := range p.RuntimeDataset.PrintersOutputs {
+		log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(o.Output))
 	}
 	return nil
 }

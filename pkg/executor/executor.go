@@ -156,7 +156,7 @@ func (b *ShRunner) RunWithTty(command string) error {
 	return err
 }
 
-// Run - exec command and hide secrets in log output.
+// Run - exec command and return stdout, stderr, run error.
 func (b *ShRunner) Run(command string) ([]byte, []byte, error) {
 
 	var logPrefix string

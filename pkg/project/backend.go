@@ -18,11 +18,15 @@ type Backend interface {
 	GetBackendBytes(string, string) ([]byte, error)
 	GetRemoteStateHCL(string, string) ([]byte, error)
 	State() map[string]interface{}
+	LockState() error
+	UnlockState() error
+	WriteState(stateData string) error
+	ReadState() (string, error)
 }
 
 // BackendsFactory - interface for backend provider factory. New() creates backend.
 type BackendsFactory interface {
-	New([]byte, string) (Backend, error)
+	New([]byte, string, *Project) (Backend, error)
 }
 
 // RegisterBackendFactory - register factory of some provider (like s3) in map.
@@ -75,7 +79,7 @@ func (p *Project) readBackendObj(obj ObjectData) error {
 	if !exists {
 		return fmt.Errorf("'%v': provider does not found: %v", name, provider)
 	}
-	b, err := factory.New(rawSpec, name)
+	b, err := factory.New(rawSpec, name, p)
 	if err != nil {
 		return err
 	}

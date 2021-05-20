@@ -16,10 +16,20 @@ var applyCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Fatal error: apply: %v", err.Error())
 		}
+		err = project.LockState()
+		if err != nil {
+			log.Fatalf("Fatal error: apply: lock state: %v", err.Error())
+		}
 		err = project.Apply()
 		if err != nil {
+			project.UnLockState()
 			log.Fatalf("Fatal error: apply: %v", err.Error())
 		}
+		err = project.PrintOutputs()
+		if err != nil {
+			log.Fatalf("Fatal error: apply: print outputs %v", err.Error())
+		}
+		project.UnLockState()
 	},
 }
 

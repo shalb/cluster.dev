@@ -15,8 +15,8 @@ import (
 )
 
 func (sp *StateProject) UpdateModule(mod Module) {
-	sp.StateLock.Lock()
-	defer sp.StateLock.Unlock()
+	sp.StateMutex.Lock()
+	defer sp.StateMutex.Unlock()
 	sp.Modules[mod.Key()] = mod
 	sp.ChangedModules[mod.Key()] = mod
 }
@@ -32,8 +32,8 @@ type StateProject struct {
 }
 
 func (p *Project) SaveState() error {
-	p.StateLock.Lock()
-	defer p.StateLock.Unlock()
+	p.StateMutex.Lock()
+	defer p.StateMutex.Unlock()
 	st := stateData{
 		Markers: p.Markers,
 		Modules: map[string]interface{}{},
@@ -49,12 +49,46 @@ func (p *Project) SaveState() error {
 	if err != nil {
 		return fmt.Errorf("saving project state: %v", err.Error())
 	}
-	return ioutil.WriteFile(config.Global.StateFileName, buffer.Bytes(), fs.ModePerm)
+	if p.StateBackendName != "" {
+		sBk, ok := p.Backends[p.StateBackendName]
+		if !ok {
+			return fmt.Errorf("lock state: state backend '%v' does not found", p.StateBackendName)
+		}
+		return sBk.WriteState(buffer.String())
+	}
+	return ioutil.WriteFile(config.Global.StateLocalFileName, buffer.Bytes(), fs.ModePerm)
 }
 
 type stateData struct {
 	Markers map[string]interface{} `json:"markers"`
 	Modules map[string]interface{} `json:"modules"`
+}
+
+func (p *Project) LockState() error {
+	if p.StateBackendName != "" {
+		sBk, ok := p.Backends[p.StateBackendName]
+		if !ok {
+			return fmt.Errorf("lock state: state backend '%v' does not found", p.StateBackendName)
+		}
+		return sBk.LockState()
+	}
+	_, err := ioutil.ReadFile(config.Global.StateLocalLockFile)
+	if err == nil {
+		return fmt.Errorf("state is locked by another process")
+	}
+	err = ioutil.WriteFile(config.Global.StateLocalLockFile, []byte{}, os.ModePerm)
+	return err
+}
+
+func (p *Project) UnLockState() error {
+	if p.StateBackendName != "" {
+		sBk, ok := p.Backends[p.StateBackendName]
+		if !ok {
+			return fmt.Errorf("lock state: state backend '%v' does not found", p.StateBackendName)
+		}
+		return sBk.UnlockState()
+	}
+	return os.Remove(config.Global.StateLocalLockFile)
 }
 
 func (p *Project) LoadState() (*StateProject, error) {
@@ -70,8 +104,19 @@ func (p *Project) LoadState() (*StateProject, error) {
 	}
 
 	stateD := stateData{}
+	var stateStr string
+	var loadedStateFile []byte
+	if p.StateBackendName != "" {
+		sBk, ok := p.Backends[p.StateBackendName]
+		if !ok {
+			return nil, fmt.Errorf("load state: state backend '%v' does not found", p.StateBackendName)
+		}
+		stateStr, err = sBk.ReadState()
+		loadedStateFile = []byte(stateStr)
+	} else {
+		loadedStateFile, err = ioutil.ReadFile(config.Global.StateLocalFileName)
+	}
 
-	loadedStateFile, err := ioutil.ReadFile(config.Global.StateFileName)
 	if err == nil {
 		err = utils.JSONDecode(loadedStateFile, &stateD)
 		if err != nil {
@@ -80,16 +125,17 @@ func (p *Project) LoadState() (*StateProject, error) {
 	}
 	statePrj := StateProject{
 		Project: Project{
-			name:            p.Name(),
-			secrets:         p.secrets,
-			configData:      p.configData,
-			configDataFile:  p.configDataFile,
-			objects:         p.objects,
-			Modules:         make(map[string]Module),
-			Markers:         stateD.Markers,
-			Infrastructures: make(map[string]*Infrastructure),
-			Backends:        p.Backends,
-			CodeCacheDir:    config.Global.StateCacheDir,
+			name:             p.Name(),
+			secrets:          p.secrets,
+			configData:       p.configData,
+			configDataFile:   p.configDataFile,
+			objects:          p.objects,
+			Modules:          make(map[string]Module),
+			Markers:          stateD.Markers,
+			Infrastructures:  make(map[string]*Infrastructure),
+			Backends:         p.Backends,
+			CodeCacheDir:     config.Global.StateCacheDir,
+			StateBackendName: p.StateBackendName,
 		},
 		LoaderProjectPtr: p,
 		ChangedModules:   make(map[string]Module),
@@ -114,6 +160,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			return nil, fmt.Errorf("loading state: error loading module from state: %v", err.Error())
 		}
 		statePrj.Modules[mName] = mod
+		mod.UpdateProjectRuntimeData(&statePrj.Project)
 	}
 	err = statePrj.prepareModules()
 	if err != nil {
@@ -122,11 +169,11 @@ func (p *Project) LoadState() (*StateProject, error) {
 	return &statePrj, nil
 }
 
-func (sp *StateProject) CheckModuleChanges(module Module) string {
+func (sp *StateProject) CheckModuleChanges(module Module) (string, Module) {
 	// log.Debugf("Check module: %v %+v", module.Key(), sp.Modules)
 	moddInState, exists := sp.Modules[module.Key()]
 	if !exists {
-		return utils.Diff(nil, module.GetDiffData(), true)
+		return utils.Diff(nil, module.GetDiffData(), true), nil
 	}
 	var diffData interface{}
 	if module != nil {
@@ -134,14 +181,14 @@ func (sp *StateProject) CheckModuleChanges(module Module) string {
 	}
 	df := utils.Diff(moddInState.GetDiffData(), diffData, true)
 	if len(df) > 0 {
-		return df
+		return df, moddInState
 	}
 	for _, dep := range *module.Dependencies() {
 		if sp.checkModuleChangesRecursive(dep.Module) {
-			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the module dependencies.")
+			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the module dependencies."), moddInState
 		}
 	}
-	return ""
+	return "", moddInState
 }
 
 func (sp *StateProject) checkModuleChangesRecursive(module Module) bool {

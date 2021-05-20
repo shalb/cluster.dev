@@ -44,7 +44,8 @@ type ConfSpec struct {
 	OptFooTest         bool
 	IgnoreState        bool
 	ShowTerraformPlan  bool
-	StateFileName      string
+	StateLocalFileName string
+	StateLocalLockFile string
 	StateCacheDir      string
 	TemplatesCacheDir  string
 	CacheDir           string
@@ -74,7 +75,8 @@ func InitConfig() {
 	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
 	Global.CacheDir = filepath.Join(Global.TmpDir, "cache")
 	Global.StateCacheDir = filepath.Join(Global.TmpDir, "state")
-	Global.StateFileName = filepath.Join(curPath, "cdev.state")
+	Global.StateLocalFileName = filepath.Join(curPath, "cdev.state")
+	Global.StateLocalLockFile = filepath.Join(curPath, "cdev.state.lock")
 	Global.TemplatesCacheDir = filepath.Join(Global.TmpDir, "templates")
 	usr, err := user.Current()
 	if err != nil {

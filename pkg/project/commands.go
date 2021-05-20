@@ -13,6 +13,10 @@ import (
 
 // Build generate all terraform code for project.
 func (p *Project) Build() error {
+	err := p.ClearCacheDir()
+	if err != nil {
+		return fmt.Errorf("build project: %v", err.Error())
+	}
 	for _, module := range p.Modules {
 		if err := module.Build(); err != nil {
 			return err
@@ -24,6 +28,7 @@ func (p *Project) Build() error {
 
 // Destroy all modules.
 func (p *Project) Destroy() error {
+
 	fProject, err := p.LoadState()
 	if err != nil {
 		return err
@@ -49,6 +54,10 @@ func (p *Project) Destroy() error {
 			return nil
 		}
 	}
+	err = p.ClearCacheDir()
+	if err != nil {
+		return fmt.Errorf("project destroy: clear cache dir: %v", err.Error())
+	}
 	log.Info("Destroying...")
 	for _, md := range destSeq {
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Destroying module '%v'", md.Key()))
@@ -66,23 +75,34 @@ func (p *Project) Destroy() error {
 			return fmt.Errorf("project destroy: saving state: %v", err.Error())
 		}
 	}
-	os.Remove(config.Global.StateFileName)
+	os.Remove(config.Global.StateLocalFileName)
 	return nil
 }
 
 // Apply all modules.
 func (p *Project) Apply() error {
+
 	if !config.Global.Force {
-		p.Plan()
+		hasChanges, err := p.Plan()
+		if err != nil {
+			return err
+		}
+		if !hasChanges {
+			return nil
+		}
 		respond := climenu.GetText("Continue?(yes/no)", "no")
 		if respond != "yes" {
 			log.Info("Cancelled")
 			return nil
 		}
 	}
+	err := p.ClearCacheDir()
+	if err != nil {
+		return fmt.Errorf("project apply: clear cache dir: %v", err.Error())
+	}
 	log.Info("Applying...")
 	gr := grapher{}
-	err := gr.Init(p, config.Global.MaxParallel, false)
+	err = gr.Init(p, config.Global.MaxParallel, false)
 	if err != nil {
 		return err
 	}
@@ -138,7 +158,7 @@ func (p *Project) Apply() error {
 		}
 
 		go func(mod Module, finFunc func(error), stateP *StateProject) {
-			diff := stateP.CheckModuleChanges(mod)
+			diff, _ := stateP.CheckModuleChanges(mod)
 			var res error
 			if len(diff) > 0 || config.Global.IgnoreState {
 				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying module '%v':", md.Key()))
@@ -154,6 +174,11 @@ func (p *Project) Apply() error {
 						finFunc(err)
 						return
 					}
+					err = mod.UpdateProjectRuntimeData(p)
+					if err != nil {
+						finFunc(err)
+						return
+					}
 				}
 				finFunc(res)
 				return
@@ -165,22 +190,22 @@ func (p *Project) Apply() error {
 }
 
 // Plan and output result.
-func (p *Project) Plan() error {
+func (p *Project) Plan() (hasChanges bool, err error) {
 	fProject, err := p.LoadState()
 	if err != nil {
-		return err
+		return
 	}
 
 	CurrentGraph := grapher{}
 	err = CurrentGraph.Init(p, 1, false)
 	if err != nil {
-		return err
+		return
 	}
 	defer CurrentGraph.Close()
 	StateGraph := grapher{}
 	err = StateGraph.Init(&fProject.Project, 1, true)
 	if err != nil {
-		return err
+		return
 	}
 	defer StateGraph.Close()
 	stateModsSeq := StateGraph.GetSequenceSet()
@@ -193,7 +218,7 @@ func (p *Project) Plan() error {
 
 	for _, md := range curModsSeq {
 		_, exists := fProject.Modules[md.Key()]
-		diff := fProject.CheckModuleChanges(md)
+		diff, stateModule := fProject.CheckModuleChanges(md)
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning module '%v':", md.Key()))
 		if len(diff) > 0 || config.Global.IgnoreState {
 			if len(diff) == 0 {
@@ -207,6 +232,10 @@ func (p *Project) Plan() error {
 			}
 
 			if config.Global.ShowTerraformPlan {
+				err = p.ClearCacheDir()
+				if err != nil {
+					return false, fmt.Errorf("project plan: clear cache dir: %v", err.Error())
+				}
 				allDepsDeployed := true
 				for _, planModDep := range *md.Dependencies() {
 					_, exists := fProject.Modules[planModDep.Module.Key()]
@@ -216,27 +245,30 @@ func (p *Project) Plan() error {
 					}
 				}
 				if allDepsDeployed {
-					err := md.Build()
+					err = md.Build()
 					if err != nil {
 						log.Errorf("terraform plan: module build error: %v", err.Error())
-						return err
+						return
 					}
 					err = md.Plan()
 					if err != nil {
 						log.Errorf("Module '%v' terraform plan return an error: %v", md.Key(), err.Error())
-						return err
+						return
 					}
 				} else {
 					log.Warnf("The module '%v' has dependencies that have not yet been deployed. Can't show terraform plan.", md.Key())
 				}
 			}
 		} else {
+			// Update project printers and outputs with state module.
+			stateModule.UpdateProjectRuntimeData(p)
 			modsUnchanged = append(modsUnchanged, md.Key())
 			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
 		}
 	}
 	showPlanResults(modsForApply, modsForUpdate, modsForDestroy, modsUnchanged)
-	return nil
+	hasChanges = len(modsForApply)+len(modsForUpdate)+len(modsForDestroy) != 0
+	return
 }
 
 // planDestroy collect and show modules for destroying.

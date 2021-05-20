@@ -15,7 +15,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-type tfModule struct {
+type Module struct {
 	common.Module
 	source      string
 	version     string
@@ -23,11 +23,11 @@ type tfModule struct {
 	localModule map[string][]byte
 }
 
-func (m *tfModule) KindKey() string {
+func (m *Module) KindKey() string {
 	return "terraform"
 }
 
-func (m *tfModule) genMainCodeBlock() ([]byte, error) {
+func (m *Module) genMainCodeBlock() ([]byte, error) {
 
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
@@ -61,7 +61,7 @@ func (m *tfModule) genMainCodeBlock() ([]byte, error) {
 }
 
 // genOutputsBlock generate output code block for this module.
-func (m *tfModule) genOutputs() ([]byte, error) {
+func (m *Module) genOutputs() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
@@ -80,7 +80,7 @@ func (m *tfModule) genOutputs() ([]byte, error) {
 
 }
 
-func (m *tfModule) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
 	err := m.ReadConfigCommon(spec, infra)
 	if err != nil {
 		log.Debug(err.Error())
@@ -120,7 +120,7 @@ func (m *tfModule) ReadConfig(spec map[string]interface{}, infra *project.Infras
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *tfModule) ReplaceMarkers() error {
+func (m *Module) ReplaceMarkers() error {
 	err := project.ScanMarkers(m.inputs, m.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
@@ -133,7 +133,7 @@ func (m *tfModule) ReplaceMarkers() error {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *tfModule) Build() error {
+func (m *Module) Build() error {
 	var err error
 	err = m.BuildCommon()
 	if err != nil {
@@ -153,4 +153,9 @@ func (m *tfModule) Build() error {
 		}
 	}
 	return m.CreateCodeDir()
+}
+
+// UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
+func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
+	return m.UpdateProjectRuntimeDataCommon(p)
 }

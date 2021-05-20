@@ -13,7 +13,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-type helm struct {
+type Module struct {
 	common.Module
 	source            string
 	helmOpts          map[string]interface{}
@@ -22,11 +22,11 @@ type helm struct {
 	valuesFileContent []byte
 }
 
-func (m *helm) KindKey() string {
+func (m *Module) KindKey() string {
 	return "helm"
 }
 
-func (m *helm) genMainCodeBlock() ([]byte, error) {
+func (m *Module) genMainCodeBlock() ([]byte, error) {
 	var marker string
 	if len(m.valuesFileContent) > 0 {
 		m.FilesList()["values.yaml"] = m.valuesFileContent
@@ -72,7 +72,7 @@ func (m *helm) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *helm) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
 	err := m.ReadConfigCommon(spec, infra)
 	if err != nil {
 		log.Debug(err.Error())
@@ -121,7 +121,7 @@ func (m *helm) ReadConfig(spec map[string]interface{}, infra *project.Infrastruc
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *helm) ReplaceMarkers() error {
+func (m *Module) ReplaceMarkers() error {
 	err := project.ScanMarkers(m.helmOpts, m.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
@@ -142,7 +142,7 @@ func (m *helm) ReplaceMarkers() error {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *helm) Build() error {
+func (m *Module) Build() error {
 	m.BuildCommon()
 	var err error
 	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
@@ -152,4 +152,9 @@ func (m *helm) Build() error {
 	}
 	//	log.Debugf("VALUES: %v", string(m.valuesFileContent))
 	return m.CreateCodeDir()
+}
+
+// UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
+func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
+	return m.UpdateProjectRuntimeDataCommon(p)
 }

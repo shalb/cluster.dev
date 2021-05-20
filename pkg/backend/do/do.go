@@ -7,29 +7,31 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
+	"github.com/shalb/cluster.dev/pkg/project"
 )
 
-// BackendDo - describe do spaces backend for interface package.backend.
-type BackendDo struct {
-	name      string
-	Bucket    string `yaml:"bucket"`
-	Region    string `yaml:"region"`
-	AccessKey string `yaml:"access_key,omitempty"`
-	SecretKey string `yaml:"secret_key,omitempty"`
-	state     map[string]interface{}
+// Backend - describe do spaces backend for interface package.backend.
+type Backend struct {
+	name       string
+	Bucket     string `yaml:"bucket"`
+	Region     string `yaml:"region"`
+	AccessKey  string `yaml:"access_key,omitempty"`
+	SecretKey  string `yaml:"secret_key,omitempty"`
+	state      map[string]interface{}
+	ProjectPtr *project.Project
 }
 
-func (b *BackendDo) State() map[string]interface{} {
+func (b *Backend) State() map[string]interface{} {
 	return b.state
 }
 
 // Name return name.
-func (b *BackendDo) Name() string {
+func (b *Backend) Name() string {
 	return b.name
 }
 
 // Provider return name.
-func (b *BackendDo) Provider() string {
+func (b *Backend) Provider() string {
 	return "do"
 }
 
@@ -40,7 +42,7 @@ type backendConfigSpec struct {
 }
 
 // GetBackendBytes generate terraform backend config.
-func (b *BackendDo) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
+func (b *Backend) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
 	f, err := b.GetBackendHCL(infraName, moduleName)
 	if err != nil {
 		return nil, err
@@ -49,7 +51,7 @@ func (b *BackendDo) GetBackendBytes(infraName, moduleName string) ([]byte, error
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *BackendDo) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
+func (b *Backend) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
@@ -71,7 +73,7 @@ func (b *BackendDo) GetBackendHCL(infraName, moduleName string) (*hclwrite.File,
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *BackendDo) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
+func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
@@ -97,4 +99,20 @@ func (b *BackendDo) GetRemoteStateHCL(infraName, moduleName string) ([]byte, err
 		return nil, err
 	}
 	return f.Bytes(), nil
+}
+
+func (b *Backend) LockState() error {
+	return fmt.Errorf("cdev state do not supported")
+}
+
+func (b *Backend) UnlockState() error {
+	return fmt.Errorf("cdev state do not supported")
+}
+
+func (b *Backend) WriteState(stateData string) error {
+	return fmt.Errorf("cdev state do not supported")
+}
+
+func (b *Backend) ReadState() (string, error) {
+	return "", fmt.Errorf("cdev state do not supported")
 }

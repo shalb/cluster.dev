@@ -22,6 +22,7 @@ type StateSpecCommon struct {
 	Markers          map[string]string           `json:"markers,omitempty"`
 	Dependencies     []StateDep                  `json:"dependencies,omitempty"`
 	RequiredProvider map[string]RequiredProvider `json:"required_providers,omitempty"`
+	Outputs          map[string]interface{}      `json:"outputs,omitempty"`
 }
 
 type StateSpecDiffCommon struct {
@@ -70,7 +71,7 @@ func (m *Module) GetStateDiffCommon() StateSpecDiffCommon {
 	return st
 }
 
-func (m *Module) LoadStateBase(spec StateCommon, modKey string, p *project.StateProject) error {
+func (m *Module) LoadStateCommon(spec StateCommon, modKey string, p *project.StateProject) error {
 
 	mkSplitted := strings.Split(modKey, ".")
 	if len(mkSplitted) != 2 {
@@ -125,6 +126,7 @@ func (m *Module) LoadStateBase(spec StateCommon, modKey string, p *project.State
 	return nil
 }
 
+// ReplaceRemoteStatesForDiff replace remote state markers in struct to <remote state infra.mod.output> to show in diff.
 func (m *Module) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	inJSON, err := utils.JSONEncode(in)
 	if err != nil {
@@ -135,7 +137,15 @@ func (m *Module) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	if !ok {
 		return utils.JSONDecode([]byte(inJSONstr), out)
 	}
-	for key, marker := range depMarkers.(map[string]*project.Dependency) {
+	markersList, ok := depMarkers.(map[string]*project.Dependency)
+	if !ok {
+		markersList := make(map[string]*project.Dependency)
+		err := utils.JSONInterfaceToType(depMarkers, &markersList)
+		if err != nil {
+			return fmt.Errorf("remote state scanner: read dependency: bad type")
+		}
+	}
+	for key, marker := range markersList {
 		if strings.Contains(inJSONstr, key) {
 			remoteStateRef := fmt.Sprintf("<remoteState %s.%s.%s>", marker.InfraName, marker.ModuleName, marker.Output)
 			replacer := strings.NewReplacer(key, remoteStateRef)

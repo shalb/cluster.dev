@@ -36,7 +36,7 @@ func (p *Project) readInfrastructures() error {
 	if !exists {
 		err := fmt.Errorf("no infrastructures found, at least one needed")
 		log.Debug(err.Error())
-		return err
+		// return err
 	}
 	for _, infra := range infras {
 		err := p.readInfrastructureObj(infra)
