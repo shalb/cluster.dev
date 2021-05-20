@@ -11,7 +11,7 @@ type Factory struct {
 
 // New creates new module driver factory.
 func (f *Factory) New(spec map[string]interface{}, infra *project.Infrastructure) (project.Module, error) {
-	mod := helm{
+	mod := Module{
 		helmOpts: map[string]interface{}{},
 		sets:     map[string]interface{}{},
 	}
@@ -25,7 +25,7 @@ func (f *Factory) New(spec map[string]interface{}, infra *project.Infrastructure
 
 // NewFromState creates new module from state data.
 func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Module, error) {
-	mod := helm{}
+	mod := Module{}
 	err := mod.LoadState(spec, modKey, p)
 	if err != nil {
 		log.Debug(err.Error())

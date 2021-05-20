@@ -27,7 +27,7 @@ type StateDiff struct {
 	LocalModule map[string]string `json:"local_module"`
 }
 
-func (m *tfModule) GetState() interface{} {
+func (m *Module) GetState() interface{} {
 	st := m.GetStateCommon()
 	stTf := State{
 		StateSpecCommon: st,
@@ -45,7 +45,7 @@ func (m *tfModule) GetState() interface{} {
 	return stTf
 }
 
-func (m *tfModule) GetDiffData() interface{} {
+func (m *Module) GetDiffData() interface{} {
 	st := m.GetStateDiffCommon()
 	stTf := StateDiff{
 		StateSpecDiffCommon: st,
@@ -70,7 +70,7 @@ func (s *State) GetType() string {
 	return s.ModType
 }
 
-func (m *tfModule) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
+func (m *Module) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	s := State{}
 	err := utils.JSONInterfaceToType(stateData, &s)
 	if err != nil {
@@ -79,7 +79,7 @@ func (m *tfModule) LoadState(stateData interface{}, modKey string, p *project.St
 	m.inputs = s.Inputs.(map[string]interface{})
 	m.source = s.Source
 	m.version = s.Version
-	err = m.LoadStateBase(s.StateSpecCommon, modKey, p)
+	err = m.LoadStateCommon(s.StateSpecCommon, modKey, p)
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}

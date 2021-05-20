@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/apex/log"
+	"github.com/gookit/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -32,6 +33,15 @@ type MarkerScanner func(data reflect.Value, module Module) (reflect.Value, error
 // 	Exports   map[string]interface{} `yaml:"exports"`
 // 	Variables map[string]interface{} `yaml:"variables"`
 // }
+type PrinterOutput struct {
+	Name   string `json:"name"`
+	Output string `json:"output"`
+}
+
+type RuntimeData struct {
+	ModulesOutputs  map[string]interface{}
+	PrintersOutputs []PrinterOutput
+}
 
 // Project describes main config with user-defined variables.
 type Project struct {
@@ -49,21 +59,26 @@ type Project struct {
 	CodeCacheDir     string
 	StateMutex       sync.Mutex
 	InitLock         sync.Mutex
+	RuntimeDataset   RuntimeData
 	StateBackendName string
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
 func NewEmptyProject() *Project {
 	project := &Project{
-		Infrastructures:  map[string]*Infrastructure{},
-		Modules:          map[string]Module{},
-		Backends:         map[string]Backend{},
-		Markers:          map[string]interface{}{},
+		Infrastructures:  make(map[string]*Infrastructure),
+		Modules:          make(map[string]Module),
+		Backends:         make(map[string]Backend),
+		Markers:          make(map[string]interface{}),
 		TmplFunctionsMap: templateFunctionsMap,
-		objects:          map[string][]ObjectData{},
-		configData:       map[string]interface{}{},
-		secrets:          map[string]Secret{},
-		CodeCacheDir:     config.Global.CacheDir,
+		objects:          make(map[string][]ObjectData),
+		configData:       make(map[string]interface{}),
+		secrets:          make(map[string]Secret),
+		RuntimeDataset: RuntimeData{
+			ModulesOutputs:  make(map[string]interface{}),
+			PrintersOutputs: make([]PrinterOutput, 0),
+		},
+		CodeCacheDir: config.Global.CacheDir,
 	}
 	for _, drv := range TemplateDriversMap {
 		drv.AddTemplateFunctions(project)
@@ -390,6 +405,13 @@ func (p *Project) ExportEnvs(ex interface{}) error {
 		log.Debugf("Exports: %v", key)
 		valStr := fmt.Sprintf("%v", val)
 		os.Setenv(key, valStr)
+	}
+	return nil
+}
+
+func (p *Project) PrintOutputs() error {
+	for _, o := range p.RuntimeDataset.PrintersOutputs {
+		log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(o.Output))
 	}
 	return nil
 }

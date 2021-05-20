@@ -160,6 +160,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			return nil, fmt.Errorf("loading state: error loading module from state: %v", err.Error())
 		}
 		statePrj.Modules[mName] = mod
+		mod.UpdateProjectRuntimeData(&statePrj.Project)
 	}
 	err = statePrj.prepareModules()
 	if err != nil {
@@ -168,11 +169,11 @@ func (p *Project) LoadState() (*StateProject, error) {
 	return &statePrj, nil
 }
 
-func (sp *StateProject) CheckModuleChanges(module Module) string {
+func (sp *StateProject) CheckModuleChanges(module Module) (string, Module) {
 	// log.Debugf("Check module: %v %+v", module.Key(), sp.Modules)
 	moddInState, exists := sp.Modules[module.Key()]
 	if !exists {
-		return utils.Diff(nil, module.GetDiffData(), true)
+		return utils.Diff(nil, module.GetDiffData(), true), nil
 	}
 	var diffData interface{}
 	if module != nil {
@@ -180,14 +181,14 @@ func (sp *StateProject) CheckModuleChanges(module Module) string {
 	}
 	df := utils.Diff(moddInState.GetDiffData(), diffData, true)
 	if len(df) > 0 {
-		return df
+		return df, moddInState
 	}
 	for _, dep := range *module.Dependencies() {
 		if sp.checkModuleChangesRecursive(dep.Module) {
-			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the module dependencies.")
+			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the module dependencies."), moddInState
 		}
 	}
-	return ""
+	return "", moddInState
 }
 
 func (sp *StateProject) checkModuleChangesRecursive(module Module) bool {

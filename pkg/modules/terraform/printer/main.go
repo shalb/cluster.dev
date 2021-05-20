@@ -4,23 +4,23 @@ import (
 	"fmt"
 
 	"github.com/apex/log"
-	"github.com/gookit/color"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
-type printer struct {
+type Module struct {
 	common.Module
-	inputs map[string]interface{}
+	outputRaw string
+	inputs    map[string]interface{}
 }
 
-func (m *printer) KindKey() string {
+func (m *Module) KindKey() string {
 	return "printer"
 }
 
-func (m *printer) genMainCodeBlock() ([]byte, error) {
+func (m *Module) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 
@@ -39,7 +39,7 @@ func (m *printer) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *printer) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
 	err := m.ReadConfigCommon(spec, infra)
 	if err != nil {
 		log.Debug(err.Error())
@@ -61,7 +61,7 @@ func (m *printer) ReadConfig(spec map[string]interface{}, infra *project.Infrast
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *printer) ReplaceMarkers() error {
+func (m *Module) ReplaceMarkers() error {
 	err := project.ScanMarkers(m.inputs, m.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (m *printer) ReplaceMarkers() error {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *printer) Build() error {
+func (m *Module) Build() error {
 	var err error
 	err = m.BuildCommon()
 	if err != nil {
@@ -94,7 +94,7 @@ func (m *printer) Build() error {
 	return m.CreateCodeDir()
 }
 
-func (m *printer) Apply() (err error) {
+func (m *Module) Apply() (err error) {
 	err = m.ApplyCommon()
 	if err != nil {
 		return
@@ -103,8 +103,12 @@ func (m *printer) Apply() (err error) {
 	if err != nil {
 		return
 	}
-
-	log.Infof("Printer output. Module: '%v', Infra: '%v'\n%v", m.Name(), m.InfraName(), color.Style{color.FgGreen, color.OpBold}.Sprintf(outputs))
-
+	m.outputRaw = outputs
 	return
+}
+
+// UpdateProjectRuntimeData update project runtime dataset, adds printer module outputs.
+func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
+	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: m.Key(), Output: m.outputRaw})
+	return m.UpdateProjectRuntimeDataCommon(p)
 }

@@ -158,7 +158,7 @@ func (p *Project) Apply() error {
 		}
 
 		go func(mod Module, finFunc func(error), stateP *StateProject) {
-			diff := stateP.CheckModuleChanges(mod)
+			diff, _ := stateP.CheckModuleChanges(mod)
 			var res error
 			if len(diff) > 0 || config.Global.IgnoreState {
 				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying module '%v':", md.Key()))
@@ -170,6 +170,11 @@ func (p *Project) Apply() error {
 				if res == nil {
 					stateP.UpdateModule(mod)
 					err := stateP.SaveState()
+					if err != nil {
+						finFunc(err)
+						return
+					}
+					err = mod.UpdateProjectRuntimeData(p)
 					if err != nil {
 						finFunc(err)
 						return
@@ -213,7 +218,7 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 
 	for _, md := range curModsSeq {
 		_, exists := fProject.Modules[md.Key()]
-		diff := fProject.CheckModuleChanges(md)
+		diff, stateModule := fProject.CheckModuleChanges(md)
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning module '%v':", md.Key()))
 		if len(diff) > 0 || config.Global.IgnoreState {
 			if len(diff) == 0 {
@@ -255,6 +260,8 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 				}
 			}
 		} else {
+			// Update project printers and outputs with state module.
+			stateModule.UpdateProjectRuntimeData(p)
 			modsUnchanged = append(modsUnchanged, md.Key())
 			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
 		}

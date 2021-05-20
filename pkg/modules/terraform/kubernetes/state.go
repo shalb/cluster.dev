@@ -16,7 +16,7 @@ type State struct {
 	Inputs     interface{} `json:"inputs"`
 }
 
-func (m *kubernetes) GetState() interface{} {
+func (m *Module) GetState() interface{} {
 	st := m.GetStateCommon()
 	stTf := State{
 		StateSpecCommon: st,
@@ -33,7 +33,7 @@ type StateDiff struct {
 	Inputs interface{} `json:"inputs"`
 }
 
-func (m *kubernetes) GetDiffData() interface{} {
+func (m *Module) GetDiffData() interface{} {
 	st := m.GetStateDiffCommon()
 	stTf := StateDiff{
 		StateSpecDiffCommon: st,
@@ -51,7 +51,7 @@ func (s *State) GetType() string {
 
 }
 
-func (m *kubernetes) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
+func (m *Module) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	s := State{}
 	err := utils.JSONInterfaceToType(stateData, &s)
 	if err != nil {
@@ -60,5 +60,5 @@ func (m *kubernetes) LoadState(stateData interface{}, modKey string, p *project.
 	m.inputs = s.Inputs.(map[string]interface{})
 	m.source = s.Source
 	m.kubeconfig = s.Kubeconfig
-	return m.LoadStateBase(s.StateSpecCommon, modKey, p)
+	return m.LoadStateCommon(s.StateSpecCommon, modKey, p)
 }

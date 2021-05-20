@@ -23,6 +23,7 @@ type Module interface {
 	LoadState(interface{}, string, *StateProject) error
 	KindKey() string
 	CodeDir() string
+	UpdateProjectRuntimeData(p *Project) error
 }
 
 type ModuleDriver interface {

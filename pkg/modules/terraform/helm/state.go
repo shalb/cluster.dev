@@ -18,7 +18,7 @@ type State struct {
 	Values     []byte      `json:"values,omitempty"`
 }
 
-func (m *helm) GetState() interface{} {
+func (m *Module) GetState() interface{} {
 	st := m.GetStateCommon()
 	stTf := State{
 		StateSpecCommon: st,
@@ -40,7 +40,7 @@ type StateDiff struct {
 	Values   []byte      `json:"values,omitempty"`
 }
 
-func (m *helm) GetDiffData() interface{} {
+func (m *Module) GetDiffData() interface{} {
 	st := m.GetStateDiffCommon()
 	stTf := StateDiff{
 		StateSpecDiffCommon: st,
@@ -60,7 +60,7 @@ func (s *State) GetType() string {
 	return s.ModType
 }
 
-func (m *helm) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
+func (m *Module) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	s := State{}
 	err := utils.JSONInterfaceToType(stateData, &s)
 	if err != nil {
@@ -71,5 +71,5 @@ func (m *helm) LoadState(stateData interface{}, modKey string, p *project.StateP
 	m.source = s.Source
 	m.kubeconfig = s.Kubeconfig
 	m.valuesFileContent = s.Values
-	return m.LoadStateBase(s.StateSpecCommon, modKey, p)
+	return m.LoadStateCommon(s.StateSpecCommon, modKey, p)
 }

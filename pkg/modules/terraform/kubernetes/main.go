@@ -17,7 +17,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-type kubernetes struct {
+type Module struct {
 	common.Module
 	source          string
 	kubeconfig      string
@@ -25,11 +25,11 @@ type kubernetes struct {
 	providerVersion string
 }
 
-func (m *kubernetes) KindKey() string {
+func (m *Module) KindKey() string {
 	return "kubernetes"
 }
 
-func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
+func (m *Module) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	providerBlock := rootBody.AppendNewBlock("provider", []string{"kubernetes-alpha"})
@@ -60,7 +60,7 @@ func (m *kubernetes) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
 	err := m.ReadConfigCommon(spec, infra)
 	if err != nil {
 		return fmt.Errorf("reading kubernetes module: %v", err.Error())
@@ -131,7 +131,7 @@ func (m *kubernetes) ReadConfig(spec map[string]interface{}, infra *project.Infr
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *kubernetes) ReplaceMarkers() error {
+func (m *Module) ReplaceMarkers() error {
 	err := project.ScanMarkers(m.inputs, m.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
@@ -144,7 +144,7 @@ func (m *kubernetes) ReplaceMarkers() error {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *kubernetes) Build() error {
+func (m *Module) Build() error {
 	m.BuildCommon()
 	var err error
 	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
@@ -153,4 +153,9 @@ func (m *kubernetes) Build() error {
 		return err
 	}
 	return m.CreateCodeDir()
+}
+
+// UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
+func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
+	return m.UpdateProjectRuntimeDataCommon(p)
 }
