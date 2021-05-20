@@ -49,7 +49,6 @@ func (m *Module) GetStateCommon() StateSpecCommon {
 		Markers:          m.markers,
 		Dependencies:     deps,
 		RequiredProvider: m.requiredProviders,
-		Outputs:          m.outputs,
 	}
 	if len(m.dependencies) == 0 {
 		st.Dependencies = []StateDep{}
