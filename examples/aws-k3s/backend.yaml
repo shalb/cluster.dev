@@ -1,0 +1,6 @@
+name: aws-backend
+kind: Backend
+provider: s3
+spec:
+  bucket: {{ .project.variables.state_bucket_name }}
+  region: {{ .project.variables.region }}

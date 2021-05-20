@@ -24,6 +24,7 @@ The infrastructure templates could be based on Terraform modules, Kubernetes man
 **Table of contents:**
 
 * [Concept](#concept)
+  * [Principle Diagram](#principle-diagram)
   * [Common Infrastructure Project Structure](#common-infrastructure-project-structure)
   * [Infrastructure Reconcilation](#infrastructure-reconcilation)
   * [Demo Video](#demo-video)
@@ -64,6 +65,10 @@ The infrastructure templates could be based on Terraform modules, Kubernetes man
 * [Code of Conduct and License](#code-of-conduct-and-license)
 
 ## Concept
+
+### Principle Diagram
+
+![cdev diagram](./docs/images/cdev-base-diagram.png)
 
 ### Common Infrastructure Project Structure
 

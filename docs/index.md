@@ -6,6 +6,10 @@ Cluster.dev is an open-source tool designed to manage Cloud Native Infrastructur
 
 The infrastructure templates could be based on Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc. Cluster.dev sticks those components together so that you could deploy, test and distribute a whole set of components with pinned versions.
 
+## Principle Diagram
+
+![cdev diagram](./images/cdev-base-diagram.png)
+
 ## Quick Preview
 
 ![demo video cdev](./images/demo.gif)

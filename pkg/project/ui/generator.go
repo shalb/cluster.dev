@@ -88,6 +88,11 @@ func CreateSecret() error {
 	return nil
 }
 
+// GetTemplates returns list of templates in dir.
+func GetProjectTemplates() (res []string, err error) {
+	return getDirSubCats(templatesDir + "/project")
+}
+
 func CreteProject(dir string, args ...string) error {
 	generator, err := NewGenerator("project")
 	if err != nil {

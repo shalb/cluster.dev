@@ -1,0 +1,37 @@
+name: eks-demo
+template: https://github.com/shalb/cdev-aws-eks?ref=v0.1.6
+kind: Infrastructure
+backend: aws-backend
+variables:
+  region: {{ .project.variables.region }}
+  organization: {{ .project.variables.organization }}
+  domain: cluster.dev
+  instance_type: "t3.medium"
+  eks_version: "1.19"
+  # If you want to use existing VPC and subnets, uncomment the options below and set correct VPC ID and the subnets IDs.
+  # Otherwise, the new VPC and subnets will be created automatically.
+  # vpc_id: "vpc-5ecf1234"
+  # public_subnets:
+  #   - "subnet-d775f0bd"
+  #   - "subnet-6696651a"
+  env: "dev"
+  azs:
+    - "{{ .project.variables.region }}a"
+    - "{{ .project.variables.region }}b"
+  default_node_pool:
+    - name: "spot-group"
+      instance_type: "t3.medium"
+      public_ip: true
+      override_instance_types:
+        - "t3a.medium"
+        - "t3.small"
+      spot_allocation_strategy: "lowest-price"
+      asg_desired_capacity: 2
+      asg_max_size: 4
+      asg_min_size: 2
+      root_volume_size: 50
+      kubelet_extra_args: "--node-labels=node.kubernetes.io/lifecycle=spot"
+      spot_instance_pools: 10
+      on_demand_base_capacity: 0
+      on_demand_percentage_above_base_capacity: 0
+  argocdServerAdminPassword: "$2a$10$1buVsK9yv0Al1oJlLmABeeRxYsArdlT2QPdNRqaZwiuYztj9JUDmu" # This bcrypted "password" is for testing only. Make sure to change it! To bcrypt your own password, use this online tool: https://www.browserling.com/tools/bcrypt

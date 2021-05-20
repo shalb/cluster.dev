@@ -1,4 +1,4 @@
-description: AWS cloud, k3s Kubernetes cluster with ArgoCD
+description: AWS cloud, EKS cluster with ArgoCD
 options:
   - name: name
     description: Project name

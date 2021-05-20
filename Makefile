@@ -18,6 +18,8 @@ VERSION      = `git describe --tag --abbrev=0`
 BUILD        = `date +%FT%T%z`
 CONFIG_PKG   = "github.com/shalb/cluster.dev/pkg/config"
 
+TLIST        = `cdev project create --list-templates`
+
 # Required for globs to work correctly
 SHELL      = /usr/bin/env bash
 
@@ -35,10 +37,19 @@ linux_arm64:
 build: darwin_amd64 linux_amd64 linux_arm64
 	@echo version: $(VERSION)
 
+examples:
+	rm -rf ./examples/*
+	for tmpl in $(TLIST); do \
+		cd examples ; \
+    	mkdir $$tmpl ; \
+		cd $$tmpl && cdev project create $$tmpl ; \
+		cd ../ ; \
+	done
+
 install:
 	GO111MODULE=on CGO_ENABLED=0 GOOS=$(CUR_GOOS) GOARCH=$(CUR_GOARCH) go install -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" ./cmd/$(BINNAME)
 
 clean:
 	rm -rf $(BINDIR)/*
 
-.PHONY: all clean
+.PHONY: all clean examples
