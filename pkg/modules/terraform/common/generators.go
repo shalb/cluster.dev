@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
@@ -113,10 +114,31 @@ func (m *Module) BuildCommon() error {
 	}
 
 	if m.preHook != nil {
-		m.filesList["pre_hook.sh"] = []byte(m.preHook.Command)
+		hookCmd, err := m.replaceRemoteStatesForBash(m.preHook.Command)
+		if err != nil {
+			return err
+		}
+		m.filesList["pre_hook.sh"] = []byte(hookCmd)
 	}
 	if m.postHook != nil {
-		m.filesList["post_hook.sh"] = []byte(m.postHook.Command)
+		hookCmd, err := m.replaceRemoteStatesForBash(m.postHook.Command)
+		if err != nil {
+			return err
+		}
+		m.filesList["post_hook.sh"] = []byte(hookCmd)
 	}
 	return nil
+}
+
+func (m *Module) replaceRemoteStatesForBash(cmd string) (res string, err error) {
+	res = cmd
+	for hash, mr := range m.Markers() {
+		marker, ok := mr.(*project.Dependency)
+		if !ok {
+			return "", fmt.Errorf("preparing module: internal error: incorrect remote state type")
+		}
+		refStr := DependencyToBashRemoteState(marker)
+		res = strings.ReplaceAll(res, hash, refStr)
+	}
+	return
 }

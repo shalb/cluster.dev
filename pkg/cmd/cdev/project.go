@@ -21,8 +21,8 @@ func init() {
 	rootCmd.AddCommand(projectCmd)
 	projectCmd.AddCommand(projectLs)
 	projectCmd.AddCommand(projectCreate)
-	projectCreate.Flags().BoolVar(&config.Global.Interactive, "interactive", false, "Use intteractive mode to for project generation")
-	projectCreate.Flags().BoolVar(&listAllTemplates, "list-templates", false, "Show all available templates for project generator.")
+	projectCreate.Flags().BoolVar(&config.Global.Interactive, "interactive", false, "Use interactive mode for project generation")
+	projectCreate.Flags().BoolVar(&listAllTemplates, "list-templates", false, "Show all available templates for project generation")
 }
 
 // projectsCmd represents the plan command

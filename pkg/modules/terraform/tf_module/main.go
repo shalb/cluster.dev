@@ -54,8 +54,13 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 		}
 		moduleBody.SetAttributeValue("source", cty.StringVal(m.source))
 	}
-	for hash, ref := range m.Markers() {
-		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, ref)
+	for hash, m := range m.Markers() {
+		marker, ok := m.(*project.Dependency)
+		refStr := common.DependencyToRemoteStateRef(marker)
+		if !ok {
+			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+		}
+		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, refStr)
 	}
 	return f.Bytes(), nil
 }
@@ -121,7 +126,11 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
-	err := project.ScanMarkers(m.inputs, m.YamlBlockMarkerScanner, m)
+	err := m.ReplaceMarkersCommon(m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.inputs, m.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}

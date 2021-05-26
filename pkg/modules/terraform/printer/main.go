@@ -32,8 +32,13 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 			return nil, err
 		}
 		dataBody.SetAttributeValue("value", hclVal)
-		for hash, ref := range m.Markers() {
-			hcltools.ReplaceStingMarkerInBody(dataBody, hash, ref)
+		for hash, m := range m.Markers() {
+			marker, ok := m.(*project.Dependency)
+			refStr := common.DependencyToRemoteStateRef(marker)
+			if !ok {
+				return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+			}
+			hcltools.ReplaceStingMarkerInBody(dataBody, hash, refStr)
 		}
 	}
 	return f.Bytes(), nil
@@ -62,7 +67,11 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
-	err := project.ScanMarkers(m.inputs, m.YamlBlockMarkerScanner, m)
+	err := m.ReplaceMarkersCommon(m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.inputs, m.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}
@@ -86,9 +95,9 @@ func (m *Module) Build() error {
 		return err
 	}
 
-	if len(m.ExpectedOutputs()) > 0 {
-		return fmt.Errorf("module type 'printer' cannot have outputs, don't use remote state to it")
-	}
+	// if len(m.ExpectedOutputs()) > 0 {
+	// 	return fmt.Errorf("module type 'printer' cannot have outputs, don't use remote state to it")
+	// }
 	// Remove backend for printer.
 	delete(m.FilesList(), "init.tf")
 	return m.CreateCodeDir()

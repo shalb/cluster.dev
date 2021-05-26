@@ -19,7 +19,7 @@ type StateSpecCommon struct {
 	PreHook          *hookSpec                   `json:"pre_hook,omitempty"`
 	PostHook         *hookSpec                   `json:"post_hook,omitempty"`
 	Providers        interface{}                 `json:"providers,omitempty"`
-	Markers          map[string]string           `json:"markers,omitempty"`
+	Markers          map[string]interface{}      `json:"markers,omitempty"`
 	Dependencies     []StateDep                  `json:"dependencies,omitempty"`
 	RequiredProvider map[string]RequiredProvider `json:"required_providers,omitempty"`
 	Outputs          map[string]interface{}      `json:"outputs,omitempty"`
@@ -114,10 +114,10 @@ func (m *Module) LoadStateCommon(spec StateCommon, modKey string, p *project.Sta
 	m.projectPtr = &p.Project
 	m.dependencies = modDeps
 	m.backendPtr = bPtr
-	m.expectedOutputs = map[string]bool{}
-	m.filesList = map[string][]byte{}
-	m.specRaw = map[string]interface{}{}
-	m.markers = map[string]string{}
+	m.expectedOutputs = make(map[string]bool)
+	m.filesList = make(map[string][]byte)
+	m.specRaw = make(map[string]interface{})
+	m.markers = make(map[string]interface{})
 	m.preHook = mState.PreHook
 	m.postHook = mState.PostHook
 	m.providers = mState.Providers

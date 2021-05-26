@@ -29,7 +29,7 @@ func (p *Project) readSecrets() error {
 			log.Debug(tmplErr.Error())
 			return fmt.Errorf("searching for secrets in %v: %v", filename, tmplErr.Error())
 		}
-		secretDriver, err := getRwaSecretInfo(templatedData, p)
+		secretDriver, err := getRwaSecretInfo(templatedData)
 		if err != nil {
 			return fmt.Errorf("searching for secrets in %v: %v", filename, err.Error())
 		}
@@ -62,7 +62,7 @@ func (p *Project) fileIsSecret(fn string) bool {
 	return false
 }
 
-func getRwaSecretInfo(data []byte, p *Project) (res SecretDriver, err error) {
+func getRwaSecretInfo(data []byte) (res SecretDriver, err error) {
 	objects, err := utils.ReadYAMLObjects(data)
 	if err != nil {
 		return

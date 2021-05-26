@@ -80,3 +80,12 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 	return &ScriptData, nil
 
 }
+
+func DependencyToRemoteStateRef(dep *project.Dependency) (remoteStateRef string) {
+	remoteStateRef = fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", dep.InfraName, dep.ModuleName, dep.Output)
+	return
+}
+func DependencyToBashRemoteState(dep *project.Dependency) (remoteStateRef string) {
+	remoteStateRef = fmt.Sprintf("\"$(terraform -chdir=../%v.%v/ output -raw %v)\"", dep.InfraName, dep.ModuleName, dep.Output)
+	return
+}
