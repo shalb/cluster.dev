@@ -63,7 +63,13 @@ modules:
       type: spot
 ```
 
-* `remoteState` - is used for passing data between modules and infrastructures. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: as yaml value, only in module `inputs`.
+* `remoteState` - is used for passing data between modules and infrastructures, can be used in pre/post hooks. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: 
+
+    * all modules types: in `inputs`;
+
+    * all modules types: in modules pre/post hooks;
+
+    * in Kubernetes modules: in Kubernetes manifests.
 
 * `cidrSubnet` - calculates a subnet address within given IP network address prefix. Same as [Terraform function](https://www.terraform.io/docs/language/functions/cidrsubnet.html). Example:
 

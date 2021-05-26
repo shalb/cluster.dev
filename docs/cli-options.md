@@ -18,6 +18,14 @@
 
 * `--ignore-state`       Apply even if the state has not changed.
 
+## Create flags
+
+* `-h`, `--help`        Help for create.
+
+* `--interactive`       Use interactive mode for project generation.
+
+* `--list-templates`    Show all available templates for project generator.
+
 ## Destroy flags
 
 * `--force`              Skip interactive approval.
