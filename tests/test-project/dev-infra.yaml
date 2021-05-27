@@ -6,8 +6,7 @@ spec:
   region: {{ .project.variables.region }}
 ---
 name: cdev-tests
-# template: https://github.com/shalb/cdev-test-template?ref=v0.0.2
-template: ./cdev-tests/
+template: https://github.com/shalb/cdev-test-template?ref=v0.0.2
 kind: Infrastructure
 backend: aws-backend
 variables:
