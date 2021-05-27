@@ -301,9 +301,13 @@ func (p *Project) ClearCacheDir() error {
 	}
 	if !config.Global.UseCache {
 		log.Debugf("Removes all old content: './%s'", relPath)
+
 		err := removeDirContent(p.CodeCacheDir)
 		if err != nil {
 			return err
+		}
+		if _, err := os.Stat(config.Global.TemplatesCacheDir); os.IsNotExist(err) {
+			return nil
 		}
 		return removeDirContent(config.Global.TemplatesCacheDir)
 	}
