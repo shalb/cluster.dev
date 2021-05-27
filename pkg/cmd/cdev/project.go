@@ -2,7 +2,6 @@ package cdev
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
@@ -22,8 +21,8 @@ func init() {
 	rootCmd.AddCommand(projectCmd)
 	projectCmd.AddCommand(projectLs)
 	projectCmd.AddCommand(projectCreate)
-	projectCreate.Flags().BoolVar(&config.Global.Interactive, "interactive", false, "Use intteractive mode to for project generation")
-	projectCreate.Flags().BoolVar(&listAllTemplates, "list-templates", false, "Show all available templates for project generator.")
+	projectCreate.Flags().BoolVar(&config.Global.Interactive, "interactive", false, "Use interactive mode for project generation")
+	projectCreate.Flags().BoolVar(&listAllTemplates, "list-templates", false, "Show all available templates for project generation")
 }
 
 // projectsCmd represents the plan command
@@ -39,6 +38,15 @@ var projectLs = &cobra.Command{
 		log.Info("Project info:")
 		p.PrintInfo()
 	},
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return fmt.Errorf("requires a template git URL argument")
+		}
+		if len(args) > 2 {
+			return fmt.Errorf("too many arguments")
+		}
+		return nil
+	},
 }
 
 // projectsCmd represents the plan command
@@ -46,20 +54,13 @@ var projectCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Generate new project from template in curent dir. Directory must be empty",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if listAllTemplates {
-			list, err := ui.GetProjectTemplates()
-			if err != nil {
-				log.Fatalf("List project templates: %v", err.Error())
-			}
-			res := strings.Join(list, "\n")
-			fmt.Println(res)
-			return
-		}
 		if project.ProjectsFilesExists() {
 			log.Fatalf("project creating: some project's data (yaml files) found in current directory, use command in empty dir")
 		}
-		err := ui.CreteProject(config.Global.WorkingDir, args...)
+		if len(args) < 1 {
+			log.Fatal("project creating: ")
+		}
+		err := ui.CreteProject(config.Global.WorkingDir, args[0], args[1:]...)
 		if err != nil {
 			log.Fatalf("Create project: %v", err.Error())
 		}

@@ -1,7 +1,0 @@
-name: demo-project
-kind: Project
-variables:
-  organization: my-organization
-  region: eu-central-1
-  state_bucket_name: cdev-state
-  

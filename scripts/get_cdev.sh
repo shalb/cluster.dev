@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 BIN_DIR="${HOME}/.cluster.dev/bin/"
 CDEV_LATEST_VERSION=$(curl -s https://api.github.com/repos/shalb/cluster.dev/releases/latest | grep tag_name | cut -d '"' -f 4)
 

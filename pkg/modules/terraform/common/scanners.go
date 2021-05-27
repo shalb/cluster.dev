@@ -12,7 +12,12 @@ import (
 
 // RemoteStatesScanner - project scanner function, witch process dependencies markers in module data setted by AddRemoteStateMarker template function.
 func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
-	subVal := reflect.ValueOf(data.Interface())
+	var subVal = data
+	if data.Kind() != reflect.String {
+		subVal = reflect.ValueOf(data.Interface())
+
+	}
+
 	resString := subVal.String()
 	depMarkers, ok := module.ProjectPtr().Markers[RemoteStateMarkerCatName]
 	if !ok {
@@ -38,8 +43,7 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
 			}
 			*module.Dependencies() = append(*module.Dependencies(), marker)
-			remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.InfraName, marker.ModuleName, marker.Output)
-			m.markers[key] = remoteStateRef
+			m.markers[key] = marker
 			depModule.ExpectedOutputs()[marker.Output] = true
 			return reflect.ValueOf(resString), nil
 		}

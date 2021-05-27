@@ -65,8 +65,20 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 	switch out.Kind() {
 	case reflect.Slice:
 		for i := 0; i < out.Len(); i++ {
-			if out.Index(i).Elem().Kind() == reflect.String {
-				val, err := procFunc(out.Index(i), module)
+			elem := out.Index(i)
+			if elem.Kind() != reflect.Interface && elem.Kind() != reflect.Ptr {
+				val, err := procFunc(elem, module)
+				if err != nil {
+					return err
+				}
+				if val.Kind() != elem.Kind() {
+					log.Fatal("ScanMarkers: type conversion error")
+				}
+				out.Index(i).Set(val)
+				continue
+			}
+			if elem.Elem().Kind() == reflect.String {
+				val, err := procFunc(elem, module)
 				if err != nil {
 					return err
 				}
@@ -80,19 +92,52 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 		}
 	case reflect.Map:
 		for _, key := range out.MapKeys() {
-			if out.MapIndex(key).Elem().Kind() == reflect.String {
+			elem := out.MapIndex(key)
+			if elem.Kind() != reflect.Interface && elem.Kind() != reflect.Ptr {
+				val, err := procFunc(elem, module)
+				if err != nil {
+					return err
+				}
+				if val.Kind() != elem.Kind() {
+					log.Fatal("ScanMarkers: type conversion error")
+				}
+				out.SetMapIndex(key, val)
+				continue
+			}
+			if elem.Elem().Kind() == reflect.String {
 				val, err := procFunc(out.MapIndex(key), module)
 				if err != nil {
 					return err
 				}
 				out.SetMapIndex(key, val)
 			} else {
-				err := ScanMarkers(out.MapIndex(key).Interface(), procFunc, module)
+				err := ScanMarkers(elem.Interface(), procFunc, module)
 				if err != nil {
 					return err
 				}
 			}
 		}
+	case reflect.Struct:
+		for i := 0; i < out.NumField(); i++ {
+			if out.Field(i).Kind() == reflect.String {
+				val, err := procFunc(reflect.ValueOf(out.Field(i).Interface()), module)
+				if err != nil {
+					return err
+				}
+				out.Field(i).Set(val)
+			} else {
+				err := ScanMarkers(out.Field(i).Interface(), procFunc, module)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	case reflect.String:
+		val, err := procFunc(out, module)
+		if err != nil {
+			return err
+		}
+		out.Set(val)
 	default:
 
 	}

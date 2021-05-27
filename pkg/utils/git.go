@@ -9,7 +9,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/executor"
 )
 
-type gitRepo struct {
+type GitRepo struct {
 	URL     string
 	Subdir  string
 	Version string
@@ -17,7 +17,7 @@ type gitRepo struct {
 
 func GetTemplate(gitURL, targetDir, templateName string) (string, error) {
 	log.Debugf("Cloning template from repo: %v, %v, %v", gitURL, targetDir, templateName)
-	parsedGitURL, err := parseGitUrl(gitURL)
+	parsedGitURL, err := ParseGitUrl(gitURL)
 	if err != nil {
 		return "", fmt.Errorf("get template: %v", err.Error())
 	}
@@ -51,7 +51,7 @@ func GetTemplate(gitURL, targetDir, templateName string) (string, error) {
 	return filepath.Join(pulledTempplatePath, parsedGitURL.Subdir), nil
 }
 
-func parseGitUrl(gitURL string) (repo gitRepo, err error) {
+func ParseGitUrl(gitURL string) (repo GitRepo, err error) {
 	res := strings.Split(gitURL, "?ref=")
 	var url string
 	if len(res) == 2 {

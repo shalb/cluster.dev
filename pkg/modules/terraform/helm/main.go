@@ -122,7 +122,11 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
-	err := project.ScanMarkers(m.helmOpts, m.YamlBlockMarkerScanner, m)
+	err := m.ReplaceMarkersCommon(m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.helmOpts, m.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}

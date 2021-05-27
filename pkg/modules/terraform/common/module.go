@@ -46,7 +46,7 @@ type Module struct {
 	filesList         map[string][]byte
 	providers         interface{}
 	specRaw           map[string]interface{}
-	markers           map[string]string
+	markers           map[string]interface{}
 	applyOutput       []byte
 	requiredProviders map[string]RequiredProvider
 }
@@ -61,7 +61,7 @@ func (m *Module) AddRequiredProvider(name, source, version string) {
 	}
 }
 
-func (m *Module) Markers() map[string]string {
+func (m *Module) Markers() map[string]interface{} {
 	return m.markers
 }
 
@@ -86,7 +86,7 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	m.expectedOutputs = make(map[string]bool)
 	m.filesList = make(map[string][]byte)
 	m.specRaw = spec
-	m.markers = make(map[string]string)
+	m.markers = make(map[string]interface{})
 
 	// Process dependencies.
 	var modDeps []*project.Dependency
@@ -345,5 +345,22 @@ func (m *Module) CodeDir() string {
 // UpdateProjectRuntimeDataCommon update project runtime dataset, adds module outputs.
 // TODO: get module outputs and write to project runtime dataset. Now this function is only for printer's module interface.
 func (m *Module) UpdateProjectRuntimeDataCommon(p *project.Project) error {
+	return nil
+}
+
+// ReplaceMarkers replace all templated markers with values.
+func (m *Module) ReplaceMarkersCommon(inheritedModule project.Module) error {
+	if m.preHook != nil {
+		err := project.ScanMarkers(&m.preHook.Command, m.RemoteStatesScanner, inheritedModule)
+		if err != nil {
+			return err
+		}
+	}
+	if m.postHook != nil {
+		err := project.ScanMarkers(&m.postHook.Command, m.RemoteStatesScanner, inheritedModule)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
