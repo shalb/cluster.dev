@@ -10,10 +10,11 @@ import (
 
 type State struct {
 	common.StateSpecCommon
-	Source     string      `json:"source"`
-	Kubeconfig string      `json:"kubeconfig"`
-	ModType    string      `json:"type"`
-	Inputs     interface{} `json:"inputs"`
+	Source       string             `json:"source"`
+	Kubeconfig   string             `json:"kubeconfig"`
+	ModType      string             `json:"type"`
+	Inputs       interface{}        `json:"inputs"`
+	ProviderConf ProviderConfigSpec `json:"provider_conf"`
 }
 
 func (m *Module) GetState() interface{} {
@@ -24,13 +25,15 @@ func (m *Module) GetState() interface{} {
 		ModType:         m.KindKey(),
 		Source:          m.source,
 		Kubeconfig:      m.kubeconfig,
+		ProviderConf:    m.ProviderConf,
 	}
 	return stTf
 }
 
 type StateDiff struct {
 	common.StateSpecDiffCommon
-	Inputs interface{} `json:"inputs"`
+	ProviderConf ProviderConfigSpec `json:"provider_conf"`
+	Inputs       interface{}        `json:"inputs"`
 }
 
 func (m *Module) GetDiffData() interface{} {
@@ -60,5 +63,6 @@ func (m *Module) LoadState(stateData interface{}, modKey string, p *project.Stat
 	m.inputs = s.Inputs.(map[string]interface{})
 	m.source = s.Source
 	m.kubeconfig = s.Kubeconfig
+	m.ProviderConf = s.ProviderConf
 	return m.LoadStateCommon(s.StateSpecCommon, modKey, p)
 }
