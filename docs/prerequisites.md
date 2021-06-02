@@ -1,5 +1,9 @@
 # Prerequisites
 
+This section describes preconditions and software necessary to start using cdev. <br> Please note that deploying to a certain cloud provider requires its own preconditions that are described in the [cloud providers prerequisites](#cloud-providers-prerequisites) subsection.
+
+## cdev Prerequisites
+
 To start using cdev please make sure that you have the following software installed:
 
 * Linux amd64
@@ -8,11 +12,9 @@ To start using cdev please make sure that you have the following software instal
 
 * Bash
 
-* [Terraform](#terraform)
+* Terraform
 
-* [SOPS](#sops)
-
-## Terraform
+### Terraform
 
 Cdev client uses the Terraform binary. The required Terraform version is ~13 or higher. Refer to the [Terraform installation instructions](https://www.terraform.io/downloads.html) to install Terraform.
 
@@ -24,8 +26,26 @@ unzip terraform_0.14.7_linux_amd64.zip
 mv terraform /usr/local/bin/
 ```
 
-## SOPS
+## Cloud providers prerequisites
 
-For **creating** and **editing** SOPS secrets, cdev uses SOPS binary. But the SOPS binary is **not required** for decrypting and using SOPS secrets. As none of cdev reconcilation processes (build, plan, apply) requires SOPS to be performed, you don't have to install it for pipelines.
+### AWS prerequisites
 
-See [SOPS installation instructions](https://github.com/mozilla/sops#download) in official repo.
+1. Terraform version 13+.
+
+2. AWS account.
+
+3. AWS CLI installed.
+
+4. kubectl installed.
+
+5. [cdev installed](https://cluster.dev/installation/).
+
+### DigitalOcean prerequisites
+
+1. Terraform version 13+.
+
+2. DigitalOcean account.
+
+3. [doctl installed](https://docs.digitalocean.com/reference/doctl/how-to/install/).
+
+4. [cdev installed](https://cluster.dev/installation/).
