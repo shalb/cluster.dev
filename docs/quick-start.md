@@ -1,14 +1,12 @@
-# Quick Start
+# Step-by-step Guide
 
-cdev uses [project templates](https://cluster.dev/template-development/) to generate users' projects in a desired cloud. In this section you will find a quick guidance on how to create your first project, and the description of three available templates that are ready to use.
+cdev uses [project templates](https://cluster.dev/template-development/) to generate users' projects in a desired cloud. This section provides you with a guidance on how to create your first project, and the description of three available templates: [AWS-EKS](#aws-eks), [AWS-k3s](#aws-k3s), [DO-k8s](#do-k8s) along with the resources that are to be created.
 
-## Step-by-step guide
-
-This guide explains how to create and deploy your first project using cdev.
+## Create a New Project
 
 Before you begin make sure that you have [cdev installed](https://cluster.dev/installation/) and comply with all [preconditions](https://cluster.dev/prerequisites/) necessary to start using it.
 
-1. Configure access to your desired cloud ([AWS](https://cluster.dev/aws-cloud-provider/),[DigitalOcean](https://cluster.dev/digital-ocean-cloud-provider/), [GCE](https://cluster.dev/google-cloud-provider/), [Azure](https://cluster.dev/azure-cloud-provider/) and export required variables.
+1. Configure access to your desired cloud ([AWS](https://cluster.dev/aws-cloud-provider/), [DigitalOcean](https://cluster.dev/digital-ocean-cloud-provider/), [GCE](https://cluster.dev/google-cloud-provider/), [Azure](https://cluster.dev/azure-cloud-provider/)) and export required variables.
 
 2. Create locally a project directory, cd into it and execute the command depending on a chosen template. For AWS-EKS:
 
@@ -62,7 +60,7 @@ Before you begin make sure that you have [cdev installed](https://cluster.dev/in
 
 ## AWS-EKS
 
-[AWS-EKS is a cdev template](https://github.com/shalb/cdev-aws-eks) that creates and provisions Kubernetes clusters in [AWS cloud](https://cluster.dev/aws-cloud-provider/) by means of Amazon Elastic Kubernetes Service (EKS). The resources to be created:
+[AWS-EKS is a cdev template](https://github.com/shalb/cdev-aws-eks) that creates and provisions Kubernetes clusters in [AWS cloud](https://cluster.dev/aws-cloud-provider/) by means of Amazon Elastic Kubernetes Service (EKS). <br> The resources to be created:
 
 * *(optional, if your use cluster.dev domain)* Route53 zone **<cluster-name>.cluster.dev**
 
@@ -80,21 +78,9 @@ Before you begin make sure that you have [cdev installed](https://cluster.dev/in
 
 * AWS IAM roles for EKS IRSA cert-manager and external-dns.
 
-### Prerequisites
-
-1. Terraform version 13+.
-
-2. AWS account.
-
-3. AWS CLI installed.
-
-4. kubectl installed.
-
-5. [cdev installed](https://cluster.dev/installation/).
-
 ## AWS-k3s
 
-[AWS-k3s is a cdev template](https://github.com/shalb/cdev-aws-k3s) that creates and provisions Kubernetes clusters in [AWS cloud](https://cluster.dev/aws-cloud-provider/) by means of k3s utility. The template deploys a k3s cluster using existing or created VPC and domain name. The resources to be created:
+[AWS-k3s is a cdev template](https://github.com/shalb/cdev-aws-k3s) that creates and provisions Kubernetes clusters in [AWS cloud](https://cluster.dev/aws-cloud-provider/) by means of k3s utility. The template deploys a k3s cluster using existing or created VPC and domain name. <br> The resources to be created:
 
 * AWS Key Pair to access running instances of the cluster.
 
@@ -114,33 +100,11 @@ Before you begin make sure that you have [cdev installed](https://cluster.dev/in
 
     * argocd
 
-### Prerequisites
-
-1. Terraform version 13+.
-
-2. AWS account.
-
-3. AWS CLI installed.
-
-4. kubectl installed.
-
-5. [cdev installed](https://cluster.dev/installation/).
-
 ## DO-k8s
 
-[DO-k8s is a cdev template](https://github.com/shalb/cdev-do-k8s) that creates and provisions Kubernetes clusters in the DigitalOcean cloud. The resources to be created:
+[DO-k8s is a cdev template](https://github.com/shalb/cdev-do-k8s) that creates and provisions Kubernetes clusters in the DigitalOcean cloud. <br> The resources to be created:
 
 * *(optional, if vpc_id is not set)* VPC for Kubernetes cluster
 * DO Kubernetes cluster with addons:
     * cert-manager
     * argocd
-
-### Prerequisites
-
-1. Terraform version 13+.
-
-2. DigitalOcean account.
-
-3. [doctl installed](https://docs.digitalocean.com/reference/doctl/how-to/install/).
-
-4. [cdev installed](https://cluster.dev/installation/).

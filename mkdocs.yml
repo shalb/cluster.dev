@@ -16,13 +16,13 @@ nav:
       - Deploying to DigitalOcean: digital-ocean-cloud-provider.md
       - Deploying to GCE: google-cloud-provider.md
       - Deploying to Azure: azure-cloud-provider.md
-    - Quick Start: quick-start.md
-  - Usage:
+    - Step-by-step Guide: quick-start.md
+  - Template Development: template-development.md
+  - Reference:
     - Project Configuration: project-configuration.md
     - CLI Reference:
       - CLI Commands: cli-commands.md
       - CLI Options: cli-options.md
-  - Template Development: template-development.md
 
 
 markdown_extensions:

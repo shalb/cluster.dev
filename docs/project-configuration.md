@@ -146,6 +146,10 @@ There are two ways to use secrets:
 
 ### SOPS secrets
 
+For **creating** and **editing** SOPS secrets, cdev uses SOPS binary. But the SOPS binary is **not required** for decrypting and using SOPS secrets. As none of cdev reconcilation processes (build, plan, apply) requires SOPS to be performed, you don't have to install it for pipelines.
+
+See [SOPS installation instructions](https://github.com/mozilla/sops#download) in official repo.
+
 Secrets are encoded/decoded with [SOPS](https://github.com/mozilla/sops) utility that supports AWS KMS, GCP KMS, Azure Key Vault and PGP keys. How to use:
 
 1. Use console client cdev to create a new secret from scratch:
