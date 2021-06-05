@@ -29,7 +29,7 @@ google-beta:
   batching: true
 `
 
-// InterfaceToCty convert go type tu cty.Value(for hlc lib), using hack with JSON marshal/unmarshal.
+// InterfaceToCty convert go type to cty.Value(for hlc lib), using hack with JSON marshal/unmarshal.
 func InterfaceToCty(in interface{}) (cty.Value, error) {
 	js, err := json.Marshal(in)
 	if err != nil {
