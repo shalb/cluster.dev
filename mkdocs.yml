@@ -9,14 +9,13 @@ nav:
   - Home:
     - Welcome: index.md
   - Getting Started:
-    - Prerequisites: prerequisites.md
-    - Installing cdev: installation.md
-    - Cloud Providers:
-      - Deploying to AWS: aws-cloud-provider.md
-      - Deploying to DigitalOcean: digital-ocean-cloud-provider.md
-      - Deploying to GCE: google-cloud-provider.md
-      - Deploying to Azure: azure-cloud-provider.md
-    - Step-by-step Guide: quick-start.md
+    - cdev Prerequisites: prerequisites.md
+    - cdev Install: installation.md
+    - Deploying to AWS: aws-cloud-provider.md
+    - Deploying to DigitalOcean: digital-ocean-cloud-provider.md
+    - Deploying to GCE: google-cloud-provider.md
+    - Deploying to Azure: azure-cloud-provider.md
+    - cdev Install Reference: cdev-installation-reference.md
   - Template Development: template-development.md
   - Reference:
     - Project Configuration: project-configuration.md
