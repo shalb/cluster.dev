@@ -8,6 +8,7 @@ site_url: 'https://cluster.dev'
 nav:
   - Home:
     - Welcome: index.md
+    - Documentation Structure: documentation-structure.md
   - Getting Started:
     - cdev Prerequisites: prerequisites.md
     - cdev Install: installation.md

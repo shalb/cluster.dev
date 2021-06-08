@@ -58,7 +58,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
 ### DO-k8s starting guide
 
-1. Configure access to [DigitalOcean](#configure-access-to-digitalocean) and export required variables.
+1. Configure [access to DigitalOcean](#configure-access-to-digitalocean) and export required variables.
 
 2. Create locally a project directory, cd into it and execute the command:
 
@@ -66,17 +66,24 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
       cdev project create https://github.com/shalb/cdev-do-k8s
     ```
 
-    > As the template's repo could contain several options for project generation, you can specify which generator  to use, for example:
+    !!! tip
+        The template's repo could contain several options for project generation. To list available generators, use ```--list-templates``` option:
 
-    ```bash
-      cdev project create https://github.com/shalb/cdev-do-k8s minimal
-    ```
+          ```bash
+          cdev project create https://github.com/shalb/cdev-do-k8s --list-templates
+          ```
 
-    > If you leave it unspecified, cdev will generate a default project for you. You can also opt for an  interactive mode with the extended menu:
+        Then you can specify which generator to use, for example:
 
-    ```bash
-      cdev project create https://github.com/shalb/cdev-do-k8s --interactive
-    ```
+          ```bash
+          cdev project create https://github.com/shalb/cdev-do-k8s minimal
+          ```
+    !!! tip
+        If you leave it unspecified, cdev will generate a default project for you. You can also opt for an  interactive mode with the extended menu:
+
+          ```bash
+          cdev project create https://github.com/shalb/cdev-do-k8s --interactive
+          ```
 
 3. Edit variables in the example's files, if necessary:
 
@@ -88,10 +95,13 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
 4. Run `cdev plan` to build the project. In the output you will see an infrastructure that is going to be created after running `cdev apply`.
 
-    !!! Note
+    !!! note
         Prior to running `cdev apply` make sure to look through the infra.yaml file and replace the commented fields with real values. In case you would like to use existing VPC and subnets, uncomment preset options and set correct VPC ID and subnets' IDs. If you leave them as is, cdev will have VPC and subnets created for you.
 
-5. Run `cdev apply` . We highly recommend to run `cdev apply` in a debug mode so that you could see cdev logging in the output: `cdev apply -l debug`
+5. Run `cdev apply`
+
+    !!! tip
+        We highly recommend to run `cdev apply` in a debug mode so that you could see cdev logging in the output: `cdev apply -l debug`
 
 6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the infra.yaml.
 

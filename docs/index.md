@@ -24,7 +24,7 @@ Capabilities:
 - Applying parallel changes in multiple infrastructures concurrently.
 - Using the same global variables and secrets across different infrastructures, clouds and technologies.
 - Templating anything with Go-template function, even Terraform modules in Helm style templates.
-- Create and manage secrets with sops or cloud secret storages.
+- Create and manage secrets with SOPS or cloud secret storages.
 - Generate a ready to use Terraform code.
 
 ## Features

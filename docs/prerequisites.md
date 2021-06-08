@@ -1,12 +1,14 @@
 # cdev Prerequisites
 
-To start using cdev please make sure that you have the following software installed:
+Supported operation systems:
 
 * Linux amd64
 
-* Git console client
+* Darwin amd64
 
-* Bash
+To start using cdev please make sure that you have the following software installed:
+
+* Git console client
 
 * Terraform
 
