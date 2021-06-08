@@ -25,7 +25,7 @@ Capabilities:
 - Using the same global variables and secrets across different infrastructures, clouds and technologies.
 - Templating anything with Go-template function, even Terraform modules in Helm style templates.
 - Create and manage secrets with SOPS or cloud secret storages.
-- Generate a ready to use Terraform code.
+- Generate a ready-to-use Terraform code.
 
 ## Features
 
