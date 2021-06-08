@@ -1,6 +1,6 @@
 # DevOps Days 2021
 
-Hi Guys, I'm Vova from SHALB.
+Hi Guys, I'm Vova from SHALB!
 
 In SHALB we build and support a hundreds of infrastructures so we have some outcome and expierence that we'd like to share.
 
