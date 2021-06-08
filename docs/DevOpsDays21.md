@@ -24,9 +24,9 @@ And you need one-shot to be clear that it is fully automated and can be GitOps-e
 
 So thats why:
 
-- Terragrunt, Terraspace and Atlantis exist for Terraform
+- Terragrunt, Terraspace and Atlantis exist for Terraform.
 - Helmfile, Helm Operator exist form Helm.
-- and Helm exist for K8s yaml :)b
+- and Helm exist for K8s yaml :).
 
 ### Its hard to deal with variables and secrets
 
