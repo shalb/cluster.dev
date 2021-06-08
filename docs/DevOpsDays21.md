@@ -2,7 +2,7 @@
 
 Hi Guys, I'm Vova from SHALB!
 
-In SHALB we build and support a hundreds of infrastructures so we have some outcome and expierence that we'd like to share.
+In SHALB we build and support a hundreds of infrastructures so we have some outcome and experience that we'd like to share.
 
 ## Problems of the modern Cloud Native infrastructures
 
@@ -25,7 +25,7 @@ And you need one-shot to be clear that it is fully automated and can be GitOps-e
 So thats why:
 
 - Terragrunt, Terraspace and Atlantis exist for Terraform
-- Helmfile, Helm Operator exist form Helm 
+- Helmfile, Helm Operator exist form Helm.
 - and Helm exist for K8s yaml :)b
 
 ### Its hard to deal with variables and secrets
