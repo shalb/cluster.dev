@@ -22,14 +22,15 @@ type StateSpecCommon struct {
 	Markers          map[string]interface{}      `json:"markers,omitempty"`
 	Dependencies     []StateDep                  `json:"dependencies,omitempty"`
 	RequiredProvider map[string]RequiredProvider `json:"required_providers,omitempty"`
-	Outputs          map[string]interface{}      `json:"outputs,omitempty"`
+	Outputs          map[string]bool             `json:"outputs,omitempty"`
 }
 
 type StateSpecDiffCommon struct {
 	// BackendName string      `json:"backend_name"`
-	PreHook   *hookSpec   `json:"pre_hook,omitempty"`
-	PostHook  *hookSpec   `json:"post_hook,omitempty"`
-	Providers interface{} `json:"providers,omitempty"`
+	PreHook   *hookSpec         `json:"pre_hook,omitempty"`
+	PostHook  *hookSpec         `json:"post_hook,omitempty"`
+	Providers interface{}       `json:"providers,omitempty"`
+	Outputs   map[string]string `json:"outputs,omitempty"`
 }
 
 type StateCommon interface {
@@ -49,6 +50,7 @@ func (m *Module) GetStateCommon() StateSpecCommon {
 		Markers:          m.markers,
 		Dependencies:     deps,
 		RequiredProvider: m.requiredProviders,
+		Outputs:          m.expectedOutputs,
 	}
 	if len(m.dependencies) == 0 {
 		st.Dependencies = []StateDep{}
@@ -67,6 +69,10 @@ func (m *Module) GetStateDiffCommon() StateSpecDiffCommon {
 		PreHook:   m.preHook,
 		PostHook:  m.postHook,
 		Providers: m.providers,
+		Outputs:   map[string]string{},
+	}
+	for output := range m.expectedOutputs {
+		st.Outputs[output] = "<terraform output>"
 	}
 	return st
 }
@@ -123,6 +129,7 @@ func (m *Module) LoadStateCommon(spec StateCommon, modKey string, p *project.Sta
 	m.providers = mState.Providers
 	m.requiredProviders = mState.RequiredProvider
 	m.codeDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
+	m.expectedOutputs = mState.Outputs
 	return nil
 }
 

@@ -3,7 +3,9 @@ package project
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"text/template"
@@ -118,4 +120,34 @@ func BcryptString(pwd []byte) (string, error) {
 		return "", err
 	}
 	return string(hash), nil
+}
+
+type tmplFileReader struct {
+	infraPtr *Infrastructure
+}
+
+func (t tmplFileReader) ReadFile(path string) (string, error) {
+	vfPath := filepath.Join(t.infraPtr.TemplateDir, path)
+	valuesFileContent, err := ioutil.ReadFile(vfPath)
+	if err != nil {
+		log.Debugf(err.Error())
+		return "", err
+	}
+	return string(valuesFileContent), nil
+}
+
+func (t tmplFileReader) TemplateFile(path string) (string, error) {
+	vfPath := filepath.Join(t.infraPtr.TemplateDir, path)
+	rawFile, err := ioutil.ReadFile(vfPath)
+	if err != nil {
+		log.Debugf(err.Error())
+		return "", err
+	}
+	templatedFile, errIsWarn, err := t.infraPtr.TemplateTry(rawFile)
+	if err != nil {
+		if !errIsWarn {
+			log.Fatal(err.Error())
+		}
+	}
+	return string(templatedFile), nil
 }

@@ -16,15 +16,16 @@ import (
 const infraObjKindKey = "Infrastructure"
 
 type Infrastructure struct {
-	ProjectPtr  *Project
-	Backend     Backend
-	Name        string
-	BackendName string
-	TemplateSrc string
-	TemplateDir string
-	Templates   []InfraTemplate
-	Variables   map[string]interface{}
-	ConfigData  map[string]interface{}
+	ProjectPtr       *Project
+	Backend          Backend
+	Name             string
+	BackendName      string
+	TemplateSrc      string
+	TemplateDir      string
+	Templates        []InfraTemplate
+	Variables        map[string]interface{}
+	ConfigData       map[string]interface{}
+	TmplFunctionsMap template.FuncMap
 }
 
 type infrastructureState struct {
@@ -58,11 +59,23 @@ func (p *Project) readInfrastructureObj(infraSpec ObjectData) error {
 	}
 
 	infra := Infrastructure{
-		ProjectPtr: p,
-		ConfigData: infraSpec.data,
-		Name:       name,
+		ProjectPtr:       p,
+		ConfigData:       infraSpec.data,
+		Name:             name,
+		TmplFunctionsMap: make(template.FuncMap),
 	}
 
+	// Copy project template functions and add infra based (like readFile and templateFile)
+	for fName, f := range p.TmplFunctionsMap {
+		infra.TmplFunctionsMap[fName] = f
+	}
+	fReader := tmplFileReader{
+		infraPtr: &infra,
+	}
+	infra.TmplFunctionsMap["readFile"] = fReader.ReadFile
+	infra.TmplFunctionsMap["templateFile"] = fReader.TemplateFile
+
+	// Copy secrets from project for templating.
 	infra.ConfigData["secret"], _ = p.configData["secret"]
 
 	tmplSource, ok := infraSpec.data["template"].(string)
@@ -159,7 +172,7 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 	return nil
 }
 
-// TemplateTry apply infrastructure variables to template data.
+// TemplateMust apply infrastructure variables to template data.
 // If template has unresolved variables - function will return an error.
 func (i *Infrastructure) TemplateMust(data []byte) (res []byte, err error) {
 	return i.tmplWithMissingKey(data, "error")
@@ -177,6 +190,7 @@ func (i *Infrastructure) TemplateTry(data []byte) (res []byte, warn bool, err er
 }
 
 func (i *Infrastructure) tmplWithMissingKey(data []byte, missingKey string) (res []byte, err error) {
+
 	tmpl, err := template.New("main").Funcs(i.ProjectPtr.TmplFunctionsMap).Option("missingkey=" + missingKey).Parse(string(data))
 	if err != nil {
 		return

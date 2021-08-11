@@ -15,7 +15,7 @@ type State struct {
 	ModType    string      `json:"type"`
 	HelmOpts   interface{} `json:"helm_opts,omitempty"`
 	Sets       interface{} `json:"sets,omitempty"`
-	Values     []byte      `json:"values,omitempty"`
+	Values     [][]byte    `json:"values,omitempty"`
 }
 
 func (m *Module) GetState() interface{} {
@@ -27,7 +27,7 @@ func (m *Module) GetState() interface{} {
 		Kubeconfig:      m.kubeconfig,
 		HelmOpts:        m.helmOpts,
 		Sets:            m.sets,
-		Values:          m.valuesFileContent,
+		Values:          m.valuesFilesList,
 	}
 	return stTf
 }
@@ -37,14 +37,14 @@ type StateDiff struct {
 	Source   string      `json:"source"`
 	HelmOpts interface{} `json:"helm_opts,omitempty"`
 	Sets     interface{} `json:"sets,omitempty"`
-	Values   []byte      `json:"values,omitempty"`
+	Values   [][]byte    `json:"values,omitempty"`
 }
 
 func (m *Module) GetDiffData() interface{} {
 	st := m.GetStateDiffCommon()
 	stTf := StateDiff{
 		StateSpecDiffCommon: st,
-		Values:              m.valuesFileContent,
+		Values:              m.valuesFilesList,
 		Source:              m.source,
 		HelmOpts:            m.helmOpts,
 		Sets:                m.sets,
@@ -70,6 +70,6 @@ func (m *Module) LoadState(stateData interface{}, modKey string, p *project.Stat
 	m.sets = s.Sets.(map[string]interface{})
 	m.source = s.Source
 	m.kubeconfig = s.Kubeconfig
-	m.valuesFileContent = s.Values
+	m.valuesFilesList = s.Values
 	return m.LoadStateCommon(s.StateSpecCommon, modKey, p)
 }
