@@ -11,15 +11,17 @@ import (
 	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/zclconf/go-cty/cty"
+	"gopkg.in/yaml.v3"
 )
 
 type Module struct {
 	common.Module
-	source            string
-	helmOpts          map[string]interface{}
-	sets              map[string]interface{}
-	kubeconfig        string
-	valuesFileContent []byte
+	source          string
+	helmOpts        map[string]interface{}
+	sets            map[string]interface{}
+	kubeconfig      string
+	valuesFilesList [][]byte
+	valuesYAML      []map[string]interface{}
 }
 
 func (m *Module) KindKey() string {
@@ -27,10 +29,10 @@ func (m *Module) KindKey() string {
 }
 
 func (m *Module) genMainCodeBlock() ([]byte, error) {
-	var marker string
-	if len(m.valuesFileContent) > 0 {
-		m.FilesList()["values.yaml"] = m.valuesFileContent
-	}
+	// var marker string
+	// if len(m.valuesFileContent) > 0 {
+	// 	m.FilesList()["values.yaml"] = m.valuesFileContent
+	// }
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	providerBlock := rootBody.AppendNewBlock("provider", []string{"helm"})
@@ -66,8 +68,13 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 			hcltools.ReplaceStingMarkerInBody(helmBody, hash, remoteStateRef)
 		}
 	}
-	if len(m.valuesFileContent) > 0 {
-		hcltools.ReplaceStingMarkerInBody(helmBody, marker, "file(\"./values.yaml\")")
+	if len(m.valuesFilesList) > 0 {
+		ctyValuesList := []cty.Value{}
+		for _, v := range m.valuesFilesList {
+			ctyValuesList = append(ctyValuesList, cty.StringVal(string(v)))
+		}
+		helmBody.SetAttributeValue("values", cty.ListVal(ctyValuesList))
+		//hcltools.ReplaceStingMarkerInBody(helmBody, marker, "file(\"./values.yaml\")")
 	}
 	return f.Bytes(), nil
 }
@@ -80,7 +87,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 	}
 	source, ok := spec["source"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("Incorrect module source, %v", m.Key())
+		return fmt.Errorf("read module config: incorrect module source, %v", m.Key())
 	}
 	for key, val := range source {
 		m.helmOpts[key] = val
@@ -103,15 +110,52 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 		}
 	}
 	m.helmOpts["name"] = spec["name"]
-	valuesFile, ok := spec["values_file"].(string)
+	valuesCat, ok := spec["values"]
 	if ok {
-		vfPath := filepath.Join(m.InfraPtr().TemplateDir, valuesFile)
-		valuesFileContent, err := ioutil.ReadFile(vfPath)
-		if err != nil {
-			log.Debugf(err.Error())
-			return fmt.Errorf("can't load values file: %v", err)
+		valuesCatList, check := valuesCat.([]interface{})
+		if !check {
+			return fmt.Errorf("read module config: 'values' have unknown type: %v", err)
 		}
-		m.valuesFileContent = valuesFileContent
+		m.valuesFilesList = [][]byte{}
+		log.Warnf("%v", ok)
+
+		for _, valuesCat := range valuesCatList {
+			valuesCatMap, check := valuesCat.(map[string]interface{})
+			if !check {
+				return fmt.Errorf("read module config: 'values' have unknown format: %v", err)
+			}
+			applyTemplate, exists := valuesCatMap["apply_template"].(bool)
+			if !exists {
+				applyTemplate = true
+			}
+			valuesFileName, ok := valuesCatMap["file"].(string)
+			if !ok {
+				return fmt.Errorf("read module config: 'values.file' is required field: %v", err)
+			}
+			vfPath := filepath.Join(m.InfraPtr().TemplateDir, valuesFileName)
+			valuesFileContent, err := ioutil.ReadFile(vfPath)
+			if err != nil {
+				log.Debugf(err.Error())
+				return fmt.Errorf("read module config: can't load values file: %v", err)
+			}
+			values := valuesFileContent
+			if applyTemplate {
+				renderedValues, errIsWarn, err := m.InfraPtr().TemplateTry(valuesFileContent)
+				if err != nil {
+					if !errIsWarn {
+						log.Fatal(err.Error())
+					}
+				}
+				values = renderedValues
+			}
+			vYAML := make(map[string]interface{})
+			err = yaml.Unmarshal(values, &vYAML)
+			if err != nil {
+				return fmt.Errorf("read module config: unmarshal values file: ", err.Error())
+			}
+			m.valuesYAML = append(m.valuesYAML, vYAML)
+			m.valuesFilesList = append(m.valuesFilesList, values)
+		}
 	}
 	pv, ok := spec["provider_version"].(string)
 	if ok {
@@ -139,6 +183,14 @@ func (m *Module) ReplaceMarkers() error {
 		return err
 	}
 	err = project.ScanMarkers(m.sets, m.RemoteStatesScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.valuesYAML, m.YamlBlockMarkerScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.valuesYAML, m.RemoteStatesScanner, m)
 	if err != nil {
 		return err
 	}

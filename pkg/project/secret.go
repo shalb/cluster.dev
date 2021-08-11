@@ -43,6 +43,7 @@ func (p *Project) readSecrets() error {
 		if _, exists := p.secrets[name]; exists {
 			return fmt.Errorf("searching for secrets in the project dir: duplicated secret name '%v'", name)
 		}
+		// For use in templating.
 		p.secrets[name] = Secret{Filename: filename, DriverKey: secretDriver.Key(), Data: d}
 		if _, exists := p.configData["secret"]; !exists {
 			p.configData["secret"] = map[string]interface{}{}

@@ -176,7 +176,7 @@ func (g *Generator) RunMainMenu(subCategory ...string) (escaped bool, err error)
 	}
 	var keysList string
 	i := 0
-	for k, _ := range generatorSpecs {
+	for k := range generatorSpecs {
 		if i != 0 {
 			keysList += "\n"
 		}
