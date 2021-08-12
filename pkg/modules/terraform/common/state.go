@@ -120,7 +120,6 @@ func (m *Module) LoadStateCommon(spec StateCommon, modKey string, p *project.Sta
 	m.projectPtr = &p.Project
 	m.dependencies = modDeps
 	m.backendPtr = bPtr
-	m.expectedOutputs = make(map[string]bool)
 	m.filesList = make(map[string][]byte)
 	m.specRaw = make(map[string]interface{})
 	m.markers = make(map[string]interface{})
@@ -130,6 +129,9 @@ func (m *Module) LoadStateCommon(spec StateCommon, modKey string, p *project.Sta
 	m.requiredProviders = mState.RequiredProvider
 	m.codeDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
 	m.expectedOutputs = mState.Outputs
+	if m.expectedOutputs == nil {
+		m.expectedOutputs = make(map[string]bool)
+	}
 	return nil
 }
 
