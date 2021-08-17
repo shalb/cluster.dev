@@ -76,7 +76,12 @@ func (m *Module) LoadState(stateData interface{}, modKey string, p *project.Stat
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
-	m.inputs = s.Inputs.(map[string]interface{})
+	inputs, ok := s.Inputs.(map[string]interface{})
+	if !ok {
+		m.inputs = make(map[string]interface{})
+	} else {
+		m.inputs = inputs
+	}
 	m.source = s.Source
 	m.version = s.Version
 	err = m.LoadStateCommon(s.StateSpecCommon, modKey, p)
