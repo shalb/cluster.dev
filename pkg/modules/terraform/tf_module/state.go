@@ -15,7 +15,7 @@ type State struct {
 	Source      string            `json:"source"`
 	Version     string            `json:"version,omitempty"`
 	ModType     string            `json:"type"`
-	Inputs      interface{}       `json:"inputs"`
+	Inputs      interface{}       `json:"inputs,omitempty"`
 	LocalModule map[string]string `json:"local_module"`
 }
 
@@ -23,7 +23,7 @@ type StateDiff struct {
 	common.StateSpecDiffCommon
 	Source      string            `json:"source"`
 	Version     string            `json:"version,omitempty"`
-	Inputs      interface{}       `json:"inputs"`
+	Inputs      interface{}       `json:"inputs,omitempty"`
 	LocalModule map[string]string `json:"local_module"`
 }
 
