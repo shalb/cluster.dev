@@ -117,9 +117,9 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 	}
 	m.source = source
 	mInputs, ok := spec["inputs"].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("Incorrect module inputs")
-	}
+	// if !ok {
+	// 	return fmt.Errorf("Incorrect module inputs")
+	// }
 	m.inputs = mInputs
 	return nil
 }
