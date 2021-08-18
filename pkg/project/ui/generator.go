@@ -332,7 +332,7 @@ func getDirSubCats(path string, tFS TmplFS) (cats []string, err error) {
 func getTemplateSpec(catDir, templateName string, tFS TmplFS) (res templateConfSpec, err error) {
 	rs := templateConfSpec{}
 	confFileName := filepath.Join(catDir, templateName, "config.yaml")
-	log.Warn(confFileName)
+	// log.Warn(confFileName)
 	configRaw, err := tFS.ReadFile(confFileName)
 	if err != nil {
 		err = fmt.Errorf("reading template: internal error (file not found %v): %v", confFileName, err.Error())

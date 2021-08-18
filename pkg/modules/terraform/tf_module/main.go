@@ -60,7 +60,6 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
 		}
 		refStr := common.DependencyToRemoteStateRef(marker)
-		// log.Warnf("module markers:", marker.Module.Key())
 		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, refStr)
 	}
 	return f.Bytes(), nil

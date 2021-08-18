@@ -34,6 +34,7 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 		dataBody.SetAttributeValue("value", hclVal)
 		for hash, m := range m.Markers() {
 			marker, ok := m.(*project.Dependency)
+			// log.Warnf("kubernetes marker printer: %v", marker)
 			refStr := common.DependencyToRemoteStateRef(marker)
 			if !ok {
 				return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")

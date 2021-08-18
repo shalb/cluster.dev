@@ -74,28 +74,24 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 		}
 
 		moduleBody.SetAttributeValue("manifest", ctyVal)
-		depMarkers, ok := m.ProjectPtr().Markers[common.RemoteStateMarkerCatName]
-		if ok {
-			for hash, marker := range depMarkers.(map[string]*project.Dependency) {
-				if marker.Module == nil {
-					continue
-				}
-				remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output)
-				hcltools.ReplaceStingMarkerInBody(moduleBody, hash, remoteStateRef)
+		for hash, m := range m.Markers() {
+			marker, ok := m.(*project.Dependency)
+			refStr := common.DependencyToRemoteStateRef(marker)
+			if !ok {
+				return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
 			}
-		}
-	}
-	depMarkers, ok := m.ProjectPtr().Markers[common.RemoteStateMarkerCatName]
-	if ok {
-		for hash, marker := range depMarkers.(map[string]*project.Dependency) {
-			if marker.Module == nil {
-				continue
-			}
-			remoteStateRef := fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", marker.Module.InfraName(), marker.Module.Name(), marker.Output)
-			hcltools.ReplaceStingMarkerInBody(providerBody, hash, remoteStateRef)
+			hcltools.ReplaceStingMarkerInBody(moduleBody, hash, refStr)
 		}
 	}
 
+	for hash, m := range m.Markers() {
+		marker, ok := m.(*project.Dependency)
+		refStr := common.DependencyToRemoteStateRef(marker)
+		if !ok {
+			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+		}
+		hcltools.ReplaceStingMarkerInBody(providerBody, hash, refStr)
+	}
 	return f.Bytes(), nil
 }
 

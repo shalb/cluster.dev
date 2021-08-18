@@ -15,7 +15,7 @@ type State struct {
 	ModType    string      `json:"type"`
 	HelmOpts   interface{} `json:"helm_opts,omitempty"`
 	Sets       interface{} `json:"sets,omitempty"`
-	Values     [][]byte    `json:"values,omitempty"`
+	Values     []string    `json:"values,omitempty"`
 }
 
 func (m *Module) GetState() interface{} {
@@ -37,7 +37,7 @@ type StateDiff struct {
 	Source   string      `json:"source"`
 	HelmOpts interface{} `json:"helm_opts,omitempty"`
 	Sets     interface{} `json:"sets,omitempty"`
-	Values   [][]byte    `json:"values,omitempty"`
+	Values   []string    `json:"values,omitempty"`
 }
 
 func (m *Module) GetDiffData() interface{} {
