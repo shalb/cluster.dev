@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -15,7 +14,7 @@ type State struct {
 	Source      string            `json:"source"`
 	Version     string            `json:"version,omitempty"`
 	ModType     string            `json:"type"`
-	Inputs      interface{}       `json:"inputs"`
+	Inputs      interface{}       `json:"inputs,omitempty"`
 	LocalModule map[string]string `json:"local_module"`
 }
 
@@ -23,7 +22,7 @@ type StateDiff struct {
 	common.StateSpecDiffCommon
 	Source      string            `json:"source"`
 	Version     string            `json:"version,omitempty"`
-	Inputs      interface{}       `json:"inputs"`
+	Inputs      interface{}       `json:"inputs,omitempty"`
 	LocalModule map[string]string `json:"local_module"`
 }
 
@@ -78,7 +77,7 @@ func (m *Module) LoadState(stateData interface{}, modKey string, p *project.Stat
 	}
 	inputs, ok := s.Inputs.(map[string]interface{})
 	if !ok {
-		m.inputs = make(map[string]interface{})
+		m.inputs = nil
 	} else {
 		m.inputs = inputs
 	}
@@ -98,6 +97,5 @@ func (m *Module) LoadState(stateData interface{}, modKey string, p *project.Stat
 			m.localModule[dir] = decodedFile
 		}
 	}
-	log.Debugf("%+v", s.LocalModule)
 	return nil
 }
