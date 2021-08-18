@@ -1,0 +1,8 @@
+name: cdev-tests-local
+template: ./local-tmpl/
+kind: Infrastructure
+backend: aws-backend
+variables:
+  data: {{ remoteState "cdev-tests.create-bucket.test" }}
+  region: {{ .project.variables.region }}
+  

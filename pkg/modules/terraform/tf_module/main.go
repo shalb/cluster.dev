@@ -56,10 +56,11 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 	}
 	for hash, m := range m.Markers() {
 		marker, ok := m.(*project.Dependency)
-		refStr := common.DependencyToRemoteStateRef(marker)
 		if !ok {
 			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
 		}
+		refStr := common.DependencyToRemoteStateRef(marker)
+		// log.Warnf("module markers:", marker.Module.Key())
 		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, refStr)
 	}
 	return f.Bytes(), nil
@@ -117,9 +118,9 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 	}
 	m.source = source
 	mInputs, ok := spec["inputs"].(map[string]interface{})
-	// if !ok {
-	// 	return fmt.Errorf("Incorrect module inputs")
-	// }
+	if !ok {
+		mInputs = nil
+	}
 	m.inputs = mInputs
 	return nil
 }
