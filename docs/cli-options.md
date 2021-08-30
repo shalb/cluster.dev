@@ -8,8 +8,6 @@
 
 * `--parallelism int`    Max parallel threads for module applying (default - `3`).
 
-* `--trace`              Print functions trace info in logs (mainly used for development).
-
 ## Apply flags
 
 * `--force`              Skip interactive approval.
