@@ -10,8 +10,6 @@ Available commands:
 
 * `help`        Help about any command.
 
-* `new`         Code generator. Creates new 'project' or 'secret' from template in an interactive mode.
-
 * `output`      Display the template's output.
 
 * `plan`        Plan all modules - build project. Try to run the plan scenario for modules. Modules often refer to the remote states of other modules. Because of this, the plan command may fail if the remote state does not already exist.
@@ -26,3 +24,7 @@ Available commands:
     * `ls`        List secrets in current project.
     * `edit`      Edit secret by name. Usage: `cdev secret edit secret-name`.
     * `create`    Creates new 'secret' from template in an interactive mode.
+
+* `state`       State operations.
+
+   * `unlock`     Unlock state forcibly.
