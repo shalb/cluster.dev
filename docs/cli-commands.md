@@ -27,4 +27,4 @@ Available commands:
 
 * `state`       State operations.
 
-   * `unlock`     Unlock state forcibly.
+    * `unlock`     Unlock state forcibly.
