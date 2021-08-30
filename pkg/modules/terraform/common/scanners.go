@@ -51,10 +51,9 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 			*module.Dependencies() = append(*module.Dependencies(), &markerTmp)
 			m.markers[key] = &markerTmp
 			depModule.ExpectedOutputs()[marker.Output] = true
-			return reflect.ValueOf(resString), nil
 		}
 	}
-	return subVal, nil
+	return reflect.ValueOf(resString), nil
 }
 func (m *Module) YamlBlockMarkerScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
 	subVal := reflect.ValueOf(data.Interface())
