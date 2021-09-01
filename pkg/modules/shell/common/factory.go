@@ -33,8 +33,7 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 
 func init() {
 	modDrv := Factory{}
-	log.Debug("Registering module driver 'printer'")
-	if err := project.RegisterModuleFactory(&modDrv, "printer"); err != nil {
-		log.Trace("Can't register module driver 'printer'.")
+	if err := project.RegisterModuleFactory(&modDrv, "shell"); err != nil {
+		log.Trace("Can't register module driver 'shell'.")
 	}
 }

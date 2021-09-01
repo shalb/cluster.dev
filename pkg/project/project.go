@@ -89,7 +89,9 @@ func NewEmptyProject() *Project {
 // LoadProjectBase read project data in current directory, create base project, and load secrets.
 // Infrastructures, backends and other objects are not loads.
 func LoadProjectBase() (*Project, error) {
-
+	for mf := range ModuleFactoriesMap {
+		log.Debugf("%v", mf)
+	}
 	project := NewEmptyProject()
 	err := project.MkBuildDir()
 	if err != nil {
