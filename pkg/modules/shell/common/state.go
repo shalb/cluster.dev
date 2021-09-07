@@ -15,14 +15,17 @@ type StateDep struct {
 }
 
 type StateSpec struct {
-	BackendName  string                 `json:"backend_name"`
-	Markers      map[string]interface{} `json:"markers,omitempty"`
-	Dependencies []StateDep             `json:"dependencies,omitempty"`
-	Outputs      map[string]bool        `json:"outputs,omitempty"`
+	BackendName     string                 `json:"backend_name"`
+	Markers         map[string]interface{} `json:"markers,omitempty"`
+	Dependencies    []StateDep             `json:"dependencies,omitempty"`
+	Outputs         map[string]bool        `json:"outputs,omitempty"`
+	CustomStateData map[string]interface{} `json:"custom_state_data"`
+	ModType         string                 `json:"type"`
 }
 
 type StateSpecDiff struct {
-	Outputs map[string]string `json:"outputs,omitempty"`
+	Outputs         map[string]string      `json:"outputs,omitempty"`
+	CustomStateData map[string]interface{} `json:"custom_state_data"`
 }
 
 type StateCommon interface {
@@ -35,11 +38,16 @@ func (m *Module) GetState() interface{} {
 		deps[i].Module = dep.ModuleName
 	}
 	st := StateSpec{
-		BackendName:  m.backendPtr.Name(),
-		Markers:      m.markers,
-		Dependencies: deps,
-		Outputs:      m.expectedOutputs,
+		BackendName:     m.backendPtr.Name(),
+		Markers:         m.markers,
+		Dependencies:    deps,
+		Outputs:         m.expectedOutputs,
+		CustomStateData: make(map[string]interface{}),
+		ModType:         m.KindKey(),
 	}
+	st.CustomStateData["apply_conf"] = m.ApplyConf.Commands
+	st.CustomStateData["plan_conf"] = m.PlanConf.Commands
+	st.CustomStateData["destroy_conf"] = m.DestroyConf.Commands
 	if len(m.dependencies) == 0 {
 		st.Dependencies = []StateDep{}
 	}
@@ -53,11 +61,15 @@ func (m *Module) GetStateDiff() StateSpecDiff {
 		deps[i].Module = dep.ModuleName
 	}
 	st := StateSpecDiff{
-		Outputs: map[string]string{},
+		Outputs:         map[string]string{},
+		CustomStateData: make(map[string]interface{}),
 	}
 	for output := range m.expectedOutputs {
 		st.Outputs[output] = "<output>"
 	}
+	st.CustomStateData["apply_conf"] = m.ApplyConf.Commands
+	st.CustomStateData["plan_conf"] = m.PlanConf.Commands
+	st.CustomStateData["destroy_conf"] = m.DestroyConf.Commands
 	return st
 }
 
@@ -76,8 +88,10 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	}
 	infraName := mkSplitted[0]
 	modName := mkSplitted[1]
-	mState, ok := spec.(StateSpec)
-	if !ok {
+	var mState StateSpec
+	err := utils.JSONInterfaceToType(spec, &mState)
+
+	if err != nil {
 		return fmt.Errorf("loading module state common: can't convert state data, internal error")
 	}
 
@@ -106,7 +120,7 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	if !exists {
 		return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
 	}
-	m.name = modName
+	m.MyName = modName
 	m.infraPtr = infra
 	m.projectPtr = &p.Project
 	m.dependencies = modDeps
@@ -114,8 +128,18 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	m.filesList = make(map[string][]byte)
 	m.specRaw = make(map[string]interface{})
 	m.markers = make(map[string]interface{})
-	m.codeDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
+	m.WorkDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
 	m.expectedOutputs = mState.Outputs
+	m.ApplyConf = OperationConfig{}
+	err = utils.JSONInterfaceToType(mState.CustomStateData["apply_conf"], &m.ApplyConf.Commands)
+	if err != nil {
+		return fmt.Errorf("load module from state: %v", err.Error())
+	}
+	m.PlanConf = OperationConfig{}
+	err = utils.JSONInterfaceToType(mState.CustomStateData["plan_conf"], &m.PlanConf.Commands)
+	if err != nil {
+		return fmt.Errorf("load module from state: %v", err.Error())
+	}
 	if m.expectedOutputs == nil {
 		m.expectedOutputs = make(map[string]bool)
 	}

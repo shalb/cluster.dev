@@ -7,20 +7,30 @@ import (
 	"path/filepath"
 
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 // CreateCodeDir generate all terraform code for project.
 func (m *Module) CreateCodeDir() error {
-	err := os.Mkdir(m.codeDir, 0755)
-
-	for fn, f := range m.FilesList() {
-		filePath := filepath.Join(m.codeDir, fn)
+	err := os.Mkdir(m.cacheDir, 0755)
+	if err != nil {
+		return fmt.Errorf("read module '%v': '%v'", m.Name(), err.Error())
+	}
+	err = utils.CopyDirectory(m.WorkDir, m.cacheDir)
+	if err != nil {
+		return fmt.Errorf("read module '%v': creating cache: '%v'", m.Name(), err.Error())
+	}
+	for _, f := range m.CreateFiles {
+		filePath := filepath.Join(m.cacheDir, f.File)
 		// relPath, _ := filepath.Rel(config.Global.WorkingDir, filePath)
-		if m.projectPtr.CheckContainsMarkers(string(f)) {
-			log.Debugf("Unprocessed markers:\n %+v", string(f))
-			return fmt.Errorf("misuse of functions in a template: module: '%s.%s'", m.infraPtr.Name, m.name)
+		if m.projectPtr.CheckContainsMarkers(f.Content) {
+			log.Debugf("Unprocessed markers:\n %+v", f.Content)
+			return fmt.Errorf("misuse of functions in a template: module: '%s.%s'", m.infraPtr.Name, m.MyName)
 		}
-		err = ioutil.WriteFile(filePath, f, 0777)
+		if utils.FileExists(filePath) {
+			return fmt.Errorf("read module '%v': creating cache: file '%v' is already  exists in working dir", m.Name(), f.File)
+		}
+		err = ioutil.WriteFile(filePath, []byte(f.Content), 0777)
 		if err != nil {
 			log.Debug(err.Error())
 			return err
@@ -30,6 +40,5 @@ func (m *Module) CreateCodeDir() error {
 }
 
 func (m *Module) Build() error {
-
-	return nil
+	return m.CreateCodeDir()
 }
