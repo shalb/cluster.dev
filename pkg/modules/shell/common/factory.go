@@ -12,6 +12,11 @@ type Factory struct {
 // New creates new module driver factory.
 func (f *Factory) New(spec map[string]interface{}, infra *project.Infrastructure) (project.Module, error) {
 	mod := Module{}
+	mod.outputParsers = map[string]outputParser{
+		"json":      mod.JSONOutputParser,
+		"regex":     mod.RegexOutputParser,
+		"separator": mod.SeparatorOutputParser,
+	}
 	err := mod.ReadConfig(spec, infra)
 	if err != nil {
 		log.Debug(err.Error())

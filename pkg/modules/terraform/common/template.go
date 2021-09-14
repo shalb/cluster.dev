@@ -19,7 +19,6 @@ func (m *TerraformTemplateDriver) AddTemplateFunctions(p *project.Project) {
 	f := terraformTemplateFunctions{projectPtr: p}
 	funcs := map[string]interface{}{
 		"remoteState": f.addRemoteStateMarker,
-		"insertYAML":  f.addYAMLBlockMarker,
 	}
 	for k, f := range funcs {
 		_, ok := p.TmplFunctionsMap[k]
@@ -36,7 +35,6 @@ func (m *TerraformTemplateDriver) Name() string {
 
 // RemoteStateMarkerCatName - name of markers category for remote states
 const RemoteStateMarkerCatName = "RemoteStateMarkers"
-const InsertYAMLMarkerCatName = "insertYAMLMarkers"
 
 // addRemoteStateMarker function for template. Add hash marker, witch will be replaced with desired remote state.
 func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, error) {
@@ -57,17 +55,6 @@ func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, 
 	}
 	marker := project.CreateMarker("remoteState", fmt.Sprintf("%s.%s.%s", splittedPath[0], splittedPath[1], splittedPath[2]))
 	m.projectPtr.Markers[RemoteStateMarkerCatName].(map[string]*project.Dependency)[marker] = &dep
-	return fmt.Sprintf("%s", marker), nil
-}
-
-// addYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
-func (m *terraformTemplateFunctions) addYAMLBlockMarker(data interface{}) (string, error) {
-	_, ok := m.projectPtr.Markers[InsertYAMLMarkerCatName]
-	if !ok {
-		m.projectPtr.Markers[InsertYAMLMarkerCatName] = map[string]interface{}{}
-	}
-	marker := project.CreateMarker("YAML", fmt.Sprintf("%v", data))
-	m.projectPtr.Markers[InsertYAMLMarkerCatName].(map[string]interface{})[marker] = data
 	return fmt.Sprintf("%s", marker), nil
 }
 

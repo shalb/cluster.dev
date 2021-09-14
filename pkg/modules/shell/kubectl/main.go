@@ -43,11 +43,6 @@ func (m *Module) Apply() (err error) {
 	if err != nil {
 		return
 	}
-	outputs, err := m.Outputs()
-	if err != nil {
-		return
-	}
-	m.outputRaw = outputs
 	return
 }
 

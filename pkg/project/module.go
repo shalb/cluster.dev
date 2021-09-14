@@ -23,6 +23,7 @@ type Module interface {
 	LoadState(interface{}, string, *StateProject) error
 	KindKey() string
 	CodeDir() string
+	Markers() map[string]interface{}
 	UpdateProjectRuntimeData(p *Project) error
 }
 

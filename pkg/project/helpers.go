@@ -62,6 +62,9 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 	if out.Kind() == reflect.Ptr && !out.IsNil() {
 		out = out.Elem()
 	}
+	if out.IsNil() {
+		return nil
+	}
 	switch out.Kind() {
 	case reflect.Slice:
 		for i := 0; i < out.Len(); i++ {
@@ -132,14 +135,29 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 				}
 			}
 		}
+	case reflect.Interface:
+		log.Warnf("%v", out)
+		if reflect.TypeOf(out.Interface()).Kind() == reflect.String {
+			if !out.CanSet() {
+				log.Fatal("Internal error: can't set interface field.")
+			}
+			val, err := procFunc(out, module)
+			if err != nil {
+				return err
+			}
+			out.Set(val)
+		}
 	case reflect.String:
 		val, err := procFunc(out, module)
 		if err != nil {
 			return err
 		}
+		if !out.CanSet() {
+			log.Fatalf("Internal error: can't set string field.")
+		}
 		out.Set(val)
 	default:
-
+		log.Debugf("Unknown type: %v", out.Type())
 	}
 	return nil
 }

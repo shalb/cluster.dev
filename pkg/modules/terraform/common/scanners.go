@@ -23,8 +23,8 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 	if !ok {
 		return subVal, nil
 	}
-	markersList := map[string]*project.Dependency{}
-	markersList, ok = depMarkers.(map[string]*project.Dependency)
+	//markersList := map[string]*project.Dependency{}
+	markersList, ok := depMarkers.(map[string]*project.Dependency)
 	if !ok {
 		err := utils.JSONInterfaceToType(depMarkers, &markersList)
 		if err != nil {
@@ -54,18 +54,4 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 		}
 	}
 	return reflect.ValueOf(resString), nil
-}
-func (m *Module) YamlBlockMarkerScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
-	subVal := reflect.ValueOf(data.Interface())
-
-	yamlMarkers, ok := module.ProjectPtr().Markers[InsertYAMLMarkerCatName].(map[string]interface{})
-	if !ok {
-		return subVal, nil
-	}
-	for hash := range yamlMarkers {
-		if subVal.String() == hash {
-			return reflect.ValueOf(yamlMarkers[hash]), nil
-		}
-	}
-	return subVal, nil
 }

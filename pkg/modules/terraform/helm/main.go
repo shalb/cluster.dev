@@ -169,7 +169,7 @@ func (m *Module) ReplaceMarkers() error {
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.helmOpts, m.YamlBlockMarkerScanner, m)
+	err = project.ScanMarkers(m.helmOpts, project.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (m *Module) ReplaceMarkers() error {
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.valuesFilesList, m.YamlBlockMarkerScanner, m)
+	err = project.ScanMarkers(m.valuesFilesList, project.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (m *Module) ReplaceMarkers() error {
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.sets, m.YamlBlockMarkerScanner, m)
+	err = project.ScanMarkers(m.sets, project.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (m *Module) ReplaceMarkers() error {
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.valuesYAML, m.YamlBlockMarkerScanner, m)
+	err = project.ScanMarkers(m.valuesYAML, project.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}

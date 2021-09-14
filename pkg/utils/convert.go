@@ -47,5 +47,7 @@ func JSONEncode(in interface{}) ([]byte, error) {
 
 // JSONDecode decode in to .
 func JSONDecode(in []byte, out interface{}) error {
-	return json.Unmarshal(in, out)
+	buffer := bytes.NewBuffer(in)
+	decoder := json.NewDecoder(buffer)
+	return decoder.Decode(&out)
 }

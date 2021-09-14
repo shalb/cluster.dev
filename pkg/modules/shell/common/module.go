@@ -1,8 +1,11 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"reflect"
+	"strings"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
@@ -18,12 +21,15 @@ type CreateFileRepresentation struct {
 
 // OperationConfig type that describe apply, plan and destroy operations.
 type OperationConfig struct {
-	Commands []string `yaml:"commands"`
+	Commands interface{} `yaml:"commands" json:"commands"`
 }
 
 type GetOutputsConfig struct {
-	Command string `yaml:"command,omitempty"`
-	Type    string `yaml:"type"`
+	Command     string `yaml:"command,omitempty"`
+	Type        string `yaml:"type"`
+	KeyRegexp   string `yaml:"key,omitempty"`
+	ValueRegexp string `yaml:"value,omitempty"`
+	Separator   string `yaml:"separator,omitempty"`
 }
 
 type StateConfigFileSpec struct {
@@ -38,6 +44,8 @@ type StateConfigSpec struct {
 	SaveEnv      bool                  `yaml:"env"`
 }
 
+type outputParser func(string, interface{}) error
+
 // Module describe cluster.dev shell module.
 type Module struct {
 	infraPtr        *project.Infrastructure
@@ -48,20 +56,53 @@ type Module struct {
 	filesList       map[string][]byte
 	specRaw         map[string]interface{}
 	markers         map[string]interface{}
-	applyOutput     []byte
+	outputRaw       []byte
 	cacheDir        string
 	MyName          string                     `yaml:"name"`
 	WorkDir         string                     `yaml:"work_dir,omitempty"`
-	Env             map[string]string          `yaml:"env,omitempty"`
+	Env             interface{}                `yaml:"env,omitempty"`
 	CreateFiles     []CreateFileRepresentation `yaml:"create_files,omitempty"`
 	ApplyConf       OperationConfig            `yaml:"apply"`
 	PlanConf        OperationConfig            `yaml:"plan,omitempty"`
 	DestroyConf     OperationConfig            `yaml:"destroy"`
 	GetOutputsConf  GetOutputsConfig           `yaml:"outputs,omitempty"`
 	StateConf       StateConfigSpec            `yaml:"state,omitempty"`
+	outputParsers   map[string]outputParser
+}
+
+func (m *Module) JSONOutputParser(in string, out interface{}) error {
+	return utils.JSONDecode([]byte(in), out)
+}
+
+func (m *Module) RegexOutputParser(in string, out interface{}) error {
+	return utils.JSONDecode([]byte(in), out)
+}
+
+func (m *Module) SeparatorOutputParser(in string, out interface{}) error {
+	rv := reflect.ValueOf(out)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return nil
+	}
+	lines := strings.Split(in, "\n")
+	if len(lines) == 0 {
+		return nil
+	}
+	outTmp := make(map[string]string)
+	for _, ln := range lines {
+		kv := strings.SplitN(ln, m.GetOutputsConf.Separator, 2)
+		if len(kv) != 2 {
+			continue
+		}
+		outTmp[kv[0]] = kv[1]
+	}
+	rv.Elem().Set(reflect.ValueOf(outTmp))
+	return nil
 }
 
 func (m *Module) Markers() map[string]interface{} {
+	if m.markers == nil {
+		m.markers = make(map[string]interface{})
+	}
 	return m.markers
 }
 
@@ -93,10 +134,17 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 		return fmt.Errorf("read module: check working dir: '%v' is not a directory", m.WorkDir)
 	}
 	m.cacheDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
+	_, ok := m.outputParsers[m.GetOutputsConf.Type]
+	if !ok {
+		return fmt.Errorf("read module: outputs config: unknown type '%v'", m.GetOutputsConf.Type)
+	}
 	return nil
 }
 
 func (m *Module) ExpectedOutputs() map[string]bool {
+	if m.expectedOutputs == nil {
+		m.expectedOutputs = make(map[string]bool)
+	}
 	return m.expectedOutputs
 }
 
@@ -110,14 +158,9 @@ func (m *Module) InfraPtr() *project.Infrastructure {
 	return m.infraPtr
 }
 
-// ApplyOutput return output of last module applying.
+// ApplyOutput return output of module applying.
 func (m *Module) ApplyOutput() []byte {
-	return m.applyOutput
-}
-
-// Outputs module.
-func (m *Module) Outputs() (string, error) {
-	return "", nil
+	return m.outputRaw
 }
 
 // ProjectPtr return ptr to module project.
@@ -151,7 +194,7 @@ func (m *Module) Apply() error {
 		log.Debug(err.Error())
 		return err
 	}
-	for key, val := range m.Env {
+	for key, val := range m.Env.(map[string]interface{}) {
 		rn.Env = append(rn.Env, fmt.Sprintf("%v=%v", key, val))
 	}
 
@@ -163,15 +206,39 @@ func (m *Module) Apply() error {
 	var errMsg []byte
 
 	var cmd string
-	for _, c := range m.ApplyConf.Commands {
+
+	// cmd = "set -e\n"
+	for _, c := range m.ApplyConf.Commands.([]interface{}) {
 		cmd += fmt.Sprintf("%v\n", c)
 	}
-	m.applyOutput, errMsg, err = rn.Run(cmd)
+	m.outputRaw, errMsg, err = rn.Run(cmd)
 	if err != nil {
 		if len(errMsg) > 1 {
 			return fmt.Errorf("%v, error output:\n %v", err.Error(), string(errMsg))
 		}
+
+		return err
 	}
+	// Get outputs.
+	if m.GetOutputsConf.Command != "" {
+		cmd = m.GetOutputsConf.Command
+		m.outputRaw, errMsg, err = rn.Run(cmd)
+		if err != nil {
+			if len(errMsg) > 1 {
+				return fmt.Errorf("%v, error output:\n %v", err.Error(), string(errMsg))
+			}
+			return err
+		}
+	}
+	var pOutputs interface{}
+	err = m.outputParsers[m.GetOutputsConf.Type](string(m.outputRaw), &pOutputs)
+	if err != nil {
+		if e, ok := err.(*json.SyntaxError); ok {
+			return fmt.Errorf("parse outputs: '%v': %v", m.GetOutputsConf.Type, e.Offset)
+		}
+		return fmt.Errorf("parse outputs '%v': %v", m.GetOutputsConf.Type, err.Error())
+	}
+	log.Warnf("Output: %v\nParsed:%v", string(m.outputRaw), pOutputs)
 	return err
 }
 
@@ -203,6 +270,30 @@ func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
+
+	tEnv := m.Env
+	err := project.ScanMarkers(&tEnv, project.YamlBlockMarkerScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(&tEnv, project.OutputsScanner, m)
+	if err != nil {
+		return err
+	}
+	m.Env = tEnv
+
+	tmpAppl := m.ApplyConf.Commands
+	err = project.ScanMarkers(&tmpAppl, project.YamlBlockMarkerScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(&tmpAppl, project.OutputsScanner, m)
+	if err != nil {
+		return err
+	}
+	log.Warnf("%v", tmpAppl)
+	m.ApplyConf.Commands = tmpAppl
+
 	return nil
 }
 

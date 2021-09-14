@@ -72,7 +72,7 @@ func (m *Module) ReplaceMarkers() error {
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.inputs, m.YamlBlockMarkerScanner, m)
+	err = project.ScanMarkers(m.inputs, project.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (m *Module) Apply() (err error) {
 	if err != nil {
 		return
 	}
-	outputs, err := m.Outputs()
+	outputs, err := m.Output()
 	if err != nil {
 		return
 	}

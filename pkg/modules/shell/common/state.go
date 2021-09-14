@@ -15,17 +15,23 @@ type StateDep struct {
 }
 
 type StateSpec struct {
-	BackendName     string                 `json:"backend_name"`
-	Markers         map[string]interface{} `json:"markers,omitempty"`
-	Dependencies    []StateDep             `json:"dependencies,omitempty"`
-	Outputs         map[string]bool        `json:"outputs,omitempty"`
-	CustomStateData map[string]interface{} `json:"custom_state_data"`
-	ModType         string                 `json:"type"`
+	BackendName     string                     `json:"backend_name"`
+	Markers         map[string]interface{}     `json:"markers,omitempty"`
+	Dependencies    []StateDep                 `json:"dependencies,omitempty"`
+	Outputs         map[string]bool            `json:"outputs,omitempty"`
+	CustomStateData map[string]interface{}     `json:"custom_state_data"`
+	CreateFiles     []CreateFileRepresentation `json:"create_files,omitempty"`
+	ModType         string                     `json:"type"`
+	ApplyConf       OperationConfig            `json:"apply"`
+	Env             interface{}                `json:"env"`
 }
 
 type StateSpecDiff struct {
-	Outputs         map[string]string      `json:"outputs,omitempty"`
-	CustomStateData map[string]interface{} `json:"custom_state_data"`
+	Outputs         map[string]string          `json:"outputs,omitempty"`
+	CustomStateData map[string]interface{}     `json:"custom_state_data"`
+	CreateFiles     []CreateFileRepresentation `json:"create_files,omitempty"`
+	ApplyConf       OperationConfig            `json:"apply"`
+	Env             interface{}                `json:"env"`
 }
 
 type StateCommon interface {
@@ -44,10 +50,10 @@ func (m *Module) GetState() interface{} {
 		Outputs:         m.expectedOutputs,
 		CustomStateData: make(map[string]interface{}),
 		ModType:         m.KindKey(),
+		ApplyConf:       m.ApplyConf,
+		Env:             m.Env,
+		CreateFiles:     m.CreateFiles,
 	}
-	st.CustomStateData["apply_conf"] = m.ApplyConf.Commands
-	st.CustomStateData["plan_conf"] = m.PlanConf.Commands
-	st.CustomStateData["destroy_conf"] = m.DestroyConf.Commands
 	if len(m.dependencies) == 0 {
 		st.Dependencies = []StateDep{}
 	}
@@ -67,9 +73,9 @@ func (m *Module) GetStateDiff() StateSpecDiff {
 	for output := range m.expectedOutputs {
 		st.Outputs[output] = "<output>"
 	}
-	st.CustomStateData["apply_conf"] = m.ApplyConf.Commands
-	st.CustomStateData["plan_conf"] = m.PlanConf.Commands
-	st.CustomStateData["destroy_conf"] = m.DestroyConf.Commands
+	st.ApplyConf = m.ApplyConf
+	st.Env = m.Env
+	st.CreateFiles = m.CreateFiles
 	return st
 }
 
@@ -84,7 +90,7 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 
 	mkSplitted := strings.Split(modKey, ".")
 	if len(mkSplitted) != 2 {
-		return fmt.Errorf("loading module state common: bad module key: %v", modKey)
+		return fmt.Errorf("loading module state: bad module key: %v", modKey)
 	}
 	infraName := mkSplitted[0]
 	modName := mkSplitted[1]
@@ -92,7 +98,7 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	err := utils.JSONInterfaceToType(spec, &mState)
 
 	if err != nil {
-		return fmt.Errorf("loading module state common: can't convert state data, internal error")
+		return fmt.Errorf("loading module state: can't convert state data: %v", err.Error())
 	}
 
 	backend, exists := p.LoaderProjectPtr.Backends[mState.BackendName]
@@ -130,16 +136,9 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	m.markers = make(map[string]interface{})
 	m.WorkDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
 	m.expectedOutputs = mState.Outputs
-	m.ApplyConf = OperationConfig{}
-	err = utils.JSONInterfaceToType(mState.CustomStateData["apply_conf"], &m.ApplyConf.Commands)
-	if err != nil {
-		return fmt.Errorf("load module from state: %v", err.Error())
-	}
-	m.PlanConf = OperationConfig{}
-	err = utils.JSONInterfaceToType(mState.CustomStateData["plan_conf"], &m.PlanConf.Commands)
-	if err != nil {
-		return fmt.Errorf("load module from state: %v", err.Error())
-	}
+	m.ApplyConf = mState.ApplyConf
+	m.Env = mState.Env
+	m.CreateFiles = mState.CreateFiles
 	if m.expectedOutputs == nil {
 		m.expectedOutputs = make(map[string]bool)
 	}

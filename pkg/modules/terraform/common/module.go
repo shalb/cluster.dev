@@ -240,8 +240,8 @@ func (m *Module) Apply() error {
 	return m.ApplyCommon()
 }
 
-// Outputs module.
-func (m *Module) Outputs() (string, error) {
+// Output module.
+func (m *Module) Output() (string, error) {
 	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
