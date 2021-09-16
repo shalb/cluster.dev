@@ -14,7 +14,7 @@ func (f *Factory) New(spec map[string]interface{}, infra *project.Infrastructure
 	mod := Module{}
 	mod.outputParsers = map[string]outputParser{
 		"json":      mod.JSONOutputParser,
-		"regex":     mod.RegexOutputParser,
+		"regexp":    mod.RegexOutputParser,
 		"separator": mod.SeparatorOutputParser,
 	}
 	err := mod.ReadConfig(spec, infra)

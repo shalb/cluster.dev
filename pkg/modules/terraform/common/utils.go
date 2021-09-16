@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (m *Module) readDeps(depsData interface{}) ([]*project.Dependency, error) {
+func (m *Module) readDeps(depsData interface{}) ([]*project.DependencyOutput, error) {
 	rawDepsList := []string{}
 	switch depsData.(type) {
 	case string:
@@ -20,7 +20,7 @@ func (m *Module) readDeps(depsData interface{}) ([]*project.Dependency, error) {
 	case []string:
 		rawDepsList = append(rawDepsList, depsData.([]string)...)
 	}
-	var res []*project.Dependency
+	var res []*project.DependencyOutput
 	for _, dep := range rawDepsList {
 		splDep := strings.Split(dep, ".")
 		if len(splDep) != 2 {
@@ -30,7 +30,7 @@ func (m *Module) readDeps(depsData interface{}) ([]*project.Dependency, error) {
 		if infNm == "this" {
 			infNm = m.InfraName()
 		}
-		res = append(res, &project.Dependency{
+		res = append(res, &project.DependencyOutput{
 			InfraName:  infNm,
 			ModuleName: splDep[1],
 		})
@@ -81,11 +81,11 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 
 }
 
-func DependencyToRemoteStateRef(dep *project.Dependency) (remoteStateRef string) {
+func DependencyToRemoteStateRef(dep *project.DependencyOutput) (remoteStateRef string) {
 	remoteStateRef = fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", dep.InfraName, dep.ModuleName, dep.Output)
 	return
 }
-func DependencyToBashRemoteState(dep *project.Dependency) (remoteStateRef string) {
+func DependencyToBashRemoteState(dep *project.DependencyOutput) (remoteStateRef string) {
 	remoteStateRef = fmt.Sprintf("\"$(terraform -chdir=../%v.%v/ output -raw %v)\"", dep.InfraName, dep.ModuleName, dep.Output)
 	return
 }

@@ -47,12 +47,15 @@ func (m *Module) GetState() interface{} {
 		BackendName:     m.backendPtr.Name(),
 		Markers:         m.markers,
 		Dependencies:    deps,
-		Outputs:         m.expectedOutputs,
+		Outputs:         make(map[string]bool),
 		CustomStateData: make(map[string]interface{}),
 		ModType:         m.KindKey(),
 		ApplyConf:       m.ApplyConf,
 		Env:             m.Env,
 		CreateFiles:     m.CreateFiles,
+	}
+	for key := range m.expectedOutputs {
+		st.Outputs[key] = true
 	}
 	if len(m.dependencies) == 0 {
 		st.Dependencies = []StateDep{}
@@ -76,6 +79,7 @@ func (m *Module) GetStateDiff() StateSpecDiff {
 	st.ApplyConf = m.ApplyConf
 	st.Env = m.Env
 	st.CreateFiles = m.CreateFiles
+
 	return st
 }
 
@@ -83,6 +87,7 @@ func (m *Module) GetDiffData() interface{} {
 	st := m.GetStateDiff()
 	diffData := map[string]interface{}{}
 	utils.JSONInterfaceToType(st, &diffData)
+	project.ScanMarkers(&diffData, project.StateOutputsScanner, m)
 	return diffData
 }
 
@@ -115,9 +120,9 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 		}
 	}
 
-	modDeps := make([]*project.Dependency, len(mState.Dependencies))
+	modDeps := make([]*project.DependencyOutput, len(mState.Dependencies))
 	for i, dep := range mState.Dependencies {
-		modDeps[i] = &project.Dependency{
+		modDeps[i] = &project.DependencyOutput{
 			ModuleName: dep.Module,
 			InfraName:  dep.Infra,
 		}
@@ -135,12 +140,15 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	m.specRaw = make(map[string]interface{})
 	m.markers = make(map[string]interface{})
 	m.WorkDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
-	m.expectedOutputs = mState.Outputs
 	m.ApplyConf = mState.ApplyConf
 	m.Env = mState.Env
 	m.CreateFiles = mState.CreateFiles
-	if m.expectedOutputs == nil {
-		m.expectedOutputs = make(map[string]bool)
+	m.expectedOutputs = make(map[string]*project.DependencyOutput)
+
+	for key := range mState.Outputs {
+		m.expectedOutputs[key] = &project.DependencyOutput{
+			Output: key,
+		}
 	}
 	return nil
 }

@@ -75,7 +75,7 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 
 		moduleBody.SetAttributeValue("manifest", ctyVal)
 		for hash, m := range m.Markers() {
-			marker, ok := m.(*project.Dependency)
+			marker, ok := m.(*project.DependencyOutput)
 			refStr := common.DependencyToRemoteStateRef(marker)
 			if !ok {
 				return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
@@ -85,7 +85,7 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 	}
 
 	for hash, m := range m.Markers() {
-		marker, ok := m.(*project.Dependency)
+		marker, ok := m.(*project.DependencyOutput)
 		refStr := common.DependencyToRemoteStateRef(marker)
 		if !ok {
 			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")

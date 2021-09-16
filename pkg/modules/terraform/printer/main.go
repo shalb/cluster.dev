@@ -33,7 +33,7 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 		}
 		dataBody.SetAttributeValue("value", hclVal)
 		for hash, m := range m.Markers() {
-			marker, ok := m.(*project.Dependency)
+			marker, ok := m.(*project.DependencyOutput)
 			// log.Warnf("kubernetes marker printer: %v", marker)
 			refStr := common.DependencyToRemoteStateRef(marker)
 			if !ok {

@@ -11,13 +11,13 @@ type Module interface {
 	ProjectPtr() *Project
 	InfraName() string
 	ReplaceMarkers() error
-	Dependencies() *[]*Dependency
+	Dependencies() *[]*DependencyOutput
 	Build() error
 	Apply() error
 	Plan() error
 	Destroy() error
 	Key() string
-	ExpectedOutputs() map[string]bool
+	ExpectedOutputs() map[string]*DependencyOutput
 	GetState() interface{}
 	GetDiffData() interface{}
 	LoadState(interface{}, string, *StateProject) error
@@ -47,12 +47,13 @@ func RegisterModuleFactory(f ModuleFactory, modType string) error {
 
 var ModuleFactoriesMap = map[string]ModuleFactory{}
 
-// Dependency describe module dependency.
-type Dependency struct {
+// DependencyOutput describe module dependency.
+type DependencyOutput struct {
 	Module     Module `json:"-"`
 	ModuleName string
 	InfraName  string
 	Output     string
+	OutputData interface{} `json:"-"`
 }
 
 // NewModule creates and return module with needed driver.

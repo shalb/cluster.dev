@@ -152,13 +152,13 @@ func (t tmplFileReader) TemplateFile(path string) (string, error) {
 	return string(templatedFile), nil
 }
 
-const insertYAMLMarkerCatName = "insertYAMLMarkers"
-const outputMarkerCatName = "outputMarkers"
+const InsertYAMLMarkerCatName = "insertYAMLMarkers"
+const OutputMarkerCatName = "outputMarkers"
 
 func YamlBlockMarkerScanner(data reflect.Value, module Module) (reflect.Value, error) {
 	subVal := reflect.ValueOf(data.Interface())
 
-	yamlMarkers, ok := module.ProjectPtr().Markers[insertYAMLMarkerCatName].(map[string]interface{})
+	yamlMarkers, ok := module.ProjectPtr().Markers[InsertYAMLMarkerCatName].(map[string]interface{})
 	if !ok {
 		return subVal, nil
 	}
@@ -172,12 +172,12 @@ func YamlBlockMarkerScanner(data reflect.Value, module Module) (reflect.Value, e
 
 // addYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
 func (p *Project) addYAMLBlockMarker(data interface{}) (string, error) {
-	_, ok := p.Markers[insertYAMLMarkerCatName]
+	_, ok := p.Markers[InsertYAMLMarkerCatName]
 	if !ok {
-		p.Markers[insertYAMLMarkerCatName] = map[string]interface{}{}
+		p.Markers[InsertYAMLMarkerCatName] = map[string]interface{}{}
 	}
 	marker := CreateMarker("YAML", fmt.Sprintf("%v", data))
-	p.Markers[insertYAMLMarkerCatName].(map[string]interface{})[marker] = data
+	p.Markers[InsertYAMLMarkerCatName].(map[string]interface{})[marker] = data
 	return fmt.Sprintf("%s", marker), nil
 }
 
@@ -205,22 +205,22 @@ func (d *GlobalTemplateDriver) Name() string {
 // addOutputMarker function for template. Add hash marker, witch will be replaced with desired unit output.
 func (p *Project) addOutputMarker(path string) (string, error) {
 
-	_, ok := p.Markers[outputMarkerCatName]
+	_, ok := p.Markers[OutputMarkerCatName]
 	if !ok {
-		p.Markers[outputMarkerCatName] = map[string]*Dependency{}
+		p.Markers[OutputMarkerCatName] = map[string]*DependencyOutput{}
 	}
 	splittedPath := strings.Split(path, ".")
 	if len(splittedPath) != 3 {
 		return "", fmt.Errorf("bad dependency path")
 	}
-	dep := Dependency{
+	dep := DependencyOutput{
 		Module:     nil,
 		InfraName:  splittedPath[0],
 		ModuleName: splittedPath[1],
 		Output:     splittedPath[2],
 	}
 	marker := CreateMarker("output", fmt.Sprintf("%s.%s.%s", splittedPath[0], splittedPath[1], splittedPath[2]))
-	p.Markers[outputMarkerCatName].(map[string]*Dependency)[marker] = &dep
+	p.Markers[OutputMarkerCatName].(map[string]*DependencyOutput)[marker] = &dep
 	return fmt.Sprintf("%s", marker), nil
 }
 
@@ -229,16 +229,13 @@ func OutputsScanner(data reflect.Value, module Module) (reflect.Value, error) {
 	var subVal = data
 	if data.Kind() != reflect.String {
 		subVal = reflect.ValueOf(data.Interface())
-
 	}
-
 	resString := subVal.String()
-	depMarkers, ok := module.ProjectPtr().Markers[outputMarkerCatName]
+	depMarkers, ok := module.ProjectPtr().Markers[OutputMarkerCatName]
 	if !ok {
 		return subVal, nil
 	}
-	//markersList := map[string]*project.Dependency{}
-	markersList, ok := depMarkers.(map[string]*Dependency)
+	markersList, ok := depMarkers.(map[string]*DependencyOutput)
 	if !ok {
 		err := utils.JSONInterfaceToType(depMarkers, &markersList)
 		if err != nil {
@@ -261,10 +258,42 @@ func OutputsScanner(data reflect.Value, module Module) (reflect.Value, error) {
 			if !exists {
 				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
 			}
-			markerTmp := Dependency{Module: depModule, ModuleName: marker.ModuleName, InfraName: InfraName, Output: marker.Output}
+			o, exists := depModule.ExpectedOutputs()[marker.Output]
+			if exists && o.OutputData != nil {
+				resString = strings.ReplaceAll(resString, key, o.OutputData.(string))
+			}
+			markerTmp := DependencyOutput{Module: depModule, ModuleName: marker.ModuleName, InfraName: InfraName, Output: marker.Output}
 			*module.Dependencies() = append(*module.Dependencies(), &markerTmp)
 			module.Markers()[key] = &markerTmp
-			depModule.ExpectedOutputs()[marker.Output] = true
+			depModule.ExpectedOutputs()[marker.Output] = &markerTmp
+		}
+	}
+	return reflect.ValueOf(resString), nil
+}
+
+// StateOutputsScanner scan state data for outputs markers and replaces them for placeholders with output ref like <output "stack.unit.output" >
+func StateOutputsScanner(data reflect.Value, module Module) (reflect.Value, error) {
+	var subVal = data
+	if data.Kind() != reflect.String {
+		subVal = reflect.ValueOf(data.Interface())
+	}
+	resString := subVal.String()
+	depMarkers, ok := module.ProjectPtr().Markers[OutputMarkerCatName]
+	if !ok {
+		return subVal, nil
+	}
+	//markersList := map[string]*project.Dependency{}
+	markersList, ok := depMarkers.(map[string]*DependencyOutput)
+	if !ok {
+		err := utils.JSONInterfaceToType(depMarkers, &markersList)
+		if err != nil {
+			return reflect.ValueOf(nil), fmt.Errorf("remote state scanner: read dependency: bad type")
+		}
+	}
+
+	for key, marker := range markersList {
+		if strings.Contains(resString, key) {
+			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<output %v.%v.%v>", marker.InfraName, marker.ModuleName, marker.Output))
 		}
 	}
 	return reflect.ValueOf(resString), nil

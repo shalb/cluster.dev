@@ -50,10 +50,13 @@ func (m *Module) GetStateCommon() StateSpecCommon {
 		Markers:          m.markers,
 		Dependencies:     deps,
 		RequiredProvider: m.requiredProviders,
-		Outputs:          m.expectedOutputs,
 	}
 	if len(m.dependencies) == 0 {
 		st.Dependencies = []StateDep{}
+	}
+	st.Outputs = make(map[string]bool)
+	for key := range m.expectedOutputs {
+		st.Outputs[key] = true
 	}
 	return st
 }
@@ -104,9 +107,9 @@ func (m *Module) LoadStateCommon(spec StateCommon, modKey string, p *project.Sta
 		}
 	}
 
-	modDeps := make([]*project.Dependency, len(mState.Dependencies))
+	modDeps := make([]*project.DependencyOutput, len(mState.Dependencies))
 	for i, dep := range mState.Dependencies {
-		modDeps[i] = &project.Dependency{
+		modDeps[i] = &project.DependencyOutput{
 			ModuleName: dep.Module,
 			InfraName:  dep.Infra,
 		}
@@ -128,9 +131,8 @@ func (m *Module) LoadStateCommon(spec StateCommon, modKey string, p *project.Sta
 	m.providers = mState.Providers
 	m.requiredProviders = mState.RequiredProvider
 	m.codeDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
-	m.expectedOutputs = mState.Outputs
 	if m.expectedOutputs == nil {
-		m.expectedOutputs = make(map[string]bool)
+		m.expectedOutputs = make(map[string]*project.DependencyOutput)
 	}
 	return nil
 }
@@ -146,9 +148,9 @@ func (m *Module) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	if !ok {
 		return utils.JSONDecode([]byte(inJSONstr), out)
 	}
-	markersList, ok := depMarkers.(map[string]*project.Dependency)
+	markersList, ok := depMarkers.(map[string]*project.DependencyOutput)
 	if !ok {
-		markersList := make(map[string]*project.Dependency)
+		markersList := make(map[string]*project.DependencyOutput)
 		err := utils.JSONInterfaceToType(depMarkers, &markersList)
 		if err != nil {
 			return fmt.Errorf("remote state scanner: read dependency: bad type")

@@ -55,7 +55,7 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 		moduleBody.SetAttributeValue("source", cty.StringVal(m.source))
 	}
 	for hash, m := range m.Markers() {
-		marker, ok := m.(*project.Dependency)
+		marker, ok := m.(*project.DependencyOutput)
 		if !ok {
 			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
 		}

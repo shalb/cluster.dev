@@ -38,8 +38,8 @@ type Module struct {
 	projectPtr        *project.Project
 	backendPtr        project.Backend
 	name              string
-	dependencies      []*project.Dependency
-	expectedOutputs   map[string]bool
+	dependencies      []*project.DependencyOutput
+	expectedOutputs   map[string]*project.DependencyOutput
 	preHook           *hookSpec
 	postHook          *hookSpec
 	codeDir           string
@@ -83,13 +83,13 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	m.infraPtr = infra
 	m.projectPtr = infra.ProjectPtr
 	m.name = mName.(string)
-	m.expectedOutputs = make(map[string]bool)
+	m.expectedOutputs = make(map[string]*project.DependencyOutput)
 	m.filesList = make(map[string][]byte)
 	m.specRaw = spec
 	m.markers = make(map[string]interface{})
 
 	// Process dependencies.
-	var modDeps []*project.Dependency
+	var modDeps []*project.DependencyOutput
 	var err error
 	dependsOn, ok := spec["depends_on"]
 	if ok {
@@ -134,7 +134,7 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	return nil
 }
 
-func (m *Module) ExpectedOutputs() map[string]bool {
+func (m *Module) ExpectedOutputs() map[string]*project.DependencyOutput {
 	return m.expectedOutputs
 }
 
@@ -169,7 +169,7 @@ func (m *Module) Backend() project.Backend {
 }
 
 // Dependencies return slice of module dependencies.
-func (m *Module) Dependencies() *[]*project.Dependency {
+func (m *Module) Dependencies() *[]*project.DependencyOutput {
 	return &m.dependencies
 }
 

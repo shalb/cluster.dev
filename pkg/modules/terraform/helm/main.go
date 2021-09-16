@@ -67,7 +67,7 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 		//hcltools.ReplaceStingMarkerInBody(helmBody, marker, "file(\"./values.yaml\")")
 	}
 	for hash, m := range m.Markers() {
-		marker, ok := m.(*project.Dependency)
+		marker, ok := m.(*project.DependencyOutput)
 		// log.Warnf("kubernetes marker HELM: %v", marker)
 		refStr := common.DependencyToRemoteStateRef(marker)
 		if !ok {

@@ -1,10 +1,10 @@
 package common
 
 import (
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/apex/log"
@@ -25,11 +25,10 @@ type OperationConfig struct {
 }
 
 type GetOutputsConfig struct {
-	Command     string `yaml:"command,omitempty"`
-	Type        string `yaml:"type"`
-	KeyRegexp   string `yaml:"key,omitempty"`
-	ValueRegexp string `yaml:"value,omitempty"`
-	Separator   string `yaml:"separator,omitempty"`
+	Command   string `yaml:"command,omitempty"`
+	Type      string `yaml:"type"`
+	Regexp    string `yaml:"regexp,omitempty"`
+	Separator string `yaml:"separator,omitempty"`
 }
 
 type StateConfigFileSpec struct {
@@ -51,8 +50,8 @@ type Module struct {
 	infraPtr        *project.Infrastructure
 	projectPtr      *project.Project
 	backendPtr      project.Backend
-	dependencies    []*project.Dependency
-	expectedOutputs map[string]bool
+	dependencies    []*project.DependencyOutput
+	expectedOutputs map[string]*project.DependencyOutput
 	filesList       map[string][]byte
 	specRaw         map[string]interface{}
 	markers         map[string]interface{}
@@ -70,27 +69,63 @@ type Module struct {
 	outputParsers   map[string]outputParser
 }
 
+// JSONOutputParser parse in (expected JSON string)
+// and stores it in the value pointed to by out.
 func (m *Module) JSONOutputParser(in string, out interface{}) error {
 	return utils.JSONDecode([]byte(in), out)
 }
 
+// RegexOutputParser parse each line od in string with key/value regexp
+// and stores result as a map in the value pointed to by out.
 func (m *Module) RegexOutputParser(in string, out interface{}) error {
-	return utils.JSONDecode([]byte(in), out)
-}
-
-func (m *Module) SeparatorOutputParser(in string, out interface{}) error {
 	rv := reflect.ValueOf(out)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
-		return nil
+		return fmt.Errorf("can't set unaddressable value")
 	}
 	lines := strings.Split(in, "\n")
 	if len(lines) == 0 {
 		return nil
 	}
-	outTmp := make(map[string]string)
+
+	outTmp := make(map[string]interface{})
+	for _, ln := range lines {
+		re, err := regexp.Compile(m.GetOutputsConf.Regexp)
+		if err != nil {
+			return err
+		}
+		parsed := re.FindStringSubmatch(ln)
+		log.Warnf("Regexp: %v %q", m.GetOutputsConf.Regexp, re)
+		if len(parsed) < 2 {
+			// ignore "not found"
+			continue
+		}
+		kv := strings.SplitN(ln, m.GetOutputsConf.Separator, 2)
+		if len(kv) != 2 {
+			continue
+		}
+		// Use first occurrence as key and value.
+		outTmp[parsed[1]] = parsed[2]
+	}
+	rv.Elem().Set(reflect.ValueOf(outTmp))
+	return nil
+}
+
+// SeparatorOutputParser split each line of in string with using separator
+// and stores result as a map in the value pointed to by out.
+func (m *Module) SeparatorOutputParser(in string, out interface{}) error {
+	rv := reflect.ValueOf(out)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return fmt.Errorf("can't set unadresseble value")
+	}
+	lines := strings.Split(in, "\n")
+	if len(lines) == 0 {
+		return nil
+	}
+	outTmp := make(map[string]interface{})
 	for _, ln := range lines {
 		kv := strings.SplitN(ln, m.GetOutputsConf.Separator, 2)
 		if len(kv) != 2 {
+			// ignore line if separator does not found
 			continue
 		}
 		outTmp[kv[0]] = kv[1]
@@ -141,9 +176,9 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 	return nil
 }
 
-func (m *Module) ExpectedOutputs() map[string]bool {
+func (m *Module) ExpectedOutputs() map[string]*project.DependencyOutput {
 	if m.expectedOutputs == nil {
-		m.expectedOutputs = make(map[string]bool)
+		m.expectedOutputs = make(map[string]*project.DependencyOutput)
 	}
 	return m.expectedOutputs
 }
@@ -179,16 +214,19 @@ func (m *Module) Backend() project.Backend {
 }
 
 // Dependencies return slice of module dependencies.
-func (m *Module) Dependencies() *[]*project.Dependency {
+func (m *Module) Dependencies() *[]*project.DependencyOutput {
 	return &m.dependencies
 }
 
 func (m *Module) Init() error {
-
 	return nil
 }
 
 func (m *Module) Apply() error {
+	err := m.ReplaceMarkers()
+	if err != nil {
+		return err
+	}
 	rn, err := executor.NewExecutor(m.cacheDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -207,7 +245,6 @@ func (m *Module) Apply() error {
 
 	var cmd string
 
-	// cmd = "set -e\n"
 	for _, c := range m.ApplyConf.Commands.([]interface{}) {
 		cmd += fmt.Sprintf("%v\n", c)
 	}
@@ -230,15 +267,19 @@ func (m *Module) Apply() error {
 			return err
 		}
 	}
-	var pOutputs interface{}
+	var pOutputs map[string]interface{}
 	err = m.outputParsers[m.GetOutputsConf.Type](string(m.outputRaw), &pOutputs)
 	if err != nil {
-		if e, ok := err.(*json.SyntaxError); ok {
-			return fmt.Errorf("parse outputs: '%v': %v", m.GetOutputsConf.Type, e.Offset)
-		}
 		return fmt.Errorf("parse outputs '%v': %v", m.GetOutputsConf.Type, err.Error())
 	}
-	log.Warnf("Output: %v\nParsed:%v", string(m.outputRaw), pOutputs)
+	for _, eo := range m.expectedOutputs {
+		op, exists := pOutputs[eo.Output]
+		if !exists {
+			return fmt.Errorf("parse outputs: unit has no output named '%v', expected by another unit", eo.Output)
+		}
+		eo.OutputData = op
+	}
+	//log.Warnf("Output: %v\nParsed:%v", string(m.outputRaw), pOutputs)
 	return err
 }
 
@@ -282,17 +323,16 @@ func (m *Module) ReplaceMarkers() error {
 	}
 	m.Env = tEnv
 
-	tmpAppl := m.ApplyConf.Commands
-	err = project.ScanMarkers(&tmpAppl, project.YamlBlockMarkerScanner, m)
+	tmpAP := m.ApplyConf.Commands
+	err = project.ScanMarkers(&tmpAP, project.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(&tmpAppl, project.OutputsScanner, m)
+	err = project.ScanMarkers(&tmpAP, project.OutputsScanner, m)
 	if err != nil {
 		return err
 	}
-	log.Warnf("%v", tmpAppl)
-	m.ApplyConf.Commands = tmpAppl
+	m.ApplyConf.Commands = tmpAP
 
 	return nil
 }

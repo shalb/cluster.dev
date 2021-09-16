@@ -24,7 +24,7 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 		return subVal, nil
 	}
 	//markersList := map[string]*project.Dependency{}
-	markersList, ok := depMarkers.(map[string]*project.Dependency)
+	markersList, ok := depMarkers.(map[string]*project.DependencyOutput)
 	if !ok {
 		err := utils.JSONInterfaceToType(depMarkers, &markersList)
 		if err != nil {
@@ -47,10 +47,12 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 			if !exists {
 				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
 			}
-			markerTmp := project.Dependency{Module: depModule, ModuleName: marker.ModuleName, InfraName: InfraName, Output: marker.Output}
+			markerTmp := project.DependencyOutput{Module: depModule, ModuleName: marker.ModuleName, InfraName: InfraName, Output: marker.Output}
 			*module.Dependencies() = append(*module.Dependencies(), &markerTmp)
 			m.markers[key] = &markerTmp
-			depModule.ExpectedOutputs()[marker.Output] = true
+			depModule.ExpectedOutputs()[marker.Output] = &project.DependencyOutput{
+				Output: marker.Output,
+			}
 		}
 	}
 	return reflect.ValueOf(resString), nil

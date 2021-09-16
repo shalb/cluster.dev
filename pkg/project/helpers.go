@@ -136,7 +136,6 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 			}
 		}
 	case reflect.Interface:
-		log.Warnf("%v", out)
 		if reflect.TypeOf(out.Interface()).Kind() == reflect.String {
 			if !out.CanSet() {
 				log.Fatal("Internal error: can't set interface field.")
@@ -146,6 +145,11 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 				return err
 			}
 			out.Set(val)
+		} else {
+			err := ScanMarkers(out.Interface(), procFunc, module)
+			if err != nil {
+				return err
+			}
 		}
 	case reflect.String:
 		val, err := procFunc(out, module)
@@ -179,7 +183,7 @@ func ConvertToShellVar(name string) string {
 	return fmt.Sprintf("${%s}", ConvertToShellVarName(name))
 }
 
-func BuildDep(m Module, dep *Dependency) error {
+func BuildDep(m Module, dep *DependencyOutput) error {
 	if dep.Module == nil {
 
 		if dep.ModuleName == "" || dep.InfraName == "" {

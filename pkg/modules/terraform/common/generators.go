@@ -133,7 +133,7 @@ func (m *Module) BuildCommon() error {
 func (m *Module) replaceRemoteStatesForBash(cmd string) (res string, err error) {
 	res = cmd
 	for hash, mr := range m.Markers() {
-		marker, ok := mr.(*project.Dependency)
+		marker, ok := mr.(*project.DependencyOutput)
 		if !ok {
 			return "", fmt.Errorf("preparing module: internal error: incorrect remote state type")
 		}
