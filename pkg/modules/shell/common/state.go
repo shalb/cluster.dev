@@ -10,7 +10,7 @@ import (
 )
 
 type StateDep struct {
-	Infra  string `json:"infra"`
+	Stack  string `json:"infra"`
 	Module string `json:"module"`
 }
 
@@ -40,7 +40,7 @@ type StateCommon interface {
 func (m *Module) GetState() interface{} {
 	deps := make([]StateDep, len(m.dependencies))
 	for i, dep := range m.dependencies {
-		deps[i].Infra = dep.InfraName
+		deps[i].Stack = dep.StackName
 		deps[i].Module = dep.ModuleName
 	}
 	st := StateSpec{
@@ -66,7 +66,7 @@ func (m *Module) GetState() interface{} {
 func (m *Module) GetStateDiff() StateSpecDiff {
 	deps := make([]StateDep, len(m.dependencies))
 	for i, dep := range m.dependencies {
-		deps[i].Infra = dep.InfraName
+		deps[i].Stack = dep.StackName
 		deps[i].Module = dep.ModuleName
 	}
 	st := StateSpecDiff{
@@ -97,7 +97,7 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	if len(mkSplitted) != 2 {
 		return fmt.Errorf("loading module state: bad module key: %v", modKey)
 	}
-	infraName := mkSplitted[0]
+	stackName := mkSplitted[0]
 	modName := mkSplitted[1]
 	var mState StateSpec
 	err := utils.JSONInterfaceToType(spec, &mState)
@@ -110,12 +110,12 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	if !exists {
 		return fmt.Errorf("load module from state: backend '%v' does not exists in curent project", mState.BackendName)
 	}
-	infra, exists := p.LoaderProjectPtr.Infrastructures[infraName]
+	stack, exists := p.LoaderProjectPtr.Stack[stackName]
 	if !exists {
-		infra = &project.Infrastructure{
+		stack = &project.Stack{
 			ProjectPtr:  &p.Project,
 			Backend:     backend,
-			Name:        infraName,
+			Name:        stackName,
 			BackendName: mState.BackendName,
 		}
 	}
@@ -124,15 +124,15 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	for i, dep := range mState.Dependencies {
 		modDeps[i] = &project.DependencyOutput{
 			ModuleName: dep.Module,
-			InfraName:  dep.Infra,
+			StackName:  dep.Stack,
 		}
 	}
-	bPtr, exists := infra.ProjectPtr.Backends[infra.BackendName]
+	bPtr, exists := stack.ProjectPtr.Backends[stack.BackendName]
 	if !exists {
-		return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
+		return fmt.Errorf("Backend '%s' not found, stack: '%s'", stack.BackendName, stack.Name)
 	}
 	m.MyName = modName
-	m.infraPtr = infra
+	m.stackPtr = stack
 	m.projectPtr = &p.Project
 	m.dependencies = modDeps
 	m.backendPtr = bPtr

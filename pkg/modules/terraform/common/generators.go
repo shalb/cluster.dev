@@ -15,7 +15,7 @@ import (
 // genBackendCodeBlock generate backend code block for this module.
 func (m *Module) genBackendCodeBlock() ([]byte, error) {
 
-	f, err := m.backendPtr.GetBackendHCL(m.InfraName(), m.Name())
+	f, err := m.backendPtr.GetBackendHCL(m.StackName(), m.Name())
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
@@ -51,8 +51,8 @@ func (m *Module) genDepsRemoteStates() ([]byte, error) {
 		}
 		// Deduplication.
 		depsUniq[dep.Module] = true
-		modBackend := dep.Module.InfraPtr().Backend
-		rs, err := modBackend.GetRemoteStateHCL(dep.Module.InfraName(), dep.Module.Name())
+		modBackend := dep.Module.StackPtr().Backend
+		rs, err := modBackend.GetRemoteStateHCL(dep.Module.StackName(), dep.Module.Name())
 		if err != nil {
 			log.Debug(err.Error())
 			return nil, err
@@ -71,7 +71,7 @@ func (m *Module) CreateCodeDir() error {
 		// relPath, _ := filepath.Rel(config.Global.WorkingDir, filePath)
 		if m.projectPtr.CheckContainsMarkers(string(f)) {
 			log.Debugf("Unprocessed markers:\n %+v", string(f))
-			return fmt.Errorf("misuse of functions in a template: module: '%s.%s'", m.infraPtr.Name, m.name)
+			return fmt.Errorf("misuse of functions in a template: module: '%s.%s'", m.stackPtr.Name, m.name)
 		}
 		err = ioutil.WriteFile(filePath, f, 0777)
 		if err != nil {
@@ -82,7 +82,7 @@ func (m *Module) CreateCodeDir() error {
 	return nil
 }
 
-func (m *Module) BuildCommon() error {
+func (m *Module) Build() error {
 	var err error
 
 	m.filesList["init.tf"], err = m.genBackendCodeBlock()

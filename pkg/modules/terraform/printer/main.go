@@ -45,8 +45,8 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
-	err := m.ReadConfigCommon(spec, infra)
+func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+	err := m.Module.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return err
@@ -68,11 +68,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
-	err := m.ReplaceMarkersCommon(m)
-	if err != nil {
-		return err
-	}
-	err = project.ScanMarkers(m.inputs, project.YamlBlockMarkerScanner, m)
+	err := m.Module.ReplaceMarkers(m)
 	if err != nil {
 		return err
 	}
@@ -83,10 +79,10 @@ func (m *Module) ReplaceMarkers() error {
 	return nil
 }
 
-// CreateCodeDir generate all terraform code for project.
+// Build generate all terraform code for project.
 func (m *Module) Build() error {
 	var err error
-	err = m.BuildCommon()
+	err = m.Module.Build()
 	if err != nil {
 		return err
 	}
@@ -105,7 +101,7 @@ func (m *Module) Build() error {
 }
 
 func (m *Module) Apply() (err error) {
-	err = m.ApplyCommon()
+	err = m.Module.Apply()
 	if err != nil {
 		return
 	}
@@ -120,5 +116,5 @@ func (m *Module) Apply() (err error) {
 // UpdateProjectRuntimeData update project runtime dataset, adds printer module outputs.
 func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
 	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: m.Key(), Output: m.outputRaw})
-	return m.UpdateProjectRuntimeDataCommon(p)
+	return m.Module.UpdateProjectRuntimeData(p)
 }

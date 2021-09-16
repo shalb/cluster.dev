@@ -197,7 +197,7 @@ func checkModulesDependencies(p *Project) error {
 	errDepth := 15
 	for _, mod := range p.Modules {
 		if ok := checkDependenciesRecursive(mod, errDepth); !ok {
-			return fmt.Errorf("Unresolved dependency in module %v.%v", mod.InfraName(), mod.Name())
+			return fmt.Errorf("Unresolved dependency in module %v.%v", mod.StackName(), mod.Name())
 		}
 	}
 	return nil

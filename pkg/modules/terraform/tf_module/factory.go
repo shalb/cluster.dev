@@ -10,9 +10,9 @@ type Factory struct {
 }
 
 // New creates new module.
-func (f *Factory) New(spec map[string]interface{}, infra *project.Infrastructure) (project.Module, error) {
+func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (project.Module, error) {
 	mod := Module{}
-	err := mod.ReadConfig(spec, infra)
+	err := mod.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err

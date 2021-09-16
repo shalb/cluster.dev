@@ -49,7 +49,7 @@ func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, 
 	}
 	dep := project.DependencyOutput{
 		Module:     nil,
-		InfraName:  splittedPath[0],
+		StackName:  splittedPath[0],
 		ModuleName: splittedPath[1],
 		Output:     splittedPath[2],
 	}

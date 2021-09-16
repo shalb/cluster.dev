@@ -34,20 +34,20 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 
 	for key, marker := range markersList {
 		if strings.Contains(resString, key) {
-			var InfraName string
-			if marker.InfraName == "this" {
-				InfraName = module.InfraName()
+			var stackName string
+			if marker.StackName == "this" {
+				stackName = module.StackName()
 			} else {
-				InfraName = marker.InfraName
+				stackName = marker.StackName
 			}
 
-			modKey := fmt.Sprintf("%s.%s", InfraName, marker.ModuleName)
+			modKey := fmt.Sprintf("%s.%s", stackName, marker.ModuleName)
 			// log.Warnf("Mod Key: %v", modKey)
 			depModule, exists := module.ProjectPtr().Modules[modKey]
 			if !exists {
-				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
+				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.StackName(), module.Name(), modKey)
 			}
-			markerTmp := project.DependencyOutput{Module: depModule, ModuleName: marker.ModuleName, InfraName: InfraName, Output: marker.Output}
+			markerTmp := project.DependencyOutput{Module: depModule, ModuleName: marker.ModuleName, StackName: stackName, Output: marker.Output}
 			*module.Dependencies() = append(*module.Dependencies(), &markerTmp)
 			m.markers[key] = &markerTmp
 			depModule.ExpectedOutputs()[marker.Output] = &project.DependencyOutput{

@@ -39,8 +39,8 @@ func (b *Backend) Provider() string {
 }
 
 // GetBackendBytes generate terraform backend config.
-func (b *Backend) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
-	f, err := b.GetBackendHCL(infraName, moduleName)
+func (b *Backend) GetBackendBytes(stackName, moduleName string) ([]byte, error) {
+	f, err := b.GetBackendHCL(stackName, moduleName)
 	if err != nil {
 		return nil, err
 	}
@@ -48,12 +48,12 @@ func (b *Backend) GetBackendBytes(infraName, moduleName string) ([]byte, error) 
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *Backend) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
+func (b *Backend) GetBackendHCL(stackName, moduleName string) (*hclwrite.File, error) {
 	bConfigTmpl, err := getStateMap(*b)
 	if err != nil {
 		return nil, err
 	}
-	bConfigTmpl["prefix"] = fmt.Sprintf("%s%s_%s", b.Prefix, infraName, moduleName)
+	bConfigTmpl["prefix"] = fmt.Sprintf("%s%s_%s", b.Prefix, stackName, moduleName)
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
@@ -66,16 +66,16 @@ func (b *Backend) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, e
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
+func (b *Backend) GetRemoteStateHCL(stackName, moduleName string) ([]byte, error) {
 	bConfigTmpl, err := getStateMap(*b)
 	if err != nil {
 		return nil, err
 	}
-	bConfigTmpl["prefix"] = fmt.Sprintf("%s%s_%s", b.Prefix, infraName, moduleName)
+	bConfigTmpl["prefix"] = fmt.Sprintf("%s%s_%s", b.Prefix, stackName, moduleName)
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", infraName, moduleName)})
+	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", stackName, moduleName)})
 	dataBody := dataBlock.Body()
 	dataBody.SetAttributeValue("backend", cty.StringVal("gcs"))
 	config, err := hcltools.InterfaceToCty(bConfigTmpl)

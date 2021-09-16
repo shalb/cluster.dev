@@ -45,6 +45,16 @@ func JSONEncode(in interface{}) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
+// JSONEncode encode in to JSON.
+func JSONEncodeString(in interface{}) (string, error) {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent(" ", " ")
+	err := encoder.Encode(in)
+	return buffer.String(), err
+}
+
 // JSONDecode decode in to .
 func JSONDecode(in []byte, out interface{}) error {
 	buffer := bytes.NewBuffer(in)

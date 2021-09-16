@@ -9,17 +9,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const infraTemplateObjKindKey = "InfraTemplate"
+const stackTemplateObjKindKey = "InfraTemplate"
 
-type InfraTemplate struct {
+type stackTemplate struct {
 	Name             string                   `yaml:"name"`
 	Kind             string                   `yaml:"kind"`
 	Modules          []map[string]interface{} `yaml:"modules"`
 	ReqClientVersion string                   `yaml:"cliVersion"`
 }
 
-func NewInfraTemplate(data []byte) (*InfraTemplate, error) {
-	iTmpl := InfraTemplate{}
+func NewStackTemplate(data []byte) (*stackTemplate, error) {
+	iTmpl := stackTemplate{}
 	err := yaml.Unmarshal(data, &iTmpl)
 	if err != nil {
 		if config.Global.TraceLog {
@@ -33,7 +33,7 @@ func NewInfraTemplate(data []byte) (*InfraTemplate, error) {
 	if iTmpl.Name == "" {
 		return nil, fmt.Errorf("parsing template: template must contain 'name' field")
 	}
-	if iTmpl.Kind != infraTemplateObjKindKey {
+	if iTmpl.Kind != stackTemplateObjKindKey {
 		return nil, fmt.Errorf("parsing template: unknown template object kind or kind is not set: '%v'", iTmpl.Kind)
 	}
 	log.Debug("check client version")

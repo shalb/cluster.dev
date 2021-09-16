@@ -42,8 +42,8 @@ func (b *Backend) Provider() string {
 // }
 
 // GetBackendBytes generate terraform backend config.
-func (b *Backend) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
-	f, err := b.GetBackendHCL(infraName, moduleName)
+func (b *Backend) GetBackendBytes(stackName, moduleName string) ([]byte, error) {
+	f, err := b.GetBackendHCL(stackName, moduleName)
 	if err != nil {
 		return nil, err
 	}
@@ -51,14 +51,14 @@ func (b *Backend) GetBackendBytes(infraName, moduleName string) ([]byte, error) 
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *Backend) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
+func (b *Backend) GetBackendHCL(stackName, moduleName string) (*hclwrite.File, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
 	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"s3"})
 	backendBody := backendBlock.Body()
 	backendBody.SetAttributeValue("bucket", cty.StringVal(b.Bucket))
-	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s.state", infraName, moduleName)))
+	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s.state", stackName, moduleName)))
 	backendBody.SetAttributeValue("region", cty.StringVal(b.Region))
 
 	terraformBlock.Body().SetAttributeValue("required_version", cty.StringVal("~> 0.13"))
@@ -67,16 +67,16 @@ func (b *Backend) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, e
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
+func (b *Backend) GetRemoteStateHCL(stackName, moduleName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", infraName, moduleName)})
+	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", stackName, moduleName)})
 	dataBody := dataBlock.Body()
 	dataBody.SetAttributeValue("backend", cty.StringVal("s3"))
 	dataBody.SetAttributeValue("config", cty.MapVal(map[string]cty.Value{
 		"bucket": cty.StringVal(b.Bucket),
-		"key":    cty.StringVal(fmt.Sprintf("%s/%s.state", infraName, moduleName)),
+		"key":    cty.StringVal(fmt.Sprintf("%s/%s.state", stackName, moduleName)),
 		"region": cty.StringVal(b.Region),
 	}))
 

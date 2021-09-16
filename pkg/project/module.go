@@ -7,9 +7,9 @@ import (
 // Module interface for module drivers.
 type Module interface {
 	Name() string
-	InfraPtr() *Infrastructure
+	StackPtr() *Stack
 	ProjectPtr() *Project
-	InfraName() string
+	StackName() string
 	ReplaceMarkers() error
 	Dependencies() *[]*DependencyOutput
 	Build() error
@@ -33,7 +33,7 @@ type ModuleDriver interface {
 }
 
 type ModuleFactory interface {
-	New(map[string]interface{}, *Infrastructure) (Module, error)
+	New(map[string]interface{}, *Stack) (Module, error)
 	NewFromState(map[string]interface{}, string, *StateProject) (Module, error)
 }
 
@@ -51,13 +51,13 @@ var ModuleFactoriesMap = map[string]ModuleFactory{}
 type DependencyOutput struct {
 	Module     Module `json:"-"`
 	ModuleName string
-	InfraName  string
+	StackName  string
 	Output     string
 	OutputData interface{} `json:"-"`
 }
 
 // NewModule creates and return module with needed driver.
-func NewModule(spec map[string]interface{}, infra *Infrastructure) (Module, error) {
+func NewModule(spec map[string]interface{}, stack *Stack) (Module, error) {
 	mType, ok := spec["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("incorrect module type")
@@ -67,11 +67,11 @@ func NewModule(spec map[string]interface{}, infra *Infrastructure) (Module, erro
 		return nil, fmt.Errorf("incorrect module type '%v'", mType)
 	}
 
-	return modDrv.New(spec, infra)
+	return modDrv.New(spec, stack)
 }
 
 // NewModuleFromState creates module from saved state.
-func NewModuleFromState(state map[string]interface{}, infra *Infrastructure) (Module, error) {
+func NewModuleFromState(state map[string]interface{}, stack *Stack) (Module, error) {
 	mType, ok := state["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("Incorrect module type")
@@ -81,7 +81,7 @@ func NewModuleFromState(state map[string]interface{}, infra *Infrastructure) (Mo
 		return nil, fmt.Errorf("Incorrect module type '%v'", mType)
 	}
 
-	return modDrv.New(state, infra)
+	return modDrv.New(state, stack)
 }
 
 type ModuleState interface {

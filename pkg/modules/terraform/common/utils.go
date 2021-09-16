@@ -28,10 +28,10 @@ func (m *Module) readDeps(depsData interface{}) ([]*project.DependencyOutput, er
 		}
 		infNm := splDep[0]
 		if infNm == "this" {
-			infNm = m.InfraName()
+			infNm = m.StackName()
 		}
 		res = append(res, &project.DependencyOutput{
-			InfraName:  infNm,
+			StackName:  infNm,
 			ModuleName: splDep[1],
 		})
 		log.Debugf("Dependency added: %v --> %v.%v", m.Key(), infNm, splDep[1])
@@ -82,10 +82,10 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 }
 
 func DependencyToRemoteStateRef(dep *project.DependencyOutput) (remoteStateRef string) {
-	remoteStateRef = fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", dep.InfraName, dep.ModuleName, dep.Output)
+	remoteStateRef = fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", dep.StackName, dep.ModuleName, dep.Output)
 	return
 }
 func DependencyToBashRemoteState(dep *project.DependencyOutput) (remoteStateRef string) {
-	remoteStateRef = fmt.Sprintf("\"$(terraform -chdir=../%v.%v/ output -raw %v)\"", dep.InfraName, dep.ModuleName, dep.Output)
+	remoteStateRef = fmt.Sprintf("\"$(terraform -chdir=../%v.%v/ output -raw %v)\"", dep.StackName, dep.ModuleName, dep.Output)
 	return
 }

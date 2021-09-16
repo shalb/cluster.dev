@@ -132,7 +132,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			objects:          p.objects,
 			Modules:          make(map[string]Module),
 			Markers:          stateD.Markers,
-			Infrastructures:  make(map[string]*Infrastructure),
+			Stack:            make(map[string]*Stack),
 			Backends:         p.Backends,
 			CodeCacheDir:     config.Global.StateCacheDir,
 			StateBackendName: p.StateBackendName,

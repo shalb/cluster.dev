@@ -123,11 +123,11 @@ func BcryptString(pwd []byte) (string, error) {
 }
 
 type tmplFileReader struct {
-	infraPtr *Infrastructure
+	stackPtr *Stack
 }
 
 func (t tmplFileReader) ReadFile(path string) (string, error) {
-	vfPath := filepath.Join(t.infraPtr.TemplateDir, path)
+	vfPath := filepath.Join(t.stackPtr.TemplateDir, path)
 	valuesFileContent, err := ioutil.ReadFile(vfPath)
 	if err != nil {
 		log.Debugf(err.Error())
@@ -137,13 +137,13 @@ func (t tmplFileReader) ReadFile(path string) (string, error) {
 }
 
 func (t tmplFileReader) TemplateFile(path string) (string, error) {
-	vfPath := filepath.Join(t.infraPtr.TemplateDir, path)
+	vfPath := filepath.Join(t.stackPtr.TemplateDir, path)
 	rawFile, err := ioutil.ReadFile(vfPath)
 	if err != nil {
 		log.Debugf(err.Error())
 		return "", err
 	}
-	templatedFile, errIsWarn, err := t.infraPtr.TemplateTry(rawFile)
+	templatedFile, errIsWarn, err := t.stackPtr.TemplateTry(rawFile)
 	if err != nil {
 		if !errIsWarn {
 			log.Fatal(err.Error())
@@ -152,33 +152,11 @@ func (t tmplFileReader) TemplateFile(path string) (string, error) {
 	return string(templatedFile), nil
 }
 
-const InsertYAMLMarkerCatName = "insertYAMLMarkers"
 const OutputMarkerCatName = "outputMarkers"
 
-func YamlBlockMarkerScanner(data reflect.Value, module Module) (reflect.Value, error) {
-	subVal := reflect.ValueOf(data.Interface())
-
-	yamlMarkers, ok := module.ProjectPtr().Markers[InsertYAMLMarkerCatName].(map[string]interface{})
-	if !ok {
-		return subVal, nil
-	}
-	for hash := range yamlMarkers {
-		if subVal.String() == hash {
-			return reflect.ValueOf(yamlMarkers[hash]), nil
-		}
-	}
-	return subVal, nil
-}
-
-// addYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
-func (p *Project) addYAMLBlockMarker(data interface{}) (string, error) {
-	_, ok := p.Markers[InsertYAMLMarkerCatName]
-	if !ok {
-		p.Markers[InsertYAMLMarkerCatName] = map[string]interface{}{}
-	}
-	marker := CreateMarker("YAML", fmt.Sprintf("%v", data))
-	p.Markers[InsertYAMLMarkerCatName].(map[string]interface{})[marker] = data
-	return fmt.Sprintf("%s", marker), nil
+// insertYaml function for template. Add hash marker, witch will be replaced with desired block.
+func (p *Project) insertYaml(data interface{}) (string, error) {
+	return utils.JSONEncodeString(data)
 }
 
 type GlobalTemplateDriver struct {
@@ -186,7 +164,7 @@ type GlobalTemplateDriver struct {
 
 func (d *GlobalTemplateDriver) AddTemplateFunctions(p *Project) {
 	funcs := map[string]interface{}{
-		"insertYaml": p.addYAMLBlockMarker,
+		"insertYaml": p.insertYaml,
 		"output":     p.addOutputMarker,
 	}
 	for k, f := range funcs {
@@ -215,7 +193,7 @@ func (p *Project) addOutputMarker(path string) (string, error) {
 	}
 	dep := DependencyOutput{
 		Module:     nil,
-		InfraName:  splittedPath[0],
+		StackName:  splittedPath[0],
 		ModuleName: splittedPath[1],
 		Output:     splittedPath[2],
 	}
@@ -245,24 +223,24 @@ func OutputsScanner(data reflect.Value, module Module) (reflect.Value, error) {
 
 	for key, marker := range markersList {
 		if strings.Contains(resString, key) {
-			var InfraName string
-			if marker.InfraName == "this" {
-				InfraName = module.InfraName()
+			var stackName string
+			if marker.StackName == "this" {
+				stackName = module.StackName()
 			} else {
-				InfraName = marker.InfraName
+				stackName = marker.StackName
 			}
 
-			modKey := fmt.Sprintf("%s.%s", InfraName, marker.ModuleName)
+			modKey := fmt.Sprintf("%s.%s", stackName, marker.ModuleName)
 			// log.Warnf("Mod Key: %v", modKey)
 			depModule, exists := module.ProjectPtr().Modules[modKey]
 			if !exists {
-				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
+				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.StackName(), module.Name(), modKey)
 			}
 			o, exists := depModule.ExpectedOutputs()[marker.Output]
 			if exists && o.OutputData != nil {
 				resString = strings.ReplaceAll(resString, key, o.OutputData.(string))
 			}
-			markerTmp := DependencyOutput{Module: depModule, ModuleName: marker.ModuleName, InfraName: InfraName, Output: marker.Output}
+			markerTmp := DependencyOutput{Module: depModule, ModuleName: marker.ModuleName, StackName: stackName, Output: marker.Output}
 			*module.Dependencies() = append(*module.Dependencies(), &markerTmp)
 			module.Markers()[key] = &markerTmp
 			depModule.ExpectedOutputs()[marker.Output] = &markerTmp
@@ -293,7 +271,7 @@ func StateOutputsScanner(data reflect.Value, module Module) (reflect.Value, erro
 
 	for key, marker := range markersList {
 		if strings.Contains(resString, key) {
-			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<output %v.%v.%v>", marker.InfraName, marker.ModuleName, marker.Output))
+			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<output %v.%v.%v>", marker.StackName, marker.ModuleName, marker.Output))
 		}
 	}
 	return reflect.ValueOf(resString), nil

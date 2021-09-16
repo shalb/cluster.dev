@@ -25,7 +25,7 @@ func (m *Module) CreateCodeDir() error {
 		// relPath, _ := filepath.Rel(config.Global.WorkingDir, filePath)
 		if m.projectPtr.CheckContainsMarkers(f.Content) {
 			log.Debugf("Unprocessed markers:\n %+v", f.Content)
-			return fmt.Errorf("misuse of functions in a template: module: '%s.%s'", m.infraPtr.Name, m.MyName)
+			return fmt.Errorf("misuse of functions in a template: module: '%s.%s'", m.stackPtr.Name, m.MyName)
 		}
 		if utils.FileExists(filePath) {
 			return fmt.Errorf("read module '%v': creating cache: file '%v' is already  exists in working dir", m.Name(), f.File)

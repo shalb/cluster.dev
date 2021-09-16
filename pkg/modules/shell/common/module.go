@@ -21,7 +21,7 @@ type CreateFileRepresentation struct {
 
 // OperationConfig type that describe apply, plan and destroy operations.
 type OperationConfig struct {
-	Commands interface{} `yaml:"commands" json:"commands"`
+	Commands []interface{} `yaml:"commands" json:"commands"`
 }
 
 type GetOutputsConfig struct {
@@ -47,7 +47,7 @@ type outputParser func(string, interface{}) error
 
 // Module describe cluster.dev shell module.
 type Module struct {
-	infraPtr        *project.Infrastructure
+	stackPtr        *project.Stack
 	projectPtr      *project.Project
 	backendPtr      project.Backend
 	dependencies    []*project.DependencyOutput
@@ -89,6 +89,10 @@ func (m *Module) RegexOutputParser(in string, out interface{}) error {
 
 	outTmp := make(map[string]interface{})
 	for _, ln := range lines {
+		if len(ln) == 0 {
+			// ignore empty string
+			continue
+		}
 		re, err := regexp.Compile(m.GetOutputsConf.Regexp)
 		if err != nil {
 			return err
@@ -96,11 +100,8 @@ func (m *Module) RegexOutputParser(in string, out interface{}) error {
 		parsed := re.FindStringSubmatch(ln)
 		log.Warnf("Regexp: %v %q", m.GetOutputsConf.Regexp, re)
 		if len(parsed) < 2 {
-			// ignore "not found"
-			continue
-		}
-		kv := strings.SplitN(ln, m.GetOutputsConf.Separator, 2)
-		if len(kv) != 2 {
+			// ignore "not found" and show warn
+			log.Warnf("can't parse the output string '%v' with regexp '%v'", ln, m.GetOutputsConf.Regexp)
 			continue
 		}
 		// Use first occurrence as key and value.
@@ -113,6 +114,7 @@ func (m *Module) RegexOutputParser(in string, out interface{}) error {
 // SeparatorOutputParser split each line of in string with using separator
 // and stores result as a map in the value pointed to by out.
 func (m *Module) SeparatorOutputParser(in string, out interface{}) error {
+
 	rv := reflect.ValueOf(out)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return fmt.Errorf("can't set unadresseble value")
@@ -123,9 +125,14 @@ func (m *Module) SeparatorOutputParser(in string, out interface{}) error {
 	}
 	outTmp := make(map[string]interface{})
 	for _, ln := range lines {
+		if len(ln) == 0 {
+			// ignore empty string
+			continue
+		}
 		kv := strings.SplitN(ln, m.GetOutputsConf.Separator, 2)
-		if len(kv) != 2 {
+		if len(kv) != 2 || len(ln) < len(m.GetOutputsConf.Separator) {
 			// ignore line if separator does not found
+			log.Warnf("can't parse the output string '%v' , separator '%v' does not found", ln, m.GetOutputsConf.Separator)
 			continue
 		}
 		outTmp[kv[0]] = kv[1]
@@ -145,20 +152,20 @@ func (m *Module) FilesList() map[string][]byte {
 	return m.filesList
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
-	if infra == nil {
-		return fmt.Errorf("read shell module: empty infra or project")
+func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+	if stack == nil {
+		return fmt.Errorf("read shell module: empty stack or project")
 	}
-	m.infraPtr = infra
-	m.projectPtr = infra.ProjectPtr
+	m.stackPtr = stack
+	m.projectPtr = stack.ProjectPtr
 	m.specRaw = spec
-	m.backendPtr = infra.Backend
+	m.backendPtr = stack.Backend
 	err := utils.YAMLInterfaceToType(spec, m)
 	if err != nil {
 		return err
 	}
 	if utils.IsLocalPath(m.WorkDir) {
-		m.WorkDir = filepath.Join(config.Global.WorkingDir, m.infraPtr.TemplateDir, m.WorkDir)
+		m.WorkDir = filepath.Join(config.Global.WorkingDir, m.stackPtr.TemplateDir, m.WorkDir)
 	}
 
 	isDir, err := utils.CheckDir(m.WorkDir)
@@ -188,9 +195,9 @@ func (m *Module) Name() string {
 	return m.MyName
 }
 
-// InfraPtr return ptr to module infrastructure.
-func (m *Module) InfraPtr() *project.Infrastructure {
-	return m.infraPtr
+// StackPtr return ptr to module stack.
+func (m *Module) StackPtr() *project.Stack {
+	return m.stackPtr
 }
 
 // ApplyOutput return output of module applying.
@@ -203,14 +210,14 @@ func (m *Module) ProjectPtr() *project.Project {
 	return m.projectPtr
 }
 
-// InfraName return module infrastructure name.
-func (m *Module) InfraName() string {
-	return m.infraPtr.Name
+// StackName return module stack name.
+func (m *Module) StackName() string {
+	return m.stackPtr.Name
 }
 
 // Backend return module backend.
 func (m *Module) Backend() project.Backend {
-	return m.infraPtr.Backend
+	return m.stackPtr.Backend
 }
 
 // Dependencies return slice of module dependencies.
@@ -237,7 +244,7 @@ func (m *Module) Apply() error {
 	}
 
 	rn.LogLabels = []string{
-		m.InfraName(),
+		m.StackName(),
 		m.Name(),
 		"apply",
 	}
@@ -245,7 +252,7 @@ func (m *Module) Apply() error {
 
 	var cmd string
 
-	for _, c := range m.ApplyConf.Commands.([]interface{}) {
+	for _, c := range m.ApplyConf.Commands {
 		cmd += fmt.Sprintf("%v\n", c)
 	}
 	m.outputRaw, errMsg, err = rn.Run(cmd)
@@ -295,7 +302,7 @@ func (m *Module) Destroy() error {
 
 // Key return uniq module index (string key for maps).
 func (m *Module) Key() string {
-	return fmt.Sprintf("%v.%v", m.InfraName(), m.MyName)
+	return fmt.Sprintf("%v.%v", m.StackName(), m.MyName)
 }
 
 // CodeDir return path to module code directory.
@@ -311,29 +318,14 @@ func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
-
-	tEnv := m.Env
-	err := project.ScanMarkers(&tEnv, project.YamlBlockMarkerScanner, m)
+	err := project.ScanMarkers(m.Env, project.OutputsScanner, m)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(&tEnv, project.OutputsScanner, m)
+	err = project.ScanMarkers(m.ApplyConf.Commands, project.OutputsScanner, m)
 	if err != nil {
 		return err
 	}
-	m.Env = tEnv
-
-	tmpAP := m.ApplyConf.Commands
-	err = project.ScanMarkers(&tmpAP, project.YamlBlockMarkerScanner, m)
-	if err != nil {
-		return err
-	}
-	err = project.ScanMarkers(&tmpAP, project.OutputsScanner, m)
-	if err != nil {
-		return err
-	}
-	m.ApplyConf.Commands = tmpAP
-
 	return nil
 }
 

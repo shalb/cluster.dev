@@ -34,7 +34,7 @@ type RequiredProvider struct {
 
 // Module describe cluster.dev module to deploy/destroy terraform modules.
 type Module struct {
-	infraPtr          *project.Infrastructure
+	stackPtr          *project.Stack
 	projectPtr        *project.Project
 	backendPtr        project.Backend
 	name              string
@@ -69,7 +69,7 @@ func (m *Module) FilesList() map[string][]byte {
 	return m.filesList
 }
 
-func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.Infrastructure) error {
+func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	// Check if CDEV_TF_BINARY is set to change terraform binary name.
 	envTfBin, exists := os.LookupEnv("CDEV_TF_BINARY")
 	if exists {
@@ -80,8 +80,8 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 		return fmt.Errorf("Incorrect module name")
 	}
 
-	m.infraPtr = infra
-	m.projectPtr = infra.ProjectPtr
+	m.stackPtr = stack
+	m.projectPtr = stack.ProjectPtr
 	m.name = mName.(string)
 	m.expectedOutputs = make(map[string]*project.DependencyOutput)
 	m.filesList = make(map[string][]byte)
@@ -102,9 +102,9 @@ func (m *Module) ReadConfigCommon(spec map[string]interface{}, infra *project.In
 	m.dependencies = modDeps
 
 	// Check and set backend.
-	bPtr, exists := infra.ProjectPtr.Backends[infra.BackendName]
+	bPtr, exists := stack.ProjectPtr.Backends[stack.BackendName]
 	if !exists {
-		return fmt.Errorf("Backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
+		return fmt.Errorf("Backend '%s' not found, stack: '%s'", stack.BackendName, stack.Name)
 	}
 	m.backendPtr = bPtr
 
@@ -143,9 +143,9 @@ func (m *Module) Name() string {
 	return m.name
 }
 
-// InfraPtr return ptr to module infrastructure.
-func (m *Module) InfraPtr() *project.Infrastructure {
-	return m.infraPtr
+// StackPtr return ptr to module stack.
+func (m *Module) StackPtr() *project.Stack {
+	return m.stackPtr
 }
 
 // ApplyOutput return output of last module applying.
@@ -158,14 +158,14 @@ func (m *Module) ProjectPtr() *project.Project {
 	return m.projectPtr
 }
 
-// InfraName return module infrastructure name.
-func (m *Module) InfraName() string {
-	return m.infraPtr.Name
+// StackName return module stack name.
+func (m *Module) StackName() string {
+	return m.stackPtr.Name
 }
 
 // Backend return module backend.
 func (m *Module) Backend() project.Backend {
-	return m.infraPtr.Backend
+	return m.stackPtr.Backend
 }
 
 // Dependencies return slice of module dependencies.
@@ -173,7 +173,7 @@ func (m *Module) Dependencies() *[]*project.DependencyOutput {
 	return &m.dependencies
 }
 
-func (m *Module) InitCommon() error {
+func (m *Module) Init() error {
 	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -181,7 +181,7 @@ func (m *Module) InitCommon() error {
 	}
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
-		m.InfraName(),
+		m.StackName(),
 		m.Name(),
 		"init",
 	}
@@ -200,7 +200,7 @@ func (m *Module) InitCommon() error {
 	return err
 }
 
-func (m *Module) ApplyCommon() error {
+func (m *Module) Apply() error {
 	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -208,7 +208,7 @@ func (m *Module) ApplyCommon() error {
 	}
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
-		m.InfraName(),
+		m.StackName(),
 		m.Name(),
 		"apply",
 	}
@@ -231,14 +231,14 @@ func (m *Module) ApplyCommon() error {
 	return err
 }
 
-// Apply module.
-func (m *Module) Apply() error {
-	err := m.InitCommon()
-	if err != nil {
-		return err
-	}
-	return m.ApplyCommon()
-}
+// // Apply module.
+// func (m *Module) Apply() error {
+// 	err := m.InitCommon()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return m.ApplyCommon()
+// }
 
 // Output module.
 func (m *Module) Output() (string, error) {
@@ -249,7 +249,7 @@ func (m *Module) Output() (string, error) {
 	}
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
-		m.InfraName(),
+		m.StackName(),
 		m.Name(),
 		"plan",
 	}
@@ -276,7 +276,7 @@ func (m *Module) Plan() error {
 	}
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
-		m.InfraName(),
+		m.StackName(),
 		m.Name(),
 		"plan",
 	}
@@ -309,7 +309,7 @@ func (m *Module) Destroy() error {
 		return err
 	}
 	rn.LogLabels = []string{
-		m.InfraName(),
+		m.StackName(),
 		m.Name(),
 		"destroy",
 	}
@@ -334,7 +334,7 @@ func (m *Module) Destroy() error {
 
 // Key return uniq module index (string key for maps).
 func (m *Module) Key() string {
-	return fmt.Sprintf("%v.%v", m.InfraName(), m.name)
+	return fmt.Sprintf("%v.%v", m.StackName(), m.name)
 }
 
 // CodeDir return path to module code directory.
@@ -344,12 +344,12 @@ func (m *Module) CodeDir() string {
 
 // UpdateProjectRuntimeDataCommon update project runtime dataset, adds module outputs.
 // TODO: get module outputs and write to project runtime dataset. Now this function is only for printer's module interface.
-func (m *Module) UpdateProjectRuntimeDataCommon(p *project.Project) error {
+func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
 	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Module) ReplaceMarkersCommon(inheritedModule project.Module) error {
+func (m *Module) ReplaceMarkers(inheritedModule project.Module) error {
 	if m.preHook != nil {
 		err := project.ScanMarkers(&m.preHook.Command, m.RemoteStatesScanner, inheritedModule)
 		if err != nil {

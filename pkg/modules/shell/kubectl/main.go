@@ -15,7 +15,7 @@ func (m *Module) KindKey() string {
 	return "printer"
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
+func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	return nil
 }
 

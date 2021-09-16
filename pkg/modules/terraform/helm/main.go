@@ -78,8 +78,8 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
-	err := m.ReadConfigCommon(spec, infra)
+func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+	err := m.Module.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return err
@@ -131,7 +131,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 			if !ok {
 				return fmt.Errorf("read module config: 'values.file' is required field: %v", err)
 			}
-			vfPath := filepath.Join(m.InfraPtr().TemplateDir, valuesFileName)
+			vfPath := filepath.Join(m.StackPtr().TemplateDir, valuesFileName)
 			valuesFileContent, err := ioutil.ReadFile(vfPath)
 			if err != nil {
 				log.Debugf(err.Error())
@@ -139,7 +139,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 			}
 			values := valuesFileContent
 			if applyTemplate {
-				renderedValues, errIsWarn, err := m.InfraPtr().TemplateTry(valuesFileContent)
+				renderedValues, errIsWarn, err := m.StackPtr().TemplateTry(valuesFileContent)
 				if err != nil {
 					if !errIsWarn {
 						log.Fatal(err.Error())
@@ -165,11 +165,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
-	err := m.ReplaceMarkersCommon(m)
-	if err != nil {
-		return err
-	}
-	err = project.ScanMarkers(m.helmOpts, project.YamlBlockMarkerScanner, m)
+	err := m.Module.ReplaceMarkers(m)
 	if err != nil {
 		return err
 	}
@@ -177,23 +173,11 @@ func (m *Module) ReplaceMarkers() error {
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.valuesFilesList, project.YamlBlockMarkerScanner, m)
-	if err != nil {
-		return err
-	}
 	err = project.ScanMarkers(m.helmOpts, m.RemoteStatesScanner, m)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.sets, project.YamlBlockMarkerScanner, m)
-	if err != nil {
-		return err
-	}
 	err = project.ScanMarkers(m.sets, m.RemoteStatesScanner, m)
-	if err != nil {
-		return err
-	}
-	err = project.ScanMarkers(m.valuesYAML, project.YamlBlockMarkerScanner, m)
 	if err != nil {
 		return err
 	}
@@ -204,10 +188,12 @@ func (m *Module) ReplaceMarkers() error {
 	return nil
 }
 
-// CreateCodeDir generate all terraform code for project.
+// Build generate all terraform code for project.
 func (m *Module) Build() error {
-	m.BuildCommon()
-	var err error
+	err := m.Module.Build()
+	if err != nil {
+		return err
+	}
 	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
@@ -219,5 +205,5 @@ func (m *Module) Build() error {
 
 // UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
 func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
-	return m.UpdateProjectRuntimeDataCommon(p)
+	return m.Module.UpdateProjectRuntimeData(p)
 }

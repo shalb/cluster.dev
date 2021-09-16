@@ -47,7 +47,7 @@ type RuntimeData struct {
 type Project struct {
 	name             string
 	Modules          map[string]Module
-	Infrastructures  map[string]*Infrastructure
+	Stack            map[string]*Stack
 	TmplFunctionsMap template.FuncMap
 	Backends         map[string]Backend
 	Markers          map[string]interface{}
@@ -66,7 +66,7 @@ type Project struct {
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
 func NewEmptyProject() *Project {
 	project := &Project{
-		Infrastructures:  make(map[string]*Infrastructure),
+		Stack:            make(map[string]*Stack),
 		Modules:          make(map[string]Module),
 		Backends:         make(map[string]Backend),
 		Markers:          make(map[string]interface{}),
@@ -87,7 +87,7 @@ func NewEmptyProject() *Project {
 }
 
 // LoadProjectBase read project data in current directory, create base project, and load secrets.
-// Infrastructures, backends and other objects are not loads.
+// stacks, backends and other objects are not loads.
 func LoadProjectBase() (*Project, error) {
 	for mf := range ModuleFactoriesMap {
 		log.Debugf("%v", mf)
@@ -212,7 +212,7 @@ func (p *Project) prepareObjects() error {
 	if err != nil {
 		return err
 	}
-	err = p.readInfrastructures()
+	err = p.readStacks()
 	if err != nil {
 		return err
 	}
@@ -223,27 +223,27 @@ func (p *Project) checkGraph() error {
 	errDepth := 15
 	for _, mod := range p.Modules {
 		if ok := checkDependenciesRecursive(mod, errDepth); !ok {
-			return fmt.Errorf("Unresolved dependency in module %v.%v", mod.InfraName(), mod.Name())
+			return fmt.Errorf("Unresolved dependency in module %v.%v", mod.StackName(), mod.Name())
 		}
 	}
 	return nil
 }
 
 func (p *Project) readModules() error {
-	// Read modules from all infrastructures.
-	for infraName, infra := range p.Infrastructures {
-		for _, infraTmpl := range infra.Templates {
-			for _, moduleData := range infraTmpl.Modules {
-				mod, err := NewModule(moduleData, infra)
+	// Read modules from all stacks.
+	for stackName, stack := range p.Stack {
+		for _, stackTmpl := range stack.Templates {
+			for _, moduleData := range stackTmpl.Modules {
+				mod, err := NewModule(moduleData, stack)
 				if err != nil {
 					traceModuleView, errYaml := yaml.Marshal(moduleData)
 					if errYaml != nil {
 						traceModuleView = []byte{}
 					}
-					return fmt.Errorf("infra '%v', reading modules: %v\nModule data:\n%v", infraName, err.Error(), string(traceModuleView))
+					return fmt.Errorf("stack '%v', reading modules: %v\nModule data:\n%v", stackName, err.Error(), string(traceModuleView))
 				}
 				if _, exists := p.Modules[mod.Key()]; exists {
-					return fmt.Errorf("infra '%v', reading modules: duplicate module name: %v", infraName, mod.Name())
+					return fmt.Errorf("stack '%v', reading modules: duplicate module name: %v", stackName, mod.Name())
 				}
 				p.Modules[mod.Key()] = mod
 			}
@@ -346,31 +346,31 @@ func (p *Project) readManifests() error {
 func (p *Project) PrintInfo() error {
 	fmt.Println("Project:")
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Infra count", "Modules count", "Backends count", "Secrets count"})
+	table.SetHeader([]string{"Name", "Stacks count", "Modules count", "Backends count", "Secrets count"})
 	table.Append([]string{
 		p.name,
-		fmt.Sprintf("%v", len(p.Infrastructures)),
+		fmt.Sprintf("%v", len(p.Stack)),
 		fmt.Sprintf("%v", len(p.Modules)),
 		fmt.Sprintf("%v", len(p.Backends)),
 		fmt.Sprintf("%v", len(p.secrets)),
 	})
 	table.Render()
 
-	fmt.Println("Infrastructures:")
+	fmt.Println("Stacks:")
 	table = tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "Modules count", "Backend name", "Backend type"})
-	for name, infra := range p.Infrastructures {
+	for name, stack := range p.Stack {
 		mCount := 0
 		for _, mod := range p.Modules {
-			if mod.InfraName() == infra.Name {
+			if mod.StackName() == stack.Name {
 				mCount++
 			}
 		}
 		table.Append([]string{
 			name,
 			fmt.Sprintf("%v", mCount),
-			infra.Backend.Name(),
-			infra.Backend.Provider(),
+			stack.Backend.Name(),
+			stack.Backend.Provider(),
 		})
 	}
 	table.Render()
@@ -379,11 +379,11 @@ func (p *Project) PrintInfo() error {
 	table = tablewriter.NewWriter(os.Stdout)
 	table.SetRowLine(true)
 	// table.SetRowSeparator(".")
-	table.SetHeader([]string{"Name", "Infra", "Kind", "Dependencies"})
+	table.SetHeader([]string{"Name", "Stack", "Kind", "Dependencies"})
 	for name, mod := range p.Modules {
 		deps := ""
 		for i, dep := range *mod.Dependencies() {
-			deps = fmt.Sprintf("%s%s.%s", deps, dep.InfraName, dep.ModuleName)
+			deps = fmt.Sprintf("%s%s.%s", deps, dep.StackName, dep.ModuleName)
 			if dep.Output != "" {
 				deps = fmt.Sprintf("%s.%s", deps, dep.Output)
 			}
@@ -393,7 +393,7 @@ func (p *Project) PrintInfo() error {
 		}
 		table.Append([]string{
 			name,
-			mod.InfraName(),
+			mod.StackName(),
 			mod.KindKey(),
 			deps,
 		})

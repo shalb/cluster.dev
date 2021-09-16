@@ -45,7 +45,7 @@ func removeDirContent(dir string) error {
 }
 
 func findModule(module Module, modsList map[string]Module) *Module {
-	mod, exists := modsList[fmt.Sprintf("%s.%s", module.InfraName(), module.Name())]
+	mod, exists := modsList[fmt.Sprintf("%s.%s", module.StackName(), module.Name())]
 	// log.Printf("Check Mod: %s, exists: %v, list %v", name, exists, modsList)
 	if !exists {
 		return nil
@@ -62,9 +62,9 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 	if out.Kind() == reflect.Ptr && !out.IsNil() {
 		out = out.Elem()
 	}
-	if out.IsNil() {
-		return nil
-	}
+	// if out.IsNil() {
+	// 	return nil
+	// }
 	switch out.Kind() {
 	case reflect.Slice:
 		for i := 0; i < out.Len(); i++ {
@@ -157,7 +157,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 			return err
 		}
 		if !out.CanSet() {
-			log.Fatalf("Internal error: can't set string field.")
+			log.Fatalf("Internal error: can't set string field. %v", out)
 		}
 		out.Set(val)
 	default:
@@ -186,12 +186,12 @@ func ConvertToShellVar(name string) string {
 func BuildDep(m Module, dep *DependencyOutput) error {
 	if dep.Module == nil {
 
-		if dep.ModuleName == "" || dep.InfraName == "" {
-			return fmt.Errorf("Empty dependency in module '%v.%v'", m.InfraName(), m.Name())
+		if dep.ModuleName == "" || dep.StackName == "" {
+			return fmt.Errorf("Empty dependency in module '%v.%v'", m.StackName(), m.Name())
 		}
-		depMod, exists := m.ProjectPtr().Modules[fmt.Sprintf("%v.%v", dep.InfraName, dep.ModuleName)]
+		depMod, exists := m.ProjectPtr().Modules[fmt.Sprintf("%v.%v", dep.StackName, dep.ModuleName)]
 		if !exists {
-			return fmt.Errorf("Error in module '%v.%v' dependency, target '%v.%v' does not exist", m.InfraName(), m.Name(), dep.InfraName, dep.ModuleName)
+			return fmt.Errorf("Error in module '%v.%v' dependency, target '%v.%v' does not exist", m.StackName(), m.Name(), dep.StackName, dep.ModuleName)
 		}
 		dep.Module = depMod
 	}
