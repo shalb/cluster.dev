@@ -11,7 +11,10 @@ type Factory struct {
 
 // New creates new module driver factory.
 func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (project.Module, error) {
-	mod := Module{}
+	mod := Unit{
+		markers: make(map[string]interface{}),
+		applied: false,
+	}
 	mod.outputParsers = map[string]outputParser{
 		"json":      mod.JSONOutputParser,
 		"regexp":    mod.RegexOutputParser,
@@ -27,7 +30,7 @@ func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (projec
 
 // NewFromState creates new module from state data.
 func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Module, error) {
-	mod := Module{}
+	mod := Unit{}
 	err := mod.LoadState(spec, modKey, p)
 	if err != nil {
 		log.Debug(err.Error())

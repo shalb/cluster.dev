@@ -25,6 +25,7 @@ type Module interface {
 	CodeDir() string
 	Markers() map[string]interface{}
 	UpdateProjectRuntimeData(p *Project) error
+	WasApplied() bool
 }
 
 type ModuleDriver interface {
@@ -53,7 +54,7 @@ type DependencyOutput struct {
 	ModuleName string
 	StackName  string
 	Output     string
-	OutputData interface{} `json:"-"`
+	OutputData interface{}
 }
 
 // NewModule creates and return module with needed driver.

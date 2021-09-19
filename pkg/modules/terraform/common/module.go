@@ -11,12 +11,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
-// moduleTypeKeyTf - string representation of this module type.
-const moduleTypeKeyTf = "terraform"
-const moduleTypeKeyKubernetes = "kubernetes"
-const moduleTypeKeyHelm = "helm"
 const remoteStateMarkerName = "RemoteStateMarkers"
-const insertYAMLMarkerName = "insertYAMLMarkers"
 
 var terraformBin = "terraform"
 
@@ -32,8 +27,8 @@ type RequiredProvider struct {
 	Version string `json:"version"`
 }
 
-// Module describe cluster.dev module to deploy/destroy terraform modules.
-type Module struct {
+// Unit describe cluster.dev module to deploy/destroy terraform modules.
+type Unit struct {
 	stackPtr          *project.Stack
 	projectPtr        *project.Project
 	backendPtr        project.Backend
@@ -49,9 +44,15 @@ type Module struct {
 	markers           map[string]interface{}
 	applyOutput       []byte
 	requiredProviders map[string]RequiredProvider
+	applied           bool
 }
 
-func (m *Module) AddRequiredProvider(name, source, version string) {
+// WasApplied return true if unit's method Apply was runned.
+func (m *Unit) WasApplied() bool {
+	return m.applied
+}
+
+func (m *Unit) AddRequiredProvider(name, source, version string) {
 	if m.requiredProviders == nil {
 		m.requiredProviders = make(map[string]RequiredProvider)
 	}
@@ -61,15 +62,15 @@ func (m *Module) AddRequiredProvider(name, source, version string) {
 	}
 }
 
-func (m *Module) Markers() map[string]interface{} {
+func (m *Unit) Markers() map[string]interface{} {
 	return m.markers
 }
 
-func (m *Module) FilesList() map[string][]byte {
+func (m *Unit) FilesList() map[string][]byte {
 	return m.filesList
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	// Check if CDEV_TF_BINARY is set to change terraform binary name.
 	envTfBin, exists := os.LookupEnv("CDEV_TF_BINARY")
 	if exists {
@@ -86,6 +87,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 	m.expectedOutputs = make(map[string]*project.DependencyOutput)
 	m.filesList = make(map[string][]byte)
 	m.specRaw = spec
+	m.applied = false
 	m.markers = make(map[string]interface{})
 
 	// Process dependencies.
@@ -134,46 +136,46 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 	return nil
 }
 
-func (m *Module) ExpectedOutputs() map[string]*project.DependencyOutput {
+func (m *Unit) ExpectedOutputs() map[string]*project.DependencyOutput {
 	return m.expectedOutputs
 }
 
 // Name return module name.
-func (m *Module) Name() string {
+func (m *Unit) Name() string {
 	return m.name
 }
 
 // StackPtr return ptr to module stack.
-func (m *Module) StackPtr() *project.Stack {
+func (m *Unit) StackPtr() *project.Stack {
 	return m.stackPtr
 }
 
 // ApplyOutput return output of last module applying.
-func (m *Module) ApplyOutput() []byte {
+func (m *Unit) ApplyOutput() []byte {
 	return m.applyOutput
 }
 
 // ProjectPtr return ptr to module project.
-func (m *Module) ProjectPtr() *project.Project {
+func (m *Unit) ProjectPtr() *project.Project {
 	return m.projectPtr
 }
 
 // StackName return module stack name.
-func (m *Module) StackName() string {
+func (m *Unit) StackName() string {
 	return m.stackPtr.Name
 }
 
 // Backend return module backend.
-func (m *Module) Backend() project.Backend {
+func (m *Unit) Backend() project.Backend {
 	return m.stackPtr.Backend
 }
 
 // Dependencies return slice of module dependencies.
-func (m *Module) Dependencies() *[]*project.DependencyOutput {
+func (m *Unit) Dependencies() *[]*project.DependencyOutput {
 	return &m.dependencies
 }
 
-func (m *Module) Init() error {
+func (m *Unit) Init() error {
 	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -200,7 +202,7 @@ func (m *Module) Init() error {
 	return err
 }
 
-func (m *Module) Apply() error {
+func (m *Unit) Apply() error {
 	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -228,20 +230,14 @@ func (m *Module) Apply() error {
 			return fmt.Errorf("%v, error output:\n %v", err.Error(), string(errMsg))
 		}
 	}
+	if err == nil {
+		m.applied = true
+	}
 	return err
 }
 
-// // Apply module.
-// func (m *Module) Apply() error {
-// 	err := m.InitCommon()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return m.ApplyCommon()
-// }
-
 // Output module.
-func (m *Module) Output() (string, error) {
+func (m *Unit) Output() (string, error) {
 	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -268,7 +264,7 @@ func (m *Module) Output() (string, error) {
 }
 
 // Plan module.
-func (m *Module) Plan() error {
+func (m *Unit) Plan() error {
 	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
 		log.Debug(err.Error())
@@ -301,7 +297,7 @@ func (m *Module) Plan() error {
 }
 
 // Destroy module.
-func (m *Module) Destroy() error {
+func (m *Unit) Destroy() error {
 	rn, err := executor.NewExecutor(m.codeDir)
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	if err != nil {
@@ -333,23 +329,22 @@ func (m *Module) Destroy() error {
 }
 
 // Key return uniq module index (string key for maps).
-func (m *Module) Key() string {
+func (m *Unit) Key() string {
 	return fmt.Sprintf("%v.%v", m.StackName(), m.name)
 }
 
 // CodeDir return path to module code directory.
-func (m *Module) CodeDir() string {
+func (m *Unit) CodeDir() string {
 	return m.codeDir
 }
 
-// UpdateProjectRuntimeDataCommon update project runtime dataset, adds module outputs.
-// TODO: get module outputs and write to project runtime dataset. Now this function is only for printer's module interface.
-func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
+// UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
+func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Module) ReplaceMarkers(inheritedModule project.Module) error {
+func (m *Unit) ReplaceMarkers(inheritedModule project.Module) error {
 	if m.preHook != nil {
 		err := project.ScanMarkers(&m.preHook.Command, m.RemoteStatesScanner, inheritedModule)
 		if err != nil {

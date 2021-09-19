@@ -25,10 +25,10 @@ type OperationConfig struct {
 }
 
 type GetOutputsConfig struct {
-	Command   string `yaml:"command,omitempty"`
-	Type      string `yaml:"type"`
-	Regexp    string `yaml:"regexp,omitempty"`
-	Separator string `yaml:"separator,omitempty"`
+	Command   string `yaml:"command,omitempty" json:"command,omitempty"`
+	Type      string `yaml:"type" json:"type"`
+	Regexp    string `yaml:"regexp,omitempty" json:"regexp,omitempty"`
+	Separator string `yaml:"separator,omitempty" json:"separator,omitempty"`
 }
 
 type StateConfigFileSpec struct {
@@ -45,8 +45,9 @@ type StateConfigSpec struct {
 
 type outputParser func(string, interface{}) error
 
-// Module describe cluster.dev shell module.
-type Module struct {
+// Unit describe cluster.dev shell module.
+type Unit struct {
+	statePtr        *StateSpec
 	stackPtr        *project.Stack
 	projectPtr      *project.Project
 	backendPtr      project.Backend
@@ -67,17 +68,23 @@ type Module struct {
 	GetOutputsConf  GetOutputsConfig           `yaml:"outputs,omitempty"`
 	StateConf       StateConfigSpec            `yaml:"state,omitempty"`
 	outputParsers   map[string]outputParser
+	applied         bool
+}
+
+// WasApplied return true if unit's method Apply was runned.
+func (m *Unit) WasApplied() bool {
+	return m.applied
 }
 
 // JSONOutputParser parse in (expected JSON string)
 // and stores it in the value pointed to by out.
-func (m *Module) JSONOutputParser(in string, out interface{}) error {
+func (m *Unit) JSONOutputParser(in string, out interface{}) error {
 	return utils.JSONDecode([]byte(in), out)
 }
 
 // RegexOutputParser parse each line od in string with key/value regexp
 // and stores result as a map in the value pointed to by out.
-func (m *Module) RegexOutputParser(in string, out interface{}) error {
+func (m *Unit) RegexOutputParser(in string, out interface{}) error {
 	rv := reflect.ValueOf(out)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return fmt.Errorf("can't set unaddressable value")
@@ -113,7 +120,7 @@ func (m *Module) RegexOutputParser(in string, out interface{}) error {
 
 // SeparatorOutputParser split each line of in string with using separator
 // and stores result as a map in the value pointed to by out.
-func (m *Module) SeparatorOutputParser(in string, out interface{}) error {
+func (m *Unit) SeparatorOutputParser(in string, out interface{}) error {
 
 	rv := reflect.ValueOf(out)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
@@ -141,18 +148,15 @@ func (m *Module) SeparatorOutputParser(in string, out interface{}) error {
 	return nil
 }
 
-func (m *Module) Markers() map[string]interface{} {
-	if m.markers == nil {
-		m.markers = make(map[string]interface{})
-	}
+func (m *Unit) Markers() map[string]interface{} {
 	return m.markers
 }
 
-func (m *Module) FilesList() map[string][]byte {
+func (m *Unit) FilesList() map[string][]byte {
 	return m.filesList
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	if stack == nil {
 		return fmt.Errorf("read shell module: empty stack or project")
 	}
@@ -183,7 +187,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 	return nil
 }
 
-func (m *Module) ExpectedOutputs() map[string]*project.DependencyOutput {
+func (m *Unit) ExpectedOutputs() map[string]*project.DependencyOutput {
 	if m.expectedOutputs == nil {
 		m.expectedOutputs = make(map[string]*project.DependencyOutput)
 	}
@@ -191,45 +195,50 @@ func (m *Module) ExpectedOutputs() map[string]*project.DependencyOutput {
 }
 
 // Name return module name.
-func (m *Module) Name() string {
+func (m *Unit) Name() string {
 	return m.MyName
 }
 
 // StackPtr return ptr to module stack.
-func (m *Module) StackPtr() *project.Stack {
+func (m *Unit) StackPtr() *project.Stack {
 	return m.stackPtr
 }
 
 // ApplyOutput return output of module applying.
-func (m *Module) ApplyOutput() []byte {
+func (m *Unit) ApplyOutput() []byte {
 	return m.outputRaw
 }
 
 // ProjectPtr return ptr to module project.
-func (m *Module) ProjectPtr() *project.Project {
+func (m *Unit) ProjectPtr() *project.Project {
 	return m.projectPtr
 }
 
 // StackName return module stack name.
-func (m *Module) StackName() string {
+func (m *Unit) StackName() string {
 	return m.stackPtr.Name
 }
 
 // Backend return module backend.
-func (m *Module) Backend() project.Backend {
+func (m *Unit) Backend() project.Backend {
 	return m.stackPtr.Backend
 }
 
 // Dependencies return slice of module dependencies.
-func (m *Module) Dependencies() *[]*project.DependencyOutput {
+func (m *Unit) Dependencies() *[]*project.DependencyOutput {
 	return &m.dependencies
 }
 
-func (m *Module) Init() error {
+func (m *Unit) Init() error {
 	return nil
 }
 
-func (m *Module) Apply() error {
+// Apply run unit apply procedure.
+func (m *Unit) Apply() error {
+
+	// Get and remember module state before markers replacement.
+	m.statePtr = m.buildState()
+
 	err := m.ReplaceMarkers()
 	if err != nil {
 		return err
@@ -287,37 +296,41 @@ func (m *Module) Apply() error {
 		eo.OutputData = op
 	}
 	//log.Warnf("Output: %v\nParsed:%v", string(m.outputRaw), pOutputs)
+	if err == nil {
+		m.applied = true
+		log.Warnf("set applied to true: %v, err: %v", m.Key(), err)
+	}
 	return err
 }
 
 // Plan module.
-func (m *Module) Plan() error {
+func (m *Unit) Plan() error {
 	return nil
 }
 
 // Destroy module.
-func (m *Module) Destroy() error {
+func (m *Unit) Destroy() error {
 	return nil
 }
 
 // Key return uniq module index (string key for maps).
-func (m *Module) Key() string {
+func (m *Unit) Key() string {
 	return fmt.Sprintf("%v.%v", m.StackName(), m.MyName)
 }
 
 // CodeDir return path to module code directory.
-func (m *Module) CodeDir() string {
+func (m *Unit) CodeDir() string {
 	return m.WorkDir
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
 // TODO: get module outputs and write to project runtime dataset. Now this function is only for printer's module interface.
-func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
+func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Module) ReplaceMarkers() error {
+func (m *Unit) ReplaceMarkers() error {
 	err := project.ScanMarkers(m.Env, project.OutputsScanner, m)
 	if err != nil {
 		return err
@@ -329,6 +342,6 @@ func (m *Module) ReplaceMarkers() error {
 	return nil
 }
 
-func (m *Module) KindKey() string {
+func (m *Unit) KindKey() string {
 	return "shell"
 }

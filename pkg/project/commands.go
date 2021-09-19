@@ -230,7 +230,6 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 			} else {
 				modsForApply = append(modsForApply, md.Key())
 			}
-
 			if config.Global.ShowTerraformPlan {
 				err = p.ClearCacheDir()
 				if err != nil {

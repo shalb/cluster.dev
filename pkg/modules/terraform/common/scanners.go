@@ -11,7 +11,7 @@ import (
 )
 
 // RemoteStatesScanner - project scanner function, witch process dependencies markers in module data setted by AddRemoteStateMarker template function.
-func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
+func (m *Unit) RemoteStatesScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
 	var subVal = data
 	if data.Kind() != reflect.String {
 		subVal = reflect.ValueOf(data.Interface())

@@ -13,7 +13,7 @@ import (
 )
 
 // genBackendCodeBlock generate backend code block for this module.
-func (m *Module) genBackendCodeBlock() ([]byte, error) {
+func (m *Unit) genBackendCodeBlock() ([]byte, error) {
 
 	f, err := m.backendPtr.GetBackendHCL(m.StackName(), m.Name())
 	if err != nil {
@@ -37,7 +37,7 @@ func (m *Module) genBackendCodeBlock() ([]byte, error) {
 }
 
 // genDepsRemoteStates generate terraform remote states for all dependencies of this module.
-func (m *Module) genDepsRemoteStates() ([]byte, error) {
+func (m *Unit) genDepsRemoteStates() ([]byte, error) {
 	var res []byte
 	depsUniq := map[project.Module]bool{}
 	for _, dep := range *m.Dependencies() {
@@ -63,7 +63,7 @@ func (m *Module) genDepsRemoteStates() ([]byte, error) {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *Module) CreateCodeDir() error {
+func (m *Unit) CreateCodeDir() error {
 	err := os.Mkdir(m.codeDir, 0755)
 
 	for fn, f := range m.FilesList() {
@@ -82,7 +82,7 @@ func (m *Module) CreateCodeDir() error {
 	return nil
 }
 
-func (m *Module) Build() error {
+func (m *Unit) Build() error {
 	var err error
 
 	m.filesList["init.tf"], err = m.genBackendCodeBlock()
@@ -130,7 +130,7 @@ func (m *Module) Build() error {
 	return nil
 }
 
-func (m *Module) replaceRemoteStatesForBash(cmd string) (res string, err error) {
+func (m *Unit) replaceRemoteStatesForBash(cmd string) (res string, err error) {
 	res = cmd
 	for hash, mr := range m.Markers() {
 		marker, ok := mr.(*project.DependencyOutput)

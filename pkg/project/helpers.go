@@ -67,6 +67,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 	// }
 	switch out.Kind() {
 	case reflect.Slice:
+		// log.Warnf("slice %v", out)
 		for i := 0; i < out.Len(); i++ {
 			elem := out.Index(i)
 			if elem.Kind() != reflect.Interface && elem.Kind() != reflect.Ptr {
@@ -85,8 +86,10 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 				if err != nil {
 					return err
 				}
+				// log.Warnf("slice set")
 				out.Index(i).Set(val)
 			} else {
+				// log.Warnf("slice scan")
 				err := ScanMarkers(out.Index(i).Interface(), procFunc, module)
 				if err != nil {
 					return err
@@ -94,6 +97,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 			}
 		}
 	case reflect.Map:
+		// log.Warn("map")
 		for _, key := range out.MapKeys() {
 			elem := out.MapIndex(key)
 			if elem.Kind() != reflect.Interface && elem.Kind() != reflect.Ptr {
@@ -121,6 +125,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 			}
 		}
 	case reflect.Struct:
+		// log.Warn("struct")
 		for i := 0; i < out.NumField(); i++ {
 			if out.Field(i).Kind() == reflect.String {
 				val, err := procFunc(reflect.ValueOf(out.Field(i).Interface()), module)
@@ -136,6 +141,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 			}
 		}
 	case reflect.Interface:
+		// log.Warn("interface")
 		if reflect.TypeOf(out.Interface()).Kind() == reflect.String {
 			if !out.CanSet() {
 				log.Fatal("Internal error: can't set interface field.")
@@ -152,6 +158,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 			}
 		}
 	case reflect.String:
+		// log.Warn("string")
 		val, err := procFunc(out, module)
 		if err != nil {
 			return err

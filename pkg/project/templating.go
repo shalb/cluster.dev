@@ -223,15 +223,10 @@ func OutputsScanner(data reflect.Value, module Module) (reflect.Value, error) {
 
 	for key, marker := range markersList {
 		if strings.Contains(resString, key) {
-			var stackName string
 			if marker.StackName == "this" {
-				stackName = module.StackName()
-			} else {
-				stackName = marker.StackName
+				marker.StackName = module.StackName()
 			}
-
-			modKey := fmt.Sprintf("%s.%s", stackName, marker.ModuleName)
-			// log.Warnf("Mod Key: %v", modKey)
+			modKey := fmt.Sprintf("%s.%s", marker.StackName, marker.ModuleName)
 			depModule, exists := module.ProjectPtr().Modules[modKey]
 			if !exists {
 				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.StackName(), module.Name(), modKey)
@@ -239,11 +234,12 @@ func OutputsScanner(data reflect.Value, module Module) (reflect.Value, error) {
 			o, exists := depModule.ExpectedOutputs()[marker.Output]
 			if exists && o.OutputData != nil {
 				resString = strings.ReplaceAll(resString, key, o.OutputData.(string))
+				return reflect.ValueOf(resString), nil
 			}
-			markerTmp := DependencyOutput{Module: depModule, ModuleName: marker.ModuleName, StackName: stackName, Output: marker.Output}
-			*module.Dependencies() = append(*module.Dependencies(), &markerTmp)
-			module.Markers()[key] = &markerTmp
-			depModule.ExpectedOutputs()[marker.Output] = &markerTmp
+			outputTmp := marker
+			*module.Dependencies() = append(*module.Dependencies(), outputTmp)
+			module.Markers()[key] = &outputTmp
+			depModule.ExpectedOutputs()[marker.Output] = outputTmp
 		}
 	}
 	return reflect.ValueOf(resString), nil

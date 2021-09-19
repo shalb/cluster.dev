@@ -59,7 +59,7 @@ func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, 
 }
 
 // GetTemplateDriver return template driver to add template functions into the project.
-func (m *Module) GetTemplateDriver() (string, project.TemplateDriver) {
+func (m *Unit) GetTemplateDriver() (string, project.TemplateDriver) {
 	return "terraform", &TerraformTemplateDriver{}
 }
 

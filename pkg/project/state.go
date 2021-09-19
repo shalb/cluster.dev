@@ -151,6 +151,9 @@ func (p *Project) LoadState() (*StateProject, error) {
 	for mName, mState := range stateD.Modules {
 		log.Debugf("Loading module from state: %v", mName)
 
+		if mState == nil {
+			continue
+		}
 		key, exists := mState.(map[string]interface{})["type"]
 		if !exists {
 			return nil, fmt.Errorf("loading state: internal error: bad module type in state")
@@ -193,6 +196,10 @@ func (sp *StateProject) CheckModuleChanges(module Module) (string, Module) {
 
 func (sp *StateProject) checkModuleChangesRecursive(module Module) bool {
 	// log.Debugf("Check module recu: %v deps: %v", module.Key(), *module.Dependencies())
+	log.Warnf("Mod %v, applied: %v", module.Key(), module.WasApplied())
+	if module.WasApplied() {
+		return true
+	}
 	modNew, exists := sp.Modules[module.Key()]
 	if !exists {
 		return true

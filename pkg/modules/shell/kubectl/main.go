@@ -6,7 +6,7 @@ import (
 )
 
 type Module struct {
-	common.Module
+	common.Unit
 	outputRaw string
 	inputs    map[string]interface{}
 }
@@ -21,7 +21,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
-	err := m.Module.ReplaceMarkers()
+	err := m.Unit.ReplaceMarkers()
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func (m *Module) ReplaceMarkers() error {
 // CreateCodeDir generate all terraform code for project.
 func (m *Module) Build() error {
 	var err error
-	err = m.Module.Build()
+	err = m.Unit.Build()
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (m *Module) Build() error {
 }
 
 func (m *Module) Apply() (err error) {
-	err = m.Module.Apply()
+	err = m.Unit.Apply()
 	if err != nil {
 		return
 	}
@@ -49,5 +49,5 @@ func (m *Module) Apply() (err error) {
 // UpdateProjectRuntimeData update project runtime dataset, adds printer module outputs.
 func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
 	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: m.Key(), Output: m.outputRaw})
-	return m.Module.UpdateProjectRuntimeData(p)
+	return m.Unit.UpdateProjectRuntimeData(p)
 }

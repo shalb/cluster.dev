@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (m *Module) readDeps(depsData interface{}) ([]*project.DependencyOutput, error) {
+func (m *Unit) readDeps(depsData interface{}) ([]*project.DependencyOutput, error) {
 	rawDepsList := []string{}
 	switch depsData.(type) {
 	case string:

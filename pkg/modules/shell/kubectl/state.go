@@ -16,7 +16,7 @@ type State struct {
 }
 
 func (m *Module) GetState() interface{} {
-	st := m.Module.GetState()
+	st := m.Unit.GetState()
 	printer := State{
 		StateSpec:    st.(common.StateSpec),
 		Inputs:       m.inputs,
@@ -32,7 +32,7 @@ type StateDiff struct {
 }
 
 func (m *Module) GetDiffData() interface{} {
-	st := m.Module.GetStateDiff()
+	st := m.Unit.GetStateDiff()
 	stTf := StateDiff{
 		StateSpecDiff: st,
 		Inputs:        m.inputs,
@@ -54,5 +54,5 @@ func (m *Module) LoadState(stateData interface{}, modKey string, p *project.Stat
 	}
 	m.inputs = s.Inputs.(map[string]interface{})
 	m.outputRaw = s.ModOutputRaw
-	return m.Module.LoadState(s.StateSpec, modKey, p)
+	return m.Unit.LoadState(s.StateSpec, modKey, p)
 }

@@ -11,10 +11,10 @@ import (
 )
 
 // CreateCodeDir generate all terraform code for project.
-func (m *Module) CreateCodeDir() error {
+func (m *Unit) CreateCodeDir() error {
 	err := os.Mkdir(m.cacheDir, 0755)
 	if err != nil {
-		return fmt.Errorf("read module '%v': '%v'", m.Name(), err.Error())
+		return fmt.Errorf("read module '%v': mkdir '%v': '%v'", m.Name(), m.cacheDir, err.Error())
 	}
 	err = utils.CopyDirectory(m.WorkDir, m.cacheDir)
 	if err != nil {
@@ -39,6 +39,6 @@ func (m *Module) CreateCodeDir() error {
 	return nil
 }
 
-func (m *Module) Build() error {
+func (m *Unit) Build() error {
 	return m.CreateCodeDir()
 }

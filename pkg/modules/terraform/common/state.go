@@ -36,7 +36,7 @@ type StateSpecDiffCommon struct {
 type StateCommon interface {
 }
 
-func (m *Module) GetStateCommon() StateSpecCommon {
+func (m *Unit) GetStateCommon() StateSpecCommon {
 	deps := make([]StateDep, len(m.dependencies))
 	for i, dep := range m.dependencies {
 		deps[i].Stack = dep.StackName
@@ -61,7 +61,7 @@ func (m *Module) GetStateCommon() StateSpecCommon {
 	return st
 }
 
-func (m *Module) GetStateDiffCommon() StateSpecDiffCommon {
+func (m *Unit) GetStateDiffCommon() StateSpecDiffCommon {
 	deps := make([]StateDep, len(m.dependencies))
 	for i, dep := range m.dependencies {
 		deps[i].Stack = dep.StackName
@@ -80,7 +80,7 @@ func (m *Module) GetStateDiffCommon() StateSpecDiffCommon {
 	return st
 }
 
-func (m *Module) LoadStateCommon(spec StateCommon, modKey string, p *project.StateProject) error {
+func (m *Unit) LoadStateCommon(spec StateCommon, modKey string, p *project.StateProject) error {
 
 	mkSplitted := strings.Split(modKey, ".")
 	if len(mkSplitted) != 2 {
@@ -138,7 +138,7 @@ func (m *Module) LoadStateCommon(spec StateCommon, modKey string, p *project.Sta
 }
 
 // ReplaceRemoteStatesForDiff replace remote state markers in struct to <remote state stack.mod.output> to show in diff.
-func (m *Module) ReplaceRemoteStatesForDiff(in, out interface{}) error {
+func (m *Unit) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	inJSON, err := utils.JSONEncode(in)
 	if err != nil {
 		return fmt.Errorf("module diff: internal error")

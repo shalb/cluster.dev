@@ -17,7 +17,7 @@ import (
 )
 
 type Module struct {
-	common.Module
+	common.Unit
 	source          string
 	kubeconfig      string
 	inputs          map[string]interface{}
@@ -96,7 +96,7 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 }
 
 func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
-	err := m.Module.ReadConfig(spec, stack)
+	err := m.Unit.ReadConfig(spec, stack)
 	if err != nil {
 		return fmt.Errorf("reading kubernetes module: %v", err.Error())
 	}
@@ -170,7 +170,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Module) ReplaceMarkers() error {
-	err := m.Module.ReplaceMarkers(m)
+	err := m.Unit.ReplaceMarkers(m)
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func (m *Module) ReplaceMarkers() error {
 
 // Build generate all terraform code for project.
 func (m *Module) Build() error {
-	err := m.Module.Build()
+	err := m.Unit.Build()
 	if err != nil {
 		return err
 	}
@@ -201,5 +201,5 @@ func (m *Module) Build() error {
 
 // UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
 func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
-	return m.Module.UpdateProjectRuntimeData(p)
+	return m.Unit.UpdateProjectRuntimeData(p)
 }

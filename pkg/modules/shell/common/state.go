@@ -15,29 +15,29 @@ type StateDep struct {
 }
 
 type StateSpec struct {
-	BackendName     string                     `json:"backend_name"`
-	Markers         map[string]interface{}     `json:"markers,omitempty"`
-	Dependencies    []StateDep                 `json:"dependencies,omitempty"`
-	Outputs         map[string]bool            `json:"outputs,omitempty"`
-	CustomStateData map[string]interface{}     `json:"custom_state_data"`
-	CreateFiles     []CreateFileRepresentation `json:"create_files,omitempty"`
-	ModType         string                     `json:"type"`
-	ApplyConf       OperationConfig            `json:"apply"`
-	Env             interface{}                `json:"env"`
+	WorkDir         string                               `json:"work_dir"`
+	BackendName     string                               `json:"backend_name"`
+	Markers         map[string]interface{}               `json:"markers,omitempty"`
+	Dependencies    []StateDep                           `json:"dependencies,omitempty"`
+	CustomStateData map[string]interface{}               `json:"custom_state_data,omitempty"`
+	CreateFiles     []CreateFileRepresentation           `json:"create_files,omitempty"`
+	ModType         string                               `json:"type"`
+	ApplyConf       OperationConfig                      `json:"apply"`
+	Env             map[string]interface{}               `json:"env"`
+	Outputs         map[string]*project.DependencyOutput `json:"outputs,omitempty"`
+	OutputsConfig   GetOutputsConfig                     `json:"outputs_config,omitempty"`
 }
 
 type StateSpecDiff struct {
 	Outputs         map[string]string          `json:"outputs,omitempty"`
-	CustomStateData map[string]interface{}     `json:"custom_state_data"`
+	CustomStateData map[string]interface{}     `json:"custom_state_data,omitempty"`
 	CreateFiles     []CreateFileRepresentation `json:"create_files,omitempty"`
 	ApplyConf       OperationConfig            `json:"apply"`
-	Env             interface{}                `json:"env"`
+	Env             map[string]interface{}     `json:"env"`
+	OutputsConfig   GetOutputsConfig           `json:"outputs_config,omitempty"`
 }
 
-type StateCommon interface {
-}
-
-func (m *Module) GetState() interface{} {
+func (m *Unit) buildState() *StateSpec {
 	deps := make([]StateDep, len(m.dependencies))
 	for i, dep := range m.dependencies {
 		deps[i].Stack = dep.StackName
@@ -47,43 +47,63 @@ func (m *Module) GetState() interface{} {
 		BackendName:     m.backendPtr.Name(),
 		Markers:         m.markers,
 		Dependencies:    deps,
-		Outputs:         make(map[string]bool),
+		WorkDir:         m.WorkDir,
+		Outputs:         m.expectedOutputs,
 		CustomStateData: make(map[string]interface{}),
 		ModType:         m.KindKey(),
-		ApplyConf:       m.ApplyConf,
-		Env:             m.Env,
-		CreateFiles:     m.CreateFiles,
+		ApplyConf: OperationConfig{
+			Commands: make([]interface{}, len(m.ApplyConf.Commands)),
+		},
+		Env:           make(map[string]interface{}),
+		CreateFiles:   m.CreateFiles,
+		OutputsConfig: m.GetOutputsConf,
 	}
-	for key := range m.expectedOutputs {
-		st.Outputs[key] = true
+	for i := range m.ApplyConf.Commands {
+		st.ApplyConf.Commands[i] = m.ApplyConf.Commands[i]
+	}
+	if m.Env != nil {
+		for key, val := range m.Env.(map[string]interface{}) {
+			st.Env[key] = val
+		}
 	}
 	if len(m.dependencies) == 0 {
 		st.Dependencies = []StateDep{}
 	}
-	return st
+	return &st
 }
 
-func (m *Module) GetStateDiff() StateSpecDiff {
+func (m *Unit) GetState() interface{} {
+	if m.statePtr == nil {
+		m.statePtr = m.buildState()
+	}
+	return m.statePtr
+}
+
+func (m *Unit) GetStateDiff() StateSpecDiff {
 	deps := make([]StateDep, len(m.dependencies))
 	for i, dep := range m.dependencies {
 		deps[i].Stack = dep.StackName
 		deps[i].Module = dep.ModuleName
 	}
 	st := StateSpecDiff{
-		Outputs:         map[string]string{},
-		CustomStateData: make(map[string]interface{}),
+		Outputs:       make(map[string]string),
+		ApplyConf:     m.ApplyConf,
+		CreateFiles:   m.CreateFiles,
+		Env:           make(map[string]interface{}),
+		OutputsConfig: m.GetOutputsConf,
+	}
+	if m.Env != nil {
+		for key, val := range m.Env.(map[string]interface{}) {
+			st.Env[key] = val
+		}
 	}
 	for output := range m.expectedOutputs {
 		st.Outputs[output] = "<output>"
 	}
-	st.ApplyConf = m.ApplyConf
-	st.Env = m.Env
-	st.CreateFiles = m.CreateFiles
-
 	return st
 }
 
-func (m *Module) GetDiffData() interface{} {
+func (m *Unit) GetDiffData() interface{} {
 	st := m.GetStateDiff()
 	diffData := map[string]interface{}{}
 	utils.JSONInterfaceToType(st, &diffData)
@@ -91,7 +111,7 @@ func (m *Module) GetDiffData() interface{} {
 	return diffData
 }
 
-func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProject) error {
+func (m *Unit) LoadState(spec interface{}, modKey string, p *project.StateProject) error {
 
 	mkSplitted := strings.Split(modKey, ".")
 	if len(mkSplitted) != 2 {
@@ -139,11 +159,13 @@ func (m *Module) LoadState(spec interface{}, modKey string, p *project.StateProj
 	m.filesList = make(map[string][]byte)
 	m.specRaw = make(map[string]interface{})
 	m.markers = make(map[string]interface{})
-	m.WorkDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
+	m.cacheDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
 	m.ApplyConf = mState.ApplyConf
 	m.Env = mState.Env
 	m.CreateFiles = mState.CreateFiles
 	m.expectedOutputs = make(map[string]*project.DependencyOutput)
+	m.GetOutputsConf = mState.OutputsConfig
+	m.WorkDir = mState.WorkDir
 
 	for key := range mState.Outputs {
 		m.expectedOutputs[key] = &project.DependencyOutput{
