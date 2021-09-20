@@ -1,30 +1,34 @@
-# Template Development
+# Stack Template Development
 
 ## Basics
 
-A template is a directory, either local or located in a Git repo that contains template config files. cdev reads all ./*.yaml files from the directory (non-recursively), renders a template with the project's data, parse the yaml file and loads modules. Modules may contain reference to other files that are required for work. These files should be located inside the current directory (template context). As some of the files will also be rendered with the project's data, you can use Go-templates in them. For more details please see [modules configuration](#modules) below.
+A stack template is a yaml file, which tells cdev which units to run and how. It is a core cdev resource that makes for its flexibility. Stack templates use Go template language to allow you customise and select the units you want to run.
 
-Template represents a yaml structure with an array of different invocation modules. Common view:
+The stack template's config files are stored within the stack template directory, which could be located either locally or in a Git repo. cdev reads all _./*.yaml files from the directory (non-recursively), renders a stack template with the project's data, parse the yaml file and loads units - the most primitive elements of a stack template. 
+
+Units are building blocks that stack templates are made of. It could be anything — a Terraform module, Helm you want to install or a Bash script that you want to run. Units can be remote or stored in the same repo with other cdev code. Units may contain reference to other files that are required for work. These files should be located inside the current directory (stack template's context). As some of the files will also be rendered with the project's data, you can use Go templates in them. For more details please see [units configuration](#units) below.
+
+A stack template represents a yaml structure with an array of different invocation units. Common view:
 
 ```yaml
-modules:
-  - module1
-  - module2
-  - module3
+units:
+  - unit1
+  - unit2
+  - unit3
   ...
 ```
 
-Template can utilize all kinds of Go-templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
+Stack templates can utilize all kinds of Go templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
 
 ## Functions
 
-1) [Base Go-template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
+1) [Base Go template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
 
 2) [Sprig functions](https://masterminds.github.io/sprig/).
 
-3) Enhanced functions: all functions described above allow you to modify the template text. Apart from these, some special enhanced functions are available. They cannot be used everywhere. The functions are integrated within the functionality of the program and with the yaml syntax:
+3) Enhanced functions: all functions described above allow you to modify the text of a stack template. Apart from these, some special enhanced functions are available. They cannot be used everywhere. The functions are integrated within the functionality of the program and with the yaml syntax:
 
-* `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block. **Allowed use**: only as full yaml value, in module `inputs`. Example:
+* `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block. **Allowed use**: only as full yaml value, in unit `inputs`. Example:
 
 Source yaml:
 
@@ -48,7 +52,7 @@ modules:
     node_groups: {{ insertYAML .values.node_groups }}
 ```
 
-Rendered template:
+Rendered stack template:
 
 ```yaml
 modules:
@@ -63,11 +67,11 @@ modules:
       type: spot
 ```
 
-* `remoteState` - is used for passing data between modules and infrastructures, can be used in pre/post hooks. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: 
+* `remoteState` - is used for passing data across units and stacks, can be used in pre/post hooks. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"stack_name.unit_name.output_name"`. Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`. **Allowed use**: 
 
-    * all modules types: in `inputs`;
+    * all units types: in `inputs`;
 
-    * all modules types: in modules pre/post hooks;
+    * all units types: in units pre/post hooks;
 
     * in Kubernetes modules: in Kubernetes manifests.
 
@@ -82,7 +86,7 @@ Rendered:
 172.18.0.0/16
 ```
 
-## Modules
+## Units
 
 All modules described below have a common format and common fields. Base example:
 
