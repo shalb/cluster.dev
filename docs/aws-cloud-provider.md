@@ -1,6 +1,6 @@
 # Deploying to AWS
 
-cdev uses project templates to generate projects in a desired cloud. This section describes steps necessary to start working with cdev in AWS cloud using [AWS-EKS](https://github.com/shalb/cdev-aws-eks) template.
+cdev uses stack templates to generate projects in a desired cloud. This section describes steps necessary to start working with cdev in AWS cloud using [AWS-EKS](https://github.com/shalb/cdev-aws-eks) stack template.
 
 ## Prerequisites to use AWS-EKS template
 
@@ -73,7 +73,7 @@ aws s3 mb s3://cdev-states
 
 ### DNS Zone
 
-For the AWS-EKS template example, you need to define a Route 53 hosted zone. Options:
+In AWS-EKS stack template example you need to define a Route 53 hosted zone. Options:
 
 1. You already have a Route 53 hosted zone.
 
@@ -83,7 +83,7 @@ For the AWS-EKS template example, you need to define a Route 53 hosted zone. Opt
 
 ## AWS-EKS
 
-[AWS-EKS](https://github.com/shalb/cdev-aws-eks) is a cdev template that creates and provisions Kubernetes clusters in AWS cloud by means of Amazon Elastic Kubernetes Service (EKS).
+[AWS-EKS](https://github.com/shalb/cdev-aws-eks) is a cdev stack template that creates and provisions Kubernetes clusters in AWS cloud by means of Amazon Elastic Kubernetes Service (EKS).
 
 ### AWS-EKS starting guide
 
@@ -96,7 +96,7 @@ For the AWS-EKS template example, you need to define a Route 53 hosted zone. Opt
     ```
 
     !!! tip
-        The template's repo could contain several options for project generation. To list available generators, use ```--list-templates``` option:
+        The stack template's repo could contain several options for project generation. To list available generators, use ```--list-templates``` option:
 
           ```bash
           cdev project create https://github.com/shalb/cdev-aws-eks --list-templates
@@ -120,7 +120,7 @@ For the AWS-EKS template example, you need to define a Route 53 hosted zone. Opt
 
     * backend.yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://cluster.dev/project-configuration/#backends).
 
-    * infra.yaml - describes infrastructure configuration. See [infrastructure docs](https://cluster.dev/project-configuration/#infrastructure).
+    * infra.yaml - describes stack configuration. See [infrastructure docs](https://cluster.dev/project-configuration/#infrastructure).
 
 4. Run `cdev plan` to build the project. In the output you will see an infrastructure that is going to be created after running `cdev apply`.
 
@@ -132,7 +132,7 @@ For the AWS-EKS template example, you need to define a Route 53 hosted zone. Opt
     !!! tip
         We highly recommend to run `cdev apply` in a debug mode so that you could see cdev logging in the output: `cdev apply -l debug`
 
-6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the infra.yaml.
+6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the stack template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the infra.yaml.
 
 7. Displayed in the output will be also a command on how to get kubeconfig and connect to your Kubernetes cluster.
 
