@@ -46,7 +46,7 @@ values:
 Target yaml template:
 
 ```yaml
-modules:
+units:
   - name: k3s
     type: terraform
     node_groups: {{ insertYAML .values.node_groups }}
@@ -55,7 +55,7 @@ modules:
 Rendered stack template:
 
 ```yaml
-modules:
+units:
   - name: k3s
     type: terraform
     node_groups:
@@ -88,15 +88,19 @@ Rendered:
 
 ## Units
 
-All modules described below have a common format and common fields. Base example:
+cdev has two types of units that operate through Terraform or shell. Each type gives rise to the hierarchy of lower-level units that are marked with a prefix respectively, for example: terraform.helm, shell.kubectl.
+
+### Terraform units hierarchy
+
+All units described below have a common format and common fields. Base example:
 
 ```yaml
   - name: k3s
     type: terraform
     depends_on:
-      - this.module1_name
-      - this.module2_name
-#   depends_on: this.module1_name # is allowed to use string for single, or list for multiple dependencies
+      - this.unit1_name
+      - this.unit2_name
+#   depends_on: this.unit1_name # is allowed to use string for single, or list for multiple dependencies
     pre_hook:
       command: "echo pre_hook"
       # script: "./scripts/hook.sh"
@@ -111,32 +115,32 @@ All modules described below have a common format and common fields. Base example
       on_plan: false
 ```
 
-* `name` - module name. *Required*.
+* `name` - unit name. *Required*.
 
-* `type` - module type. One of: `terraform`, `helm`, `kubernetes`, `printer`. See below.
+* `type` - unit type. One of: `terraform`, `helm`, `kubernetes`, `printer`. See below.
 
-* `depends_on` - *string* or *list of strings*. One or multiple module dependencies in the format "infra_name.module_name". Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`.
+* `depends_on` - *string* or *list of strings*. One or multiple unit dependencies in the format "stack_name.unit_name". Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`.
 
-* `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the module execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the module.
+* `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the unit, respectively. The commands will be executed in the same context as the actions of the unit. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the unit execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the unit.
 
     * `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
 
-    * `script` - *string* path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
+    * `script` - *string* path to shell script file which is relative to the stack template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
 
-    * `on_apply` *bool*, *optional* turn off/on when module applying. **Default: "true"**.
+    * `on_apply` *bool*, *optional* turn off/on when unit applying. **Default: "true"**.
 
-    * `on_destroy` - *bool*, *optional* turn off/on when module destroying. **Default: "false"**.
+    * `on_destroy` - *bool*, *optional* turn off/on when unit destroying. **Default: "false"**.
 
-    * `on_plan` - *bool*, *optional* turn off/on when module plan executing. **Default: "false"**.
+    * `on_plan` - *bool*, *optional* turn off/on when unit plan executing. **Default: "false"**.
 
-### Terraform module
+#### Terraform unit
 
-Describes direct Terraform module invocation.
+Describes direct Terraform unit invocation.
 
 Example:
 
 ```yaml
-modules:
+units:
   - name: vpc
     type: terraform
     version: "2.77.0"
@@ -155,14 +159,14 @@ In addition to common options the following are available:
 
 * `inputs` - *map of any*, *required*. A map that corresponds to [input variables](https://www.terraform.io/docs/language/values/variables.html) defined by the module. This block allows to use functions `remoteState` and `insertYAML`.
 
-### Helm module
+#### Helm unit
 
 Describes [Terraform Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
 
 Example:
 
 ```yaml
-modules:
+units:
   - name: argocd
     type: helm
     provider_version: "2.0.3"
@@ -186,11 +190,11 @@ modules:
 
 In addition to common options the following are available:
 
-* `source` - *map*, *required*. Block describes Helm chart source.
+* `source` - *map*, *required*. This block describes Helm chart source.
 
   * `chart`, `repository`, `version` - correspond to options with the same name from helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
 
-* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
+* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the unit was executed.
 * `provider_version` - *string*, *optional*. Version of terraform helm provider to use. Default - latest. See [terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest)  
 
 * `additional_options` - *map of any*, *optional*. Corresponds to [Terraform helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
@@ -216,14 +220,14 @@ In addition to common options the following are available:
     }
     ```
 
-### Kubernetes module
+#### Kubernetes unit
 
 Describes [Terraform kubernetes-alpha provider](https://github.com/hashicorp/terraform-provider-kubernetes-alpha) invocation.
 
 Example:
 
 ```yaml
-modules:
+units:
   - name: argocd_apps
     type: kubernetes
     provider_version: "0.2.1"
@@ -232,18 +236,19 @@ modules:
     depends_on: this.argocd
 ```
 
-* `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the template, and also allows to use the functions `remoteState` and `insertYAML`**.
+* `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the stack template, and also allows to use the functions `remoteState` and `insertYAML`**.
 
-* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
+* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the unit was executed.
 * `provider_version` - *string*, *optional*. Version of terraform kubernetes-alpha provider to use. Default - latest. See [terraform kubernetes-alpha provider](https://registry.terraform.io/providers/hashicorp/kubernetes-alpha/latest) 
-### Printer module
 
-The module is mainly used to see the outputs of other modules in the console logs.
+#### Printer unit
+
+The unit is mainly used to see the outputs of other units in the console logs.
 
 Example:
 
 ```yaml
-modules:
+units:
   - name: print_outputs
     type: printer
     inputs:
