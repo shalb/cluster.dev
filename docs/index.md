@@ -2,9 +2,9 @@
 
 ## What is it?
 
-Cluster.dev is an open-source tool designed to manage Cloud Native Infrastructures with simple declarative manifests - infrastructure templates. It allows you to describe a whole infrastructure and deploy it with a single tool.
+Cluster.dev is an open-source tool designed to manage cloud native infrastructures with simple declarative manifests - stack templates. It allows you to describe a whole infrastructure and deploy it with a single tool.
 
-The infrastructure templates could be based on Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc. Cluster.dev sticks those components together so that you could deploy, test and distribute a whole set of components with pinned versions.
+The stack templates could be based on Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Kustomize and ArgoCD/Flux applications, OPA policies etc. Cluster.dev sticks those components together so that you could deploy, test and distribute a whole set of components with pinned versions.
 
 ## Principle Diagram
 
@@ -16,7 +16,7 @@ The infrastructure templates could be based on Terraform modules, Kubernetes man
 
 ## How does it work?
 
-With cluster.dev you create or download a predefined template, set the variables, then render and deploy a whole infra set.
+With cluster.dev you create or download a predefined stack template, set the variables, then render and deploy a whole stack.
 
 Capabilities:
 
