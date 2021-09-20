@@ -2,7 +2,7 @@
 
 cdev uses stack templates to generate projects in a desired cloud. This section describes steps necessary to start working with cdev in AWS cloud using [AWS-EKS](https://github.com/shalb/cdev-aws-eks) stack template.
 
-## Prerequisites to use AWS-EKS template
+## Prerequisites to use AWS-EKS stack template
 
 1. Terraform version 13+.
 
