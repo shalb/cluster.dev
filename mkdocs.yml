@@ -45,9 +45,18 @@ theme:
   features:
     - navigation.tabs
   palette:
-    scheme: default
-    primary: indigo
-    accent: indigo
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mod
   font:
     text: Roboto
     code: Roboto Mono
