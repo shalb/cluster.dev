@@ -24,7 +24,7 @@ type OperationConfig struct {
 	Commands []interface{} `yaml:"commands" json:"commands"`
 }
 
-type GetOutputsConfig struct {
+type OutputsConfigSpec struct {
 	Command   string `yaml:"command,omitempty" json:"command,omitempty"`
 	Type      string `yaml:"type" json:"type"`
 	Regexp    string `yaml:"regexp,omitempty" json:"regexp,omitempty"`
@@ -47,28 +47,28 @@ type outputParser func(string, interface{}) error
 
 // Unit describe cluster.dev shell module.
 type Unit struct {
-	statePtr        *StateSpec
-	stackPtr        *project.Stack
-	projectPtr      *project.Project
-	backendPtr      project.Backend
-	dependencies    []*project.DependencyOutput
-	expectedOutputs map[string]*project.DependencyOutput
-	filesList       map[string][]byte
-	specRaw         map[string]interface{}
-	markers         map[string]interface{}
-	outputRaw       []byte
-	cacheDir        string
-	MyName          string                     `yaml:"name"`
-	WorkDir         string                     `yaml:"work_dir,omitempty"`
-	Env             interface{}                `yaml:"env,omitempty"`
-	CreateFiles     []CreateFileRepresentation `yaml:"create_files,omitempty"`
-	ApplyConf       OperationConfig            `yaml:"apply"`
-	PlanConf        OperationConfig            `yaml:"plan,omitempty"`
-	DestroyConf     OperationConfig            `yaml:"destroy"`
-	GetOutputsConf  GetOutputsConfig           `yaml:"outputs,omitempty"`
-	StateConf       StateConfigSpec            `yaml:"state,omitempty"`
-	outputParsers   map[string]outputParser
-	applied         bool
+	statePtr       *StateSpec
+	stackPtr       *project.Stack
+	projectPtr     *project.Project
+	backendPtr     project.Backend
+	dependencies   []*project.DependencyOutput
+	outputs        map[string]*project.DependencyOutput
+	filesList      map[string][]byte
+	specRaw        map[string]interface{}
+	markers        map[string]interface{}
+	outputRaw      []byte
+	cacheDir       string
+	MyName         string                     `yaml:"name"`
+	WorkDir        string                     `yaml:"work_dir,omitempty"`
+	Env            interface{}                `yaml:"env,omitempty"`
+	CreateFiles    []CreateFileRepresentation `yaml:"create_files,omitempty"`
+	ApplyConf      OperationConfig            `yaml:"apply"`
+	PlanConf       OperationConfig            `yaml:"plan,omitempty"`
+	DestroyConf    OperationConfig            `yaml:"destroy"`
+	GetOutputsConf OutputsConfigSpec          `yaml:"outputs,omitempty"`
+	StateConf      StateConfigSpec            `yaml:"state,omitempty"`
+	outputParsers  map[string]outputParser
+	applied        bool
 }
 
 // WasApplied return true if unit's method Apply was runned.
@@ -188,10 +188,10 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 }
 
 func (m *Unit) ExpectedOutputs() map[string]*project.DependencyOutput {
-	if m.expectedOutputs == nil {
-		m.expectedOutputs = make(map[string]*project.DependencyOutput)
+	if m.outputs == nil {
+		m.outputs = make(map[string]*project.DependencyOutput)
 	}
-	return m.expectedOutputs
+	return m.outputs
 }
 
 // Name return module name.
@@ -288,7 +288,7 @@ func (m *Unit) Apply() error {
 	if err != nil {
 		return fmt.Errorf("parse outputs '%v': %v", m.GetOutputsConf.Type, err.Error())
 	}
-	for _, eo := range m.expectedOutputs {
+	for _, eo := range m.outputs {
 		op, exists := pOutputs[eo.Output]
 		if !exists {
 			return fmt.Errorf("parse outputs: unit has no output named '%v', expected by another unit", eo.Output)

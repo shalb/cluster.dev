@@ -9,46 +9,38 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-type StateDep struct {
-	Stack  string `json:"infra"`
-	Module string `json:"module"`
-}
-
+// StateSpec the unit's data to
 type StateSpec struct {
 	WorkDir         string                               `json:"work_dir"`
 	BackendName     string                               `json:"backend_name"`
 	Markers         map[string]interface{}               `json:"markers,omitempty"`
-	Dependencies    []StateDep                           `json:"dependencies,omitempty"`
+	Dependencies    []*project.DependencyOutput          `json:"dependencies,omitempty"`
 	CustomStateData map[string]interface{}               `json:"custom_state_data,omitempty"`
 	CreateFiles     []CreateFileRepresentation           `json:"create_files,omitempty"`
 	ModType         string                               `json:"type"`
 	ApplyConf       OperationConfig                      `json:"apply"`
 	Env             map[string]interface{}               `json:"env"`
 	Outputs         map[string]*project.DependencyOutput `json:"outputs,omitempty"`
-	OutputsConfig   GetOutputsConfig                     `json:"outputs_config,omitempty"`
+	OutputsConfig   OutputsConfigSpec                    `json:"outputs_config,omitempty"`
 }
 
+// StateSpecDiff describe the pieces of StateSpec data, that will be comered in "plan" diff and should affect the unit redeployment.
 type StateSpecDiff struct {
 	Outputs         map[string]string          `json:"outputs,omitempty"`
 	CustomStateData map[string]interface{}     `json:"custom_state_data,omitempty"`
 	CreateFiles     []CreateFileRepresentation `json:"create_files,omitempty"`
 	ApplyConf       OperationConfig            `json:"apply"`
 	Env             map[string]interface{}     `json:"env"`
-	OutputsConfig   GetOutputsConfig           `json:"outputs_config,omitempty"`
+	OutputsConfig   OutputsConfigSpec          `json:"outputs_config,omitempty"`
 }
 
 func (m *Unit) buildState() *StateSpec {
-	deps := make([]StateDep, len(m.dependencies))
-	for i, dep := range m.dependencies {
-		deps[i].Stack = dep.StackName
-		deps[i].Module = dep.ModuleName
-	}
 	st := StateSpec{
 		BackendName:     m.backendPtr.Name(),
 		Markers:         m.markers,
-		Dependencies:    deps,
+		Dependencies:    m.dependencies,
 		WorkDir:         m.WorkDir,
-		Outputs:         m.expectedOutputs,
+		Outputs:         m.outputs,
 		CustomStateData: make(map[string]interface{}),
 		ModType:         m.KindKey(),
 		ApplyConf: OperationConfig{
@@ -67,7 +59,7 @@ func (m *Unit) buildState() *StateSpec {
 		}
 	}
 	if len(m.dependencies) == 0 {
-		st.Dependencies = []StateDep{}
+		st.Dependencies = make([]*project.DependencyOutput, 0)
 	}
 	return &st
 }
@@ -80,11 +72,6 @@ func (m *Unit) GetState() interface{} {
 }
 
 func (m *Unit) GetStateDiff() StateSpecDiff {
-	deps := make([]StateDep, len(m.dependencies))
-	for i, dep := range m.dependencies {
-		deps[i].Stack = dep.StackName
-		deps[i].Module = dep.ModuleName
-	}
 	st := StateSpecDiff{
 		Outputs:       make(map[string]string),
 		ApplyConf:     m.ApplyConf,
@@ -97,7 +84,7 @@ func (m *Unit) GetStateDiff() StateSpecDiff {
 			st.Env[key] = val
 		}
 	}
-	for output := range m.expectedOutputs {
+	for output := range m.outputs {
 		st.Outputs[output] = "<output>"
 	}
 	return st
@@ -139,14 +126,6 @@ func (m *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 			BackendName: mState.BackendName,
 		}
 	}
-
-	modDeps := make([]*project.DependencyOutput, len(mState.Dependencies))
-	for i, dep := range mState.Dependencies {
-		modDeps[i] = &project.DependencyOutput{
-			ModuleName: dep.Module,
-			StackName:  dep.Stack,
-		}
-	}
 	bPtr, exists := stack.ProjectPtr.Backends[stack.BackendName]
 	if !exists {
 		return fmt.Errorf("Backend '%s' not found, stack: '%s'", stack.BackendName, stack.Name)
@@ -154,7 +133,7 @@ func (m *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	m.MyName = modName
 	m.stackPtr = stack
 	m.projectPtr = &p.Project
-	m.dependencies = modDeps
+	m.dependencies = mState.Dependencies
 	m.backendPtr = bPtr
 	m.filesList = make(map[string][]byte)
 	m.specRaw = make(map[string]interface{})
@@ -163,12 +142,12 @@ func (m *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	m.ApplyConf = mState.ApplyConf
 	m.Env = mState.Env
 	m.CreateFiles = mState.CreateFiles
-	m.expectedOutputs = make(map[string]*project.DependencyOutput)
+	m.outputs = make(map[string]*project.DependencyOutput)
 	m.GetOutputsConf = mState.OutputsConfig
 	m.WorkDir = mState.WorkDir
 
 	for key := range mState.Outputs {
-		m.expectedOutputs[key] = &project.DependencyOutput{
+		m.outputs[key] = &project.DependencyOutput{
 			Output: key,
 		}
 	}
