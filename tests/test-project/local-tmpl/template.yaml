@@ -3,7 +3,7 @@ _p: &provider_aws
     region: {{ .variables.region }}
 
 name: l
-kind: InfraTemplate
+kind: StackTemplate
 units:
   - 
     name: create-bucket

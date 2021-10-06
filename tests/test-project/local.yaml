@@ -1,6 +1,6 @@
 name: cdev-tests-local
 template: ./local-tmpl/
-kind: Infrastructure
+kind: Stack
 backend: aws-backend
 variables:
   data: {{ remoteState "cdev-tests.create-bucket.test" }}
