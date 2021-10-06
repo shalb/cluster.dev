@@ -10,8 +10,8 @@ import (
 )
 
 type StateDep struct {
-	Stack  string `json:"infra"`
-	Module string `json:"module"`
+	Stack string `json:"infra"`
+	Unit  string `json:"unit"`
 }
 
 type StateSpecCommon struct {
@@ -40,7 +40,7 @@ func (m *Unit) GetStateCommon() StateSpecCommon {
 	deps := make([]StateDep, len(m.dependencies))
 	for i, dep := range m.dependencies {
 		deps[i].Stack = dep.StackName
-		deps[i].Module = dep.ModuleName
+		deps[i].Unit = dep.UnitName
 	}
 	st := StateSpecCommon{
 		BackendName:      m.backendPtr.Name(),
@@ -65,7 +65,7 @@ func (m *Unit) GetStateDiffCommon() StateSpecDiffCommon {
 	deps := make([]StateDep, len(m.dependencies))
 	for i, dep := range m.dependencies {
 		deps[i].Stack = dep.StackName
-		deps[i].Module = dep.ModuleName
+		deps[i].Unit = dep.UnitName
 	}
 	st := StateSpecDiffCommon{
 		//BackendName: m.backendPtr.Name(),
@@ -84,18 +84,18 @@ func (m *Unit) LoadStateCommon(spec StateCommon, modKey string, p *project.State
 
 	mkSplitted := strings.Split(modKey, ".")
 	if len(mkSplitted) != 2 {
-		return fmt.Errorf("loading module state common: bad module key: %v", modKey)
+		return fmt.Errorf("loading unit state common: bad unit key: %v", modKey)
 	}
 	stackName := mkSplitted[0]
 	modName := mkSplitted[1]
 	mState, ok := spec.(StateSpecCommon)
 	if !ok {
-		return fmt.Errorf("loading module state common: can't convert state data, internal error")
+		return fmt.Errorf("loading unit state common: can't convert state data, internal error")
 	}
 
 	backend, exists := p.LoaderProjectPtr.Backends[mState.BackendName]
 	if !exists {
-		return fmt.Errorf("load module from state: backend '%v' does not exists in curent project", mState.BackendName)
+		return fmt.Errorf("load unit from state: backend '%v' does not exists in curent project", mState.BackendName)
 	}
 	stack, exists := p.LoaderProjectPtr.Stack[stackName]
 	if !exists {
@@ -110,8 +110,8 @@ func (m *Unit) LoadStateCommon(spec StateCommon, modKey string, p *project.State
 	modDeps := make([]*project.DependencyOutput, len(mState.Dependencies))
 	for i, dep := range mState.Dependencies {
 		modDeps[i] = &project.DependencyOutput{
-			ModuleName: dep.Module,
-			StackName:  dep.Stack,
+			UnitName:  dep.Unit,
+			StackName: dep.Stack,
 		}
 	}
 	bPtr, exists := stack.ProjectPtr.Backends[stack.BackendName]
@@ -141,7 +141,7 @@ func (m *Unit) LoadStateCommon(spec StateCommon, modKey string, p *project.State
 func (m *Unit) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	inJSON, err := utils.JSONEncode(in)
 	if err != nil {
-		return fmt.Errorf("module diff: internal error")
+		return fmt.Errorf("unit diff: internal error")
 	}
 	inJSONstr := string(inJSON)
 	depMarkers, ok := m.ProjectPtr().Markers[RemoteStateMarkerCatName]
@@ -158,7 +158,7 @@ func (m *Unit) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	}
 	for key, marker := range markersList {
 		if strings.Contains(inJSONstr, key) {
-			remoteStateRef := fmt.Sprintf("<remoteState %s.%s.%s>", marker.StackName, marker.ModuleName, marker.Output)
+			remoteStateRef := fmt.Sprintf("<remoteState %s.%s.%s>", marker.StackName, marker.UnitName, marker.Output)
 			replacer := strings.NewReplacer(key, remoteStateRef)
 			inJSONstr = replacer.Replace(inJSONstr)
 		}

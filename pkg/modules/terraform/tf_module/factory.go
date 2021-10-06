@@ -9,9 +9,9 @@ import (
 type Factory struct {
 }
 
-// New creates new module.
-func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (project.Module, error) {
-	mod := Module{}
+// New creates new unit.
+func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (project.Unit, error) {
+	mod := Unit{}
 	err := mod.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
@@ -20,9 +20,9 @@ func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (projec
 	return &mod, nil
 }
 
-// NewFromState creates new module from state data.
-func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Module, error) {
-	mod := Module{}
+// NewFromState creates new unit from state data.
+func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Unit, error) {
+	mod := Unit{}
 	err := mod.LoadState(spec, modKey, p)
 	if err != nil {
 		log.Debug(err.Error())
@@ -33,8 +33,8 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 
 func init() {
 	modDrv := Factory{}
-	log.Debug("Registering module driver 'terraform'")
-	if err := project.RegisterModuleFactory(&modDrv, "terraform"); err != nil {
-		log.Trace("Can't register module driver 'terraform'.")
+	log.Debug("Registering unit driver 'terraform'")
+	if err := project.RegisterUnitFactory(&modDrv, "terraform"); err != nil {
+		log.Trace("Can't register unit driver 'terraform'.")
 	}
 }

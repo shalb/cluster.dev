@@ -27,7 +27,7 @@ type RequiredProvider struct {
 	Version string `json:"version"`
 }
 
-// Unit describe cluster.dev module to deploy/destroy terraform modules.
+// Unit describe cluster.dev unit to deploy/destroy terraform units.
 type Unit struct {
 	stackPtr          *project.Stack
 	projectPtr        *project.Project
@@ -78,7 +78,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	}
 	mName, ok := spec["name"]
 	if !ok {
-		return fmt.Errorf("Incorrect module name")
+		return fmt.Errorf("Incorrect unit name")
 	}
 
 	m.stackPtr = stack
@@ -140,37 +140,37 @@ func (m *Unit) ExpectedOutputs() map[string]*project.DependencyOutput {
 	return m.expectedOutputs
 }
 
-// Name return module name.
+// Name return unit name.
 func (m *Unit) Name() string {
 	return m.name
 }
 
-// StackPtr return ptr to module stack.
+// StackPtr return ptr to unit stack.
 func (m *Unit) StackPtr() *project.Stack {
 	return m.stackPtr
 }
 
-// ApplyOutput return output of last module applying.
+// ApplyOutput return output of last unit applying.
 func (m *Unit) ApplyOutput() []byte {
 	return m.applyOutput
 }
 
-// ProjectPtr return ptr to module project.
+// ProjectPtr return ptr to unit project.
 func (m *Unit) ProjectPtr() *project.Project {
 	return m.projectPtr
 }
 
-// StackName return module stack name.
+// StackName return unit stack name.
 func (m *Unit) StackName() string {
 	return m.stackPtr.Name
 }
 
-// Backend return module backend.
+// Backend return unit backend.
 func (m *Unit) Backend() project.Backend {
 	return m.stackPtr.Backend
 }
 
-// Dependencies return slice of module dependencies.
+// Dependencies return slice of unit dependencies.
 func (m *Unit) Dependencies() *[]*project.DependencyOutput {
 	return &m.dependencies
 }
@@ -236,7 +236,7 @@ func (m *Unit) Apply() error {
 	return err
 }
 
-// Output module.
+// Output unit.
 func (m *Unit) Output() (string, error) {
 	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
@@ -263,7 +263,7 @@ func (m *Unit) Output() (string, error) {
 	return string(res), err
 }
 
-// Plan module.
+// Plan unit.
 func (m *Unit) Plan() error {
 	rn, err := executor.NewExecutor(m.codeDir)
 	if err != nil {
@@ -296,7 +296,7 @@ func (m *Unit) Plan() error {
 	return nil
 }
 
-// Destroy module.
+// Destroy unit.
 func (m *Unit) Destroy() error {
 	rn, err := executor.NewExecutor(m.codeDir)
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
@@ -328,31 +328,31 @@ func (m *Unit) Destroy() error {
 	return err
 }
 
-// Key return uniq module index (string key for maps).
+// Key return uniq unit index (string key for maps).
 func (m *Unit) Key() string {
 	return fmt.Sprintf("%v.%v", m.StackName(), m.name)
 }
 
-// CodeDir return path to module code directory.
+// CodeDir return path to unit code directory.
 func (m *Unit) CodeDir() string {
 	return m.codeDir
 }
 
-// UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
+// UpdateProjectRuntimeData update project runtime dataset, adds unit outputs.
 func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Unit) ReplaceMarkers(inheritedModule project.Module) error {
+func (m *Unit) ReplaceMarkers(inheritedUnit project.Unit) error {
 	if m.preHook != nil {
-		err := project.ScanMarkers(&m.preHook.Command, m.RemoteStatesScanner, inheritedModule)
+		err := project.ScanMarkers(&m.preHook.Command, m.RemoteStatesScanner, inheritedUnit)
 		if err != nil {
 			return err
 		}
 	}
 	if m.postHook != nil {
-		err := project.ScanMarkers(&m.postHook.Command, m.RemoteStatesScanner, inheritedModule)
+		err := project.ScanMarkers(&m.postHook.Command, m.RemoteStatesScanner, inheritedUnit)
 		if err != nil {
 			return err
 		}

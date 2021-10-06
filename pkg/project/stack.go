@@ -13,7 +13,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-const stackObjKindKey = "Infrastructure"
+const stackObjKindKey = "Stack"
 
 // Stack represent stack object.
 type Stack struct {
@@ -36,9 +36,13 @@ func (p *Project) readStacks() error {
 	// Read and parse stacks.
 	stacks, exists := p.objects[stackObjKindKey]
 	if !exists {
-		err := fmt.Errorf("no stacks found, at least one needed")
-		log.Debug(err.Error())
-		// return err
+		stacks, exists = p.objects["Infrastructure"]
+		if !exists {
+			err := fmt.Errorf("no stacks found, at least one needed")
+			log.Debug(err.Error())
+			return err
+		}
+		log.Warnf("'Infrastructure' key is deprecated and will be remover in future releases. Use 'Stack' instead")
 	}
 	for _, stack := range stacks {
 		err := p.readStackObj(stack)

@@ -15,7 +15,7 @@ type State struct {
 	ModOutputRaw string      `json:"output"`
 }
 
-func (m *Module) GetState() interface{} {
+func (m *Unit) GetState() interface{} {
 	st := m.GetStateCommon()
 	printer := State{
 		StateSpecCommon: st,
@@ -31,7 +31,7 @@ type StateDiff struct {
 	Inputs interface{} `json:"inputs"`
 }
 
-func (m *Module) GetDiffData() interface{} {
+func (m *Unit) GetDiffData() interface{} {
 	st := m.GetStateDiffCommon()
 	stTf := StateDiff{
 		StateSpecDiffCommon: st,
@@ -48,7 +48,7 @@ func (s *State) GetType() string {
 	return s.ModType
 }
 
-func (m *Module) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
+func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	s := State{}
 	err := utils.JSONInterfaceToType(stateData, &s)
 	if err != nil {

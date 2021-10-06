@@ -76,7 +76,7 @@ func init() {
 	}
 }
 
-// RegisterTemplateDriver register module template driver.
+// RegisterTemplateDriver register unit template driver.
 func RegisterTemplateDriver(drv TemplateDriver) {
 	TemplateDriversMap[drv.Name()] = drv
 }
@@ -164,7 +164,7 @@ type GlobalTemplateDriver struct {
 
 func (d *GlobalTemplateDriver) AddTemplateFunctions(p *Project) {
 	funcs := map[string]interface{}{
-		"insertYaml": p.insertYaml,
+		"insertYAML": p.insertYaml,
 		"output":     p.addOutputMarker,
 	}
 	for k, f := range funcs {
@@ -192,24 +192,24 @@ func (p *Project) addOutputMarker(path string) (string, error) {
 		return "", fmt.Errorf("bad dependency path")
 	}
 	dep := DependencyOutput{
-		Module:     nil,
-		StackName:  splittedPath[0],
-		ModuleName: splittedPath[1],
-		Output:     splittedPath[2],
+		Unit:      nil,
+		StackName: splittedPath[0],
+		UnitName:  splittedPath[1],
+		Output:    splittedPath[2],
 	}
 	marker := CreateMarker("output", fmt.Sprintf("%s.%s.%s", splittedPath[0], splittedPath[1], splittedPath[2]))
 	p.Markers[OutputMarkerCatName].(map[string]*DependencyOutput)[marker] = &dep
 	return fmt.Sprintf("%s", marker), nil
 }
 
-// OutputsScanner - project scanner function, witch process dependencies markers in module data setted by AddRemoteStateMarker template function.
-func OutputsScanner(data reflect.Value, module Module) (reflect.Value, error) {
+// OutputsScanner - project scanner function, witch process dependencies markers in unit data setted by AddRemoteStateMarker template function.
+func OutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 	var subVal = data
 	if data.Kind() != reflect.String {
 		subVal = reflect.ValueOf(data.Interface())
 	}
 	resString := subVal.String()
-	depMarkers, ok := module.ProjectPtr().Markers[OutputMarkerCatName]
+	depMarkers, ok := unit.ProjectPtr().Markers[OutputMarkerCatName]
 	if !ok {
 		return subVal, nil
 	}
@@ -224,35 +224,35 @@ func OutputsScanner(data reflect.Value, module Module) (reflect.Value, error) {
 	for key, marker := range markersList {
 		if strings.Contains(resString, key) {
 			if marker.StackName == "this" {
-				marker.StackName = module.StackName()
+				marker.StackName = unit.StackName()
 			}
-			modKey := fmt.Sprintf("%s.%s", marker.StackName, marker.ModuleName)
-			depModule, exists := module.ProjectPtr().Modules[modKey]
+			modKey := fmt.Sprintf("%s.%s", marker.StackName, marker.UnitName)
+			depUnit, exists := unit.ProjectPtr().Units[modKey]
 			if !exists {
-				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.StackName(), module.Name(), modKey)
+				log.Fatalf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.StackName(), unit.Name(), modKey)
 			}
-			o, exists := depModule.ExpectedOutputs()[marker.Output]
+			o, exists := depUnit.ExpectedOutputs()[marker.Output]
 			if exists && o.OutputData != nil {
 				resString = strings.ReplaceAll(resString, key, o.OutputData.(string))
 				return reflect.ValueOf(resString), nil
 			}
 			outputTmp := marker
-			*module.Dependencies() = append(*module.Dependencies(), outputTmp)
-			module.Markers()[key] = &outputTmp
-			depModule.ExpectedOutputs()[marker.Output] = outputTmp
+			*unit.Dependencies() = append(*unit.Dependencies(), outputTmp)
+			unit.Markers()[key] = &outputTmp
+			depUnit.ExpectedOutputs()[marker.Output] = outputTmp
 		}
 	}
 	return reflect.ValueOf(resString), nil
 }
 
 // StateOutputsScanner scan state data for outputs markers and replaces them for placeholders with output ref like <output "stack.unit.output" >
-func StateOutputsScanner(data reflect.Value, module Module) (reflect.Value, error) {
+func StateOutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 	var subVal = data
 	if data.Kind() != reflect.String {
 		subVal = reflect.ValueOf(data.Interface())
 	}
 	resString := subVal.String()
-	depMarkers, ok := module.ProjectPtr().Markers[OutputMarkerCatName]
+	depMarkers, ok := unit.ProjectPtr().Markers[OutputMarkerCatName]
 	if !ok {
 		return subVal, nil
 	}
@@ -267,7 +267,7 @@ func StateOutputsScanner(data reflect.Value, module Module) (reflect.Value, erro
 
 	for key, marker := range markersList {
 		if strings.Contains(resString, key) {
-			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<output %v.%v.%v>", marker.StackName, marker.ModuleName, marker.Output))
+			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<output %v.%v.%v>", marker.StackName, marker.UnitName, marker.Output))
 		}
 	}
 	return reflect.ValueOf(resString), nil

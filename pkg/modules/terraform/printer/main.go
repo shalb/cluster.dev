@@ -10,17 +10,17 @@ import (
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
-type Module struct {
+type Unit struct {
 	common.Unit
 	outputRaw string
 	inputs    map[string]interface{}
 }
 
-func (m *Module) KindKey() string {
+func (m *Unit) KindKey() string {
 	return "printer"
 }
 
-func (m *Module) genMainCodeBlock() ([]byte, error) {
+func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 
@@ -45,7 +45,7 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	err := m.Unit.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
@@ -53,21 +53,21 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 	}
 	modType, ok := spec["type"].(string)
 	if !ok {
-		return fmt.Errorf("Incorrect module type")
+		return fmt.Errorf("Incorrect unit type")
 	}
 	if modType != m.KindKey() {
-		return fmt.Errorf("Incorrect module type")
+		return fmt.Errorf("Incorrect unit type")
 	}
 	mInputs, ok := spec["inputs"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("Incorrect module inputs")
+		return fmt.Errorf("Incorrect unit inputs")
 	}
 	m.inputs = mInputs
 	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Module) ReplaceMarkers() error {
+func (m *Unit) ReplaceMarkers() error {
 	err := m.Unit.ReplaceMarkers(m)
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (m *Module) ReplaceMarkers() error {
 }
 
 // Build generate all terraform code for project.
-func (m *Module) Build() error {
+func (m *Unit) Build() error {
 	var err error
 	err = m.Unit.Build()
 	if err != nil {
@@ -93,14 +93,14 @@ func (m *Module) Build() error {
 	}
 
 	// if len(m.ExpectedOutputs()) > 0 {
-	// 	return fmt.Errorf("module type 'printer' cannot have outputs, don't use remote state to it")
+	// 	return fmt.Errorf("unit type 'printer' cannot have outputs, don't use remote state to it")
 	// }
 	// Remove backend for printer.
 	delete(m.FilesList(), "init.tf")
 	return m.CreateCodeDir()
 }
 
-func (m *Module) Apply() (err error) {
+func (m *Unit) Apply() (err error) {
 	err = m.Unit.Apply()
 	if err != nil {
 		return
@@ -113,8 +113,8 @@ func (m *Module) Apply() (err error) {
 	return
 }
 
-// UpdateProjectRuntimeData update project runtime dataset, adds printer module outputs.
-func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
+// UpdateProjectRuntimeData update project runtime dataset, adds printer unit outputs.
+func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: m.Key(), Output: m.outputRaw})
 	return m.Unit.UpdateProjectRuntimeData(p)
 }

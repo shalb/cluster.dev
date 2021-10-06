@@ -24,15 +24,15 @@ func (m *Unit) readDeps(depsData interface{}) ([]*project.DependencyOutput, erro
 	for _, dep := range rawDepsList {
 		splDep := strings.Split(dep, ".")
 		if len(splDep) != 2 {
-			return nil, fmt.Errorf("Incorrect module dependency '%v'", dep)
+			return nil, fmt.Errorf("Incorrect unit dependency '%v'", dep)
 		}
 		infNm := splDep[0]
 		if infNm == "this" {
 			infNm = m.StackName()
 		}
 		res = append(res, &project.DependencyOutput{
-			StackName:  infNm,
-			ModuleName: splDep[1],
+			StackName: infNm,
+			UnitName:  splDep[1],
 		})
 		log.Debugf("Dependency added: %v --> %v.%v", m.Key(), infNm, splDep[1])
 	}
@@ -82,10 +82,10 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 }
 
 func DependencyToRemoteStateRef(dep *project.DependencyOutput) (remoteStateRef string) {
-	remoteStateRef = fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", dep.StackName, dep.ModuleName, dep.Output)
+	remoteStateRef = fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", dep.StackName, dep.UnitName, dep.Output)
 	return
 }
 func DependencyToBashRemoteState(dep *project.DependencyOutput) (remoteStateRef string) {
-	remoteStateRef = fmt.Sprintf("\"$(terraform -chdir=../%v.%v/ output -raw %v)\"", dep.StackName, dep.ModuleName, dep.Output)
+	remoteStateRef = fmt.Sprintf("\"$(terraform -chdir=../%v.%v/ output -raw %v)\"", dep.StackName, dep.UnitName, dep.Output)
 	return
 }

@@ -17,8 +17,8 @@ func (p *Project) Build() error {
 	if err != nil {
 		return fmt.Errorf("build project: %v", err.Error())
 	}
-	for _, module := range p.Modules {
-		if err := module.Build(); err != nil {
+	for _, unit := range p.Units {
+		if err := unit.Build(); err != nil {
 			return err
 		}
 	}
@@ -26,7 +26,7 @@ func (p *Project) Build() error {
 	return nil
 }
 
-// Destroy all modules.
+// Destroy all units.
 func (p *Project) Destroy() error {
 
 	fProject, err := p.LoadState()
@@ -60,16 +60,16 @@ func (p *Project) Destroy() error {
 	}
 	log.Info("Destroying...")
 	for _, md := range destSeq {
-		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Destroying module '%v'", md.Key()))
+		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Destroying unit '%v'", md.Key()))
 		err := md.Build()
 		if err != nil {
-			log.Errorf("project destroy: destroying deleted module: %v", err.Error())
+			log.Errorf("project destroy: destroying deleted unit: %v", err.Error())
 		}
 		err = md.Destroy()
 		if err != nil {
 			return fmt.Errorf("project destroy: %v", err.Error())
 		}
-		fProject.DeleteModule(md)
+		fProject.DeleteUnit(md)
 		err = fProject.SaveState()
 		if err != nil {
 			return fmt.Errorf("project destroy: saving state: %v", err.Error())
@@ -79,7 +79,7 @@ func (p *Project) Destroy() error {
 	return nil
 }
 
-// Apply all modules.
+// Apply all units.
 func (p *Project) Apply() error {
 
 	if !config.Global.Force {
@@ -119,19 +119,19 @@ func (p *Project) Apply() error {
 	}
 	defer StateDestroyGraph.Close()
 	for _, md := range StateDestroyGraph.GetSequenceSet() {
-		_, exists := p.Modules[md.Key()]
+		_, exists := p.Units[md.Key()]
 		if exists {
 			continue
 		}
 		err := md.Build()
 		if err != nil {
-			log.Errorf("project apply: destroying deleted module: %v", err.Error())
+			log.Errorf("project apply: destroying deleted unit: %v", err.Error())
 		}
 		err = md.Destroy()
 		if err != nil {
-			return fmt.Errorf("project apply: destroying deleted module: %v", err.Error())
+			return fmt.Errorf("project apply: destroying deleted unit: %v", err.Error())
 		}
-		fProject.DeleteModule(md)
+		fProject.DeleteUnit(md)
 		err = fProject.SaveState()
 		if err != nil {
 			return fmt.Errorf("project apply: saving state: %v", err.Error())
@@ -145,10 +145,10 @@ func (p *Project) Apply() error {
 		}
 		md, fn, err := gr.GetNextAsync()
 		if err != nil {
-			log.Errorf("error in module %v, waiting for all running modules done.", md.Key())
+			log.Errorf("error in unit %v, waiting for all running units done.", md.Key())
 			gr.Wait()
 			for modKey, e := range gr.Errors() {
-				log.Errorf("Module: '%v':\n%v", modKey, e.Error())
+				log.Errorf("unit: '%v':\n%v", modKey, e.Error())
 			}
 			return fmt.Errorf("applying error")
 		}
@@ -157,18 +157,18 @@ func (p *Project) Apply() error {
 			return nil
 		}
 
-		go func(mod Module, finFunc func(error), stateP *StateProject) {
-			diff, _ := stateP.CheckModuleChanges(mod)
+		go func(mod Unit, finFunc func(error), stateP *StateProject) {
+			diff, _ := stateP.CheckUnitChanges(mod)
 			var res error
 			if len(diff) > 0 || config.Global.IgnoreState {
-				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying module '%v':", md.Key()))
+				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying unit '%v':", md.Key()))
 				err := mod.Build()
 				if err != nil {
-					log.Errorf("project apply: module build error: %v", err.Error())
+					log.Errorf("project apply: unit build error: %v", err.Error())
 				}
 				res := mod.Apply()
 				if res == nil {
-					stateP.UpdateModule(mod)
+					stateP.UpdateUnit(mod)
 					err := stateP.SaveState()
 					if err != nil {
 						finFunc(err)
@@ -183,7 +183,7 @@ func (p *Project) Apply() error {
 				finFunc(res)
 				return
 			}
-			log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Module '%v' has not changed. Skip applying.", md.Key()))
+			log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Unit '%v' has not changed. Skip applying.", md.Key()))
 			finFunc(res)
 		}(md, fn, fProject)
 	}
@@ -213,13 +213,13 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 	modsForApply := []string{}
 	modsForUpdate := []string{}
 	modsUnchanged := []string{}
-	log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Checking modules in state"))
+	log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Checking units in state"))
 	modsForDestroy := planDestroy(stateModsSeq, curModsSeq)
 
 	for _, md := range curModsSeq {
-		_, exists := fProject.Modules[md.Key()]
-		diff, stateModule := fProject.CheckModuleChanges(md)
-		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning module '%v':", md.Key()))
+		_, exists := fProject.Units[md.Key()]
+		diff, stateUnit := fProject.CheckUnitChanges(md)
+		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning unit '%v':", md.Key()))
 		if len(diff) > 0 || config.Global.IgnoreState {
 			if len(diff) == 0 {
 				diff = colors.Fmt(colors.GreenBold).Sprint("Not changed.")
@@ -237,7 +237,7 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 				}
 				allDepsDeployed := true
 				for _, planModDep := range *md.Dependencies() {
-					_, exists := fProject.Modules[planModDep.Module.Key()]
+					_, exists := fProject.Units[planModDep.Unit.Key()]
 					if !exists {
 						allDepsDeployed = false
 						break
@@ -246,21 +246,21 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 				if allDepsDeployed {
 					err = md.Build()
 					if err != nil {
-						log.Errorf("terraform plan: module build error: %v", err.Error())
+						log.Errorf("terraform plan: unit build error: %v", err.Error())
 						return
 					}
 					err = md.Plan()
 					if err != nil {
-						log.Errorf("Module '%v' terraform plan return an error: %v", md.Key(), err.Error())
+						log.Errorf("unit '%v' terraform plan return an error: %v", md.Key(), err.Error())
 						return
 					}
 				} else {
-					log.Warnf("The module '%v' has dependencies that have not yet been deployed. Can't show terraform plan.", md.Key())
+					log.Warnf("The unit '%v' has dependencies that have not yet been deployed. Can't show terraform plan.", md.Key())
 				}
 			}
 		} else {
-			// Update project printers and outputs with state module.
-			stateModule.UpdateProjectRuntimeData(p)
+			// Update project printers and outputs with state unit.
+			stateUnit.UpdateProjectRuntimeData(p)
 			modsUnchanged = append(modsUnchanged, md.Key())
 			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
 		}
@@ -270,22 +270,22 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 	return
 }
 
-// planDestroy collect and show modules for destroying.
-func planDestroy(stateList, projList []Module) []string {
+// planDestroy collect and show units for destroying.
+func planDestroy(stateList, projList []Unit) []string {
 	modsForDestroy := []string{}
 	for _, md := range stateList {
 		if i := findMod(projList, md); i >= 0 {
 			continue
 		}
 		diff := utils.Diff(md.GetDiffData(), nil, true)
-		log.Info(colors.Fmt(colors.Red).Sprintf("Module '%v' will be destroyed:", md.Key()))
+		log.Info(colors.Fmt(colors.Red).Sprintf("unit '%v' will be destroyed:", md.Key()))
 		fmt.Printf("%v\n", diff)
 		modsForDestroy = append(modsForDestroy, md.Key())
 	}
 	return modsForDestroy
 }
 
-func findMod(list []Module, mod Module) int {
+func findMod(list []Unit, mod Unit) int {
 	if len(list) < 1 {
 		return -1
 	}

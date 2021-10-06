@@ -10,7 +10,7 @@ import (
 // planCmd represents the plan command
 var planCmd = &cobra.Command{
 	Use:   "plan",
-	Short: "Plan all modules",
+	Short: "Plan all units",
 	Run: func(cmd *cobra.Command, args []string) {
 		project, err := project.LoadProjectFull()
 		if err != nil {
@@ -26,6 +26,6 @@ var planCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(planCmd)
-	planCmd.Flags().BoolVar(&config.Global.ShowTerraformPlan, "tf-plan", false, "Also show modules terraform plan if possible.")
+	planCmd.Flags().BoolVar(&config.Global.ShowTerraformPlan, "tf-plan", false, "Also show units terraform plan if possible.")
 	planCmd.Flags().BoolVar(&config.Global.IgnoreState, "force", false, "Show plan (if set tf-plan) even if the state has not changed.")
 }

@@ -10,8 +10,8 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-// RemoteStatesScanner - project scanner function, witch process dependencies markers in module data setted by AddRemoteStateMarker template function.
-func (m *Unit) RemoteStatesScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
+// RemoteStatesScanner - project scanner function, witch process dependencies markers in unit data setted by AddRemoteStateMarker template function.
+func (m *Unit) RemoteStatesScanner(data reflect.Value, unit project.Unit) (reflect.Value, error) {
 	var subVal = data
 	if data.Kind() != reflect.String {
 		subVal = reflect.ValueOf(data.Interface())
@@ -19,7 +19,7 @@ func (m *Unit) RemoteStatesScanner(data reflect.Value, module project.Module) (r
 	}
 
 	resString := subVal.String()
-	depMarkers, ok := module.ProjectPtr().Markers[RemoteStateMarkerCatName]
+	depMarkers, ok := unit.ProjectPtr().Markers[RemoteStateMarkerCatName]
 	if !ok {
 		return subVal, nil
 	}
@@ -36,24 +36,25 @@ func (m *Unit) RemoteStatesScanner(data reflect.Value, module project.Module) (r
 		if strings.Contains(resString, key) {
 			var stackName string
 			if marker.StackName == "this" {
-				stackName = module.StackName()
+				stackName = unit.StackName()
 			} else {
 				stackName = marker.StackName
 			}
 
-			modKey := fmt.Sprintf("%s.%s", stackName, marker.ModuleName)
+			modKey := fmt.Sprintf("%s.%s", stackName, marker.UnitName)
 			// log.Warnf("Mod Key: %v", modKey)
-			depModule, exists := module.ProjectPtr().Modules[modKey]
+			depUnit, exists := unit.ProjectPtr().Units[modKey]
 			if !exists {
-				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.StackName(), module.Name(), modKey)
+				log.Fatalf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.StackName(), unit.Name(), modKey)
 			}
-			markerTmp := project.DependencyOutput{Module: depModule, ModuleName: marker.ModuleName, StackName: stackName, Output: marker.Output}
-			*module.Dependencies() = append(*module.Dependencies(), &markerTmp)
+			markerTmp := project.DependencyOutput{Unit: depUnit, UnitName: marker.UnitName, StackName: stackName, Output: marker.Output}
+			*unit.Dependencies() = append(*unit.Dependencies(), &markerTmp)
 			m.markers[key] = &markerTmp
-			depModule.ExpectedOutputs()[marker.Output] = &project.DependencyOutput{
+			depUnit.ExpectedOutputs()[marker.Output] = &project.DependencyOutput{
 				Output: marker.Output,
 			}
 		}
 	}
+	// log.Infof("%v", reflect.ValueOf(resString).Kind())
 	return reflect.ValueOf(resString), nil
 }

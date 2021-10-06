@@ -15,28 +15,28 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-type Module struct {
+type Unit struct {
 	common.Unit
-	source      string
-	version     string
-	inputs      map[string]interface{}
-	localModule map[string][]byte
+	source    string
+	version   string
+	inputs    map[string]interface{}
+	localUnit map[string][]byte
 }
 
-func (m *Module) KindKey() string {
+func (m *Unit) KindKey() string {
 	return "terraform"
 }
 
-func (m *Module) genMainCodeBlock() ([]byte, error) {
+func (m *Unit) genMainCodeBlock() ([]byte, error) {
 
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 
-	moduleBlock := rootBody.AppendNewBlock("module", []string{m.Name()})
-	moduleBody := moduleBlock.Body()
-	moduleBody.SetAttributeValue("source", cty.StringVal(m.source))
+	unitBlock := rootBody.AppendNewBlock("module", []string{m.Name()})
+	unitBody := unitBlock.Body()
+	unitBody.SetAttributeValue("source", cty.StringVal(m.source))
 	if m.version != "" {
-		moduleBody.SetAttributeValue("version", cty.StringVal(m.version))
+		unitBody.SetAttributeValue("version", cty.StringVal(m.version))
 	}
 
 	for key, val := range m.inputs {
@@ -44,15 +44,15 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		moduleBody.SetAttributeValue(key, ctyVal)
+		unitBody.SetAttributeValue(key, ctyVal)
 	}
 	if utils.IsLocalPath(m.source) {
-		log.Debugf("Writing local tf module files to %v module dir", m.Key())
-		err := utils.WriteFilesFromList(m.CodeDir(), m.localModule)
+		log.Debugf("Writing local tf unit files to %v unit dir", m.Key())
+		err := utils.WriteFilesFromList(m.CodeDir(), m.localUnit)
 		if err != nil {
-			return nil, fmt.Errorf("%v, reading local module: %v", m.Key(), err.Error())
+			return nil, fmt.Errorf("%v, reading local unit: %v", m.Key(), err.Error())
 		}
-		moduleBody.SetAttributeValue("source", cty.StringVal(m.source))
+		unitBody.SetAttributeValue("source", cty.StringVal(m.source))
 	}
 	for hash, m := range m.Markers() {
 		marker, ok := m.(*project.DependencyOutput)
@@ -60,13 +60,13 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
 		}
 		refStr := common.DependencyToRemoteStateRef(marker)
-		hcltools.ReplaceStingMarkerInBody(moduleBody, hash, refStr)
+		hcltools.ReplaceStingMarkerInBody(unitBody, hash, refStr)
 	}
 	return f.Bytes(), nil
 }
 
-// genOutputsBlock generate output code block for this module.
-func (m *Module) genOutputs() ([]byte, error) {
+// genOutputsBlock generate output code block for this unit.
+func (m *Unit) genOutputs() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
@@ -74,7 +74,7 @@ func (m *Module) genOutputs() ([]byte, error) {
 		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
 		outputName := re.FindString(output)
 		if len(outputName) < 1 {
-			return nil, fmt.Errorf("invalid output '%v' in module '%v'", output, m.Name())
+			return nil, fmt.Errorf("invalid output '%v' in unit '%v'", output, m.Name())
 		}
 		dataBlock := rootBody.AppendNewBlock("output", []string{outputName})
 		dataBody := dataBlock.Body()
@@ -85,7 +85,7 @@ func (m *Module) genOutputs() ([]byte, error) {
 
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	err := m.Unit.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
@@ -93,23 +93,23 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 	}
 	modType, ok := spec["type"].(string)
 	if !ok {
-		return fmt.Errorf("Incorrect module type")
+		return fmt.Errorf("Incorrect unit type")
 	}
 	if modType != m.KindKey() {
-		return fmt.Errorf("Incorrect module type")
+		return fmt.Errorf("Incorrect unit type")
 	}
 	source, ok := spec["source"].(string)
 	if !ok {
-		return fmt.Errorf("Incorrect module source")
+		return fmt.Errorf("Incorrect unit source")
 	}
 	if utils.IsLocalPath(source) {
 		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, m.StackPtr().TemplateDir, source)
 		tfModuleBasePath := filepath.Join(config.Global.WorkingDir, m.StackPtr().TemplateDir)
 		var err error
-		log.Debugf("Reading local tf module files %v %v ", tfModuleLocalDir, tfModuleBasePath)
-		m.localModule, err = utils.ReadFilesToList(tfModuleLocalDir, tfModuleBasePath)
+		log.Debugf("Reading local tf unit files %v %v ", tfModuleLocalDir, tfModuleBasePath)
+		m.localUnit, err = utils.ReadFilesToList(tfModuleLocalDir, tfModuleBasePath)
 		if err != nil {
-			return fmt.Errorf("%v, reading local module: %v", m.Key(), err.Error())
+			return fmt.Errorf("%v, reading local unit: %v", m.Key(), err.Error())
 		}
 	}
 	if version, ok := spec["version"]; ok {
@@ -125,7 +125,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Module) ReplaceMarkers() error {
+func (m *Unit) ReplaceMarkers() error {
 	err := m.Unit.ReplaceMarkers(m)
 	if err != nil {
 		return err
@@ -138,7 +138,7 @@ func (m *Module) ReplaceMarkers() error {
 }
 
 // Build generate all terraform code for project.
-func (m *Module) Build() error {
+func (m *Unit) Build() error {
 	err := m.Unit.Build()
 	if err != nil {
 		return err
@@ -160,6 +160,6 @@ func (m *Module) Build() error {
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
-func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
+func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return m.Unit.UpdateProjectRuntimeData(p)
 }

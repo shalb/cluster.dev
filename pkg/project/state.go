@@ -14,21 +14,21 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-func (sp *StateProject) UpdateModule(mod Module) {
+func (sp *StateProject) UpdateUnit(mod Unit) {
 	sp.StateMutex.Lock()
 	defer sp.StateMutex.Unlock()
-	sp.Modules[mod.Key()] = mod
-	sp.ChangedModules[mod.Key()] = mod
+	sp.Units[mod.Key()] = mod
+	sp.ChangedUnits[mod.Key()] = mod
 }
 
-func (sp *StateProject) DeleteModule(mod Module) {
-	delete(sp.Modules, mod.Key())
+func (sp *StateProject) DeleteUnit(mod Unit) {
+	delete(sp.Units, mod.Key())
 }
 
 type StateProject struct {
 	Project
 	LoaderProjectPtr *Project
-	ChangedModules   map[string]Module
+	ChangedUnits     map[string]Unit
 }
 
 func (p *Project) SaveState() error {
@@ -36,10 +36,10 @@ func (p *Project) SaveState() error {
 	defer p.StateMutex.Unlock()
 	st := stateData{
 		Markers: p.Markers,
-		Modules: map[string]interface{}{},
+		Units:   map[string]interface{}{},
 	}
-	for key, mod := range p.Modules {
-		st.Modules[key] = mod.GetState()
+	for key, mod := range p.Units {
+		st.Units[key] = mod.GetState()
 	}
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
@@ -61,7 +61,8 @@ func (p *Project) SaveState() error {
 
 type stateData struct {
 	Markers map[string]interface{} `json:"markers"`
-	Modules map[string]interface{} `json:"modules"`
+	// Modules map[string]interface{} `json:"modules"`
+	Units map[string]interface{} `json:"units"`
 }
 
 func (p *Project) LockState() error {
@@ -130,7 +131,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			configData:       p.configData,
 			configDataFile:   p.configDataFile,
 			objects:          p.objects,
-			Modules:          make(map[string]Module),
+			Units:            make(map[string]Unit),
 			Markers:          stateD.Markers,
 			Stack:            make(map[string]*Stack),
 			Backends:         p.Backends,
@@ -138,7 +139,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			StateBackendName: p.StateBackendName,
 		},
 		LoaderProjectPtr: p,
-		ChangedModules:   make(map[string]Module),
+		ChangedUnits:     make(map[string]Unit),
 	}
 
 	if statePrj.Markers == nil {
@@ -148,76 +149,74 @@ func (p *Project) LoadState() (*StateProject, error) {
 		statePrj.Markers[key] = m
 	}
 
-	for mName, mState := range stateD.Modules {
-		log.Debugf("Loading module from state: %v", mName)
+	for mName, mState := range stateD.Units {
+		log.Debugf("Loading unit from state: %v", mName)
 
 		if mState == nil {
 			continue
 		}
 		key, exists := mState.(map[string]interface{})["type"]
 		if !exists {
-			return nil, fmt.Errorf("loading state: internal error: bad module type in state")
+			return nil, fmt.Errorf("loading state: internal error: bad unit type in state")
 		}
-		mod, err := ModuleFactoriesMap[key.(string)].NewFromState(mState.(map[string]interface{}), mName, &statePrj)
+		mod, err := UnitFactoriesMap[key.(string)].NewFromState(mState.(map[string]interface{}), mName, &statePrj)
 		if err != nil {
-			return nil, fmt.Errorf("loading state: error loading module from state: %v", err.Error())
+			return nil, fmt.Errorf("loading state: error loading unit from state: %v", err.Error())
 		}
-		statePrj.Modules[mName] = mod
+		statePrj.Units[mName] = mod
 		mod.UpdateProjectRuntimeData(&statePrj.Project)
 	}
-	err = statePrj.prepareModules()
+	err = statePrj.prepareUnits()
 	if err != nil {
 		return nil, err
 	}
 	return &statePrj, nil
 }
 
-func (sp *StateProject) CheckModuleChanges(module Module) (string, Module) {
-	// log.Debugf("Check module: %v %+v", module.Key(), sp.Modules)
-	moddInState, exists := sp.Modules[module.Key()]
+func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
+	moddInState, exists := sp.Units[unit.Key()]
 	if !exists {
-		return utils.Diff(nil, module.GetDiffData(), true), nil
+		return utils.Diff(nil, unit.GetDiffData(), true), nil
 	}
 	var diffData interface{}
-	if module != nil {
-		diffData = module.GetDiffData()
+	if unit != nil {
+		diffData = unit.GetDiffData()
 	}
 	df := utils.Diff(moddInState.GetDiffData(), diffData, true)
 	if len(df) > 0 {
 		return df, moddInState
 	}
-	for _, dep := range *module.Dependencies() {
-		if sp.checkModuleChangesRecursive(dep.Module) {
-			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the module dependencies."), moddInState
+	for _, dep := range *unit.Dependencies() {
+		if sp.checkUnitChangesRecursive(dep.Unit) {
+			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), moddInState
 		}
 	}
 	return "", moddInState
 }
 
-func (sp *StateProject) checkModuleChangesRecursive(module Module) bool {
-	// log.Debugf("Check module recu: %v deps: %v", module.Key(), *module.Dependencies())
-	log.Warnf("Mod %v, applied: %v", module.Key(), module.WasApplied())
-	if module.WasApplied() {
+func (sp *StateProject) checkUnitChangesRecursive(unit Unit) bool {
+
+	log.Warnf("Mod %v, applied: %v", unit.Key(), unit.WasApplied())
+	if unit.WasApplied() {
 		return true
 	}
-	modNew, exists := sp.Modules[module.Key()]
+	modNew, exists := sp.Units[unit.Key()]
 	if !exists {
 		return true
 	}
 	var diffData interface{}
-	if module != nil {
-		diffData = module.GetDiffData()
+	if unit != nil {
+		diffData = unit.GetDiffData()
 	}
 	df := utils.Diff(diffData, modNew.GetDiffData(), true)
 	if len(df) > 0 {
 		return true
 	}
-	// log.Debugf("Check module recu: %v deps: %v", module.Key(), *module.Dependencies())
-	for _, dep := range *module.Dependencies() {
-		if _, exists := sp.ChangedModules[dep.Module.Key()]; exists {
+	for _, dep := range *unit.Dependencies() {
+		if _, exists := sp.ChangedUnits[dep.Unit.Key()]; exists {
 			return true
 		}
-		if sp.checkModuleChangesRecursive(dep.Module) {
+		if sp.checkUnitChangesRecursive(dep.Unit) {
 			return true
 		}
 	}

@@ -48,10 +48,10 @@ func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, 
 		return "", fmt.Errorf("bad dependency path")
 	}
 	dep := project.DependencyOutput{
-		Module:     nil,
-		StackName:  splittedPath[0],
-		ModuleName: splittedPath[1],
-		Output:     splittedPath[2],
+		Unit:      nil,
+		StackName: splittedPath[0],
+		UnitName:  splittedPath[1],
+		Output:    splittedPath[2],
 	}
 	marker := project.CreateMarker("remoteState", fmt.Sprintf("%s.%s.%s", splittedPath[0], splittedPath[1], splittedPath[2]))
 	m.projectPtr.Markers[RemoteStateMarkerCatName].(map[string]*project.DependencyOutput)[marker] = &dep

@@ -22,7 +22,7 @@ const ConfigFileName = "project.yaml"
 const projectObjKindKey = "Project"
 
 // MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
-type MarkerScanner func(data reflect.Value, module Module) (reflect.Value, error)
+type MarkerScanner func(data reflect.Value, unit Unit) (reflect.Value, error)
 
 // TODO:
 // // ProjectConfSpec type for project.yaml config.
@@ -39,14 +39,14 @@ type PrinterOutput struct {
 }
 
 type RuntimeData struct {
-	ModulesOutputs  map[string]interface{}
+	UnitsOutputs    map[string]interface{}
 	PrintersOutputs []PrinterOutput
 }
 
 // Project describes main config with user-defined variables.
 type Project struct {
 	name             string
-	Modules          map[string]Module
+	Units            map[string]Unit
 	Stack            map[string]*Stack
 	TmplFunctionsMap template.FuncMap
 	Backends         map[string]Backend
@@ -67,7 +67,7 @@ type Project struct {
 func NewEmptyProject() *Project {
 	project := &Project{
 		Stack:            make(map[string]*Stack),
-		Modules:          make(map[string]Module),
+		Units:            make(map[string]Unit),
 		Backends:         make(map[string]Backend),
 		Markers:          make(map[string]interface{}),
 		TmplFunctionsMap: templateFunctionsMap,
@@ -75,7 +75,7 @@ func NewEmptyProject() *Project {
 		configData:       make(map[string]interface{}),
 		secrets:          make(map[string]Secret),
 		RuntimeDataset: RuntimeData{
-			ModulesOutputs:  make(map[string]interface{}),
+			UnitsOutputs:    make(map[string]interface{}),
 			PrintersOutputs: make([]PrinterOutput, 0),
 		},
 		CodeCacheDir: config.Global.CacheDir,
@@ -89,7 +89,7 @@ func NewEmptyProject() *Project {
 // LoadProjectBase read project data in current directory, create base project, and load secrets.
 // stacks, backends and other objects are not loads.
 func LoadProjectBase() (*Project, error) {
-	for mf := range ModuleFactoriesMap {
+	for mf := range UnitFactoriesMap {
 		log.Debugf("%v", mf)
 	}
 	project := NewEmptyProject()
@@ -165,11 +165,11 @@ func LoadProjectFull() (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = project.readModules()
+	err = project.readUnits()
 	if err != nil {
 		return nil, err
 	}
-	err = project.prepareModules()
+	err = project.prepareUnits()
 	if err != nil {
 		return nil, err
 	}
@@ -221,45 +221,45 @@ func (p *Project) prepareObjects() error {
 
 func (p *Project) checkGraph() error {
 	errDepth := 15
-	for _, mod := range p.Modules {
+	for _, mod := range p.Units {
 		if ok := checkDependenciesRecursive(mod, errDepth); !ok {
-			return fmt.Errorf("Unresolved dependency in module %v.%v", mod.StackName(), mod.Name())
+			return fmt.Errorf("Unresolved dependency in unit %v.%v", mod.StackName(), mod.Name())
 		}
 	}
 	return nil
 }
 
-func (p *Project) readModules() error {
-	// Read modules from all stacks.
+func (p *Project) readUnits() error {
+	// Read units from all stacks.
 	for stackName, stack := range p.Stack {
 		for _, stackTmpl := range stack.Templates {
-			for _, moduleData := range stackTmpl.Modules {
-				mod, err := NewModule(moduleData, stack)
+			for _, unitData := range stackTmpl.Units {
+				mod, err := NewUnit(unitData, stack)
 				if err != nil {
-					traceModuleView, errYaml := yaml.Marshal(moduleData)
+					traceUnitView, errYaml := yaml.Marshal(unitData)
 					if errYaml != nil {
-						traceModuleView = []byte{}
+						traceUnitView = []byte{}
 					}
-					return fmt.Errorf("stack '%v', reading modules: %v\nModule data:\n%v", stackName, err.Error(), string(traceModuleView))
+					return fmt.Errorf("stack '%v', reading units: %v\nUnit data:\n%v", stackName, err.Error(), string(traceUnitView))
 				}
-				if _, exists := p.Modules[mod.Key()]; exists {
-					return fmt.Errorf("stack '%v', reading modules: duplicate module name: %v", stackName, mod.Name())
+				if _, exists := p.Units[mod.Key()]; exists {
+					return fmt.Errorf("stack '%v', reading units: duplicate unit name: %v", stackName, mod.Name())
 				}
-				p.Modules[mod.Key()] = mod
+				p.Units[mod.Key()] = mod
 			}
 		}
 	}
 	return nil
 }
 
-func (p *Project) prepareModules() error {
-	// After reads all modules to project - process templated markers and set all dependencies between modules.
-	for _, mod := range p.Modules {
+func (p *Project) prepareUnits() error {
+	// After reads all units to project - process templated markers and set all dependencies between units.
+	for _, mod := range p.Units {
 		err := mod.ReplaceMarkers()
 		if err != nil {
 			return err
 		}
-		if err = BuildModuleDeps(mod); err != nil {
+		if err = BuildUnitsDeps(mod); err != nil {
 			return err
 		}
 	}
@@ -346,11 +346,11 @@ func (p *Project) readManifests() error {
 func (p *Project) PrintInfo() error {
 	fmt.Println("Project:")
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Stacks count", "Modules count", "Backends count", "Secrets count"})
+	table.SetHeader([]string{"Name", "Stacks count", "units count", "Backends count", "Secrets count"})
 	table.Append([]string{
 		p.name,
 		fmt.Sprintf("%v", len(p.Stack)),
-		fmt.Sprintf("%v", len(p.Modules)),
+		fmt.Sprintf("%v", len(p.Units)),
 		fmt.Sprintf("%v", len(p.Backends)),
 		fmt.Sprintf("%v", len(p.secrets)),
 	})
@@ -358,10 +358,10 @@ func (p *Project) PrintInfo() error {
 
 	fmt.Println("Stacks:")
 	table = tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Modules count", "Backend name", "Backend type"})
+	table.SetHeader([]string{"Name", "units count", "Backend name", "Backend type"})
 	for name, stack := range p.Stack {
 		mCount := 0
-		for _, mod := range p.Modules {
+		for _, mod := range p.Units {
 			if mod.StackName() == stack.Name {
 				mCount++
 			}
@@ -375,15 +375,15 @@ func (p *Project) PrintInfo() error {
 	}
 	table.Render()
 
-	fmt.Println("Modules:")
+	fmt.Println("units:")
 	table = tablewriter.NewWriter(os.Stdout)
 	table.SetRowLine(true)
 	// table.SetRowSeparator(".")
 	table.SetHeader([]string{"Name", "Stack", "Kind", "Dependencies"})
-	for name, mod := range p.Modules {
+	for name, mod := range p.Units {
 		deps := ""
 		for i, dep := range *mod.Dependencies() {
-			deps = fmt.Sprintf("%s%s.%s", deps, dep.StackName, dep.ModuleName)
+			deps = fmt.Sprintf("%s%s.%s", deps, dep.StackName, dep.UnitName)
 			if dep.Output != "" {
 				deps = fmt.Sprintf("%s.%s", deps, dep.Output)
 			}

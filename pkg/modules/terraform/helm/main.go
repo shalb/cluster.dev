@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Module struct {
+type Unit struct {
 	common.Unit
 	source          string
 	helmOpts        map[string]interface{}
@@ -24,11 +24,11 @@ type Module struct {
 	valuesYAML      []map[string]interface{}
 }
 
-func (m *Module) KindKey() string {
+func (m *Unit) KindKey() string {
 	return "helm"
 }
 
-func (m *Module) genMainCodeBlock() ([]byte, error) {
+func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	// var marker string
 	// if len(m.valuesFileContent) > 0 {
 	// 	m.FilesList()["values.yaml"] = m.valuesFileContent
@@ -78,7 +78,7 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	err := m.Unit.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
@@ -86,7 +86,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 	}
 	source, ok := spec["source"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("read module config: incorrect module source, %v", m.Key())
+		return fmt.Errorf("read unit config: incorrect unit source, %v", m.Key())
 	}
 	for key, val := range source {
 		m.helmOpts[key] = val
@@ -113,7 +113,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 	if ok {
 		valuesCatList, check := valuesCat.([]interface{})
 		if !check {
-			return fmt.Errorf("read module config: 'values' have unknown type: %v", err)
+			return fmt.Errorf("read unit config: 'values' have unknown type: %v", err)
 		}
 		m.valuesFilesList = []string{}
 		//log.Warnf("%v", ok)
@@ -121,7 +121,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 		for _, valuesCat := range valuesCatList {
 			valuesCatMap, check := valuesCat.(map[string]interface{})
 			if !check {
-				return fmt.Errorf("read module config: 'values' have unknown format: %v", err)
+				return fmt.Errorf("read unit config: 'values' have unknown format: %v", err)
 			}
 			applyTemplate, exists := valuesCatMap["apply_template"].(bool)
 			if !exists {
@@ -129,13 +129,13 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 			}
 			valuesFileName, ok := valuesCatMap["file"].(string)
 			if !ok {
-				return fmt.Errorf("read module config: 'values.file' is required field: %v", err)
+				return fmt.Errorf("read unit config: 'values.file' is required field: %v", err)
 			}
 			vfPath := filepath.Join(m.StackPtr().TemplateDir, valuesFileName)
 			valuesFileContent, err := ioutil.ReadFile(vfPath)
 			if err != nil {
 				log.Debugf(err.Error())
-				return fmt.Errorf("read module config: can't load values file: %v", err)
+				return fmt.Errorf("read unit config: can't load values file: %v", err)
 			}
 			values := valuesFileContent
 			if applyTemplate {
@@ -150,7 +150,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 			vYAML := make(map[string]interface{})
 			err = yaml.Unmarshal(values, &vYAML)
 			if err != nil {
-				return fmt.Errorf("read module config: unmarshal values file: ", err.Error())
+				return fmt.Errorf("read unit config: unmarshal values file: ", err.Error())
 			}
 			m.valuesYAML = append(m.valuesYAML, vYAML)
 			m.valuesFilesList = append(m.valuesFilesList, string(values))
@@ -164,7 +164,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, stack *project.Stack) e
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Module) ReplaceMarkers() error {
+func (m *Unit) ReplaceMarkers() error {
 	err := m.Unit.ReplaceMarkers(m)
 	if err != nil {
 		return err
@@ -189,7 +189,7 @@ func (m *Module) ReplaceMarkers() error {
 }
 
 // Build generate all terraform code for project.
-func (m *Module) Build() error {
+func (m *Unit) Build() error {
 	err := m.Unit.Build()
 	if err != nil {
 		return err
@@ -203,7 +203,7 @@ func (m *Module) Build() error {
 	return m.CreateCodeDir()
 }
 
-// UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
-func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
+// UpdateProjectRuntimeData update project runtime dataset, adds unit outputs.
+func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return m.Unit.UpdateProjectRuntimeData(p)
 }

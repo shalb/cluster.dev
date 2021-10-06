@@ -44,8 +44,8 @@ func removeDirContent(dir string) error {
 	return nil
 }
 
-func findModule(module Module, modsList map[string]Module) *Module {
-	mod, exists := modsList[fmt.Sprintf("%s.%s", module.StackName(), module.Name())]
+func findUnit(unit Unit, modsList map[string]Unit) *Unit {
+	mod, exists := modsList[fmt.Sprintf("%s.%s", unit.StackName(), unit.Name())]
 	// log.Printf("Check Mod: %s, exists: %v, list %v", name, exists, modsList)
 	if !exists {
 		return nil
@@ -54,35 +54,49 @@ func findModule(module Module, modsList map[string]Module) *Module {
 }
 
 // ScanMarkers use marker scanner function to replace templated markers.
-func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error {
+func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 	if data == nil {
 		return nil
 	}
 	out := reflect.ValueOf(data)
-	if out.Kind() == reflect.Ptr && !out.IsNil() {
-		out = out.Elem()
-	}
+	// if out.Kind() == reflect.Ptr && !out.IsNil() {
+	// 	 out = out.Elem()
+
+	// 	//log.Fatalf("%v \n%v ", out.Kind(), out)
+	// }
 	// if out.IsNil() {
+	// 	log.Fatalf("%v \n%v ", out.Kind(), out)
 	// 	return nil
 	// }
 	switch out.Kind() {
 	case reflect.Slice:
 		// log.Warnf("slice %v", out)
 		for i := 0; i < out.Len(); i++ {
-			elem := out.Index(i)
-			if elem.Kind() != reflect.Interface && elem.Kind() != reflect.Ptr {
-				val, err := procFunc(elem, module)
-				if err != nil {
-					return err
-				}
-				if val.Kind() != elem.Kind() {
-					log.Fatal("ScanMarkers: type conversion error")
-				}
-				out.Index(i).Set(val)
-				continue
+			// log.Errorf("%v", out)
+			sliceElem := out.Index(i)
+			sliceElemKind := sliceElem.Kind()
+			if sliceElem.Kind() == reflect.Interface || sliceElem.Kind() == reflect.Ptr {
+				sliceElemKind = sliceElem.Elem().Kind()
 			}
-			if elem.Elem().Kind() == reflect.String {
-				val, err := procFunc(elem, module)
+
+			// log.Errorf("Kinds: %v %v", elem.Kind(), elem.Elem().Kind())
+			// if sliceElem.Kind() != reflect.Interface && sliceElem.Kind() != reflect.Ptr {
+			// 	if sliceElem.Kind() == reflect.String {
+			// 		val, err := procFunc(sliceElem, unit)
+			// 		if err != nil {
+			// 			return err
+			// 		}
+			// 		out.Index(i).Set(val)
+			// 		continue
+			// 	}
+			// 	err := ScanMarkers(out.Index(i).Interface(), procFunc, unit)
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// 	continue
+			// }
+			if sliceElemKind == reflect.String {
+				val, err := procFunc(sliceElem, unit)
 				if err != nil {
 					return err
 				}
@@ -90,7 +104,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 				out.Index(i).Set(val)
 			} else {
 				// log.Warnf("slice scan")
-				err := ScanMarkers(out.Index(i).Interface(), procFunc, module)
+				err := ScanMarkers(out.Index(i).Interface(), procFunc, unit)
 				if err != nil {
 					return err
 				}
@@ -101,7 +115,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 		for _, key := range out.MapKeys() {
 			elem := out.MapIndex(key)
 			if elem.Kind() != reflect.Interface && elem.Kind() != reflect.Ptr {
-				val, err := procFunc(elem, module)
+				val, err := procFunc(elem, unit)
 				if err != nil {
 					return err
 				}
@@ -112,13 +126,13 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 				continue
 			}
 			if elem.Elem().Kind() == reflect.String {
-				val, err := procFunc(out.MapIndex(key), module)
+				val, err := procFunc(out.MapIndex(key), unit)
 				if err != nil {
 					return err
 				}
 				out.SetMapIndex(key, val)
 			} else {
-				err := ScanMarkers(elem.Interface(), procFunc, module)
+				err := ScanMarkers(elem.Interface(), procFunc, unit)
 				if err != nil {
 					return err
 				}
@@ -128,13 +142,13 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 		// log.Warn("struct")
 		for i := 0; i < out.NumField(); i++ {
 			if out.Field(i).Kind() == reflect.String {
-				val, err := procFunc(reflect.ValueOf(out.Field(i).Interface()), module)
+				val, err := procFunc(reflect.ValueOf(out.Field(i).Interface()), unit)
 				if err != nil {
 					return err
 				}
 				out.Field(i).Set(val)
 			} else {
-				err := ScanMarkers(out.Field(i).Interface(), procFunc, module)
+				err := ScanMarkers(out.Field(i).Interface(), procFunc, unit)
 				if err != nil {
 					return err
 				}
@@ -146,20 +160,20 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 			if !out.CanSet() {
 				log.Fatal("Internal error: can't set interface field.")
 			}
-			val, err := procFunc(out, module)
+			val, err := procFunc(out, unit)
 			if err != nil {
 				return err
 			}
 			out.Set(val)
 		} else {
-			err := ScanMarkers(out.Interface(), procFunc, module)
+			err := ScanMarkers(out.Interface(), procFunc, unit)
 			if err != nil {
 				return err
 			}
 		}
 	case reflect.String:
 		// log.Warn("string")
-		val, err := procFunc(out, module)
+		val, err := procFunc(out, unit)
 		if err != nil {
 			return err
 		}
@@ -168,7 +182,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, module Module) error 
 		}
 		out.Set(val)
 	default:
-		log.Debugf("Unknown type: %v", out.Type())
+		// log.Debugf("Unknown type: %v", out.Type())
 	}
 	return nil
 }
@@ -190,23 +204,23 @@ func ConvertToShellVar(name string) string {
 	return fmt.Sprintf("${%s}", ConvertToShellVarName(name))
 }
 
-func BuildDep(m Module, dep *DependencyOutput) error {
-	if dep.Module == nil {
+func BuildDep(m Unit, dep *DependencyOutput) error {
+	if dep.Unit == nil {
 
-		if dep.ModuleName == "" || dep.StackName == "" {
-			return fmt.Errorf("Empty dependency in module '%v.%v'", m.StackName(), m.Name())
+		if dep.UnitName == "" || dep.StackName == "" {
+			return fmt.Errorf("Empty dependency in unit '%v.%v'", m.StackName(), m.Name())
 		}
-		depMod, exists := m.ProjectPtr().Modules[fmt.Sprintf("%v.%v", dep.StackName, dep.ModuleName)]
+		depMod, exists := m.ProjectPtr().Units[fmt.Sprintf("%v.%v", dep.StackName, dep.UnitName)]
 		if !exists {
-			return fmt.Errorf("Error in module '%v.%v' dependency, target '%v.%v' does not exist", m.StackName(), m.Name(), dep.StackName, dep.ModuleName)
+			return fmt.Errorf("Error in unit '%v.%v' dependency, target '%v.%v' does not exist", m.StackName(), m.Name(), dep.StackName, dep.UnitName)
 		}
-		dep.Module = depMod
+		dep.Unit = depMod
 	}
 	return nil
 }
 
-// BuildModuleDeps check all dependencies and add module pointer.
-func BuildModuleDeps(m Module) error {
+// BuildunitDeps check all dependencies and add unit pointer.
+func BuildUnitsDeps(m Unit) error {
 	for _, dep := range *m.Dependencies() {
 		err := BuildDep(m, dep)
 		if err != nil {
@@ -236,7 +250,7 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	table := tablewriter.NewWriter(os.Stdout)
 
 	headers := []string{}
-	modulesTable := []string{}
+	unitsTable := []string{}
 
 	var deployString, updateString, destroyString, unchangedString string
 	for i, modName := range deployList {
@@ -265,21 +279,21 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	}
 	if len(deployList) > 0 {
 		headers = append(headers, "Will be deployed")
-		modulesTable = append(modulesTable, deployString)
+		unitsTable = append(unitsTable, deployString)
 	}
 	if len(updateList) > 0 {
 		headers = append(headers, "Will be updated")
-		modulesTable = append(modulesTable, updateString)
+		unitsTable = append(unitsTable, updateString)
 	}
 	if len(destroyList) > 0 {
 		headers = append(headers, "Will be destroyed")
-		modulesTable = append(modulesTable, destroyString)
+		unitsTable = append(unitsTable, destroyString)
 	}
 	if len(unchangedList) > 0 {
 		headers = append(headers, "Unchanged")
-		modulesTable = append(modulesTable, unchangedString)
+		unitsTable = append(unitsTable, unchangedString)
 	}
 	table.SetHeader(headers)
-	table.Append(modulesTable)
+	table.Append(unitsTable)
 	table.Render()
 }

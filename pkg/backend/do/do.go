@@ -42,8 +42,8 @@ type backendConfigSpec struct {
 }
 
 // GetBackendBytes generate terraform backend config.
-func (b *Backend) GetBackendBytes(stackName, moduleName string) ([]byte, error) {
-	f, err := b.GetBackendHCL(stackName, moduleName)
+func (b *Backend) GetBackendBytes(stackName, unitName string) ([]byte, error) {
+	f, err := b.GetBackendHCL(stackName, unitName)
 	if err != nil {
 		return nil, err
 	}
@@ -51,14 +51,14 @@ func (b *Backend) GetBackendBytes(stackName, moduleName string) ([]byte, error) 
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *Backend) GetBackendHCL(stackName, moduleName string) (*hclwrite.File, error) {
+func (b *Backend) GetBackendHCL(stackName, unitName string) (*hclwrite.File, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
 	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"s3"})
 	backendBody := backendBlock.Body()
 	backendBody.SetAttributeValue("bucket", cty.StringVal(b.Bucket))
-	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s.state", stackName, moduleName)))
+	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s.state", stackName, unitName)))
 	backendBody.SetAttributeValue("region", cty.StringVal("us-east-1"))
 	backendBody.SetAttributeValue("endpoint", cty.StringVal(fmt.Sprintf("%s.digitaloceanspaces.com", b.Region)))
 	backendBody.SetAttributeValue("skip_credentials_validation", cty.BoolVal(true))
@@ -67,23 +67,23 @@ func (b *Backend) GetBackendHCL(stackName, moduleName string) (*hclwrite.File, e
 		backendBody.SetAttributeValue("access_key", cty.StringVal(b.AccessKey))
 		backendBody.SetAttributeValue("secret_key", cty.StringVal(b.SecretKey))
 	}
-	terraformBlock.Body().SetAttributeValue("required_version", cty.StringVal("~> 0.13"))
+	// terraformBlock.Body().SetAttributeValue("required_version", cty.StringVal("~> 0.13"))
 	return f, nil
 
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *Backend) GetRemoteStateHCL(stackName, moduleName string) ([]byte, error) {
+func (b *Backend) GetRemoteStateHCL(stackName, unitName string) ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", stackName, moduleName)})
+	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", stackName, unitName)})
 	dataBody := dataBlock.Body()
 	dataBody.SetAttributeValue("backend", cty.StringVal("s3"))
 
 	config := map[string]interface{}{
 		"bucket":                      b.Bucket,
-		"key":                         fmt.Sprintf("%s/%s.state", stackName, moduleName),
+		"key":                         fmt.Sprintf("%s/%s.state", stackName, unitName),
 		"region":                      "us-east-1",
 		"endpoint":                    fmt.Sprintf("%s.digitaloceanspaces.com", b.Region),
 		"skip_credentials_validation": true,

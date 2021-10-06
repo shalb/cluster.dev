@@ -9,8 +9,8 @@ import (
 type Factory struct {
 }
 
-// New creates new module driver factory.
-func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (project.Module, error) {
+// New creates new units driver factory.
+func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (project.Unit, error) {
 	mod := Unit{
 		markers: make(map[string]interface{}),
 		applied: false,
@@ -28,8 +28,8 @@ func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (projec
 	return &mod, nil
 }
 
-// NewFromState creates new module from state data.
-func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Module, error) {
+// NewFromState creates new units from state data.
+func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Unit, error) {
 	mod := Unit{}
 	err := mod.LoadState(spec, modKey, p)
 	if err != nil {
@@ -41,7 +41,7 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 
 func init() {
 	modDrv := Factory{}
-	if err := project.RegisterModuleFactory(&modDrv, "shell"); err != nil {
-		log.Trace("Can't register module driver 'shell'.")
+	if err := project.RegisterUnitFactory(&modDrv, "shell"); err != nil {
+		log.Trace("Can't register unit driver 'shell'.")
 	}
 }

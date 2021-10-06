@@ -9,12 +9,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const stackTemplateObjKindKey = "InfraTemplate"
+const stackTemplateObjKindKey = "StackTemplate"
 
 type stackTemplate struct {
 	Name             string                   `yaml:"name"`
 	Kind             string                   `yaml:"kind"`
-	Modules          []map[string]interface{} `yaml:"modules"`
+	Units            []map[string]interface{} `yaml:"units"`
+	Modules          []map[string]interface{} `yaml:"modules,omitempty"`
 	ReqClientVersion string                   `yaml:"cliVersion"`
 }
 
@@ -27,14 +28,22 @@ func NewStackTemplate(data []byte) (*stackTemplate, error) {
 		}
 		return nil, fmt.Errorf("unmarshal template data: %v", err.Error())
 	}
-	if len(iTmpl.Modules) < 1 {
-		return nil, fmt.Errorf("parsing template: template must contain at least one module")
+	if len(iTmpl.Units) < 1 {
+		if len(iTmpl.Modules) < 1 {
+			return nil, fmt.Errorf("parsing template: template must contain at least one unit")
+		}
+		iTmpl.Units = iTmpl.Modules
+		iTmpl.Modules = nil
+		log.Warnf("'modules' key is deprecated and will be remover in future releases. Use 'units' instead")
 	}
 	if iTmpl.Name == "" {
 		return nil, fmt.Errorf("parsing template: template must contain 'name' field")
 	}
 	if iTmpl.Kind != stackTemplateObjKindKey {
-		return nil, fmt.Errorf("parsing template: unknown template object kind or kind is not set: '%v'", iTmpl.Kind)
+		if iTmpl.Kind != "InfraTemplate" {
+			return nil, fmt.Errorf("parsing template: unknown template object kind or kind is not set: '%v'", iTmpl.Kind)
+		}
+		log.Warnf("'InfraTemplate' kind is deprecated and will be remover in future releases. Use 'StackTemplate' instead")
 	}
 	log.Debug("check client version")
 	if iTmpl.ReqClientVersion != "" {

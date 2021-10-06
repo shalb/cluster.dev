@@ -102,7 +102,7 @@ func (m *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 
 	mkSplitted := strings.Split(modKey, ".")
 	if len(mkSplitted) != 2 {
-		return fmt.Errorf("loading module state: bad module key: %v", modKey)
+		return fmt.Errorf("loading unit state: bad unit key: %v", modKey)
 	}
 	stackName := mkSplitted[0]
 	modName := mkSplitted[1]
@@ -110,12 +110,12 @@ func (m *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	err := utils.JSONInterfaceToType(spec, &mState)
 
 	if err != nil {
-		return fmt.Errorf("loading module state: can't convert state data: %v", err.Error())
+		return fmt.Errorf("loading unit state: can't convert state data: %v", err.Error())
 	}
 
 	backend, exists := p.LoaderProjectPtr.Backends[mState.BackendName]
 	if !exists {
-		return fmt.Errorf("load module from state: backend '%v' does not exists in curent project", mState.BackendName)
+		return fmt.Errorf("load unit from state: backend '%v' does not exists in curent project", mState.BackendName)
 	}
 	stack, exists := p.LoaderProjectPtr.Stack[stackName]
 	if !exists {

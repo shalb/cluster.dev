@@ -45,7 +45,7 @@ type StateConfigSpec struct {
 
 type outputParser func(string, interface{}) error
 
-// Unit describe cluster.dev shell module.
+// Unit describe cluster.dev shell unit.
 type Unit struct {
 	statePtr       *StateSpec
 	stackPtr       *project.Stack
@@ -158,7 +158,7 @@ func (m *Unit) FilesList() map[string][]byte {
 
 func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	if stack == nil {
-		return fmt.Errorf("read shell module: empty stack or project")
+		return fmt.Errorf("read shell unit: empty stack or project")
 	}
 	m.stackPtr = stack
 	m.projectPtr = stack.ProjectPtr
@@ -174,15 +174,15 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 
 	isDir, err := utils.CheckDir(m.WorkDir)
 	if err != nil {
-		return fmt.Errorf("read module '%v': check working dir: %v", m.Name(), err.Error())
+		return fmt.Errorf("read unit '%v': check working dir: %v", m.Name(), err.Error())
 	}
 	if !isDir {
-		return fmt.Errorf("read module: check working dir: '%v' is not a directory", m.WorkDir)
+		return fmt.Errorf("read unit: check working dir: '%v' is not a directory", m.WorkDir)
 	}
 	m.cacheDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
 	_, ok := m.outputParsers[m.GetOutputsConf.Type]
 	if !ok {
-		return fmt.Errorf("read module: outputs config: unknown type '%v'", m.GetOutputsConf.Type)
+		return fmt.Errorf("read unit: outputs config: unknown type '%v'", m.GetOutputsConf.Type)
 	}
 	return nil
 }
@@ -194,37 +194,37 @@ func (m *Unit) ExpectedOutputs() map[string]*project.DependencyOutput {
 	return m.outputs
 }
 
-// Name return module name.
+// Name return unit name.
 func (m *Unit) Name() string {
 	return m.MyName
 }
 
-// StackPtr return ptr to module stack.
+// StackPtr return ptr to unit stack.
 func (m *Unit) StackPtr() *project.Stack {
 	return m.stackPtr
 }
 
-// ApplyOutput return output of module applying.
+// ApplyOutput return output of unit applying.
 func (m *Unit) ApplyOutput() []byte {
 	return m.outputRaw
 }
 
-// ProjectPtr return ptr to module project.
+// ProjectPtr return ptr to unit project.
 func (m *Unit) ProjectPtr() *project.Project {
 	return m.projectPtr
 }
 
-// StackName return module stack name.
+// StackName return unit stack name.
 func (m *Unit) StackName() string {
 	return m.stackPtr.Name
 }
 
-// Backend return module backend.
+// Backend return unit backend.
 func (m *Unit) Backend() project.Backend {
 	return m.stackPtr.Backend
 }
 
-// Dependencies return slice of module dependencies.
+// Dependencies return slice of unit dependencies.
 func (m *Unit) Dependencies() *[]*project.DependencyOutput {
 	return &m.dependencies
 }
@@ -236,7 +236,7 @@ func (m *Unit) Init() error {
 // Apply run unit apply procedure.
 func (m *Unit) Apply() error {
 
-	// Get and remember module state before markers replacement.
+	// Get and remember unit state before markers replacement.
 	m.statePtr = m.buildState()
 
 	err := m.ReplaceMarkers()
@@ -303,28 +303,28 @@ func (m *Unit) Apply() error {
 	return err
 }
 
-// Plan module.
+// Plan unit.
 func (m *Unit) Plan() error {
 	return nil
 }
 
-// Destroy module.
+// Destroy unit.
 func (m *Unit) Destroy() error {
 	return nil
 }
 
-// Key return uniq module index (string key for maps).
+// Key return uniq unit index (string key for maps).
 func (m *Unit) Key() string {
 	return fmt.Sprintf("%v.%v", m.StackName(), m.MyName)
 }
 
-// CodeDir return path to module code directory.
+// CodeDir return path to unit code directory.
 func (m *Unit) CodeDir() string {
 	return m.WorkDir
 }
 
-// UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
-// TODO: get module outputs and write to project runtime dataset. Now this function is only for printer's module interface.
+// UpdateProjectRuntimeData update project runtime dataset, adds unit outputs.
+// TODO: get unit outputs and write to project runtime dataset. Now this function is only for printer's unit interface.
 func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return nil
 }
