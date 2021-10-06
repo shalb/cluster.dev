@@ -88,10 +88,6 @@ Rendered:
 
 ## Units
 
-cdev has two types of units that operate through Terraform or shell. Each type gives rise to the hierarchy of lower-level units that are marked with a prefix respectively, for example: terraform.helm, shell.kubectl.
-
-### Terraform units hierarchy
-
 All units described below have a common format and common fields. Base example:
 
 ```yaml
@@ -133,7 +129,7 @@ All units described below have a common format and common fields. Base example:
 
     * `on_plan` - *bool*, *optional* turn off/on when unit plan executing. **Default: "false"**.
 
-#### Terraform unit
+### Terraform unit
 
 Describes direct Terraform unit invocation.
 
@@ -159,7 +155,7 @@ In addition to common options the following are available:
 
 * `inputs` - *map of any*, *required*. A map that corresponds to [input variables](https://www.terraform.io/docs/language/values/variables.html) defined by the module. This block allows to use functions `remoteState` and `insertYAML`.
 
-#### Helm unit
+### Helm unit
 
 Describes [Terraform Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
 
@@ -220,7 +216,7 @@ In addition to common options the following are available:
     }
     ```
 
-#### Kubernetes unit
+### Kubernetes unit
 
 Describes [Terraform kubernetes-alpha provider](https://github.com/hashicorp/terraform-provider-kubernetes-alpha) invocation.
 
@@ -241,7 +237,7 @@ units:
 * `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the unit was executed.
 * `provider_version` - *string*, *optional*. Version of terraform kubernetes-alpha provider to use. Default - latest. See [terraform kubernetes-alpha provider](https://registry.terraform.io/providers/hashicorp/kubernetes-alpha/latest) 
 
-#### Printer unit
+### Printer unit
 
 The unit is mainly used to see the outputs of other units in the console logs.
 
@@ -258,92 +254,4 @@ units:
 
 * `inputs` - *any*, *required* - a map that represents data to be printed in the log. The block **allows to use the functions `remoteState` and `insertYAML`**.
 
-### Shell units hierarchy 
-
-An example of basic shell module upon which other customized modules will be described:
-
-```yaml
-units:
-  - name: my-tf-code
-    kind: shell
-    env: 
-      AWS_PROFILE: {{ .variables.aws_profile }}
-      TF_VAR_region: {{ .project.region }}
-    create_files:
-      - file: ./terraform.tfvars
-        content: |
-{{- range $key, $value := .variables.tfvars }}
-        $key = "$value" 
-{{- end}}
-    work_dir: ~/env/prod/
-    apply: 
-      commands:
-        - terraform apply -var-file terraform.tfvars {{ range $key, $value := .variables.vars_list }} -var="$key=$value"{{ end }}
-    plan:
-      commands:
-        - terraform plan
-    destroy:
-      commands:
-        - terraform destroy
-        - rm ./.terraform
-    outputs: # how to get outputs
-      type: json (regexp, separator)
-      regexp_key: "regexp"
-      regexp_value: "regexp"
-      separator: "="
-      command: terraform output -json
-    state: # data that will be saved in the state
-      files:
-        - mask: ~/env/prod/*.tf
-          recursive: true
- ```
- 
-* `env` -  *map*, *optional*. The list of environment variables that will be exported before executing commands of this unit. The variables defined in shell unit have a priority over variables defined in the project (the option `exports`) and will rewrite them.
-
-* `work_dir` -  *string*, *required*. The working directory within which the code of the unit will be executed.
-
-* `apply` - *required*, *map*. Describes commands to be executed when running `cdev apply`.
-
-    * `commands` -  *list of strings*, *required*. The list of commands to be executed when running `cdev apply`.
-
-* `plan` - *optional*, *map*. Describes commands to be executed when running `cdev plan`.
-
-    * `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev plan`.
-
-* `destroy` - *optional*, *map*. Describes commands to be executed when running `cdev destroy`.
-
-    * `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev destroy`.
-
-* `outputs` - *optional*, *map*. Describes how to get outputs from a command.
-
-    * `type` - *string*, *required*. A type of format to deliver the output. Could have 3 options: JSON, regexp, separator. According to the type specified, further options will  differ.
-
-        * `JSON` - if the `type` is defined as JSON, outputs will be delivered in JSON format. This type of output makes all other options not required.
-
-        * `regexp` - if the `type` is defined as regexp, this introduces an additional required option `regexp`. Regexp is a regular expression which defines how to parse each line in the module output. 
-
-        ```yaml
-         outputs: # how to get outputs
-           type: regexp
-           regexp: "^(.*)=(.*)$"
-           command: |
-             echo "key1=val1\nkey2=val2"
-         ```   
-         
-         * `separator` - if the `type` is defined as separator, this introduces an additional option `separator` (*string*). Separator is a symbol that defines how a line is divided in two parts: the key and the value.  
-
-        ```yaml
-         outputs: # how to get outputs
-           type: separator
-           separator: "="
-           command: |
-             echo "key1=val1\nkey2=val2"
-         ```
-         
-    * `command` - *string*, *optional*. The command to take the outputs from. Is used regardless of the type option. If the command is not defined, cdev takes the outputs from the `apply` command.
-
-* `state` - *map*, *optional*. Describes the data that will be saved in the cdev state. Contains state specification for the unit. 
-
-    * `files` - *list of files*, *optional*. The list of files that have to be saved in the state in case of their changing. 
-          
 
