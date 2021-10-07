@@ -35,7 +35,7 @@ Cdev has an installer script that takes the latest version of cdev and installs 
 You can fetch the script and execute it locally:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/shalb/cluster.dev/master/scripts/get_cdev.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shalb/cluster.dev/master/scripts/get_cdev.sh | sh
 ```
 
 !!! tip
