@@ -91,7 +91,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
     * backend.yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://cluster.dev/project-configuration/#backends).
 
-    * infra.yaml - describes stack configuration. See [infrastructure docs](https://cluster.dev/project-configuration/#infrastructure).
+    * infra.yaml - describes stack configuration. See [stack docs](https://cluster.dev/project-configuration/#stack).
 
 4. Run `cdev plan` to build the project. In the output you will see an infrastructure that is going to be created after running `cdev apply`.
 
