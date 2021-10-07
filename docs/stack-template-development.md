@@ -129,9 +129,9 @@ All units described below have a common format and common fields. Base example:
 
     * `on_plan` - *bool*, *optional*. Turn off/on when module plan executing. **Default: "false"**.
 
-### Terraform unit
+### Terraform module
 
-Describes direct Terraform unit invocation.
+Describes direct Terraform module invocation.
 
 Example:
 

@@ -27,7 +27,7 @@ type RequiredProvider struct {
 	Version string `json:"version"`
 }
 
-// Unit describe cluster.dev unit to deploy/destroy terraform units.
+// Unit describe cluster.dev unit to deploy/destroy terraform modules.
 type Unit struct {
 	stackPtr          *project.Stack
 	projectPtr        *project.Project
