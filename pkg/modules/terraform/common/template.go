@@ -19,7 +19,6 @@ func (m *TerraformTemplateDriver) AddTemplateFunctions(p *project.Project) {
 	f := terraformTemplateFunctions{projectPtr: p}
 	funcs := map[string]interface{}{
 		"remoteState": f.addRemoteStateMarker,
-		"insertYAML":  f.addYAMLBlockMarker,
 	}
 	for k, f := range funcs {
 		_, ok := p.TmplFunctionsMap[k]
@@ -36,43 +35,31 @@ func (m *TerraformTemplateDriver) Name() string {
 
 // RemoteStateMarkerCatName - name of markers category for remote states
 const RemoteStateMarkerCatName = "RemoteStateMarkers"
-const InsertYAMLMarkerCatName = "insertYAMLMarkers"
 
 // addRemoteStateMarker function for template. Add hash marker, witch will be replaced with desired remote state.
 func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, error) {
 
 	_, ok := m.projectPtr.Markers[RemoteStateMarkerCatName]
 	if !ok {
-		m.projectPtr.Markers[RemoteStateMarkerCatName] = map[string]*project.Dependency{}
+		m.projectPtr.Markers[RemoteStateMarkerCatName] = map[string]*project.DependencyOutput{}
 	}
 	splittedPath := strings.Split(path, ".")
 	if len(splittedPath) != 3 {
 		return "", fmt.Errorf("bad dependency path")
 	}
-	dep := project.Dependency{
-		Module:     nil,
-		InfraName:  splittedPath[0],
-		ModuleName: splittedPath[1],
-		Output:     splittedPath[2],
+	dep := project.DependencyOutput{
+		Unit:      nil,
+		StackName: splittedPath[0],
+		UnitName:  splittedPath[1],
+		Output:    splittedPath[2],
 	}
 	marker := project.CreateMarker("remoteState", fmt.Sprintf("%s.%s.%s", splittedPath[0], splittedPath[1], splittedPath[2]))
-	m.projectPtr.Markers[RemoteStateMarkerCatName].(map[string]*project.Dependency)[marker] = &dep
-	return fmt.Sprintf("%s", marker), nil
-}
-
-// addYAMLBlockMarker function for template. Add hash marker, witch will be replaced with desired block.
-func (m *terraformTemplateFunctions) addYAMLBlockMarker(data interface{}) (string, error) {
-	_, ok := m.projectPtr.Markers[InsertYAMLMarkerCatName]
-	if !ok {
-		m.projectPtr.Markers[InsertYAMLMarkerCatName] = map[string]interface{}{}
-	}
-	marker := project.CreateMarker("YAML", fmt.Sprintf("%v", data))
-	m.projectPtr.Markers[InsertYAMLMarkerCatName].(map[string]interface{})[marker] = data
+	m.projectPtr.Markers[RemoteStateMarkerCatName].(map[string]*project.DependencyOutput)[marker] = &dep
 	return fmt.Sprintf("%s", marker), nil
 }
 
 // GetTemplateDriver return template driver to add template functions into the project.
-func (m *Module) GetTemplateDriver() (string, project.TemplateDriver) {
+func (m *Unit) GetTemplateDriver() (string, project.TemplateDriver) {
 	return "terraform", &TerraformTemplateDriver{}
 }
 

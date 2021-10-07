@@ -26,7 +26,7 @@ type StateDiff struct {
 	LocalModule map[string]string `json:"local_module"`
 }
 
-func (m *Module) GetState() interface{} {
+func (m *Unit) GetState() interface{} {
 	st := m.GetStateCommon()
 	stTf := State{
 		StateSpecCommon: st,
@@ -35,16 +35,16 @@ func (m *Module) GetState() interface{} {
 		Source:          m.source,
 		Version:         m.version,
 	}
-	if m.localModule != nil {
+	if m.localUnit != nil {
 		stTf.LocalModule = make(map[string]string)
-		for dir, file := range m.localModule {
+		for dir, file := range m.localUnit {
 			stTf.LocalModule[dir] = base64.StdEncoding.EncodeToString(file)
 		}
 	}
 	return stTf
 }
 
-func (m *Module) GetDiffData() interface{} {
+func (m *Unit) GetDiffData() interface{} {
 	st := m.GetStateDiffCommon()
 	stTf := StateDiff{
 		StateSpecDiffCommon: st,
@@ -52,9 +52,9 @@ func (m *Module) GetDiffData() interface{} {
 		Source:              m.source,
 		Version:             m.version,
 	}
-	if m.localModule != nil && utils.IsLocalPath(m.source) {
+	if m.localUnit != nil && utils.IsLocalPath(m.source) {
 		stTf.LocalModule = make(map[string]string)
-		for dir, file := range m.localModule {
+		for dir, file := range m.localUnit {
 			stTf.LocalModule[dir] = base64.StdEncoding.EncodeToString(file)
 		}
 	}
@@ -69,7 +69,7 @@ func (s *State) GetType() string {
 	return s.ModType
 }
 
-func (m *Module) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
+func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	s := State{}
 	err := utils.JSONInterfaceToType(stateData, &s)
 	if err != nil {
@@ -88,13 +88,13 @@ func (m *Module) LoadState(stateData interface{}, modKey string, p *project.Stat
 		return fmt.Errorf("load state: %v", err.Error())
 	}
 	if utils.IsLocalPath(m.source) {
-		m.localModule = make(map[string][]byte)
+		m.localUnit = make(map[string][]byte)
 		for dir, file := range s.LocalModule {
 			decodedFile, err := base64.StdEncoding.DecodeString(file)
 			if err != nil {
 				return fmt.Errorf("load state: %v", err.Error())
 			}
-			m.localModule[dir] = decodedFile
+			m.localUnit[dir] = decodedFile
 		}
 	}
 	return nil

@@ -1,6 +1,6 @@
 name: cdev-tests
-template: https://github.com/shalb/cdev-test-template?ref=v0.0.2
-kind: Infrastructure
+template: https://github.com/shalb/cdev-test-template?ref=v0.0.3
+kind: Stack
 backend: aws-backend
 variables:
   name: "cdev-gha-test"

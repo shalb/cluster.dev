@@ -9,7 +9,7 @@ import (
 
 var destroyCmd = &cobra.Command{
 	Use:   "destroy",
-	Short: "Destroy all modules",
+	Short: "Destroy all units",
 	Run: func(cmd *cobra.Command, args []string) {
 		project, err := project.LoadProjectFull()
 		if err != nil {

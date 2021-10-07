@@ -3,45 +3,43 @@ package tfmodule
 import (
 	"fmt"
 
-	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
+	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 type State struct {
-	common.StateSpecCommon
+	common.StateSpec
 	ModType      string      `json:"type"`
 	Inputs       interface{} `json:"inputs"`
 	ModOutputRaw string      `json:"output"`
 }
 
 func (m *Unit) GetState() interface{} {
-	st := m.GetStateCommon()
+	st := m.Unit.GetState()
 	printer := State{
-		StateSpecCommon: st,
-		Inputs:          m.inputs,
-		ModType:         m.KindKey(),
-		ModOutputRaw:    m.outputRaw,
+		StateSpec:    st.(common.StateSpec),
+		Inputs:       m.inputs,
+		ModType:      m.KindKey(),
+		ModOutputRaw: m.outputRaw,
 	}
 	return printer
 }
 
 type StateDiff struct {
-	common.StateSpecDiffCommon
+	common.StateSpecDiff
 	Inputs interface{} `json:"inputs"`
 }
 
 func (m *Unit) GetDiffData() interface{} {
-	st := m.GetStateDiffCommon()
+	st := m.Unit.GetStateDiff()
 	stTf := StateDiff{
-		StateSpecDiffCommon: st,
-		Inputs:              m.inputs,
+		StateSpecDiff: st,
+		Inputs:        m.inputs,
 	}
 	diffData := map[string]interface{}{}
-	res := map[string]interface{}{}
 	utils.JSONInterfaceToType(stTf, &diffData)
-	m.ReplaceRemoteStatesForDiff(diffData, &res)
-	return res
+	return diffData
 }
 
 func (s *State) GetType() string {
@@ -56,5 +54,5 @@ func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateP
 	}
 	m.inputs = s.Inputs.(map[string]interface{})
 	m.outputRaw = s.ModOutputRaw
-	return m.LoadStateCommon(s.StateSpecCommon, modKey, p)
+	return m.Unit.LoadState(s.StateSpec, modKey, p)
 }

@@ -1,30 +1,34 @@
-# Template Development
+# Stack Template Development
 
 ## Basics
 
-A template is a directory, either local or located in a Git repo that contains template config files. cdev reads all ./*.yaml files from the directory (non-recursively), renders a template with the project's data, parse the yaml file and loads modules. Modules may contain reference to other files that are required for work. These files should be located inside the current directory (template context). As some of the files will also be rendered with the project's data, you can use Go-templates in them. For more details please see [modules configuration](#modules) below.
+A stack template is a yaml file, which tells cdev which units to run and how. It is a core cdev resource that makes for its flexibility. Stack templates use Go template language to allow you customise and select the units you want to run.
 
-Template represents a yaml structure with an array of different invocation modules. Common view:
+The stack template's config files are stored within the stack template directory, which could be located either locally or in a Git repo. cdev reads all _./*.yaml files from the directory (non-recursively), renders a stack template with the project's data, parse the yaml file and loads units - the most primitive elements of a stack template. 
+
+Units are building blocks that stack templates are made of. It could be anything — a Terraform module, Helm you want to install or a Bash script that you want to run. Units can be remote or stored in the same repo with other cdev code. Units may contain reference to other files that are required for work. These files should be located inside the current directory (stack template's context). As some of the files will also be rendered with the project's data, you can use Go templates in them. For more details please see [units configuration](#units) below.
+
+A stack template represents a yaml structure with an array of different invocation units. Common view:
 
 ```yaml
-modules:
-  - module1
-  - module2
-  - module3
+units:
+  - unit1
+  - unit2
+  - unit3
   ...
 ```
 
-Template can utilize all kinds of Go-templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
+Stack templates can utilize all kinds of Go templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like insertYAML that could pass yaml blocks directly.
 
 ## Functions
 
-1) [Base Go-template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
+1) [Base Go template language functions](https://golang.org/pkg/text/template/#hdr-Functions).
 
 2) [Sprig functions](https://masterminds.github.io/sprig/).
 
-3) Enhanced functions: all functions described above allow you to modify the template text. Apart from these, some special enhanced functions are available. They cannot be used everywhere. The functions are integrated within the functionality of the program and with the yaml syntax:
+3) Enhanced functions: all functions described above allow you to modify the text of a stack template. Apart from these, some special enhanced functions are available. They cannot be used everywhere. The functions are integrated within the functionality of the program and with the yaml syntax:
 
-* `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block. **Allowed use**: only as full yaml value, in module `inputs`. Example:
+* `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block. **Allowed use**: only as full yaml value, in unit `inputs`. Example:
 
 Source yaml:
 
@@ -42,16 +46,16 @@ values:
 Target yaml template:
 
 ```yaml
-modules:
+units:
   - name: k3s
     type: terraform
     node_groups: {{ insertYAML .values.node_groups }}
 ```
 
-Rendered template:
+Rendered stack template:
 
 ```yaml
-modules:
+units:
   - name: k3s
     type: terraform
     node_groups:
@@ -63,11 +67,11 @@ modules:
       type: spot
 ```
 
-* `remoteState` - is used for passing data between modules and infrastructures, can be used in pre/post hooks. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"infra_name.module_name.output_name"`. Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`. **Allowed use**: 
+* `remoteState` - is used for passing data across units and stacks, can be used in pre/post hooks. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"stack_name.unit_name.output_name"`. Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`. **Allowed use**: 
 
-    * all modules types: in `inputs`;
+    * all units types: in `inputs`;
 
-    * all modules types: in modules pre/post hooks;
+    * all units types: in units pre/post hooks;
 
     * in Kubernetes modules: in Kubernetes manifests.
 
@@ -82,17 +86,17 @@ Rendered:
 172.18.0.0/16
 ```
 
-## Modules
+## Units
 
-All modules described below have a common format and common fields. Base example:
+All units described below have a common format and common fields. Base example:
 
 ```yaml
   - name: k3s
     type: terraform
     depends_on:
-      - this.module1_name
-      - this.module2_name
-#   depends_on: this.module1_name # is allowed to use string for single, or list for multiple dependencies
+      - this.unit1_name
+      - this.unit2_name
+#   depends_on: this.unit1_name # is allowed to use string for single, or list for multiple dependencies
     pre_hook:
       command: "echo pre_hook"
       # script: "./scripts/hook.sh"
@@ -107,13 +111,13 @@ All modules described below have a common format and common fields. Base example
       on_plan: false
 ```
 
-* `name` - module name. *Required*.
+* `name` - unit name. *Required*.
 
-* `type` - module type. One of: `terraform`, `helm`, `kubernetes`, `printer`. See below.
+* `type` - unit type. One of: `terraform`, `helm`, `kubernetes`, `printer`. See below.
 
-* `depends_on` - *string* or *list of strings*. One or multiple module dependencies in the format "infra_name.module_name". Since the name of the infrastructure is unknown inside the template, you can use "this" instead:`"this.module_name.output_name"`.
+* `depends_on` - *string* or *list of strings*. One or multiple unit dependencies in the format "stack_name.unit_name". Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`.
 
-* `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the module, respectively. The commands will be executed in the same context as the actions of the module. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the module execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the module.
+* `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the unit, respectively. The commands will be executed in the same context as the actions of the unit. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the unit execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the unit.
 
     * `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
 
@@ -132,7 +136,7 @@ Describes direct Terraform module invocation.
 Example:
 
 ```yaml
-modules:
+units:
   - name: vpc
     type: terraform
     version: "2.77.0"
@@ -151,14 +155,14 @@ In addition to common options the following are available:
 
 * `inputs` - *map of any*, *required*. A map that corresponds to [input variables](https://www.terraform.io/docs/language/values/variables.html) defined by the module. This block allows to use functions `remoteState` and `insertYAML`.
 
-### Helm module
+### Helm unit
 
 Describes [Terraform Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
 
 Example:
 
 ```yaml
-modules:
+units:
   - name: argocd
     type: helm
     source:
@@ -182,11 +186,11 @@ modules:
 
 In addition to common options the following are available:
 
-* `source` - *map*, *required*. Block describes Helm chart source.
+* `source` - *map*, *required*. This block describes Helm chart source.
 
   * `chart`, `repository`, `version` - correspond to options with the same name from helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
 
-* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
+* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the unit was executed.
 * `provider_version` - *string*, *optional*. Version of terraform helm provider to use. Default - latest. See [terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest)  
 
 * `additional_options` - *map of any*, *optional*. Corresponds to [Terraform helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
@@ -218,14 +222,14 @@ In addition to common options the following are available:
     }
     ```
 
-### Kubernetes module
+### Kubernetes unit
 
 Describes [Terraform kubernetes-alpha provider](https://github.com/hashicorp/terraform-provider-kubernetes-alpha) invocation.
 
 Example:
 
 ```yaml
-modules:
+units:
   - name: argocd_apps
     type: kubernetes
     provider_version: "0.2.1"
@@ -234,18 +238,19 @@ modules:
     depends_on: this.argocd
 ```
 
-* `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the template, and also allows to use the functions `remoteState` and `insertYAML`**.
+* `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the stack template, and also allows to use the functions `remoteState` and `insertYAML`**.
 
-* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the module was executed.
+* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the unit was executed.
 * `provider_version` - *string*, *optional*. Version of terraform kubernetes-alpha provider to use. Default - latest. See [terraform kubernetes-alpha provider](https://registry.terraform.io/providers/hashicorp/kubernetes-alpha/latest) 
-### Printer module
 
-The module is mainly used to see the outputs of other modules in the console logs.
+### Printer unit
+
+The unit is mainly used to see the outputs of other units in the console logs.
 
 Example:
 
 ```yaml
-modules:
+units:
   - name: print_outputs
     type: printer
     inputs:
@@ -254,3 +259,5 @@ modules:
 ```
 
 * `inputs` - *any*, *required* - a map that represents data to be printed in the log. The block **allows to use the functions `remoteState` and `insertYAML`**.
+
+

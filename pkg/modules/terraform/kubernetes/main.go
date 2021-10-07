@@ -16,8 +16,8 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-type Module struct {
-	common.Module
+type Unit struct {
+	common.Unit
 	source          string
 	kubeconfig      string
 	inputs          map[string]interface{}
@@ -46,11 +46,11 @@ type ProviderConfigSpec struct {
 	Username             string            `yaml:"username,omitempty" json:"username,omitempty"`
 }
 
-func (m *Module) KindKey() string {
+func (m *Unit) KindKey() string {
 	return "kubernetes"
 }
 
-func (m *Module) genMainCodeBlock() ([]byte, error) {
+func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	providerBlock := rootBody.AppendNewBlock("provider", []string{"kubernetes-alpha"})
@@ -64,28 +64,28 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 		providerBody.SetAttributeValue(key, val)
 	}
 	for key, manifest := range m.inputs {
-		moduleBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
-		moduleBody := moduleBlock.Body()
+		unitBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
+		unitBody := unitBlock.Body()
 		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(" kubernetes-alpha"), SpacesBefore: 1}}
-		moduleBody.SetAttributeRaw("provider", tokens)
+		unitBody.SetAttributeRaw("provider", tokens)
 		ctyVal, err := hcltools.InterfaceToCty(manifest)
 		if err != nil {
 			return nil, err
 		}
 
-		moduleBody.SetAttributeValue("manifest", ctyVal)
+		unitBody.SetAttributeValue("manifest", ctyVal)
 		for hash, m := range m.Markers() {
-			marker, ok := m.(*project.Dependency)
+			marker, ok := m.(*project.DependencyOutput)
 			refStr := common.DependencyToRemoteStateRef(marker)
 			if !ok {
 				return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
 			}
-			hcltools.ReplaceStingMarkerInBody(moduleBody, hash, refStr)
+			hcltools.ReplaceStingMarkerInBody(unitBody, hash, refStr)
 		}
 	}
 
 	for hash, m := range m.Markers() {
-		marker, ok := m.(*project.Dependency)
+		marker, ok := m.(*project.DependencyOutput)
 		refStr := common.DependencyToRemoteStateRef(marker)
 		if !ok {
 			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
@@ -95,16 +95,16 @@ func (m *Module) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastructure) error {
-	err := m.ReadConfigCommon(spec, infra)
+func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+	err := m.Unit.ReadConfig(spec, stack)
 	if err != nil {
-		return fmt.Errorf("reading kubernetes module: %v", err.Error())
+		return fmt.Errorf("reading kubernetes unit: %v", err.Error())
 	}
 	source, ok := spec["source"].(string)
 	if !ok {
-		return fmt.Errorf("reading kubernetes module '%v': malformed module source", m.Key())
+		return fmt.Errorf("reading kubernetes unit '%v': malformed unit source", m.Key())
 	}
-	tmplDir := m.InfraPtr().TemplateDir
+	tmplDir := m.StackPtr().TemplateDir
 	var absSource string
 	if source[1:2] == "/" {
 		absSource = filepath.Join(tmplDir, source)
@@ -113,13 +113,13 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 	}
 	fileInfo, err := os.Stat(absSource)
 	if err != nil {
-		return fmt.Errorf("reading kubernetes module '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
+		return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 	}
 	var filesList []string
 	if fileInfo.IsDir() {
 		filesList, err = filepath.Glob(absSource + "/*.yaml")
 		if err != nil {
-			return fmt.Errorf("reading kubernetes module '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
+			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 		}
 	} else {
 		filesList = append(filesList, absSource)
@@ -127,9 +127,9 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 	for _, fileName := range filesList {
 		file, err := ioutil.ReadFile(fileName)
 		if err != nil {
-			return fmt.Errorf("reading kubernetes module '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
+			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 		}
-		manifest, errIsWarn, err := m.InfraPtr().TemplateTry(file)
+		manifest, errIsWarn, err := m.StackPtr().TemplateTry(file)
 		if err != nil {
 			if errIsWarn {
 				log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
@@ -139,7 +139,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 		}
 		manifests, err := utils.ReadYAMLObjects(manifest)
 		if err != nil {
-			return fmt.Errorf("reading kubernetes module '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
+			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 		}
 
 		for i, manifest := range manifests {
@@ -149,7 +149,7 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 		}
 	}
 	if len(m.inputs) < 1 {
-		return fmt.Errorf("the kubernetes module must contain at least one manifest")
+		return fmt.Errorf("the kubernetes unit must contain at least one manifest")
 	}
 
 	err = utils.JSONInterfaceToType(spec, &m.ProviderConf)
@@ -169,12 +169,8 @@ func (m *Module) ReadConfig(spec map[string]interface{}, infra *project.Infrastr
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Module) ReplaceMarkers() error {
-	err := m.ReplaceMarkersCommon(m)
-	if err != nil {
-		return err
-	}
-	err = project.ScanMarkers(m.inputs, m.YamlBlockMarkerScanner, m)
+func (m *Unit) ReplaceMarkers() error {
+	err := m.Unit.ReplaceMarkers(m)
 	if err != nil {
 		return err
 	}
@@ -189,10 +185,12 @@ func (m *Module) ReplaceMarkers() error {
 	return nil
 }
 
-// CreateCodeDir generate all terraform code for project.
-func (m *Module) Build() error {
-	m.BuildCommon()
-	var err error
+// Build generate all terraform code for project.
+func (m *Unit) Build() error {
+	err := m.Unit.Build()
+	if err != nil {
+		return err
+	}
 	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
@@ -201,7 +199,7 @@ func (m *Module) Build() error {
 	return m.CreateCodeDir()
 }
 
-// UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
-func (m *Module) UpdateProjectRuntimeData(p *project.Project) error {
-	return m.UpdateProjectRuntimeDataCommon(p)
+// UpdateProjectRuntimeData update project runtime dataset, adds unit outputs.
+func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
+	return m.Unit.UpdateProjectRuntimeData(p)
 }

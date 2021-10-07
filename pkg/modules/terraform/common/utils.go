@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (m *Module) readDeps(depsData interface{}) ([]*project.Dependency, error) {
+func (m *Unit) readDeps(depsData interface{}) ([]*project.DependencyOutput, error) {
 	rawDepsList := []string{}
 	switch depsData.(type) {
 	case string:
@@ -20,19 +20,19 @@ func (m *Module) readDeps(depsData interface{}) ([]*project.Dependency, error) {
 	case []string:
 		rawDepsList = append(rawDepsList, depsData.([]string)...)
 	}
-	var res []*project.Dependency
+	var res []*project.DependencyOutput
 	for _, dep := range rawDepsList {
 		splDep := strings.Split(dep, ".")
 		if len(splDep) != 2 {
-			return nil, fmt.Errorf("Incorrect module dependency '%v'", dep)
+			return nil, fmt.Errorf("Incorrect unit dependency '%v'", dep)
 		}
 		infNm := splDep[0]
 		if infNm == "this" {
-			infNm = m.InfraName()
+			infNm = m.StackName()
 		}
-		res = append(res, &project.Dependency{
-			InfraName:  infNm,
-			ModuleName: splDep[1],
+		res = append(res, &project.DependencyOutput{
+			StackName: infNm,
+			UnitName:  splDep[1],
 		})
 		log.Debugf("Dependency added: %v --> %v.%v", m.Key(), infNm, splDep[1])
 	}
@@ -81,11 +81,11 @@ func readHook(hookData interface{}, hookType string) (*hookSpec, error) {
 
 }
 
-func DependencyToRemoteStateRef(dep *project.Dependency) (remoteStateRef string) {
-	remoteStateRef = fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", dep.InfraName, dep.ModuleName, dep.Output)
+func DependencyToRemoteStateRef(dep *project.DependencyOutput) (remoteStateRef string) {
+	remoteStateRef = fmt.Sprintf("data.terraform_remote_state.%s-%s.outputs.%s", dep.StackName, dep.UnitName, dep.Output)
 	return
 }
-func DependencyToBashRemoteState(dep *project.Dependency) (remoteStateRef string) {
-	remoteStateRef = fmt.Sprintf("\"$(terraform -chdir=../%v.%v/ output -raw %v)\"", dep.InfraName, dep.ModuleName, dep.Output)
+func DependencyToBashRemoteState(dep *project.DependencyOutput) (remoteStateRef string) {
+	remoteStateRef = fmt.Sprintf("\"$(terraform -chdir=../%v.%v/ output -raw %v)\"", dep.StackName, dep.UnitName, dep.Output)
 	return
 }

@@ -1,4 +1,4 @@
-package helm
+package tfmodule
 
 import (
 	"github.com/apex/log"
@@ -11,10 +11,7 @@ type Factory struct {
 
 // New creates new unit driver factory.
 func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (project.Unit, error) {
-	mod := Unit{
-		helmOpts: map[string]interface{}{},
-		sets:     map[string]interface{}{},
-	}
+	mod := Unit{}
 	err := mod.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
@@ -36,8 +33,8 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 
 func init() {
 	modDrv := Factory{}
-	log.Debug("Registering unit driver 'helm'")
-	if err := project.RegisterUnitFactory(&modDrv, "helm"); err != nil {
-		log.Trace("Can't register unit driver 'helm'.")
+	log.Debug("Registering unit driver 'kubectl'")
+	if err := project.RegisterUnitFactory(&modDrv, "kubectl"); err != nil {
+		log.Trace("Can't register unit driver 'kubectl'.")
 	}
 }

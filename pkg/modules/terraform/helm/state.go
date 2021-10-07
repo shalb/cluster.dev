@@ -18,7 +18,7 @@ type State struct {
 	Values     []string    `json:"values,omitempty"`
 }
 
-func (m *Module) GetState() interface{} {
+func (m *Unit) GetState() interface{} {
 	st := m.GetStateCommon()
 	stTf := State{
 		StateSpecCommon: st,
@@ -40,7 +40,7 @@ type StateDiff struct {
 	Values   []string    `json:"values,omitempty"`
 }
 
-func (m *Module) GetDiffData() interface{} {
+func (m *Unit) GetDiffData() interface{} {
 	st := m.GetStateDiffCommon()
 	stTf := StateDiff{
 		StateSpecDiffCommon: st,
@@ -60,7 +60,7 @@ func (s *State) GetType() string {
 	return s.ModType
 }
 
-func (m *Module) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
+func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	s := State{}
 	err := utils.JSONInterfaceToType(stateData, &s)
 	if err != nil {

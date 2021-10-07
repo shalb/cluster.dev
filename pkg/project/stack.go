@@ -13,34 +13,39 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-const infraObjKindKey = "Infrastructure"
+const stackObjKindKey = "Stack"
 
-type Infrastructure struct {
+// Stack represent stack object.
+type Stack struct {
 	ProjectPtr       *Project
 	Backend          Backend
 	Name             string
 	BackendName      string
 	TemplateSrc      string
 	TemplateDir      string
-	Templates        []InfraTemplate
+	Templates        []stackTemplate
 	Variables        map[string]interface{}
 	ConfigData       map[string]interface{}
 	TmplFunctionsMap template.FuncMap
 }
 
-type infrastructureState struct {
+type stackState struct {
 }
 
-func (p *Project) readInfrastructures() error {
-	// Read and parse infrastructures.
-	infras, exists := p.objects[infraObjKindKey]
+func (p *Project) readStacks() error {
+	// Read and parse stacks.
+	stacks, exists := p.objects[stackObjKindKey]
 	if !exists {
-		err := fmt.Errorf("no infrastructures found, at least one needed")
-		log.Debug(err.Error())
-		// return err
+		stacks, exists = p.objects["Infrastructure"]
+		if !exists {
+			err := fmt.Errorf("no stacks found, at least one needed")
+			log.Debug(err.Error())
+			return err
+		}
+		log.Warnf("'Infrastructure' key is deprecated and will be remover in future releases. Use 'Stack' instead")
 	}
-	for _, infra := range infras {
-		err := p.readInfrastructureObj(infra)
+	for _, stack := range stacks {
+		err := p.readStackObj(stack)
 		if err != nil {
 			return err
 		}
@@ -48,67 +53,67 @@ func (p *Project) readInfrastructures() error {
 	return nil
 }
 
-func (p *Project) readInfrastructureObj(infraSpec ObjectData) error {
-	name, ok := infraSpec.data["name"].(string)
+func (p *Project) readStackObj(stackSpec ObjectData) error {
+	name, ok := stackSpec.data["name"].(string)
 	if !ok {
-		return fmt.Errorf("infrastructure object must contain field 'name'")
+		return fmt.Errorf("stack object must contain field 'name'")
 	}
-	// Check if infra with this name is already exists in project.
-	if _, ok = p.Infrastructures[name]; ok {
-		return fmt.Errorf("duplicate infrastructure name '%s'", name)
+	// Check if stack with this name is already exists in project.
+	if _, ok = p.Stack[name]; ok {
+		return fmt.Errorf("duplicate stack name '%s'", name)
 	}
 
-	infra := Infrastructure{
+	stack := Stack{
 		ProjectPtr:       p,
-		ConfigData:       infraSpec.data,
+		ConfigData:       stackSpec.data,
 		Name:             name,
 		TmplFunctionsMap: make(template.FuncMap),
 	}
 
-	// Copy project template functions and add infra based (like readFile and templateFile)
+	// Copy project template functions and add stack based (like readFile and templateFile)
 	for fName, f := range p.TmplFunctionsMap {
-		infra.TmplFunctionsMap[fName] = f
+		stack.TmplFunctionsMap[fName] = f
 	}
 	fReader := tmplFileReader{
-		infraPtr: &infra,
+		stackPtr: &stack,
 	}
-	infra.TmplFunctionsMap["readFile"] = fReader.ReadFile
-	infra.TmplFunctionsMap["templateFile"] = fReader.TemplateFile
+	stack.TmplFunctionsMap["readFile"] = fReader.ReadFile
+	stack.TmplFunctionsMap["templateFile"] = fReader.TemplateFile
 
 	// Copy secrets from project for templating.
-	infra.ConfigData["secret"], _ = p.configData["secret"]
+	stack.ConfigData["secret"], _ = p.configData["secret"]
 
-	tmplSource, ok := infraSpec.data["template"].(string)
+	tmplSource, ok := stackSpec.data["template"].(string)
 	if !ok {
-		return fmt.Errorf("infrastructure object must contain field 'template'")
+		return fmt.Errorf("stack object must contain field 'template'")
 	}
-	infra.Variables, ok = infraSpec.data["variables"].(map[string]interface{})
+	stack.Variables, ok = stackSpec.data["variables"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("infrastructure object must contain field 'variables'")
+		return fmt.Errorf("stack object must contain field 'variables'")
 	}
-	err := infra.ReadTemplates(tmplSource)
+	err := stack.ReadTemplates(tmplSource)
 	if err != nil {
 		return err
 	}
 
 	// Read backend name.
-	infra.BackendName, ok = infraSpec.data["backend"].(string)
+	stack.BackendName, ok = stackSpec.data["backend"].(string)
 	if !ok {
-		return fmt.Errorf("infrastructure object must contain field 'backend'")
+		return fmt.Errorf("stack object must contain field 'backend'")
 	}
-	bPtr, exists := p.Backends[infra.BackendName]
+	bPtr, exists := p.Backends[stack.BackendName]
 	if !exists {
-		return fmt.Errorf("backend '%s' not found, infra: '%s'", infra.BackendName, infra.Name)
+		return fmt.Errorf("backend '%s' not found, stack: '%s'", stack.BackendName, stack.Name)
 	}
-	infra.Backend = bPtr
-	p.Infrastructures[name] = &infra
-	log.Debugf("Infrastructure added: %v", name)
+	stack.Backend = bPtr
+	p.Stack[name] = &stack
+	log.Debugf("Stack added: %v", name)
 	return nil
 }
 
 // ReadTemplates read all templates in src.
-func (i *Infrastructure) ReadTemplates(src string) (err error) {
-	// Read infra template data and apply variables.
+func (i *Stack) ReadTemplates(src string) (err error) {
+	// Read stack template data and apply variables.
 	var templatesDir string
 	if utils.IsLocalPath(src) {
 		if utils.IsAbsolutePath(src) {
@@ -132,7 +137,7 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 		os.Mkdir(config.Global.TemplatesCacheDir, os.ModePerm)
 		dr, err := utils.GetTemplate(src, config.Global.TemplatesCacheDir, i.Name)
 		if err != nil {
-			return fmt.Errorf("download template: %v\n   See details about infrastructure template reference: https://github.com/shalb/cluster.dev#infra_options_template", err.Error())
+			return fmt.Errorf("download template: %v\n   See details about stack template reference: https://github.com/shalb/cluster.dev#stack_options_template", err.Error())
 		}
 		log.Debugf("Template dir: %v", dr)
 		i.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, dr)
@@ -145,7 +150,7 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 	if err != nil {
 		return err
 	}
-	i.Templates = []InfraTemplate{}
+	i.Templates = []stackTemplate{}
 	for _, fn := range templatesFilesList {
 		tmplData, err := ioutil.ReadFile(fn)
 		if err != nil {
@@ -158,12 +163,12 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 				log.Fatal(err.Error())
 			}
 		}
-		infraTemplate, err := NewInfraTemplate(template)
+		stackTemplate, err := NewStackTemplate(template)
 		if err != nil {
 			log.Debugf("reading templates: %v", err.Error())
 			return err
 		}
-		i.Templates = append(i.Templates, *infraTemplate)
+		i.Templates = append(i.Templates, *stackTemplate)
 	}
 	if len(i.Templates) < 1 {
 		return fmt.Errorf("reading templates: no templates found")
@@ -172,15 +177,15 @@ func (i *Infrastructure) ReadTemplates(src string) (err error) {
 	return nil
 }
 
-// TemplateMust apply infrastructure variables to template data.
+// TemplateMust apply stack variables to template data.
 // If template has unresolved variables - function will return an error.
-func (i *Infrastructure) TemplateMust(data []byte) (res []byte, err error) {
+func (i *Stack) TemplateMust(data []byte) (res []byte, err error) {
 	return i.tmplWithMissingKey(data, "error")
 }
 
-// TemplateTry apply infrastructure variables to template data.
+// TemplateTry apply stack variables to template data.
 // If template has unresolved variables - warn will be set to true.
-func (i *Infrastructure) TemplateTry(data []byte) (res []byte, warn bool, err error) {
+func (i *Stack) TemplateTry(data []byte) (res []byte, warn bool, err error) {
 	res, err = i.tmplWithMissingKey(data, "default")
 	if err != nil {
 		return res, false, err
@@ -189,7 +194,7 @@ func (i *Infrastructure) TemplateTry(data []byte) (res []byte, warn bool, err er
 	return res, missingKeysErr != nil, missingKeysErr
 }
 
-func (i *Infrastructure) tmplWithMissingKey(data []byte, missingKey string) (res []byte, err error) {
+func (i *Stack) tmplWithMissingKey(data []byte, missingKey string) (res []byte, err error) {
 
 	tmpl, err := template.New("main").Funcs(i.ProjectPtr.TmplFunctionsMap).Option("missingkey=" + missingKey).Parse(string(data))
 	if err != nil {

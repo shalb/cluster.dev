@@ -12,10 +12,10 @@ import (
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
-// genBackendCodeBlock generate backend code block for this module.
-func (m *Module) genBackendCodeBlock() ([]byte, error) {
+// genBackendCodeBlock generate backend code block for this unit.
+func (m *Unit) genBackendCodeBlock() ([]byte, error) {
 
-	f, err := m.backendPtr.GetBackendHCL(m.InfraName(), m.Name())
+	f, err := m.backendPtr.GetBackendHCL(m.StackName(), m.Name())
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
@@ -36,13 +36,13 @@ func (m *Module) genBackendCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-// genDepsRemoteStates generate terraform remote states for all dependencies of this module.
-func (m *Module) genDepsRemoteStates() ([]byte, error) {
+// genDepsRemoteStates generate terraform remote states for all dependencies of this unit.
+func (m *Unit) genDepsRemoteStates() ([]byte, error) {
 	var res []byte
-	depsUniq := map[project.Module]bool{}
+	depsUniq := map[project.Unit]bool{}
 	for _, dep := range *m.Dependencies() {
 		// Ignore duplicated dependencies.
-		if _, ok := depsUniq[dep.Module]; ok {
+		if _, ok := depsUniq[dep.Unit]; ok {
 			continue
 		}
 		// Ignore dependencies without output (user defined as 'depends_on' option.)
@@ -50,9 +50,9 @@ func (m *Module) genDepsRemoteStates() ([]byte, error) {
 			continue
 		}
 		// Deduplication.
-		depsUniq[dep.Module] = true
-		modBackend := dep.Module.InfraPtr().Backend
-		rs, err := modBackend.GetRemoteStateHCL(dep.Module.InfraName(), dep.Module.Name())
+		depsUniq[dep.Unit] = true
+		modBackend := dep.Unit.StackPtr().Backend
+		rs, err := modBackend.GetRemoteStateHCL(dep.Unit.StackName(), dep.Unit.Name())
 		if err != nil {
 			log.Debug(err.Error())
 			return nil, err
@@ -63,7 +63,7 @@ func (m *Module) genDepsRemoteStates() ([]byte, error) {
 }
 
 // CreateCodeDir generate all terraform code for project.
-func (m *Module) CreateCodeDir() error {
+func (m *Unit) CreateCodeDir() error {
 	err := os.Mkdir(m.codeDir, 0755)
 
 	for fn, f := range m.FilesList() {
@@ -71,7 +71,7 @@ func (m *Module) CreateCodeDir() error {
 		// relPath, _ := filepath.Rel(config.Global.WorkingDir, filePath)
 		if m.projectPtr.CheckContainsMarkers(string(f)) {
 			log.Debugf("Unprocessed markers:\n %+v", string(f))
-			return fmt.Errorf("misuse of functions in a template: module: '%s.%s'", m.infraPtr.Name, m.name)
+			return fmt.Errorf("misuse of functions in a template: unit: '%s.%s'", m.stackPtr.Name, m.name)
 		}
 		err = ioutil.WriteFile(filePath, f, 0777)
 		if err != nil {
@@ -82,7 +82,7 @@ func (m *Module) CreateCodeDir() error {
 	return nil
 }
 
-func (m *Module) BuildCommon() error {
+func (m *Unit) Build() error {
 	var err error
 
 	m.filesList["init.tf"], err = m.genBackendCodeBlock()
@@ -130,12 +130,12 @@ func (m *Module) BuildCommon() error {
 	return nil
 }
 
-func (m *Module) replaceRemoteStatesForBash(cmd string) (res string, err error) {
+func (m *Unit) replaceRemoteStatesForBash(cmd string) (res string, err error) {
 	res = cmd
 	for hash, mr := range m.Markers() {
-		marker, ok := mr.(*project.Dependency)
+		marker, ok := mr.(*project.DependencyOutput)
 		if !ok {
-			return "", fmt.Errorf("preparing module: internal error: incorrect remote state type")
+			return "", fmt.Errorf("preparing unit: internal error: incorrect remote state type")
 		}
 		refStr := DependencyToBashRemoteState(marker)
 		res = strings.ReplaceAll(res, hash, refStr)

@@ -32,8 +32,8 @@ func (b *Backend) Provider() string {
 }
 
 // GetBackendBytes generate terraform backend config.
-func (b *Backend) GetBackendBytes(infraName, moduleName string) ([]byte, error) {
-	f, err := b.GetBackendHCL(infraName, moduleName)
+func (b *Backend) GetBackendBytes(stackName, unitName string) ([]byte, error) {
+	f, err := b.GetBackendHCL(stackName, unitName)
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +41,8 @@ func (b *Backend) GetBackendBytes(infraName, moduleName string) ([]byte, error) 
 }
 
 // GetBackendHCL generate terraform backend config.
-func (b *Backend) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, error) {
-	b.state["key"] = fmt.Sprintf("%s-%s.state", infraName, moduleName)
+func (b *Backend) GetBackendHCL(stackName, unitName string) (*hclwrite.File, error) {
+	b.state["key"] = fmt.Sprintf("%s-%s.state", stackName, unitName)
 
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
@@ -56,13 +56,13 @@ func (b *Backend) GetBackendHCL(infraName, moduleName string) (*hclwrite.File, e
 }
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
-func (b *Backend) GetRemoteStateHCL(infraName, moduleName string) ([]byte, error) {
-	b.state["key"] = fmt.Sprintf("%s-%s.state", infraName, moduleName)
+func (b *Backend) GetRemoteStateHCL(stackName, unitName string) ([]byte, error) {
+	b.state["key"] = fmt.Sprintf("%s-%s.state", stackName, unitName)
 
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", infraName, moduleName)})
+	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", stackName, unitName)})
 	dataBody := dataBlock.Body()
 	dataBody.SetAttributeValue("backend", cty.StringVal("azurerm"))
 	config, err := hcltools.InterfaceToCty(b.state)

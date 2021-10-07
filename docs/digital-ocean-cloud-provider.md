@@ -1,8 +1,8 @@
 # Deploying to DigitalOcean
 
-cdev uses project templates to generate projects in a desired cloud. This section describes steps necessary to start working with cdev in DigitalOcean cloud using [DO-k8s](https://github.com/shalb/cdev-do-k8s) template.
+cdev uses stack templates to generate projects in a desired cloud. This section describes steps necessary to start working with cdev in DigitalOcean cloud using [DO-k8s](https://github.com/shalb/cdev-do-k8s) stack template.
 
-## Prerequisites to use DO-k8s template
+## Prerequisites to use DO-k8s stack template
 
 1. Terraform version 13+.
 
@@ -54,7 +54,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
 ## DO-k8s
 
-[DO-k8s](https://github.com/shalb/cdev-do-k8s) is a cdev template that creates and provisions Kubernetes clusters in the DigitalOcean cloud.
+[DO-k8s](https://github.com/shalb/cdev-do-k8s) is a cdev stack template that creates and provisions Kubernetes clusters in the DigitalOcean cloud.
 
 ### DO-k8s starting guide
 
@@ -67,7 +67,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
     ```
 
     !!! tip
-        The template's repo could contain several options for project generation. To list available generators, use ```--list-templates``` option:
+        The stack template's repo could contain several options for project generation. To list available generators, use ```--list-templates``` option:
 
           ```bash
           cdev project create https://github.com/shalb/cdev-do-k8s --list-templates
@@ -91,7 +91,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
     * backend.yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://cluster.dev/project-configuration/#backends).
 
-    * infra.yaml - describes infrastructure configuration. See [infrastructure docs](https://cluster.dev/project-configuration/#infrastructure).
+    * infra.yaml - describes stack configuration. See [infrastructure docs](https://cluster.dev/project-configuration/#infrastructure).
 
 4. Run `cdev plan` to build the project. In the output you will see an infrastructure that is going to be created after running `cdev apply`.
 
@@ -103,7 +103,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
     !!! tip
         We highly recommend to run `cdev apply` in a debug mode so that you could see cdev logging in the output: `cdev apply -l debug`
 
-6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the infra.yaml.
+6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the stack template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the infra.yaml.
 
 7. Displayed in the output will be also a command on how to get kubeconfig and connect to your Kubernetes cluster.
 

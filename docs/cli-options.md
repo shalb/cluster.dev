@@ -22,7 +22,7 @@
 
 * `--interactive`       Use interactive mode for project generation.
 
-* `--list-templates`    Show all available templates for project generator.
+* `--list-templates`    Show all available stack templates for project generator.
 
 ## Destroy flags
 

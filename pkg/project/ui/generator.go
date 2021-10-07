@@ -397,7 +397,7 @@ func GetTemplateGenerators(tmplSrc string) (tmplDir string, err error) {
 	}
 	dr, err := utils.GetTemplate(tmplSrc, config.Global.TemplatesCacheDir, "generator")
 	if err != nil {
-		err = fmt.Errorf("download template: %v\n   See details about infrastructure template reference: https://github.com/shalb/cluster.dev#infra_options_template", err.Error())
+		err = fmt.Errorf("download template: %v\n   See details about stack template reference: https://github.com/shalb/cluster.dev#stack_options_template", err.Error())
 		return
 	}
 	log.Debugf("Generator: template dir: %v", dr)

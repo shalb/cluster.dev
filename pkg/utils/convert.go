@@ -3,6 +3,8 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+
+	"gopkg.in/yaml.v3"
 )
 
 // JSONInterfaceToType - convert interface data in to type of out with JSON tags.
@@ -24,6 +26,15 @@ func JSONInterfaceToType(in, out interface{}) error {
 	return nil
 }
 
+// YAMLInterfaceToType - convert interface data in to type of out with YAML tags.
+func YAMLInterfaceToType(in, out interface{}) error {
+	res, err := yaml.Marshal(in)
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(res, out)
+}
+
 // JSONEncode encode in to JSON.
 func JSONEncode(in interface{}) ([]byte, error) {
 	buffer := &bytes.Buffer{}
@@ -34,7 +45,19 @@ func JSONEncode(in interface{}) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
+// JSONEncode encode in to JSON.
+func JSONEncodeString(in interface{}) (string, error) {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent(" ", " ")
+	err := encoder.Encode(in)
+	return buffer.String(), err
+}
+
 // JSONDecode decode in to .
 func JSONDecode(in []byte, out interface{}) error {
-	return json.Unmarshal(in, out)
+	buffer := bytes.NewBuffer(in)
+	decoder := json.NewDecoder(buffer)
+	return decoder.Decode(&out)
 }

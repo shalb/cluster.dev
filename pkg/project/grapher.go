@@ -13,43 +13,43 @@ import (
 )
 
 type modResult struct {
-	Mod   Module
+	Mod   Unit
 	Error error
 }
 
 type grapher struct {
 	finished       map[string]modResult
-	inProgress     map[string]Module
+	inProgress     map[string]Unit
 	queue          list.List
-	modules        map[string]Module
-	unFinished     map[string]Module
+	units          map[string]Unit
+	unFinished     map[string]Unit
 	mux            sync.Mutex
 	waitForModDone chan modResult
 	maxParallel    int
 	hasError       bool
 	reverse        bool
-	modulesErrors  map[string]error
+	unitsErrors    map[string]error
 	sigTrap        chan os.Signal
 	stopChan       chan struct{}
 }
 
 func (g *grapher) Init(project *Project, maxParallel int, reverse bool) error {
-	if err := checkModulesDependencies(project); err != nil {
+	if err := checkUnitDependencies(project); err != nil {
 		return err
 	}
 	if maxParallel < 1 {
 		return fmt.Errorf("maxParallel should be greater then 0")
 	}
-	g.modules = make(map[string]Module)
-	g.modulesErrors = make(map[string]error)
-	g.unFinished = make(map[string]Module)
-	for key, mod := range project.Modules {
-		g.modules[key] = mod
+	g.units = make(map[string]Unit)
+	g.unitsErrors = make(map[string]error)
+	g.unFinished = make(map[string]Unit)
+	for key, mod := range project.Units {
+		g.units[key] = mod
 		g.unFinished[key] = mod
 	}
 	g.maxParallel = maxParallel
 	g.queue.Init()
-	g.inProgress = make(map[string]Module)
+	g.inProgress = make(map[string]Unit)
 	g.finished = make(map[string]modResult)
 	g.waitForModDone = make(chan modResult)
 	g.hasError = false
@@ -73,11 +73,11 @@ func (g *grapher) updateQueue() int {
 
 func (g *grapher) updateDirectQueue() int {
 	count := 0
-	for key, mod := range g.modules {
+	for key, mod := range g.units {
 		isReady := true
 		if len(*mod.Dependencies()) > 0 {
 			for _, dep := range *mod.Dependencies() {
-				if er, ok := g.finished[dep.Module.Key()]; !ok || er.Error != nil {
+				if er, ok := g.finished[dep.Unit.Key()]; !ok || er.Error != nil {
 					isReady = false
 					break
 				}
@@ -85,7 +85,7 @@ func (g *grapher) updateDirectQueue() int {
 		}
 		if isReady {
 			g.queue.PushBack(mod)
-			delete(g.modules, key)
+			delete(g.units, key)
 			count++
 		}
 	}
@@ -94,34 +94,34 @@ func (g *grapher) updateDirectQueue() int {
 
 func (g *grapher) updateReverseQueue() int {
 	count := 0
-	for key, mod := range g.modules {
+	for key, mod := range g.units {
 		isReady := true
-		dependedMods := findDependedModules(g.unFinished, mod)
+		dependedMods := findDependedUnits(g.unFinished, mod)
 		if len(dependedMods) > 0 {
 			isReady = false
 		}
 		if isReady {
 			g.queue.PushBack(mod)
-			delete(g.modules, key)
+			delete(g.units, key)
 			count++
 		}
 	}
 	return count
 }
 
-func (g *grapher) GetNextAsync() (Module, func(error), error) {
+func (g *grapher) GetNextAsync() (Unit, func(error), error) {
 	g.mux.Lock()
 	defer g.mux.Unlock()
 	for {
 		if config.Interupted {
 			g.queue.Init()
-			g.modules = make(map[string]Module)
+			g.units = make(map[string]Unit)
 			g.updateQueue()
 			return nil, nil, fmt.Errorf("interupted")
 		}
 		if g.queue.Len() > 0 && len(g.inProgress) < g.maxParallel {
 			modElem := g.queue.Front()
-			mod := modElem.Value.(Module)
+			mod := modElem.Value.(Unit)
 			finFunc := func(err error) {
 				g.waitForModDone <- modResult{mod, err}
 			}
@@ -133,50 +133,50 @@ func (g *grapher) GetNextAsync() (Module, func(error), error) {
 			return nil, nil, nil
 		}
 		doneMod := <-g.waitForModDone
-		g.setModuleDone(doneMod)
+		g.setUnitDone(doneMod)
 		if doneMod.Error != nil {
-			return doneMod.Mod, nil, fmt.Errorf("error while module running")
+			return doneMod.Mod, nil, fmt.Errorf("error while unit running")
 		}
 	}
 }
 
-func (g *grapher) GetNextSync() Module {
+func (g *grapher) GetNextSync() Unit {
 	if g.Len() == 0 {
 		return nil
 	}
 	modElem := g.queue.Front()
-	mod := modElem.Value.(Module)
+	mod := modElem.Value.(Unit)
 	g.queue.Remove(modElem)
-	g.setModuleDone(modResult{mod, nil})
+	g.setUnitDone(modResult{mod, nil})
 	return mod
 }
 
-func (g *grapher) GetSequenceSet() []Module {
-	res := make([]Module, g.Len())
+func (g *grapher) GetSequenceSet() []Unit {
+	res := make([]Unit, g.Len())
 	mCount := g.Len()
 	for i := 0; i < mCount; i++ {
 		md := g.GetNextSync()
 		if md == nil {
-			log.Fatal("Building apply modules set: geting nil module, undefined behavior")
+			log.Fatal("Building apply units set: geting nil unit, undefined behavior")
 		}
 		res[i] = md
 	}
 	return res
 }
 
-func (g *grapher) setModuleDone(doneMod modResult) {
+func (g *grapher) setUnitDone(doneMod modResult) {
 	g.finished[doneMod.Mod.Key()] = doneMod
 	delete(g.inProgress, doneMod.Mod.Key())
 	delete(g.unFinished, doneMod.Mod.Key())
 	if doneMod.Error != nil {
-		g.modulesErrors[doneMod.Mod.Key()] = doneMod.Error
+		g.unitsErrors[doneMod.Mod.Key()] = doneMod.Error
 		g.hasError = true
 	}
 	g.updateQueue()
 }
 
 func (g *grapher) Errors() map[string]error {
-	return g.modulesErrors
+	return g.unitsErrors
 }
 
 func (g *grapher) Wait() {
@@ -185,47 +185,47 @@ func (g *grapher) Wait() {
 			return
 		}
 		doneMod := <-g.waitForModDone
-		g.setModuleDone(doneMod)
+		g.setUnitDone(doneMod)
 	}
 }
 
 func (g *grapher) Len() int {
-	return len(g.modules) + g.queue.Len() + len(g.inProgress)
+	return len(g.units) + g.queue.Len() + len(g.inProgress)
 }
 
-func checkModulesDependencies(p *Project) error {
+func checkUnitDependencies(p *Project) error {
 	errDepth := 15
-	for _, mod := range p.Modules {
+	for _, mod := range p.Units {
 		if ok := checkDependenciesRecursive(mod, errDepth); !ok {
-			return fmt.Errorf("Unresolved dependency in module %v.%v", mod.InfraName(), mod.Name())
+			return fmt.Errorf("Unresolved dependency in unit %v.%v", mod.StackName(), mod.Name())
 		}
 	}
 	return nil
 }
 
-func checkDependenciesRecursive(mod Module, maxDepth int) bool {
+func checkDependenciesRecursive(mod Unit, maxDepth int) bool {
 	if maxDepth == 0 {
 		return false
 	}
 	for _, dep := range *mod.Dependencies() {
-		if ok := checkDependenciesRecursive(dep.Module, maxDepth-1); !ok {
+		if ok := checkDependenciesRecursive(dep.Unit, maxDepth-1); !ok {
 			return false
 		}
 	}
 	return true
 }
 
-func findDependedModules(modList map[string]Module, targetMod Module) map[string]Module {
-	res := map[string]Module{}
+func findDependedUnits(modList map[string]Unit, targetMod Unit) map[string]Unit {
+	res := map[string]Unit{}
 	for key, mod := range modList {
 		for _, dep := range *mod.Dependencies() {
-			//log.Debugf("Tm: %v, M: %v Dependency: %v", targetMod.Name(), mod.Name(), dep.ModuleName)
-			if dep.Module.Key() == targetMod.Key() {
+			//log.Debugf("Tm: %v, M: %v Dependency: %v", targetMod.Name(), mod.Name(), dep.unitName)
+			if dep.Unit.Key() == targetMod.Key() {
 				res[key] = mod
 			}
 		}
 	}
-	//log.Debugf("Searching depended from module: %v\n Result: %v", targetMod.Name(), res)
+	//log.Debugf("Searching depended from unit: %v\n Result: %v", targetMod.Name(), res)
 	return res
 }
 

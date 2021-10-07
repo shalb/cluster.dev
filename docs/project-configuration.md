@@ -4,16 +4,16 @@ Common project files:
 
 ```bash
 project.yaml        # Contains global project variables that can be used in other configuration objects.
-<infra_name>.yaml   # Contains reference to a template, variables to render a template and backend for states.
+<infra_name>.yaml   # Contains reference to a stack template, variables to render the stack template and backend for states.
 <backend_name>.yaml # Describes a backend storage for Terraform and cdev states.
 <secret_name>.yaml  # Contains secrets, one per file.
 ```
 
 `cdev` reads configuration from current directory, i.e. all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them with "---". The exception is the project.yaml configuration file and files with secrets.
 
-Project represents a single scope for infrastructures within which they are stored and reconciled. The dependencies between different infrastructures can be used within the project scope. Project can host global variables that can be used to template target infrastructure.
-
 ## Project
+
+Project is a storage for global variables related to all stacks. It is a high-level abstraction to store and reconcile different stacks, and pass values across them.
 
 File: `project.yaml`. *Required*.
 Represents a set of configuration options for the whole project. Contains global project variables that can be used in other configuration objects, such as backend or infrastructure (except of `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it.
@@ -34,7 +34,7 @@ exports:
 
 * `name`: project name. *Required*.
 
-* `kind`: object kind. Must be `project`. *Required*.
+* `kind`: object kind. Must be set as `project`. *Required*.
 
 * `backend`: name of the backend that will be used to store the cdev state of the current project. *Optional*. If the backend is not specified the state will be saved locally in the ./cdev.state file. For now only S3 bucket backends are supported. 
 
@@ -45,15 +45,15 @@ exports:
 ## Infrastructure
 
 File: searching in `./*.yaml`. *Required at least one*.
-Infrastructure object (`kind: infrastructure`) contains reference to a template, variables to render the template and backend for states.
+Stack object (`kind: stack`) contains reference to a stack template, variables to render the template and backend for states.
 
 Example:
 
 ```yaml
-# Define infrastructure itself
+# Define stack itself
 name: k3s-infra
 template: "./templates/"
-kind: infrastructure
+kind: stack
 backend: aws-backend
 variables:
   bucket: {{ .project.variables.state_bucket_name }} # Using project variables.
@@ -64,17 +64,17 @@ variables:
   vpc_id: "vpc-5ecf1234"
 ```
 
-* `name`: infrastructure name. *Required*.
+* `name`: stack name. *Required*.
 
-* `kind`: object kind. `infrastructure`. *Required*.
+* `kind`: object kind. `stack`. *Required*.
 
-* `backend`: name of the backend that will be used to store the states of this infrastructure. *Required*.
+* `backend`: name of the backend that will be used to store the states of this stack. *Required*.
 
-* `variables`: data set for template rendering.
+* `variables`: data set for a stack template rendering.
 
-*  <a name="infra_options_template">`template`</a>: it's either a path to a local directory containing the template's configuration files, or a remote Git repository as a template source. For more details on templates please see the [Template Development](https://cluster.dev/template-development/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
+*  <a name="infra_options_template">`template`</a>: it's either a path to a local directory containing the stack template's configuration files, or a remote Git repository as the stack template source. For more details on stack templates please see the [Stack Template Development](https://cluster.dev/template-development/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
     * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls).
-    * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if template configuration is not in root of repo.
+    * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if the stack template's configuration is not in repo root.
     * `<BRANCH_OR_TAG>`- Git branch or tag.
 
 Examples:
@@ -95,9 +95,10 @@ template: git@github.com:shalb/cdev-k8s.git?ref=v1.1.1 # tag
 
 ## Backends
 
+Backend is an object that describes backend storage for Terraform and cdev states.
+
 File: searching in `./*.yaml`. *Required at least one*.
-An object that describes a backend storage for Terraform and cdev states.
-In the backends' configuration you can use any options of appropriate Terraform backend. They will be converted as is.
+In the backends' configuration you can use any options of the appropriate Terraform backend. They will be converted as is.
 Currently 4 types of backends are supported:
 
 * `s3` AWS S3 backend:
@@ -149,6 +150,8 @@ spec:
 
 ## Secrets
 
+Secret is an object that contains sensitive data such as a password, a token, or a key. Is used to pass secret values to the tools that don't have a proper support of secret engines.
+
 There are two ways to use secrets:
 
 ### SOPS secrets
@@ -169,7 +172,7 @@ Secrets are encoded/decoded with [SOPS](https://github.com/mozilla/sops) utility
 
 3. Edit the secret and set secret data in `encrypted_data:` section.
 
-4. Use references to the secret's data in infrastructure template (you can find the examples in the generated secret file).
+4. Use references to the secret's data in a stack template (you can find the examples in the generated secret file).
 
 ### Amazon secret manager
 
@@ -185,7 +188,7 @@ cdev client can use AWS SSM as a secret storage. How to use:
 
 3. Answer the questions. For `Name of secret in AWS Secrets manager` enter the name of the AWS secret created above.
 
-4. Use references to the secret's data in infrastructure template (you can find the examples in the generated secret file).
+4. Use references to the secret's data in a stack template (you can find the examples in the generated secret file).
 
 To list and edit any secret, use the commands:
 
@@ -199,12 +202,12 @@ and
 cdev secret edit secret_name
 ```
 
-## Templates
+## Stack templates
 
-Currently there are 3 types of templates available:
+Currently there are 3 types of stack templates available:
 
   * [aws-k3s](https://github.com/shalb/cdev-aws-k3s)
   * [aws-eks](https://github.com/shalb/cdev-aws-eks)
   * [do-k8s](https://github.com/shalb/cdev-do-k8s)
 
-For the detailed information on templates, please see the section [Template Development](https://cluster.dev/template-development/).
+For the detailed information on templates, please see the section [Stack Template Development](https://cluster.dev/template-development/).

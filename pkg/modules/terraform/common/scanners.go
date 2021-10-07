@@ -10,8 +10,8 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-// RemoteStatesScanner - project scanner function, witch process dependencies markers in module data setted by AddRemoteStateMarker template function.
-func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
+// RemoteStatesScanner - project scanner function, witch process dependencies markers in unit data setted by AddRemoteStateMarker template function.
+func (m *Unit) RemoteStatesScanner(data reflect.Value, unit project.Unit) (reflect.Value, error) {
 	var subVal = data
 	if data.Kind() != reflect.String {
 		subVal = reflect.ValueOf(data.Interface())
@@ -19,12 +19,12 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 	}
 
 	resString := subVal.String()
-	depMarkers, ok := module.ProjectPtr().Markers[RemoteStateMarkerCatName]
+	depMarkers, ok := unit.ProjectPtr().Markers[RemoteStateMarkerCatName]
 	if !ok {
 		return subVal, nil
 	}
-	markersList := map[string]*project.Dependency{}
-	markersList, ok = depMarkers.(map[string]*project.Dependency)
+	//markersList := map[string]*project.Dependency{}
+	markersList, ok := depMarkers.(map[string]*project.DependencyOutput)
 	if !ok {
 		err := utils.JSONInterfaceToType(depMarkers, &markersList)
 		if err != nil {
@@ -34,38 +34,27 @@ func (m *Module) RemoteStatesScanner(data reflect.Value, module project.Module) 
 
 	for key, marker := range markersList {
 		if strings.Contains(resString, key) {
-			var InfraName string
-			if marker.InfraName == "this" {
-				InfraName = module.InfraName()
+			var stackName string
+			if marker.StackName == "this" {
+				stackName = unit.StackName()
 			} else {
-				InfraName = marker.InfraName
+				stackName = marker.StackName
 			}
 
-			modKey := fmt.Sprintf("%s.%s", InfraName, marker.ModuleName)
+			modKey := fmt.Sprintf("%s.%s", stackName, marker.UnitName)
 			// log.Warnf("Mod Key: %v", modKey)
-			depModule, exists := module.ProjectPtr().Modules[modKey]
+			depUnit, exists := unit.ProjectPtr().Units[modKey]
 			if !exists {
-				log.Fatalf("Depend module does not exists. Src: '%s.%s', depend: '%s'", module.InfraName(), module.Name(), modKey)
+				log.Fatalf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.StackName(), unit.Name(), modKey)
 			}
-			markerTmp := project.Dependency{Module: depModule, ModuleName: marker.ModuleName, InfraName: InfraName, Output: marker.Output}
-			*module.Dependencies() = append(*module.Dependencies(), &markerTmp)
+			markerTmp := project.DependencyOutput{Unit: depUnit, UnitName: marker.UnitName, StackName: stackName, Output: marker.Output}
+			*unit.Dependencies() = append(*unit.Dependencies(), &markerTmp)
 			m.markers[key] = &markerTmp
-			depModule.ExpectedOutputs()[marker.Output] = true
+			depUnit.ExpectedOutputs()[marker.Output] = &project.DependencyOutput{
+				Output: marker.Output,
+			}
 		}
 	}
+	// log.Infof("%v", reflect.ValueOf(resString).Kind())
 	return reflect.ValueOf(resString), nil
-}
-func (m *Module) YamlBlockMarkerScanner(data reflect.Value, module project.Module) (reflect.Value, error) {
-	subVal := reflect.ValueOf(data.Interface())
-
-	yamlMarkers, ok := module.ProjectPtr().Markers[InsertYAMLMarkerCatName].(map[string]interface{})
-	if !ok {
-		return subVal, nil
-	}
-	for hash := range yamlMarkers {
-		if subVal.String() == hash {
-			return reflect.ValueOf(yamlMarkers[hash]), nil
-		}
-	}
-	return subVal, nil
 }
