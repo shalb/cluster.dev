@@ -11,16 +11,16 @@ This page explains how the cdev documentation is organized, and is aimed to help
 
 ## Website structure
 
-* **Home** - introductory section that gives basic knowledge about cdev.
+* **Home** - introductory section, contains basic knowledge about cdev and clues on how to use it. Also provides information on the website documentation structure.  
 
-* **Getting Started** - contains the list of preliminary conditions needed to start working with cdev in user mode, steps on configuring cloud access, and guides on creating projects with cdev stack templates in different clouds.
-
-    !!! info
-        Implies user mode level.
-
-* **Template Development** - contains description of stack template blocks, such as functions and units, and information on creating stack templates.
+* **User Mode** - contains the list of preliminary conditions needed to start working with cdev in user mode, steps on configuring cloud access, and guides on creating projects with cdev stack templates in different clouds.
 
     !!! info
-        Implies developer mode level.
+        Is intended for engineers who want to create infrastructures from ready-made stack templates.
 
-* **Reference** - contains description of project objects, and supplemental information that could be useful both for the stack users and developers.
+* **Developer Mode** - contains description of stack template blocks, such as functions and units, and information on creating stack templates.
+
+    !!! info
+        Is intended for engineers who want to create stack templates of their own.
+
+* **Reference** - contains description of project objects, and supplemental information that could be useful both for stack users and developers.
