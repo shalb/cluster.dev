@@ -1,6 +1,6 @@
 # Deploying to DigitalOcean
 
-cdev uses stack templates to generate projects in a desired cloud. This section describes steps necessary to start working with cdev in DigitalOcean cloud using [DO-k8s](https://github.com/shalb/cdev-do-k8s) stack template.
+Cdev uses stack templates to generate projects in a desired cloud. This section describes the steps necessary to start working with cdev in DigitalOcean cloud using [DO-k8s](https://github.com/shalb/cdev-do-k8s) stack template.
 
 ## Prerequisites to use DO-k8s stack template
 
@@ -10,7 +10,7 @@ cdev uses stack templates to generate projects in a desired cloud. This section 
 
 3. [doctl installed](https://docs.digitalocean.com/reference/doctl/how-to/install/).
 
-4. [cdev installed](https://cluster.dev/installation/).
+4. [Cdev installed](https://cluster.dev/getting-started/#cdev-install).
 
 ### Authentication
 
