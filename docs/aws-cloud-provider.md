@@ -1,6 +1,6 @@
 # Deploying to AWS
 
-cdev uses stack templates to generate projects in a desired cloud. This section describes steps necessary to start working with cdev in AWS cloud using [AWS-EKS](https://github.com/shalb/cdev-aws-eks) stack template.
+Cdev uses stack templates to generate projects in a desired cloud. This section describes the steps necessary to start working with cdev in AWS cloud using [AWS-EKS](https://github.com/shalb/cdev-aws-eks) stack template.
 
 ## Prerequisites to use AWS-EKS stack template
 
@@ -12,11 +12,11 @@ cdev uses stack templates to generate projects in a desired cloud. This section 
 
 4. kubectl installed.
 
-5. [cdev installed](https://cluster.dev/installation/).
+5. [Cdev installed](https://cluster.dev/getting-started/#cdev-install).
 
 ### Authentication
 
-cdev requires cloud credentials to manage and provision resources. You can configure access to AWS in two ways:
+Cdev requires cloud credentials to manage and provision resources. You can configure access to AWS in two ways:
 
 !!! Info
     Please note that you have to use IAM user with granted administrative permissions.
@@ -65,7 +65,7 @@ aws s3 ls
 
 ### Create S3 bucket for states
 
-cdev uses S3 bucket for storing states. Create the bucket with the command:
+Cdev uses S3 bucket for storing states. Create the bucket with the command:
 
 ```bash
 aws s3 mb s3://cdev-states
