@@ -18,7 +18,7 @@ nav:
     - Deploying to Azure: azure-cloud-provider.md
     - Cdev Install Reference: cdev-installation-reference.md
   - Developer Mode: 
-    - Template Development: stack-template-development.md
+    - Stack Template Development: stack-template-development.md
     - Workflow: template-development-workflow.md
   - Reference:
     - Project Configuration: project-configuration.md
