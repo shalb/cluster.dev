@@ -16,28 +16,33 @@ project.yaml        # Contains global project variables that can be used in othe
 Project is a storage for global variables related to all stacks. It is a high-level abstraction to store and reconcile different stacks, and pass values across them.
 
 File: `project.yaml`. *Required*.
-Contains global project variables that can be used in other configuration objects, such as backend or stack (except of `secrets`). Note that the `project.conf` file is not rendered with the stack template and you cannot use stack template units in it.
+Represents a set of configuration options for the whole project. Contains global project variables that can be used in other configuration objects, such as backend or infrastructure (except of `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it.
 
 Example `project.yaml`:
 
 ```yaml
 name: my_project
 kind: project
+backend: aws-backend
 variables:
   organization: shalb
   region: eu-central-1
   state_bucket_name: cdev-states
+exports:
+  AWS_PROFILE: cluster-dev  
 ```
 
 * `name`: project name. *Required*.
 
 * `kind`: object kind. Must be set as `project`. *Required*.
 
+* `backend`: name of the backend that will be used to store the cdev state of the current project. *Optional*. If the backend is not specified the state will be saved locally in the ./cdev.state file. For now only S3 bucket backends are supported. 
+
 * `variables`: a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the organization name will look like this: `{{ .project.variables.organization }}`.
 
-## Stack
+* `exports`: list of environment variables that will be exported while working with the project. *Optional*.
 
-Stack is the yaml file, which tells cdev which stack template to use and which variables to apply to this template. Usually, users have multiple stacks that reflect their environments, or tenants pointing to the same template with different variables.
+## Infrastructure
 
 File: searching in `./*.yaml`. *Required at least one*.
 Stack object (`kind: stack`) contains reference to a stack template, variables to render the template and backend for states.

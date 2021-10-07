@@ -121,13 +121,13 @@ All units described below have a common format and common fields. Base example:
 
     * `command` - *string*. Shell command in text format. Will be executed in bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
 
-    * `script` - *string* path to shell script file which is relative to the stack template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
+    * `script` - *string*. Path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
 
-    * `on_apply` - *bool*, *optional* turn off/on when unit applying. **Default: "true"**.
+    * `on_apply` *bool*, *optional*. Turn off/on when module applying. **Default: "true"**.
 
-    * `on_destroy` - *bool*, *optional* turn off/on when unit destroying. **Default: "false"**.
+    * `on_destroy` - *bool*, *optional*. Turn off/on when module destroying. **Default: "false"**.
 
-    * `on_plan` - *bool*, *optional* turn off/on when unit plan executing. **Default: "false"**.
+    * `on_plan` - *bool*, *optional*. Turn off/on when module plan executing. **Default: "false"**.
 
 ### Terraform unit
 
@@ -165,23 +165,23 @@ Example:
 units:
   - name: argocd
     type: helm
-    provider_version: "2.0.3"
     source:
       repository: "https://argoproj.github.io/argo-helm"
       chart: "argo-cd"
       version: "2.11.0"
-    kubeconfig: ../kubeconfig
-    depends_on: this.k3s
     pre_hook:
-      script: ./scripts/get_kubeconfig.sh ./kubeconfig
+      command: *getKubeconfig
       on_destroy: true
-      on_plan: true
+    kubeconfig: ./kubeconfig_{{ .name }}
+    depends_on: this.cert-manager-issuer
     additional_options:
       namespace: "argocd"
       create_namespace: true
+    values:
+      - file: ./argo/values.yaml
+        apply_template: true
     inputs:
       global.image.tag: v1.8.3
-      service.type: LoadBalancer
 ```
 
 In addition to common options the following are available:
@@ -194,6 +194,12 @@ In addition to common options the following are available:
 * `provider_version` - *string*, *optional*. Version of terraform helm provider to use. Default - latest. See [terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest)  
 
 * `additional_options` - *map of any*, *optional*. Corresponds to [Terraform helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
+
+* `values` - *array*, *optional*. List of values files in raw yaml to be passed to Helm. Values will be merged, in order, as Helm does with multiple -f options.
+
+    * `file` - *string*, *required*. Path to the values file.
+
+    * `apply_template` - *bool*, *optional*. Defines whether a template should be applied to the values file. By default is set to `true`. 
 
 * `inputs` - *map of any*, *optional*. A map that represents [Terraform helm_release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`. For example:
 
