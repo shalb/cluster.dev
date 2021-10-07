@@ -1,4 +1,4 @@
-# Template Development Workflow
+# Stack Template Development Workflow
 
 This section provides guidance on how to use cdev in the **developer mode** and contains examples of customized stack templates. 
 
@@ -163,4 +163,5 @@ Here is how our workflow looked like.
             name: AllowAutoScalingAccessforClusterAutoScaler-{{ .variables.cluster_name }}
             policy: {{ insertYAML .variables.cluster_autoscaler_irsa.policy }}
         {{- end }}
+    ```
         
