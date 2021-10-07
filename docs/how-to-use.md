@@ -1,6 +1,6 @@
-# How to Use cdev
+# How to Use Cdev
 
-Since cluster.dev (cdev) is quite powerful framework, it could be operated in several modes.
+Since cluster.dev (cdev) is quite a powerful framework, it could be operated in several modes.
 
 ## Deploy infrastructures from existing stack templates
 
