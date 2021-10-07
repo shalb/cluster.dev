@@ -4,7 +4,7 @@
 
 A stack template is a yaml file, which tells cdev which units to run and how. It is a core cdev resource that makes for its flexibility. Stack templates use Go template language to allow you customise and select the units you want to run.
 
-The stack template's config files are stored within the stack template directory, which could be located either locally or in a Git repo. cdev reads all _./*.yaml files from the directory (non-recursively), renders a stack template with the project's data, parse the yaml file and loads units - the most primitive elements of a stack template. 
+The stack template's config files are stored within the stack template directory, which could be located either locally or in a Git repo. Cdev reads all _./*.yaml files from the directory (non-recursively), renders a stack template with the project's data, parse the yaml file and loads units - the most primitive elements of a stack template. 
 
 Units are building blocks that stack templates are made of. It could be anything — a Terraform module, Helm you want to install or a Bash script that you want to run. Units can be remote or stored in the same repo with other cdev code. Units may contain reference to other files that are required for work. These files should be located inside the current directory (stack template's context). As some of the files will also be rendered with the project's data, you can use Go templates in them. For more details please see [units configuration](#units) below.
 
@@ -123,11 +123,11 @@ All units described below have a common format and common fields. Base example:
 
     * `script` - *string*. Path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
 
-    * `on_apply` *bool*, *optional*. Turn off/on when module applying. **Default: "true"**.
+    * `on_apply` *bool*, *optional*. Turn off/on when unit applying. **Default: "true"**.
 
-    * `on_destroy` - *bool*, *optional*. Turn off/on when module destroying. **Default: "false"**.
+    * `on_destroy` - *bool*, *optional*. Turn off/on when unit destroying. **Default: "false"**.
 
-    * `on_plan` - *bool*, *optional*. Turn off/on when module plan executing. **Default: "false"**.
+    * `on_plan` - *bool*, *optional*. Turn off/on when unit plan executing. **Default: "false"**.
 
 ### Terraform module
 
@@ -204,14 +204,14 @@ In addition to common options the following are available:
 * `inputs` - *map of any*, *optional*. A map that represents [Terraform helm_release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`. For example:
 
    ```yaml
-    inputs:
+   inputs:
       global.image.tag: v1.8.3
       service.type: LoadBalancer
     ```
 
     corresponds to:
 
-    ```hcl
+    ```yaml
     set {
       name = "global.image.tag"
       value = "v1.8.3"
