@@ -1,0 +1,30 @@
+name: my-k3s-cluster
+template: https://github.com/shalb/cdev-aws-k3s?ref=v0.0.2
+kind: Infrastructure
+backend: aws-backend
+variables:
+  bucket: {{ .project.variables.state_bucket_name }}
+  region: {{ .project.variables.region }}
+  organization: {{ .project.variables.organization }}
+  domain: cluster.dev
+  instance_type: "t3.medium"
+  k3s_version: "1.20.5+k3s1"
+  # If you want to use existing VPC and subnets, uncomment the options below and set correct VPC ID and the subnets IDs.
+  # Otherwise, the new VPC and subnets will be created automatically.
+  # vpc_id: "vpc-*****"
+  # public_subnets:
+  #   - "subnet-*****"
+  #   - "subnet-*****"
+  env: "dev"
+  azs:
+    - "{{ .project.variables.region }}a"
+    - "{{ .project.variables.region }}b"
+  public_key: "ssh-rsa AAAAB3NzaC1yc2EA......" # Set your public key here.
+  public_key_name: sam
+  master_node_count: 1
+  worker_node_groups:
+    - name: "node_pool"
+      min_size: 2
+      max_size: 3
+      instance_type: "t3.medium"
+  argocdServerAdminPassword: "$2a$10$1buVsK9yv0Al1oJlLmABeeRxYsArdlT2QPdNRqaZwiuYztj9JUDmu" # This bcrypted "password" is for testing only. Make sure to change it! To bcrypt your own password, use this online tool: https://www.browserling.com/tools/bcrypt

@@ -1,0 +1,33 @@
+description: AWS cloud, k3s Kubernetes cluster with ArgoCD, minimal configuration
+options:
+  - name: name
+    description: Project name
+    regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,32}$"
+    default: "demo-project"
+  - name: organization
+    description: Organization name
+    regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,64}$"
+    default: "my-organization"
+  - name: region
+    description: AWS region
+    regex: "^[a-zA-Z][a-zA-Z_0-9\\-]{0,32}$"
+    default: "eu-central-1"
+  - name: domain
+    description: Route53 DNS zone domain name
+    regex: "^[a-zA-Z0-9][a-zA-Z0-9-\\.]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$"
+    default: "cluster.dev"
+  - name: bucket_name
+    description: AWS S3 bucket name for states
+    regex: "^[a-zA-Z][a-zA-Z0-9\\-]{0,64}$"
+    default: "cdev-state"
+help_message: |
+  ###############################################################################
+  # Cluster.dev project generation for AWS cloud.                                #
+  # cdev console tool generator                                                 #
+  ###############################################################################
+  Before your begin:
+  1) Export environment variables (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or use profile AWS_PROFILE) for AWS auth. Details: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+  2) Create S3 bucket for Terraform states:
+        aws s3 mb s3://mybucket-name
+  3) Add hosted zone in Route 53 (https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html)
+  4) Use cdev command to plan and apply project infrastructure
