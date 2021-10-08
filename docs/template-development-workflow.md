@@ -4,9 +4,7 @@ This section provides guidance on how to use cdev in the **developer mode** and 
 
 ## Modify AWS-EKS stack template
 
-Let's assume you want to make changes to AWS-EKS stack template. In the example below we have modified the prepared template by adding a customized data block and excluding some addons. We have also changed the template's structure by placing the Examples directory into a separate repository, in order to decouple the abstract template from its implementation for concrete setups. This enabled us to use the template via Git and mark the template's version with Git tags. 
-      
-Here is how our workflow looked like.   
+Let's assume you want to make changes to AWS-EKS stack template. In the example below we have customized the existing template by adding some features. Here is how our workflow looked like.   
 
 1. Go to the GitHub page using the [AWS-EKS link](https://github.com/shalb/cdev-aws-eks) and download the stack template. 
 
@@ -164,4 +162,5 @@ Here is how our workflow looked like.
             policy: {{ insertYAML .variables.cluster_autoscaler_irsa.policy }}
         {{- end }}
     ```
-        
+
+In this example we have modified the prepared template by adding a customized data block and excluding some addons. We have also changed the template's structure by placing the Examples directory into a separate repository, in order to decouple the abstract template from its implementation for concrete setups. This enabled us to use the template via Git and mark the template's version with Git tags. 
