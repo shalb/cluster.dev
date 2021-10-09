@@ -1,0 +1,7 @@
+name: dev
+kind: Project
+backend: aws-backend
+variables:
+  organization: cluster.dev
+  region: eu-central-1
+  state_bucket_name: test-tmpl-dev
