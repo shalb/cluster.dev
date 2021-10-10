@@ -11,7 +11,7 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "cdev",
-	Short: "See https://cluster.dev/ for details.",
+	Short: "See https://docs.cluster.dev/ for details.",
 }
 var ll string
 

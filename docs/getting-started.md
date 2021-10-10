@@ -40,5 +40,5 @@ curl -fsSL https://raw.githubusercontent.com/shalb/cluster.dev/master/scripts/ge
 
 !!! tip
 
-    We recommend installation from script as the easiest and the quickest way to have cdev installed. For other options, please see [Cdev Install Reference](https://cluster.dev/cdev-installation-reference/) section.
+    We recommend installation from script as the easiest and the quickest way to have cdev installed. For other options, please see [Cdev Install Reference](https://docs.cluster.dev/cdev-installation-reference/) section.
 

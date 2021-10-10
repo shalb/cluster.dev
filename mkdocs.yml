@@ -2,7 +2,7 @@ site_name: Cluster.dev
 # Page tree
 repo_name: 'shalb/cluster.dev'
 repo_url: 'https://github.com/shalb/cluster.dev'
-site_url: 'https://cluster.dev'
+site_url: 'https://docs.cluster.dev'
 
 
 nav:
@@ -17,7 +17,7 @@ nav:
     - Deploying to GCE: google-cloud-provider.md
     - Deploying to Azure: azure-cloud-provider.md
     - Cdev Install Reference: cdev-installation-reference.md
-  - Developer Mode: 
+  - Developer Mode:
     - Stack Template Development: stack-template-development.md
     - Workflow: template-development-workflow.md
   - Reference:

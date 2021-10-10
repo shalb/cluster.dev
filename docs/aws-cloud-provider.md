@@ -12,7 +12,7 @@ Cdev uses stack templates to generate projects in a desired cloud. This section 
 
 4. kubectl installed.
 
-5. [Cdev installed](https://cluster.dev/getting-started/#cdev-install).
+5. [Cdev installed](https://docs.cluster.dev/getting-started/#cdev-install).
 
 ### Authentication
 
@@ -116,11 +116,11 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
 
 3. Edit variables in the example's files, if necessary:
 
-    * project.yaml - main project config. Sets common global variables for current project such as organization, region, state bucket name etc. See [project configuration docs](https://cluster.dev/project-configuration/#project).
+    * project.yaml - main project config. Sets common global variables for current project such as organization, region, state bucket name etc. See [project configuration docs](https://docs.cluster.dev/project-configuration/#project).
 
-    * backend.yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://cluster.dev/project-configuration/#backends).
+    * backend.yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://docs.cluster.dev/project-configuration/#backends).
 
-    * infra.yaml - describes stack configuration. See [stack docs](https://cluster.dev/project-configuration/#stack).
+    * infra.yaml - describes stack configuration. See [stack docs](https://docs.cluster.dev/project-configuration/#stack).
 
 4. Run `cdev plan` to build the project. In the output you will see an infrastructure that is going to be created after running `cdev apply`.
 
