@@ -1,4 +1,4 @@
-# cdev Install Reference
+# Cdev Install Reference
 
 ## Download from release
 

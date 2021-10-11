@@ -9,14 +9,14 @@ project.yaml        # Contains global project variables that can be used in othe
 <secret_name>.yaml  # Contains secrets, one per file.
 ```
 
-`cdev` reads configuration from current directory, i.e. all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them with "---". The exception is the project.yaml configuration file and files with secrets.
+Cdev reads configuration from current directory, i.e. all files by mask: `*.yaml`. It is allowed to place several yaml configuration objects in one file, separating them with "---". The exception is the project.yaml configuration file and files with secrets.
 
 ## Project
 
 Project is a storage for global variables related to all stacks. It is a high-level abstraction to store and reconcile different stacks, and pass values across them.
 
 File: `project.yaml`. *Required*.
-Represents a set of configuration options for the whole project. Contains global project variables that can be used in other configuration objects, such as backend or infrastructure (except of `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it.
+Represents a set of configuration options for the whole project. Contains global project variables that can be used in other configuration objects, such as backend or stack (except of `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it.
 
 Example `project.yaml`:
 
@@ -42,7 +42,9 @@ exports:
 
 * `exports`: list of environment variables that will be exported while working with the project. *Optional*.
 
-## Infrastructure
+## Stack
+
+Stack is a yaml file that tells cdev which template to use and what variables to apply to this template. Usually, users have multiple stacks that reflect their environments or tenants, and point to the same template with different variables.
 
 File: searching in `./*.yaml`. *Required at least one*.
 Stack object (`kind: stack`) contains reference to a stack template, variables to render the template and backend for states.
@@ -72,7 +74,7 @@ variables:
 
 * `variables`: data set for a stack template rendering.
 
-*  <a name="infra_options_template">`template`</a>: it's either a path to a local directory containing the stack template's configuration files, or a remote Git repository as the stack template source. For more details on stack templates please see the [Stack Template Development](https://cluster.dev/template-development/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
+*  <a name="infra_options_template">`template`</a>: it's either a path to a local directory containing the stack template's configuration files, or a remote Git repository as the stack template source. For more details on stack templates please see the [Stack Template Development](https://docs.cluster.dev/stack-template-development/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
     * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls).
     * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if the stack template's configuration is not in repo root.
     * `<BRANCH_OR_TAG>`- Git branch or tag.
@@ -176,7 +178,7 @@ Secrets are encoded/decoded with [SOPS](https://github.com/mozilla/sops) utility
 
 ### Amazon secret manager
 
-cdev client can use AWS SSM as a secret storage. How to use:
+Cdev client can use AWS SSM as a secret storage. How to use:
 
 1. Create a new secret in AWS secret manager using AWS CLI or web console. Both raw and JSON data formats are supported.
 
@@ -210,4 +212,4 @@ Currently there are 3 types of stack templates available:
   * [aws-eks](https://github.com/shalb/cdev-aws-eks)
   * [do-k8s](https://github.com/shalb/cdev-do-k8s)
 
-For the detailed information on templates, please see the section [Stack Template Development](https://cluster.dev/template-development/).
+For the detailed information on templates, please see the section [Stack Template Development](https://docs.cluster.dev/stack-template-development/).

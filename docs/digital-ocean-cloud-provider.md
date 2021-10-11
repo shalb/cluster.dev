@@ -1,6 +1,6 @@
 # Deploying to DigitalOcean
 
-cdev uses stack templates to generate projects in a desired cloud. This section describes steps necessary to start working with cdev in DigitalOcean cloud using [DO-k8s](https://github.com/shalb/cdev-do-k8s) stack template.
+Cdev uses stack templates to generate projects in a desired cloud. This section describes the steps necessary to start working with cdev in DigitalOcean cloud using [DO-k8s](https://github.com/shalb/cdev-do-k8s) stack template.
 
 ## Prerequisites to use DO-k8s stack template
 
@@ -10,7 +10,7 @@ cdev uses stack templates to generate projects in a desired cloud. This section 
 
 3. [doctl installed](https://docs.digitalocean.com/reference/doctl/how-to/install/).
 
-4. [cdev installed](https://cluster.dev/installation/).
+4. [Cdev installed](https://docs.cluster.dev/getting-started/#cdev-install).
 
 ### Authentication
 
@@ -87,11 +87,11 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
 3. Edit variables in the example's files, if necessary:
 
-    * project.yaml - main project config. Sets common global variables for current project such as organization, region, state bucket name etc. See [project configuration docs](https://cluster.dev/project-configuration/#project).
+    * project.yaml - main project config. Sets common global variables for current project such as organization, region, state bucket name etc. See [project configuration docs](https://docs.cluster.dev/project-configuration/#project).
 
-    * backend.yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://cluster.dev/project-configuration/#backends).
+    * backend.yaml - configures backend for cdev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://docs.cluster.dev/project-configuration/#backends).
 
-    * infra.yaml - describes stack configuration. See [infrastructure docs](https://cluster.dev/project-configuration/#infrastructure).
+    * infra.yaml - describes stack configuration. See [stack docs](https://docs.cluster.dev/project-configuration/#stack).
 
 4. Run `cdev plan` to build the project. In the output you will see an infrastructure that is going to be created after running `cdev apply`.
 
