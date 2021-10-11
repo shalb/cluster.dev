@@ -42,11 +42,6 @@ repos:
     - id: terraform_fmt
     - id: terraform_docs
 
-- repo: https://github.com/gruntwork-io/pre-commit
-  rev: v0.1.10
-  hooks:
-    - id: terraform-validate
-
 ##########
 # PYTHON #
 ##########

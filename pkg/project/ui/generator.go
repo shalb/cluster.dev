@@ -15,12 +15,12 @@ import (
 	"github.com/paulrademacher/climenu"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
-	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
 type Generator struct {
 	renderedFiles        map[string][]byte
+	categoryName         string
 	selectedTemplateName string
 	categoryDir          string
 	templateDir          string
@@ -29,11 +29,10 @@ type Generator struct {
 	templateConfig       templateConfSpec
 	categoryConfig       categoryConfSpec
 	interactive          bool
-	templateFs           TmplFS
 }
 
 //go:embed templates/*
-var embadedTemplatesFs embed.FS
+var templates embed.FS
 
 const templatesDir = "templates"
 
@@ -47,7 +46,6 @@ type optsSpec struct {
 type categoryConfSpec struct {
 	Header   string `yaml:"header"`
 	Question string `yaml:"question"`
-	Default  string `yaml:"default"`
 }
 
 type templateConfSpec struct {
@@ -62,7 +60,7 @@ type replacer struct {
 }
 
 func CreateSecret() error {
-	generator, err := NewGeneratorLocal("secret")
+	generator, err := NewGenerator("secret")
 	if err != nil {
 		return fmt.Errorf("new secret: %v", err.Error())
 	}
@@ -134,33 +132,34 @@ func (g *Generator) SelectedTemplate() string {
 	return g.selectedTemplateName
 }
 
-func NewGeneratorLocal(categoryName string) (g *Generator, err error) {
-	catDir := filepath.Join(templatesDir, categoryName)
-	return newGenerator(catDir, embadedTemplatesFs)
-}
-
-func NewGeneratorRemote(gitSrc string) (g *Generator, err error) {
-	catDir, err := GetTemplateGenerators(gitSrc)
-	if err != nil {
-		return
-	}
-	return newGenerator(".", NewTmplFS(catDir))
-}
-
-func newGenerator(catDir string, tFS TmplFS) (g *Generator, err error) {
-	categoryConf, err := getCategorySpec(catDir, tFS)
+func NewGenerator(categoryName string) (*Generator, error) {
+	checkList, err := getDirSubCats(templatesDir)
 	if err != nil {
 		return nil, err
 	}
-	g = &Generator{
-		categoryDir:    catDir,
+	exists := false
+	for _, elem := range checkList {
+		if elem == categoryName {
+			exists = true
+		}
+	}
+	if !exists {
+		err = fmt.Errorf("generate: template %v is not found", categoryName)
+		return nil, err
+	}
+	categoryConf, err := getCategorySpec(categoryName)
+	if err != nil {
+		return nil, err
+	}
+	generator := Generator{
+		categoryName:   categoryName,
+		categoryDir:    filepath.Join(templatesDir, categoryName),
 		categoryConfig: categoryConf,
 		renderedFiles:  make(map[string][]byte),
 		dataForTmpl:    make(map[string]interface{}),
 		interactive:    false,
-		templateFs:     tFS,
 	}
-	return g, nil
+	return &generator, nil
 }
 
 func (g *Generator) SetInteractive() {
@@ -168,15 +167,14 @@ func (g *Generator) SetInteractive() {
 }
 
 func (g *Generator) RunMainMenu(subCategory ...string) (escaped bool, err error) {
-	categoryTmplList, err := getDirSubCats(g.categoryDir, g.templateFs)
+	categoryTmplList, err := getDirSubCats(g.categoryDir)
 	if err != nil {
 		return
 	}
-	log.Debugf("RunMainMenu :%v", categoryTmplList)
 	menu := climenu.NewButtonMenu(g.categoryConfig.Header, g.categoryConfig.Question)
 	generatorSpecs := map[string]templateConfSpec{}
 	for _, tmplName := range categoryTmplList {
-		sp, err := getTemplateSpec(g.categoryDir, tmplName, g.templateFs)
+		sp, err := getTemplateSpec(g.categoryName, tmplName)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -185,7 +183,7 @@ func (g *Generator) RunMainMenu(subCategory ...string) (escaped bool, err error)
 	}
 	var keysList string
 	i := 0
-	for k := range generatorSpecs {
+	for k, _ := range generatorSpecs {
 		if i != 0 {
 			keysList += "\n"
 		}
@@ -199,13 +197,9 @@ func (g *Generator) RunMainMenu(subCategory ...string) (escaped bool, err error)
 		}
 	} else {
 		if len(subCategory) != 1 {
-			if g.categoryConfig.Default == "" {
-				return false, fmt.Errorf("generator: unexpected category param %v, expected 1 string, use one of: \n%v", len(subCategory), keysList)
-			}
-			g.selectedTemplateName = g.categoryConfig.Default
-		} else {
-			g.selectedTemplateName = subCategory[0]
+			return false, fmt.Errorf("generator: unexpected category param %v, expected 1 string, use one of: \n%v", len(subCategory), keysList)
 		}
+		g.selectedTemplateName = subCategory[0]
 	}
 
 	var exists bool
@@ -268,7 +262,7 @@ func (g *Generator) WriteFiles(path string) (err error) {
 }
 
 func (g *Generator) compileTree(path string, relPath ...string) (err error) {
-	dir, err := g.templateFs.ReadDir(path)
+	dir, err := templates.ReadDir(path)
 	if err != nil {
 		return
 	}
@@ -283,7 +277,7 @@ func (g *Generator) compileTree(path string, relPath ...string) (err error) {
 		inputFileName := filepath.Join(path, elem.Name())
 		outputFileName := filepath.Join(filepath.Join(relPath...), replaceFilename(elem.Name(), g.templateConfig.Replacers, g.dataForTmpl))
 		var tmplFileRaw []byte
-		tmplFileRaw, err = g.templateFs.ReadFile(inputFileName)
+		tmplFileRaw, err = templates.ReadFile(inputFileName)
 		if err != nil {
 			err = fmt.Errorf("internal error, %v", err.Error())
 			return
@@ -323,8 +317,8 @@ func (g *Generator) applyTemplateString(tmplRaw string) (string, error) {
 }
 
 // Read directories names in path. If non dir founded - return error.
-func getDirSubCats(path string, tFS TmplFS) (cats []string, err error) {
-	dir, err := tFS.ReadDir(path)
+func getDirSubCats(path string) (cats []string, err error) {
+	dir, err := templates.ReadDir(path)
 	if err != nil {
 		err = fmt.Errorf("reading templates: internal error: %v", err.Error())
 		return
@@ -338,11 +332,10 @@ func getDirSubCats(path string, tFS TmplFS) (cats []string, err error) {
 	return
 }
 
-func getTemplateSpec(catDir, templateName string, tFS TmplFS) (res templateConfSpec, err error) {
+func getTemplateSpec(catName, templateName string) (res templateConfSpec, err error) {
 	rs := templateConfSpec{}
-	confFileName := filepath.Join(catDir, templateName, "config.yaml")
-	// log.Warn(confFileName)
-	configRaw, err := tFS.ReadFile(confFileName)
+	confFileName := filepath.Join(templatesDir, catName, templateName, "config.yaml")
+	configRaw, err := templates.ReadFile(confFileName)
 	if err != nil {
 		err = fmt.Errorf("reading template: internal error (file not found %v): %v", confFileName, err.Error())
 		return
@@ -356,12 +349,12 @@ func getTemplateSpec(catDir, templateName string, tFS TmplFS) (res templateConfS
 	return
 }
 
-func getCategorySpec(catDir string, tFS TmplFS) (res categoryConfSpec, err error) {
+func getCategorySpec(catName string) (res categoryConfSpec, err error) {
 	rs := categoryConfSpec{}
-	confFileName := filepath.Join(catDir, "config.yaml")
-	configRaw, err := tFS.ReadFile(confFileName)
+	confFileName := filepath.Join(templatesDir, catName, "config.yaml")
+	configRaw, err := templates.ReadFile(confFileName)
 	if err != nil {
-		err = fmt.Errorf("reading template: file not found %v: %v", confFileName, err.Error())
+		err = fmt.Errorf("reading template: internal error (file not found %v): %v", confFileName, err.Error())
 		return
 	}
 	err = yaml.Unmarshal(configRaw, &rs)
@@ -417,3 +410,4 @@ func GetTemplateGenerators(tmplSrc string) (tmplDir string, err error) {
 	tmplDir = filepath.Join(dr, ".cdev-metadata/generator")
 	return
 }
+
