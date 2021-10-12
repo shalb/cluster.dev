@@ -65,7 +65,7 @@ theme:
   logo: '/images/cluster-dev-logo-site.png'
   favicon: 'images/favicon.png'
 google_analytics:
-  - UA-157259461-1
+  - G-KK8Z11MM4P
   - auto
 extra:
   social:
