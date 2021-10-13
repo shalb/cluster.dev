@@ -90,7 +90,16 @@ func CreateSecret() error {
 	return nil
 }
 
-func CreteProject(dir, gitURL string, args ...string) error {
+// GetProjectTemplates returns list of templates in dir.
+func GetProjectTemplates(gitURL string) (res []string, err error) {
+	generator, err := NewGeneratorRemote(gitURL)
+	if err != nil {
+		return nil, fmt.Errorf("new project: %v", err.Error())
+	}
+	return getDirSubCats(generator.categoryDir, generator.templateFs)
+}
+
+func CreateProject(dir, gitURL string, args ...string) error {
 	generator, err := NewGeneratorRemote(gitURL)
 	if err != nil {
 		return fmt.Errorf("new project: %v", err.Error())
@@ -391,6 +400,9 @@ func ClearScreen() {
 }
 
 func GetTemplateGenerators(tmplSrc string) (tmplDir string, err error) {
+	if !config.Global.UseCache {
+		os.RemoveAll(config.Global.TemplatesCacheDir)
+	}
 	err = os.MkdirAll(config.Global.TemplatesCacheDir, os.ModePerm)
 	if err != nil {
 		return
