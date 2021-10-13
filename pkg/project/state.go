@@ -195,8 +195,6 @@ func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
 }
 
 func (sp *StateProject) checkUnitChangesRecursive(unit Unit) bool {
-
-	log.Warnf("Mod %v, applied: %v", unit.Key(), unit.WasApplied())
 	if unit.WasApplied() {
 		return true
 	}
