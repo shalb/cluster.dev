@@ -2,22 +2,24 @@ site_name: Cluster.dev
 # Page tree
 repo_name: 'shalb/cluster.dev'
 repo_url: 'https://github.com/shalb/cluster.dev'
-site_url: 'https://cluster.dev'
+site_url: 'https://docs.cluster.dev'
 
 
 nav:
   - Home:
     - Welcome: index.md
+    - How to Use Cdev: how-to-use.md
     - Documentation Structure: documentation-structure.md
-  - Getting Started:
-    - cdev Prerequisites: prerequisites.md
-    - cdev Install: installation.md
+  - User Mode:
+    - Getting Started: getting-started.md
     - Deploying to AWS: aws-cloud-provider.md
     - Deploying to DigitalOcean: digital-ocean-cloud-provider.md
     - Deploying to GCE: google-cloud-provider.md
     - Deploying to Azure: azure-cloud-provider.md
-    - cdev Install Reference: cdev-installation-reference.md
-  - Template Development: template-development.md
+    - Cdev Install Reference: cdev-installation-reference.md
+  - Developer Mode:
+    - Stack Template Development: stack-template-development.md
+    - Workflow: template-development-workflow.md
   - Reference:
     - Project Configuration: project-configuration.md
     - CLI Reference:
