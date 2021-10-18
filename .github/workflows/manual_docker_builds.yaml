@@ -1,0 +1,48 @@
+name: Manual docker image build
+
+on: 
+  workflow_dispatch:
+
+env:
+  IMAGE: cluster.dev
+  REGISTRY: docker.io/clusterdev
+
+jobs:
+  push:
+    name: Release docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v2
+
+      - name: Build image
+        run: | 
+          set -x
+          VERSION=$(git describe --tag --abbrev=0)
+          cp Dockerfile-alpine Dockerfile
+          docker build -t ${IMAGE}:${VERSION}-alpine  .
+          docker tag ${IMAGE}:${VERSION}-alpine ${REGISTRY}/${IMAGE}:${VERSION}-alpine
+
+          cp Dockerfile-debian Dockerfile
+          docker build -t ${REGISTRY}/${IMAGE}:${VERSION}-debian --build-arg CDEV_VERSION=${VERSION}-alpine .
+
+          cp Dockerfile-full Dockerfile
+          docker build -t ${IMAGE} --build-arg CDEV_VERSION=${VERSION}-alpine .
+          docker tag "${IMAGE}" "${REGISTRY}/${IMAGE}:${VERSION}"
+          docker tag "${IMAGE}" "${REGISTRY}/${IMAGE}:latest"
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username "${{ secrets.DOCKER_USER }}" --password "${{ secrets.DOCKER_PASS }}"
+
+      - name: Push image for release
+        run: |
+
+          VERSION=$(git describe --tag --abbrev=0)
+
+          echo IMAGE=${IMAGE}
+          echo VERSION=${VERSION}
+
+          docker push "$REGISTRY/$IMAGE:$VERSION-alpine"
+          docker push "${REGISTRY}/${IMAGE}:${VERSION}-debian"
+          docker push "${REGISTRY}/${IMAGE}:${VERSION}"
+          docker push "${REGISTRY}/${IMAGE}:latest"
