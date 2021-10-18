@@ -2,6 +2,10 @@ name: Manual docker image build
 
 on: 
   workflow_dispatch:
+    reason_to_run:
+      description: "Please provide a description why it's need to be run outside of automatic builds process"
+      required: true
+      default: "Latest terraform version update"
 
 env:
   IMAGE: cluster.dev
@@ -46,3 +50,5 @@ jobs:
           docker push "${REGISTRY}/${IMAGE}:${VERSION}-debian"
           docker push "${REGISTRY}/${IMAGE}:${VERSION}"
           docker push "${REGISTRY}/${IMAGE}:latest"
+      - name: Message why this build was required
+        run: echo "${{ github.event.inputs.reason_to_run }}"
