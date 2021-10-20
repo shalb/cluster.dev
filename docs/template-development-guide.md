@@ -1,6 +1,6 @@
 # Stack Template Development Guide
 
-Cluster.dev uses generators to help you develop stack templates. 
+Cluster.dev uses generators to help you develop stack templates. Generators provide you with scripted dialogues, where you can populate stack values in an interactive mode. 
 
 In our example we shall use the [tmpl-development](https://github.com/shalb/cluster.dev/tree/master/.cdev-metadata/generator) generator to create a project. Then we shall modify its stack template as described below.   
 
@@ -16,9 +16,9 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
 
 4. Run `cdev plan` to build the project and see the infrastructure that will be created.  
 
-5. To start working with the stack template, cd into the template directory and open the template.yaml file: ./template/template.yaml
+5. To start working with the stack template, cd into the template directory and open the template.yaml file: ./template/template.yaml. 
 
-    Our sample stack template contains 3 units. Now, let's elaborate on each of them and see how we can modify it.   
+   Our sample stack template contains 3 units. Now, let's elaborate on each of them and see how we can modify it.   
 
 6. The `create-bucket` unit uses a remote [Terraform module](https://registry.terraform.io/modules/terraform-aws-modules/s3-bucket/aws/latest) to create an S3 bucket on AWS:
 
@@ -66,7 +66,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
 
    To check the configuration, run the `cdev plan --tf-plan` command. In the output you can see that Terraform will create a bucket with the defined tags. Run `cdev apply -l debug` to have the configuration applied.  
 
-7. The `create-s3-object` unit uses a local Terraform module, which is stored in s3-file directory, main.tf file:
+7. The `create-s3-object` unit uses local Terraform module to get the bucket ID and save data inside the bucket. The Terraform module is stored in s3-file directory, main.tf file:
 
     ```yaml
     name: create-s3-object
@@ -113,8 +113,8 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
       s3_file_info: "To get file use: aws s3 cp {{ remoteState "this.create-s3-object.file_s3_url" }} ./my_file && cat my_file"
     ```
  
-9. Having completed your work, run `cdev destroy` to eliminate the created resources. 
+9. Having finished your work, run `cdev destroy` to eliminate the created resources. 
 
-Cluster.dev gives you freedom to modify existing templates or create your own using generators. You can add inputs and outputs to already preset units, or write new units and add them to a template. In our example we used a sample project and had its stack template modified by adding new parameters to the units.   
+Cluster.dev gives you freedom to modify existing templates or create your own using generators. You can add inputs and outputs to already preset units, take the output of one unit and send it as an input for another, or write new units and add them to a template. In our example we used a sample project and had its stack template modified by adding new parameters to the units.   
 
 
