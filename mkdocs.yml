@@ -25,6 +25,7 @@ nav:
     - CLI Reference:
       - CLI Commands: cli-commands.md
       - CLI Options: cli-options.md
+      - Environment variables: env-variables.md
 
 
 markdown_extensions:
