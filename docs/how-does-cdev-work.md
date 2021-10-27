@@ -1,6 +1,6 @@
 # Cluster.dev - Working Principles
 
-With Cluster.dev you create or download a predefined stack template, set the variables, then render and deploy a whole stack.
+With Cluster.dev you download a predefined stack template, set the variables, then render and deploy a whole stack.
 
 Capabilities:
 
@@ -17,7 +17,7 @@ Capabilities:
 
 ## How to use Cluster.dev
 
-Cluster.dev is quite a powerful framework that could be operated in several modes.
+Cluster.dev is quite a powerful framework that can be operated in several modes.
 
 ### Deploy infrastructures from existing stack templates
 
