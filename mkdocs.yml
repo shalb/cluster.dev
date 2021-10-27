@@ -6,22 +6,40 @@ site_url: 'https://docs.cluster.dev'
 
 
 nav:
-  - Home:
-    - Welcome: index.md
-    - How to Use Cdev: how-to-use.md
-    - Documentation Structure: documentation-structure.md
-  - User Mode:
-    - Getting Started: getting-started.md
-    - Deploying to AWS: aws-cloud-provider.md
-    - Deploying to DigitalOcean: digital-ocean-cloud-provider.md
-    - Deploying to GCE: google-cloud-provider.md
-    - Deploying to Azure: azure-cloud-provider.md
-    - Cdev Install Reference: cdev-installation-reference.md
-  - Developer Mode:
-    - Stack Template Development: stack-template-development.md
-    - Workflow: template-development-workflow.md
+  - Introduction:
+    - Overview:
+      - What Is Cluster.dev?: what-cdev-is.md
+      - How Does It Work?: how-does-cdev-work.md
+    - Getting Started:
+      - Prerequisites: get-started-prerequisites.md
+      - Install: get-started-install.md
+      - Install From Sources: get-started-install-from-sources.md
+      - Create Own Project: get-started-create-project.md
+    - Examples:
+      - AWS-EKS: examples-aws-eks.md
+      - DO-K8s: examples-do-k8s.md
+      - Modify AWS-EKS: examples-modify-aws-eks.md
+      - Develop Stack Template: examples-develop-stack-template.md
+    - Cluster.dev vs. Others:
+      - Cluster.dev vs. Terraform: cdev-vs-terraform.md
+      - Cluster.dev vs. Pulumi & Crossplane: cdev-vs-pulumi.md
   - Reference:
-    - Project Configuration: project-configuration.md
+    - Structure:
+      - Overview: structure-overview.md
+      - Project: structure-project.md
+      - Stack: structure-stack.md
+      - Backends: structure-backends.md
+      - Secrets: structure-secrets.md
+    - Stack Templates:
+      - Overview: stack-templates-overview.md
+      - Functions: stack-templates-functions.md
+      - Stack Templates List: stack-templates-list.md
+    - Units:
+      - Overview: units-overview.md
+      - Terraform: units-terraform.md
+      - Helm: units-helm.md
+      - Kubernetes: units-kubernetes.md
+      - Printer: units-printer.md
     - CLI Reference:
       - CLI Commands: cli-commands.md
       - CLI Options: cli-options.md

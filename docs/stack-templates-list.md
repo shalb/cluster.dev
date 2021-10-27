@@ -1,9 +1,9 @@
-# Stack templates
+# Stack Templates List
 
 Currently there are 3 types of stack templates available:
 
-  * [aws-k3s](https://github.com/shalb/cdev-aws-k3s)
-  * [aws-eks](https://github.com/shalb/cdev-aws-eks)
-  * [do-k8s](https://github.com/shalb/cdev-do-k8s)
+  * [AWS-K3s](https://github.com/shalb/cdev-aws-k3s)
+  * [AWS-EKS](https://github.com/shalb/cdev-aws-eks)
+  * [DO-K8s](https://github.com/shalb/cdev-do-k8s)
 
-For the detailed information on templates, please see the section [Stack Template Development](https://docs.cluster.dev/stack-template-development/).
+For more information on the templates please refer to [Examples](https://docs.cluster.dev/stack-template-development/) section.
