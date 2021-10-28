@@ -13,4 +13,4 @@ units:
       worker_iam_role_arn: {{ remoteState "this.eks.worker_iam_role_arn" }}
 ```
 
-* `inputs` - *any*, *required* - a map that represents data to be printed in the log. The block **allows to use the functions `remoteState` and `insertYAML`**.
+* `inputs` - *any*, *required* - a map that represents data to be printed in the log. The block **allows to use functions `remoteState` and `insertYAML`**.

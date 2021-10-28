@@ -1,4 +1,4 @@
-# Backends
+# Backend
 
 Backend is an object that describes backend storage for Terraform and Cluster.dev states.
 

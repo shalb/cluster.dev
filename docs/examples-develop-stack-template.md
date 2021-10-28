@@ -6,11 +6,11 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
   
 ## Workflow steps 
 
-1. Create a project following the steps described in Create Own Project section. 
+1. Create a project following the steps described in [Create Own Project](https://docs.cluster.dev/get-started-create-project/) section. 
  
 2. To start working with the stack template, cd into the template directory and open the template.yaml file: ./template/template.yaml. 
 
-   Our sample stack template contains 3 units. Now, let's elaborate on each of them and see how we can modify it.   
+     Our sample stack template contains 3 units. Now, let's elaborate on each of them and see how we can modify it.   
 
 3. The `create-bucket` unit uses a remote [Terraform module](https://registry.terraform.io/modules/terraform-aws-modules/s3-bucket/aws/latest) to create an S3 bucket on AWS:
 
@@ -25,7 +25,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
       force_destroy: true
     ```
 
-    We can modify the unit by adding more parameters in [inputs](https://registry.terraform.io/modules/terraform-aws-modules/s3-bucket/aws/latest?tab=inputs). For example, let's add some tags using the [`insertYAML`](https://docs.cluster.dev/stack-template-development/#functions) function:
+    We can modify the unit by adding more parameters in [inputs](https://registry.terraform.io/modules/terraform-aws-modules/s3-bucket/aws/latest?tab=inputs). For example, let's add some tags using the [`insertYAML`](https://docs.cluster.dev/stack-templates-functions/) function:
 
     ```yaml
     name: create-bucket
@@ -56,7 +56,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
         tag2_name: "tag 2 value"
     ```
 
-   To check the configuration, run the `cdev plan --tf-plan` command. In the output you can see that Terraform will create a bucket with the defined tags. Run `cdev apply -l debug` to have the configuration applied.  
+    To check the configuration, run `cdev plan --tf-plan` command. In the output you can see that Terraform will create a bucket with the defined tags. Run `cdev apply -l debug` to have the configuration applied.  
 
 4. The `create-s3-object` unit uses local Terraform module to get the bucket ID and save data inside the bucket. The Terraform module is stored in s3-file directory, main.tf file:
 
@@ -74,7 +74,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
         Name: {{ .variables.name }}
     ```
 
-    The unit sends 2 parameters. The *bucket_name* is retrieved from the `create-bucket` unit by means of [`remoteState`](https://docs.cluster.dev/stack-template-development/#functions) function. The *data* parameter uses templating to obtain the *Organization* and *Name* variables from infra.yaml. 
+    The unit sends 2 parameters. The *bucket_name* is retrieved from the `create-bucket` unit by means of [`remoteState`](https://docs.cluster.dev/stack-templates-functions/) function. The *data* parameter uses templating to obtain the *Organization* and *Name* variables from infra.yaml. 
 
     Let's add to *data* input *bucket_regional_domain_name* variable to obtain the region-specific domain name of the bucket:
 
@@ -95,7 +95,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
 
     Check the configuration by running `cdev plan` command; apply it with `cdev apply -l debug`. 
 
-5. The `print_outputs` unit retrieves data from two other units by means of [`remoteState`](https://docs.cluster.dev/stack-template-development/#functions) function: *bucket_domain* variable from `create-bucket` unit and *s3_file_info* from `create-s3-object` unit:
+5. The `print_outputs` unit retrieves data from two other units by means of [`remoteState`](https://docs.cluster.dev/stack-templates-functions/) function: *bucket_domain* variable from `create-bucket` unit and *s3_file_info* from `create-s3-object` unit:
 
     ```yaml
     name: print_outputs

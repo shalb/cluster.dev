@@ -30,12 +30,12 @@ variables:
 
 * `variables`: data set for the stack template rendering.
 
-*  <a name="infra_options_template">`template`</a>: it's either a path to a local directory containing the stack template's configuration files, or a remote Git repository as the stack template source. For more details on stack templates please see the [Stack Template Development](https://docs.cluster.dev/stack-template-development/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
+*  <a name="infra_options_template">`template`</a>: it's either a path to a local directory containing the stack template's configuration files, or a remote Git repository as the stack template source. For more details on stack templates please refer to [Stack Template](https://docs.cluster.dev/stack-templates-overview/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
     * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls).
     * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if the stack template's configuration is not in repo root.
     * `<BRANCH_OR_TAG>`- Git branch or tag.
 
-Examples:
+## Examples
 
 ```yaml
 template: /path/to/dir # absolute local path

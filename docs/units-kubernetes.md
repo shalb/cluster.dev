@@ -14,7 +14,7 @@ units:
     depends_on: this.argocd
 ```
 
-* `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the stack template, and also allows to use the functions `remoteState` and `insertYAML`**.
+* `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the stack template, and also allows to use functions `remoteState` and `insertYAML`**.
 
-* `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the unit was executed.
+* `kubeconfig` - *string*, *required*. Path to the kubeconfig file, which is relative to the directory where the unit was executed.
 * `provider_version` - *string*, *optional*. Version of terraform kubernetes-alpha provider to use. Default - latest. See [terraform kubernetes-alpha provider](https://registry.terraform.io/providers/hashicorp/kubernetes-alpha/latest) 

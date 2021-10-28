@@ -31,7 +31,7 @@ In addition to common options the following are available:
 
 * `source` - *map*, *required*. This block describes Helm chart source.
 
-  * `chart`, `repository`, `version` - correspond to options with the same name from helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
+* `chart`, `repository`, `version` - correspond to options with the same name from helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
 
 * `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the unit was executed.
 * `provider_version` - *string*, *optional*. Version of terraform helm provider to use. Default - latest. See [terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest)  
@@ -46,21 +46,21 @@ In addition to common options the following are available:
 
 * `inputs` - *map of any*, *optional*. A map that represents [Terraform helm_release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`. For example:
 
-   ```yaml
-   inputs:
-      global.image.tag: v1.8.3
-      service.type: LoadBalancer
-    ```
+    ```yaml
+      inputs:
+        global.image.tag: v1.8.3
+        service.type: LoadBalancer
+      ```
 
     corresponds to:
 
-    ```yaml
-    set {
-      name = "global.image.tag"
-      value = "v1.8.3"
-    }
-    set  {
-      name = "service.type"
-      value = "LoadBalancer"
-    }
-    ```
+      ```yaml
+      set {
+        name = "global.image.tag"
+        value = "v1.8.3"
+      }
+      set  {
+        name = "service.type"
+        value = "LoadBalancer"
+      }
+      ```

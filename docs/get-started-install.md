@@ -1,4 +1,4 @@
-## Install from script
+# Install from script
 
 !!! tip
 

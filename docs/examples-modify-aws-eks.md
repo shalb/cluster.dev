@@ -2,9 +2,9 @@
 
 Let's assume you want to make changes to AWS-EKS stack template. In the example below we have customized the existing template by adding some features and removing the functionality that we don't need. 
 
-Here is how our workflow looked like.   
+## Workflow steps   
 
-1. Go to the GitHub page using the [AWS-EKS link](https://github.com/shalb/cdev-aws-eks) and download the stack template. 
+1. Go to the GitHub page via the [AWS-EKS link](https://github.com/shalb/cdev-aws-eks) and download the stack template. 
 
 2. If you are not planning to use some preset addons, edit aws-eks.yaml to exclude them. In our case, it was cert-manager, cert-manager-issuer, ingress-nginx, argocd, and argocd_apps.
  
@@ -161,6 +161,6 @@ Here is how our workflow looked like.
         {{- end }}
     ```
 
-Cluster.dev enables you to create your own stack templates using ready-made samples as key. In our example we have modified the prepared AWS-EKS stack template by adding a customized data block and excluding some addons. 
+Cluster.dev enables you to create your own stack templates using ready-made samples as a key. In our example we have modified the prepared AWS-EKS stack template by adding a customized data block and excluding some addons. 
 
 We have also changed the template's structure by placing the Examples directory into a separate repository, in order to decouple the abstract template from its implementation for concrete setups. This enabled us to use the template via Git and mark the template's version with Git tags. 

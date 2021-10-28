@@ -8,42 +8,42 @@
 
 * `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block. **Allowed use**: only as full yaml value, in unit `inputs`. Example:
 
-Source yaml:
+    Source yaml:
 
-```yaml
-values:
-  node_groups:
-    - name: ng1
-      min_size: 1
-      max_size: 5
-    - name: ng2
-      max_size: 2
-      type: spot
-```
+    ```yaml
+    values:
+      node_groups:
+        - name: ng1
+          min_size: 1
+          max_size: 5
+        - name: ng2
+          max_size: 2
+          type: spot
+    ```
 
-Target yaml template:
+    Target yaml template:
 
-```yaml
-units:
-  - name: k3s
-    type: terraform
-    node_groups: {{ insertYAML .values.node_groups }}
-```
+    ```yaml
+    units:
+      - name: k3s
+        type: terraform
+        node_groups: {{ insertYAML .values.node_groups }}
+    ```
 
-Rendered stack template:
+    Rendered stack template:
 
-```yaml
-units:
-  - name: k3s
-    type: terraform
-    node_groups:
-    - name: ng1
-      min_size: 1
-      max_size: 5
-    - name: ng2
-      max_size: 2
-      type: spot
-```
+    ```yaml
+    units:
+      - name: k3s
+        type: terraform
+        node_groups:
+        - name: ng1
+          min_size: 1
+          max_size: 5
+        - name: ng2
+          max_size: 2
+          type: spot
+    ```
 
 * `remoteState` - is used for passing data across units and stacks, can be used in pre/post hooks. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"stack_name.unit_name.output_name"`. Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`. **Allowed use**: 
 
@@ -55,11 +55,11 @@ units:
 
 * `cidrSubnet` - calculates a subnet address within given IP network address prefix. Same as [Terraform function](https://www.terraform.io/docs/language/functions/cidrsubnet.html). Example:
 
-Source:
-```bash
-{{ cidrSubnet "172.16.0.0/12" 4 2 }}
-```
-Rendered:
-```bash
-172.18.0.0/16
-```
+    Source:
+    ```bash
+    {{ cidrSubnet "172.16.0.0/12" 4 2 }}
+    ```
+    Rendered:
+    ```bash
+    172.18.0.0/16
+    ```

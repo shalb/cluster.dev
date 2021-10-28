@@ -36,7 +36,7 @@ In this mode you can create your own stack templates. Having your own template e
 You'll be able to develop and propagate changes together with your team members, just using Git.
 Operating Cluster.dev in the **developer mode** requires some prerequisites. The most important is understanding Terraform and how to work with its modules. The knowledge of `go-template` syntax or `Helm` is advisable but not mandatory.
 
-The easiest way to start is to download/clone a sample template project like [AWS EKS](https://github.com/shalb/cdev-aws-eks)
+The easiest way to start is to download/clone a sample template project like [AWS-EKS](https://github.com/shalb/cdev-aws-eks)
 and launch an infrastructure from one of the examples.
 Then you can edit some required variables, and play around by changing values in the template itself.
 
