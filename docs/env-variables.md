@@ -1,3 +1,3 @@
 # Environment variables
 
-* `CDEV_TF_BINARY`      Terraform version to be used in Cluster.dev.   
+* `CDEV_TF_BINARY`      Indicates which Terraform binary to use. The variable is used mostly for debugging during template development.

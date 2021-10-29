@@ -8,7 +8,7 @@ site_url: 'https://docs.cluster.dev'
 nav:
   - Introduction:
     - Overview:
-      - What Is Cluster.dev?: what-cdev-is.md
+      - What Is Cluster.dev?: index.md
       - How Does It Work?: how-does-cdev-work.md
     - Getting Started:
       - Prerequisites: get-started-prerequisites.md
@@ -28,7 +28,7 @@ nav:
       - Overview: structure-overview.md
       - Project: structure-project.md
       - Stack: structure-stack.md
-      - Backends: structure-backends.md
+      - Backend: structure-backend.md
       - Secrets: structure-secrets.md
     - Stack Templates:
       - Overview: stack-templates-overview.md

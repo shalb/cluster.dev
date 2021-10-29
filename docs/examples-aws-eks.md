@@ -114,7 +114,7 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
 
     * project.yaml - main project config. Sets common global variables for current project such as organization, region, state bucket name etc. See [project configuration docs](https://docs.cluster.dev/structure-project/).
 
-    * backend.yaml - configures backend for Cluster.dev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://docs.cluster.dev/structure-backends/).
+    * backend.yaml - configures backend for Cluster.dev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://docs.cluster.dev/structure-backend/).
 
     * infra.yaml - describes stack configuration. See [stack docs](https://docs.cluster.dev/structure-stack/).
 
