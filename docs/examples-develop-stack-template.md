@@ -1,8 +1,8 @@
 # Develop Stack Template
 
-Cluster.dev gives you freedom to modify existing templates or create your own using generators. You can add inputs and outputs to already preset units, take the output of one unit and send it as an input to another, or write new units and add them to a template.
+Cluster.dev gives you freedom to modify existing templates or create your own. You can add inputs and outputs to already preset units, take the output of one unit and send it as an input to another, or write new units and add them to a template.
 
-In our example we shall use the [tmpl-development](https://github.com/shalb/cluster.dev/tree/master/.cdev-metadata/generator) generator to create a project. Then we shall modify its stack template by adding new parameters to the units.
+In our example we shall use the [tmpl-development](https://github.com/shalb/cluster.dev/tree/master/.cdev-metadata/generator) sample to create a project. Then we shall modify its stack template by adding new parameters to the units.
   
 ## Workflow steps
 

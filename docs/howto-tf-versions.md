@@ -4,12 +4,13 @@ By default Cluster.dev runs that version of Terraform which is installed on a lo
 
 Example of `tfswitch` usage with alias approach:
 
-    ```bash
-        alias TF-CDEV-PROD='export AWS_PROFILE=YOUR_PROFILE && tfswitch 0.15.5'
-        cdev apply
-    ```
+```bash
+alias TF-CDEV-PROD='export AWS_PROFILE=YOUR_PROFILE && tfswitch 0.15.5'
 
-    where PROD is the name of environment that corresponds to AWS profile.
+cdev apply
+```
+
+Where PROD is the name of environment that corresponds to AWS profile.
 
 Use [`CDEV_TF_BINARY`](https://docs.cluster.dev/env-variables/) variable to indicate which Terraform binary to use. You can pin it in `project.yaml`:
 

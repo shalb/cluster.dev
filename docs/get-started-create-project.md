@@ -1,8 +1,6 @@
 # Create Own Project
 
-Cluster.dev uses generators to help you work with stack templates. Generators provide you with scripted dialogues, where you can populate stack values in an interactive mode. 
-
-In our example we shall use the [tmpl-development](https://github.com/shalb/cluster.dev/tree/master/.cdev-metadata/generator) generator to create a new project on AWS cloud. 
+In our example we shall use the [tmpl-development](https://github.com/shalb/cluster.dev/tree/master/.cdev-metadata/generator) sample to create a new project on AWS cloud. 
 
 ## Workflow steps 
 

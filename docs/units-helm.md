@@ -46,15 +46,15 @@ In addition to common options the following are available:
 
 * `inputs` - *map of any*, *optional*. A map that represents [Terraform helm_release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`. For example:
 
-    ```yaml
-      inputs:
-        global.image.tag: v1.8.3
-        service.type: LoadBalancer
-      ```
+```yaml
+  inputs:
+    global.image.tag: v1.8.3
+    service.type: LoadBalancer
+  ```
 
-    corresponds to:
+Corresponds to:
 
-      ```yaml
+```yaml
       set {
         name = "global.image.tag"
         value = "v1.8.3"
@@ -63,4 +63,4 @@ In addition to common options the following are available:
         name = "service.type"
         value = "LoadBalancer"
       }
-      ```
+```

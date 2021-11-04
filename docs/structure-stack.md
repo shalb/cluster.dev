@@ -5,7 +5,7 @@ Stack is a yaml file that tells Cluster.dev which template to use and what varia
 File: searching in `./*.yaml`. *Required at least one*.
 Stack object (`kind: stack`) contains reference to a stack template, variables to render the template and backend for states.
 
-Example:
+Example `infra.yaml`:
 
 ```yaml
 # Define stack itself

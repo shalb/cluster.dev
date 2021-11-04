@@ -15,6 +15,7 @@ nav:
       - Install: get-started-install.md
       - Install From Sources: get-started-install-from-sources.md
       - Create Own Project: get-started-create-project.md
+      - Create Own Template: get-started-create-template.md
     - Examples:
       - AWS-EKS: examples-aws-eks.md
       - DO-K8s: examples-do-k8s.md
@@ -44,6 +45,8 @@ nav:
       - CLI Commands: cli-commands.md
       - CLI Options: cli-options.md
       - Environment variables: env-variables.md
+    - How-to articles:
+      - Use Different Terraform versions: howto-tf-versions.md
 
 
 markdown_extensions:
