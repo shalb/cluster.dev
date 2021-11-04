@@ -45,7 +45,7 @@ nav:
       - CLI Commands: cli-commands.md
       - CLI Options: cli-options.md
       - Environment variables: env-variables.md
-    - How-to articles:
+    - How-to Articles:
       - Use Different Terraform versions: howto-tf-versions.md
 
 

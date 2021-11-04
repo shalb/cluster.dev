@@ -1,4 +1,4 @@
-# Kubernetes unit
+# Kubernetes Unit
 
 Describes [Terraform kubernetes-alpha provider](https://github.com/hashicorp/terraform-provider-kubernetes-alpha) invocation.
 

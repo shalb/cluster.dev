@@ -1,4 +1,4 @@
-# Use different Terraform versions
+# Use Different Terraform Versions
 
 By default Cluster.dev runs that version of Terraform which is installed on a local machine. If you would like to switch between versions, use some third-party utilities, such as [Terraform Switcher](https://github.com/warrensbox/terraform-switcher/).
 

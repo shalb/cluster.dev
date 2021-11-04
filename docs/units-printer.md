@@ -1,4 +1,4 @@
-# Printer unit
+# Printer Unit
 
 This unit is mainly used to see the outputs of other units in the console logs.
 

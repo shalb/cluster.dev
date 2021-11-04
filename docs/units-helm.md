@@ -1,4 +1,4 @@
-# Helm unit
+# Helm Unit
 
 Describes [Terraform Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
 
