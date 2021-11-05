@@ -7,12 +7,14 @@ import (
 // Unit interface for unit drivers.
 type Unit interface {
 	Name() string
-	StackPtr() *Stack
-	ProjectPtr() *Project
-	StackName() string
+	Stack() *Stack
+	Project() *Project
+	Backend() Backend
 	ReplaceMarkers() error
 	Dependencies() *[]*DependencyOutput
+	RequiredUnits() map[string]Unit
 	Build() error
+	Init() error
 	Apply() error
 	Plan() error
 	Destroy() error
@@ -54,7 +56,7 @@ type DependencyOutput struct {
 	UnitName   string
 	StackName  string
 	Output     string
-	OutputData interface{}
+	OutputData string
 }
 
 // NewUnit creates and return unit with needed driver.

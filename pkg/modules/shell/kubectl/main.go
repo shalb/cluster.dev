@@ -30,12 +30,7 @@ func (m *Unit) ReplaceMarkers() error {
 
 // CreateCodeDir generate all terraform code for project.
 func (m *Unit) Build() error {
-	var err error
-	err = m.Unit.Build()
-	if err != nil {
-		return err
-	}
-	return m.CreateCodeDir()
+	return m.Unit.Build()
 }
 
 func (m *Unit) Apply() (err error) {

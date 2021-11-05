@@ -15,7 +15,7 @@ type terraformTemplateFunctions struct {
 type TerraformTemplateDriver struct {
 }
 
-func (m *TerraformTemplateDriver) AddTemplateFunctions(p *project.Project) {
+func (d *TerraformTemplateDriver) AddTemplateFunctions(p *project.Project) {
 	f := terraformTemplateFunctions{projectPtr: p}
 	funcs := map[string]interface{}{
 		"remoteState": f.addRemoteStateMarker,
@@ -23,7 +23,7 @@ func (m *TerraformTemplateDriver) AddTemplateFunctions(p *project.Project) {
 	for k, f := range funcs {
 		_, ok := p.TmplFunctionsMap[k]
 		if !ok {
-			log.Debugf("Template Function '%v' added (terraform)", k)
+			log.Debugf("Template Function '%v' added (%v)", k, d.Name())
 			p.TmplFunctionsMap[k] = f
 		}
 	}

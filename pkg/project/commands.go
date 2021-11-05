@@ -29,10 +29,8 @@ func (p *Project) Build() error {
 // Destroy all units.
 func (p *Project) Destroy() error {
 
-	fProject, err := p.LoadState()
-	if err != nil {
-		return err
-	}
+	fProject := p.ownState
+
 	graph := grapher{}
 	if config.Global.IgnoreState {
 		graph.Init(p, 1, true)
@@ -54,7 +52,7 @@ func (p *Project) Destroy() error {
 			return nil
 		}
 	}
-	err = p.ClearCacheDir()
+	err := p.ClearCacheDir()
 	if err != nil {
 		return fmt.Errorf("project destroy: clear cache dir: %v", err.Error())
 	}
@@ -107,7 +105,7 @@ func (p *Project) Apply() error {
 		return err
 	}
 	defer gr.Close()
-	fProject, err := p.LoadState()
+	fProject := p.ownState
 	if err != nil {
 		return err
 	}
@@ -191,7 +189,7 @@ func (p *Project) Apply() error {
 
 // Plan and output result.
 func (p *Project) Plan() (hasChanges bool, err error) {
-	fProject, err := p.LoadState()
+	fProject := p.ownState
 	if err != nil {
 		return
 	}

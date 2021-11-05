@@ -9,7 +9,7 @@ import (
 )
 
 type State struct {
-	common.StateSpec
+	common.Unit
 	ModType      string      `json:"type"`
 	Inputs       interface{} `json:"inputs"`
 	ModOutputRaw string      `json:"output"`
@@ -18,7 +18,7 @@ type State struct {
 func (m *Unit) GetState() interface{} {
 	st := m.Unit.GetState()
 	printer := State{
-		StateSpec:    st.(common.StateSpec),
+		Unit:         st.(common.Unit),
 		Inputs:       m.inputs,
 		ModType:      m.KindKey(),
 		ModOutputRaw: m.outputRaw,
@@ -27,18 +27,18 @@ func (m *Unit) GetState() interface{} {
 }
 
 type StateDiff struct {
-	common.StateSpecDiff
+	common.UnitDiffSpec
 	Inputs interface{} `json:"inputs"`
 }
 
 func (m *Unit) GetDiffData() interface{} {
-	st := m.Unit.GetStateDiff()
+	st := m.Unit.GetUnitDiff()
 	stTf := StateDiff{
-		StateSpecDiff: st,
-		Inputs:        m.inputs,
+		UnitDiffSpec: st,
+		Inputs:       m.inputs,
 	}
 	diffData := map[string]interface{}{}
-	utils.JSONInterfaceToType(stTf, &diffData)
+	utils.JSONCopy(stTf, &diffData)
 	return diffData
 }
 
@@ -48,11 +48,11 @@ func (s *State) GetType() string {
 
 func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	s := State{}
-	err := utils.JSONInterfaceToType(stateData, &s)
+	err := utils.JSONCopy(stateData, &s)
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
 	m.inputs = s.Inputs.(map[string]interface{})
 	m.outputRaw = s.ModOutputRaw
-	return m.Unit.LoadState(s.StateSpec, modKey, p)
+	return m.Unit.LoadState(s.Unit, modKey, p)
 }

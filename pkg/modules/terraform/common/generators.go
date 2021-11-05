@@ -15,7 +15,7 @@ import (
 // genBackendCodeBlock generate backend code block for this unit.
 func (m *Unit) genBackendCodeBlock() ([]byte, error) {
 
-	f, err := m.backendPtr.GetBackendHCL(m.StackName(), m.Name())
+	f, err := m.backendPtr.GetBackendHCL(m.Stack().Name, m.Name())
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
@@ -51,8 +51,8 @@ func (m *Unit) genDepsRemoteStates() ([]byte, error) {
 		}
 		// Deduplication.
 		depsUniq[dep.Unit] = true
-		modBackend := dep.Unit.StackPtr().Backend
-		rs, err := modBackend.GetRemoteStateHCL(dep.Unit.StackName(), dep.Unit.Name())
+		modBackend := dep.Unit.Stack().Backend
+		rs, err := modBackend.GetRemoteStateHCL(dep.Unit.Stack().Name, dep.Unit.Name())
 		if err != nil {
 			log.Debug(err.Error())
 			return nil, err

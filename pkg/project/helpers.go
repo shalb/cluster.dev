@@ -45,7 +45,7 @@ func removeDirContent(dir string) error {
 }
 
 func findUnit(unit Unit, modsList map[string]Unit) *Unit {
-	mod, exists := modsList[fmt.Sprintf("%s.%s", unit.StackName(), unit.Name())]
+	mod, exists := modsList[fmt.Sprintf("%s.%s", unit.Stack().Name, unit.Name())]
 	// log.Printf("Check Mod: %s, exists: %v, list %v", name, exists, modsList)
 	if !exists {
 		return nil
@@ -59,11 +59,11 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 		return nil
 	}
 	out := reflect.ValueOf(data)
-	// if out.Kind() == reflect.Ptr && !out.IsNil() {
-	// 	 out = out.Elem()
+	if out.Kind() == reflect.Ptr && !out.IsNil() {
+		out = out.Elem()
 
-	// 	//log.Fatalf("%v \n%v ", out.Kind(), out)
-	// }
+		//log.Fatalf("%v \n%v ", out.Kind(), out)
+	}
 	// if out.IsNil() {
 	// 	log.Fatalf("%v \n%v ", out.Kind(), out)
 	// 	return nil
@@ -208,11 +208,11 @@ func BuildDep(m Unit, dep *DependencyOutput) error {
 	if dep.Unit == nil {
 
 		if dep.UnitName == "" || dep.StackName == "" {
-			return fmt.Errorf("Empty dependency in unit '%v.%v'", m.StackName(), m.Name())
+			return fmt.Errorf("Empty dependency in unit '%v.%v'", m.Stack().Name, m.Name())
 		}
-		depMod, exists := m.ProjectPtr().Units[fmt.Sprintf("%v.%v", dep.StackName, dep.UnitName)]
+		depMod, exists := m.Project().Units[fmt.Sprintf("%v.%v", dep.StackName, dep.UnitName)]
 		if !exists {
-			return fmt.Errorf("Error in unit '%v.%v' dependency, target '%v.%v' does not exist", m.StackName(), m.Name(), dep.StackName, dep.UnitName)
+			return fmt.Errorf("Error in unit '%v.%v' dependency, target '%v.%v' does not exist", m.Stack().Name, m.Name(), dep.StackName, dep.UnitName)
 		}
 		dep.Unit = depMod
 	}
@@ -296,4 +296,20 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	table.SetHeader(headers)
 	table.Append(unitsTable)
 	table.Render()
+}
+
+func getMarkers(markers map[string]interface{}, ctName string) (map[string]*DependencyOutput, error) {
+	depMarkers, ok := markers[ctName]
+	if !ok {
+		return make(map[string]*DependencyOutput), nil
+	}
+	markersList, ok := depMarkers.(map[string]*DependencyOutput)
+	if !ok {
+		err := utils.JSONCopy(depMarkers, &markersList)
+		if err != nil {
+			return nil, fmt.Errorf("get markers: internal error: bad dependency")
+		}
+	}
+	// log.Errorf("From: %+v\n To: %+v", depMarkers, markersList)
+	return markersList, nil
 }

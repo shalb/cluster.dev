@@ -34,10 +34,10 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 	return &mod, nil
 }
 
-func init() {
-	modDrv := Factory{}
-	log.Debug("Registering unit driver 'helm'")
-	if err := project.RegisterUnitFactory(&modDrv, "helm"); err != nil {
-		log.Trace("Can't register unit driver 'helm'.")
-	}
-}
+// func init() {
+// 	modDrv := Factory{}
+// 	log.Debug("Registering unit driver 'helm'")
+// 	if err := project.RegisterUnitFactory(&modDrv, "helm"); err != nil {
+// 		log.Trace("Can't register unit driver 'helm'.")
+// 	}
+// }

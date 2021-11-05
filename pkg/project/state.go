@@ -170,51 +170,48 @@ func (p *Project) LoadState() (*StateProject, error) {
 	if err != nil {
 		return nil, err
 	}
+	p.ownState = &statePrj
 	return &statePrj, nil
 }
 
 func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
-	moddInState, exists := sp.Units[unit.Key()]
+	unitInState, exists := sp.Units[unit.Key()]
 	if !exists {
 		return utils.Diff(nil, unit.GetDiffData(), true), nil
 	}
-	var diffData interface{}
-	if unit != nil {
-		diffData = unit.GetDiffData()
-	}
-	df := utils.Diff(moddInState.GetDiffData(), diffData, true)
+	diffData := unit.GetDiffData()
+
+	df := utils.Diff(unitInState.GetDiffData(), diffData, true)
 	if len(df) > 0 {
-		return df, moddInState
+		return df, unitInState
 	}
-	for _, dep := range *unit.Dependencies() {
-		if sp.checkUnitChangesRecursive(dep.Unit) {
-			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), moddInState
+	for _, u := range unit.RequiredUnits() {
+		if sp.checkUnitChangesRecursive(u) {
+			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), unitInState
 		}
 	}
-	return "", moddInState
+	return "", unitInState
 }
 
 func (sp *StateProject) checkUnitChangesRecursive(unit Unit) bool {
 	if unit.WasApplied() {
 		return true
 	}
-	modNew, exists := sp.Units[unit.Key()]
+	unitInState, exists := sp.Units[unit.Key()]
 	if !exists {
 		return true
 	}
-	var diffData interface{}
-	if unit != nil {
-		diffData = unit.GetDiffData()
-	}
-	df := utils.Diff(diffData, modNew.GetDiffData(), true)
+	diffData := unit.GetDiffData()
+
+	df := utils.Diff(unitInState.GetDiffData(), diffData, true)
 	if len(df) > 0 {
 		return true
 	}
-	for _, dep := range *unit.Dependencies() {
-		if _, exists := sp.ChangedUnits[dep.Unit.Key()]; exists {
+	for _, u := range unit.RequiredUnits() {
+		if _, exists := sp.ChangedUnits[u.Key()]; exists {
 			return true
 		}
-		if sp.checkUnitChangesRecursive(dep.Unit) {
+		if sp.checkUnitChangesRecursive(u) {
 			return true
 		}
 	}

@@ -51,7 +51,7 @@ func (m *Unit) GetDiffData() interface{} {
 	}
 	diffData := map[string]interface{}{}
 	res := map[string]interface{}{}
-	utils.JSONInterfaceToType(stTf, &diffData)
+	utils.JSONCopy(stTf, &diffData)
 	m.ReplaceRemoteStatesForDiff(diffData, &res)
 	return res
 }
@@ -62,7 +62,7 @@ func (s *State) GetType() string {
 
 func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	s := State{}
-	err := utils.JSONInterfaceToType(stateData, &s)
+	err := utils.JSONCopy(stateData, &s)
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}

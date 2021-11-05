@@ -197,7 +197,7 @@ func checkUnitDependencies(p *Project) error {
 	errDepth := 15
 	for _, mod := range p.Units {
 		if ok := checkDependenciesRecursive(mod, errDepth); !ok {
-			return fmt.Errorf("Unresolved dependency in unit %v.%v", mod.StackName(), mod.Name())
+			return fmt.Errorf("Unresolved dependency in unit %v.%v", mod.Stack().Name, mod.Name())
 		}
 	}
 	return nil
@@ -207,8 +207,8 @@ func checkDependenciesRecursive(mod Unit, maxDepth int) bool {
 	if maxDepth == 0 {
 		return false
 	}
-	for _, dep := range *mod.Dependencies() {
-		if ok := checkDependenciesRecursive(dep.Unit, maxDepth-1); !ok {
+	for _, u := range mod.RequiredUnits() {
+		if ok := checkDependenciesRecursive(u, maxDepth-1); !ok {
 			return false
 		}
 	}

@@ -104,7 +104,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if !ok {
 		return fmt.Errorf("reading kubernetes unit '%v': malformed unit source", m.Key())
 	}
-	tmplDir := m.StackPtr().TemplateDir
+	tmplDir := m.Stack().TemplateDir
 	var absSource string
 	if source[1:2] == "/" {
 		absSource = filepath.Join(tmplDir, source)
@@ -129,7 +129,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		if err != nil {
 			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 		}
-		manifest, errIsWarn, err := m.StackPtr().TemplateTry(file)
+		manifest, errIsWarn, err := m.Stack().TemplateTry(file)
 		if err != nil {
 			if errIsWarn {
 				log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
@@ -152,7 +152,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		return fmt.Errorf("the kubernetes unit must contain at least one manifest")
 	}
 
-	err = utils.JSONInterfaceToType(spec, &m.ProviderConf)
+	err = utils.JSONCopy(spec, &m.ProviderConf)
 	if err != nil {
 		return err
 	}

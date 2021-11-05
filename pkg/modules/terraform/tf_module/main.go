@@ -103,8 +103,8 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		return fmt.Errorf("Incorrect unit source")
 	}
 	if utils.IsLocalPath(source) {
-		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, m.StackPtr().TemplateDir, source)
-		tfModuleBasePath := filepath.Join(config.Global.WorkingDir, m.StackPtr().TemplateDir)
+		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, m.Stack().TemplateDir, source)
+		tfModuleBasePath := filepath.Join(config.Global.WorkingDir, m.Stack().TemplateDir)
 		var err error
 		log.Debugf("Reading local tf unit files %v %v ", tfModuleLocalDir, tfModuleBasePath)
 		m.localUnit, err = utils.ReadFilesToList(tfModuleLocalDir, tfModuleBasePath)

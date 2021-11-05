@@ -11,31 +11,33 @@ type Factory struct {
 
 // New creates new units driver factory.
 func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (project.Unit, error) {
-	mod := Unit{
-		markers: make(map[string]interface{}),
-		applied: false,
+	unit := Unit{
+		UnitMarkers: make(map[string]interface{}),
+		Applied:     false,
+		StatePtr:    &Unit{},
 	}
-	mod.outputParsers = map[string]outputParser{
-		"json":      mod.JSONOutputParser,
-		"regexp":    mod.RegexOutputParser,
-		"separator": mod.SeparatorOutputParser,
-	}
-	err := mod.ReadConfig(spec, stack)
+	unit.StatePtr.UnitMarkers = unit.UnitMarkers
+	err := unit.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	return &mod, nil
+	return &unit, nil
 }
 
 // NewFromState creates new units from state data.
 func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Unit, error) {
-	mod := Unit{}
+	mod := Unit{
+		UnitMarkers: make(map[string]interface{}),
+		Applied:     false,
+		StatePtr:    &Unit{},
+	}
 	err := mod.LoadState(spec, modKey, p)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
+
 	return &mod, nil
 }
 

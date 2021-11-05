@@ -130,7 +130,7 @@ func (m *Unit) LoadStateCommon(spec StateCommon, modKey string, p *project.State
 	m.postHook = mState.PostHook
 	m.providers = mState.Providers
 	m.requiredProviders = mState.RequiredProvider
-	m.codeDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
+	m.codeDir = filepath.Join(m.Project().CodeCacheDir, m.Key())
 	if m.expectedOutputs == nil {
 		m.expectedOutputs = make(map[string]*project.DependencyOutput)
 	}
@@ -144,14 +144,14 @@ func (m *Unit) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 		return fmt.Errorf("unit diff: internal error")
 	}
 	inJSONstr := string(inJSON)
-	depMarkers, ok := m.ProjectPtr().Markers[RemoteStateMarkerCatName]
+	depMarkers, ok := m.Project().Markers[RemoteStateMarkerCatName]
 	if !ok {
 		return utils.JSONDecode([]byte(inJSONstr), out)
 	}
 	markersList, ok := depMarkers.(map[string]*project.DependencyOutput)
 	if !ok {
 		markersList := make(map[string]*project.DependencyOutput)
-		err := utils.JSONInterfaceToType(depMarkers, &markersList)
+		err := utils.JSONCopy(depMarkers, &markersList)
 		if err != nil {
 			return fmt.Errorf("remote state scanner: read dependency: bad type")
 		}

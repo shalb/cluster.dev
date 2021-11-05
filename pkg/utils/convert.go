@@ -7,8 +7,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// JSONInterfaceToType - convert interface data in to type of out with JSON tags.
-func JSONInterfaceToType(in, out interface{}) error {
+// JSONCopy - convert interface data in to type of out with JSON tags.
+func JSONCopy(in, out interface{}) error {
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)

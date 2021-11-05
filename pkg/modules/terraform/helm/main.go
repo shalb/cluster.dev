@@ -131,7 +131,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			if !ok {
 				return fmt.Errorf("read unit config: 'values.file' is required field: %v", err)
 			}
-			vfPath := filepath.Join(m.StackPtr().TemplateDir, valuesFileName)
+			vfPath := filepath.Join(m.Stack().TemplateDir, valuesFileName)
 			valuesFileContent, err := ioutil.ReadFile(vfPath)
 			if err != nil {
 				log.Debugf(err.Error())
@@ -139,7 +139,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			}
 			values := valuesFileContent
 			if applyTemplate {
-				renderedValues, errIsWarn, err := m.StackPtr().TemplateTry(valuesFileContent)
+				renderedValues, errIsWarn, err := m.Stack().TemplateTry(valuesFileContent)
 				if err != nil {
 					if !errIsWarn {
 						log.Fatal(err.Error())

@@ -70,6 +70,13 @@ func (m *Unit) FilesList() map[string][]byte {
 	return m.filesList
 }
 
+func (m *Unit) RequiredUnits() (res map[string]project.Unit) {
+	for _, dep := range m.dependencies {
+		res[dep.Unit.Key()] = dep.Unit
+	}
+	return
+}
+
 func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	// Check if CDEV_TF_BINARY is set to change terraform binary name.
 	envTfBin, exists := os.LookupEnv("CDEV_TF_BINARY")
@@ -132,7 +139,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if exists {
 		m.providers = providers
 	}
-	m.codeDir = filepath.Join(m.ProjectPtr().CodeCacheDir, m.Key())
+	m.codeDir = filepath.Join(m.Project().CodeCacheDir, m.Key())
 	return nil
 }
 
@@ -146,7 +153,7 @@ func (m *Unit) Name() string {
 }
 
 // StackPtr return ptr to unit stack.
-func (m *Unit) StackPtr() *project.Stack {
+func (m *Unit) Stack() *project.Stack {
 	return m.stackPtr
 }
 
@@ -155,14 +162,9 @@ func (m *Unit) ApplyOutput() []byte {
 	return m.applyOutput
 }
 
-// ProjectPtr return ptr to unit project.
-func (m *Unit) ProjectPtr() *project.Project {
+// Project return ptr to unit project.
+func (m *Unit) Project() *project.Project {
 	return m.projectPtr
-}
-
-// StackName return unit stack name.
-func (m *Unit) StackName() string {
-	return m.stackPtr.Name
 }
 
 // Backend return unit backend.
@@ -183,7 +185,7 @@ func (m *Unit) Init() error {
 	}
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
-		m.StackName(),
+		m.Stack().Name,
 		m.Name(),
 		"init",
 	}
@@ -210,7 +212,7 @@ func (m *Unit) Apply() error {
 	}
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
-		m.StackName(),
+		m.Stack().Name,
 		m.Name(),
 		"apply",
 	}
@@ -245,7 +247,7 @@ func (m *Unit) Output() (string, error) {
 	}
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
-		m.StackName(),
+		m.Stack().Name,
 		m.Name(),
 		"plan",
 	}
@@ -272,7 +274,7 @@ func (m *Unit) Plan() error {
 	}
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
-		m.StackName(),
+		m.Stack().Name,
 		m.Name(),
 		"plan",
 	}
@@ -305,7 +307,7 @@ func (m *Unit) Destroy() error {
 		return err
 	}
 	rn.LogLabels = []string{
-		m.StackName(),
+		m.Stack().Name,
 		m.Name(),
 		"destroy",
 	}
@@ -330,7 +332,7 @@ func (m *Unit) Destroy() error {
 
 // Key return uniq unit index (string key for maps).
 func (m *Unit) Key() string {
-	return fmt.Sprintf("%v.%v", m.StackName(), m.name)
+	return fmt.Sprintf("%v.%v", m.Stack().Name, m.name)
 }
 
 // CodeDir return path to unit code directory.

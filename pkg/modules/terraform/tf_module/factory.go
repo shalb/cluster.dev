@@ -31,10 +31,10 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 	return &mod, nil
 }
 
-func init() {
-	modDrv := Factory{}
-	log.Debug("Registering unit driver 'terraform'")
-	if err := project.RegisterUnitFactory(&modDrv, "terraform"); err != nil {
-		log.Trace("Can't register unit driver 'terraform'.")
-	}
-}
+// func init() {
+// 	modDrv := Factory{}
+// 	log.Debug("Registering unit driver 'terraform'")
+// 	if err := project.RegisterUnitFactory(&modDrv, "terraform"); err != nil {
+// 		log.Trace("Can't register unit driver 'terraform'.")
+// 	}
+// }

@@ -61,6 +61,7 @@ type Project struct {
 	InitLock         sync.Mutex
 	RuntimeDataset   RuntimeData
 	StateBackendName string
+	ownState         *StateProject
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
@@ -90,7 +91,7 @@ func NewEmptyProject() *Project {
 // stacks, backends and other objects are not loads.
 func LoadProjectBase() (*Project, error) {
 	for mf := range UnitFactoriesMap {
-		log.Debugf("%v", mf)
+		log.Debugf("Registering unit type: %v", mf)
 	}
 	project := NewEmptyProject()
 	err := project.MkBuildDir()
@@ -140,7 +141,9 @@ func LoadProjectBase() (*Project, error) {
 // LoadProjectFull read project data in current directory, create base project, load secrets and all project's objects.
 func LoadProjectFull() (*Project, error) {
 	project, err := LoadProjectBase()
-
+	if err != nil {
+		return nil, fmt.Errorf("loading project: %w", err)
+	}
 	for filename, cnf := range project.objectsFiles {
 		templatedConf, isWarn, err := project.TemplateTry(cnf)
 		if project.fileIsSecret(filename) {
@@ -164,6 +167,10 @@ func LoadProjectFull() (*Project, error) {
 	err = project.prepareObjects()
 	if err != nil {
 		return nil, err
+	}
+	_, err = project.LoadState()
+	if err != nil {
+		return nil, fmt.Errorf("loading project: %w", err)
 	}
 	err = project.readUnits()
 	if err != nil {
@@ -221,9 +228,9 @@ func (p *Project) prepareObjects() error {
 
 func (p *Project) checkGraph() error {
 	errDepth := 15
-	for _, mod := range p.Units {
-		if ok := checkDependenciesRecursive(mod, errDepth); !ok {
-			return fmt.Errorf("Unresolved dependency in unit %v.%v", mod.StackName(), mod.Name())
+	for _, unit := range p.Units {
+		if ok := checkDependenciesRecursive(unit, errDepth); !ok {
+			return fmt.Errorf("Unresolved dependency in unit %v.%v", unit.Stack().Name, unit.Name())
 		}
 	}
 	return nil
@@ -361,8 +368,8 @@ func (p *Project) PrintInfo() error {
 	table.SetHeader([]string{"Name", "units count", "Backend name", "Backend type"})
 	for name, stack := range p.Stack {
 		mCount := 0
-		for _, mod := range p.Units {
-			if mod.StackName() == stack.Name {
+		for _, unit := range p.Units {
+			if unit.Stack().Name == stack.Name {
 				mCount++
 			}
 		}
@@ -380,21 +387,21 @@ func (p *Project) PrintInfo() error {
 	table.SetRowLine(true)
 	// table.SetRowSeparator(".")
 	table.SetHeader([]string{"Name", "Stack", "Kind", "Dependencies"})
-	for name, mod := range p.Units {
+	for name, unit := range p.Units {
 		deps := ""
-		for i, dep := range *mod.Dependencies() {
+		for i, dep := range *unit.Dependencies() {
 			deps = fmt.Sprintf("%s%s.%s", deps, dep.StackName, dep.UnitName)
 			if dep.Output != "" {
 				deps = fmt.Sprintf("%s.%s", deps, dep.Output)
 			}
-			if i != len(*mod.Dependencies())-1 {
+			if i != len(*unit.Dependencies())-1 {
 				deps += "\n"
 			}
 		}
 		table.Append([]string{
 			name,
-			mod.StackName(),
-			mod.KindKey(),
+			unit.Stack().Name,
+			unit.KindKey(),
 			deps,
 		})
 	}

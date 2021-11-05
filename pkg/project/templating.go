@@ -170,7 +170,7 @@ func (d *GlobalTemplateDriver) AddTemplateFunctions(p *Project) {
 	for k, f := range funcs {
 		_, ok := p.TmplFunctionsMap[k]
 		if !ok {
-			log.Debugf("Template Function '%v' added (terraform)", k)
+			log.Debugf("Template Function '%v' added (%v)", k, d.Name())
 			p.TmplFunctionsMap[k] = f
 		}
 	}
@@ -209,31 +209,40 @@ func OutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 		subVal = reflect.ValueOf(data.Interface())
 	}
 	resString := subVal.String()
-	depMarkers, ok := unit.ProjectPtr().Markers[OutputMarkerCatName]
-	if !ok {
-		return subVal, nil
+	markersList, err := getMarkers(unit.Project().Markers, OutputMarkerCatName)
+	if err != nil {
+		return reflect.ValueOf(nil), fmt.Errorf("process outputs: %w", err)
 	}
-	markersList, ok := depMarkers.(map[string]*DependencyOutput)
-	if !ok {
-		err := utils.JSONInterfaceToType(depMarkers, &markersList)
+	// Add outputs markers from state to project outputs markers (if not exists).
+	if unit.Project().ownState != nil {
+		stateMarkersList, err := getMarkers(unit.Project().ownState.Markers, OutputMarkerCatName)
 		if err != nil {
-			return reflect.ValueOf(nil), fmt.Errorf("remote state scanner: read dependency: bad type")
+			return reflect.ValueOf(nil), fmt.Errorf("process state outputs: %w", err)
+		}
+		// log.Errorf("State markers: %v", stateMarkersList)
+		// Insert outputs saved in state.
+		for key, m := range stateMarkersList {
+			if _, exists := markersList[key]; exists {
+				continue
+			}
+			markersList[key] = m
 		}
 	}
 
 	for key, marker := range markersList {
+		// log.Warnf("Key: %v Marker: %+v", key, marker)
 		if strings.Contains(resString, key) {
 			if marker.StackName == "this" {
-				marker.StackName = unit.StackName()
+				marker.StackName = unit.Stack().Name
 			}
 			modKey := fmt.Sprintf("%s.%s", marker.StackName, marker.UnitName)
-			depUnit, exists := unit.ProjectPtr().Units[modKey]
+			depUnit, exists := unit.Project().Units[modKey]
 			if !exists {
-				log.Fatalf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.StackName(), unit.Name(), modKey)
+				log.Fatalf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.Stack().Name, unit.Name(), modKey)
 			}
 			o, exists := depUnit.ExpectedOutputs()[marker.Output]
-			if exists && o.OutputData != nil {
-				resString = strings.ReplaceAll(resString, key, o.OutputData.(string))
+			if exists && o.OutputData != "" {
+				resString = strings.ReplaceAll(resString, key, o.OutputData)
 				return reflect.ValueOf(resString), nil
 			}
 			outputTmp := marker
@@ -252,14 +261,14 @@ func StateOutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 		subVal = reflect.ValueOf(data.Interface())
 	}
 	resString := subVal.String()
-	depMarkers, ok := unit.ProjectPtr().Markers[OutputMarkerCatName]
+	depMarkers, ok := unit.Project().Markers[OutputMarkerCatName]
 	if !ok {
 		return subVal, nil
 	}
 	//markersList := map[string]*project.Dependency{}
 	markersList, ok := depMarkers.(map[string]*DependencyOutput)
 	if !ok {
-		err := utils.JSONInterfaceToType(depMarkers, &markersList)
+		err := utils.JSONCopy(depMarkers, &markersList)
 		if err != nil {
 			return reflect.ValueOf(nil), fmt.Errorf("remote state scanner: read dependency: bad type")
 		}

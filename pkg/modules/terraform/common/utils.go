@@ -28,7 +28,7 @@ func (m *Unit) readDeps(depsData interface{}) ([]*project.DependencyOutput, erro
 		}
 		infNm := splDep[0]
 		if infNm == "this" {
-			infNm = m.StackName()
+			infNm = m.Stack().Name
 		}
 		res = append(res, &project.DependencyOutput{
 			StackName: infNm,
