@@ -9,7 +9,7 @@ tfswitch 0.15.5
 
 cdev apply
 ```
-This will tell Cluster.dev to use Terraform v0.15.5 instead of the one installed locally. 
+This will tell Cluster.dev to use Terraform v0.15.5. 
 
 Use [`CDEV_TF_BINARY`](https://docs.cluster.dev/env-variables/) variable to indicate which Terraform binary to use.
 
