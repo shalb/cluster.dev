@@ -55,7 +55,7 @@ func findUnit(unit Unit, modsList map[string]Unit) *Unit {
 
 // ScanMarkers use marker scanner function to replace templated markers.
 func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
-	if data == nil {
+	if data == nil || reflect.ValueOf(data).IsNil() {
 		return nil
 	}
 	out := reflect.ValueOf(data)
@@ -298,7 +298,7 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	table.Render()
 }
 
-func getMarkers(markers map[string]interface{}, ctName string) (map[string]*DependencyOutput, error) {
+func GetMarkers(markers map[string]interface{}, ctName string) (map[string]*DependencyOutput, error) {
 	depMarkers, ok := markers[ctName]
 	if !ok {
 		return make(map[string]*DependencyOutput), nil

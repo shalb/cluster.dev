@@ -10,6 +10,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/executor"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 const remoteStateMarkerName = "RemoteStateMarkers"
@@ -24,11 +25,10 @@ type RequiredProvider struct {
 // Unit describe cluster.dev unit to deploy/destroy terraform modules.
 type Unit struct {
 	common.Unit
-	BackendPtr        project.Backend             `yaml:"-" json:"-"`
-	BackendName       string                      `yaml:"-" json:"backend_name"`
-	Providers         interface{}                 `yaml:"providers,omitempty" json:"providers,omitempty"`
-	RequiredProviders map[string]RequiredProvider `yaml:"required_providers,omitempty" json:"required_providers,omitempty"`
-	initted           bool                        // True if unit was initted in this session.
+	StatePtr          *Unit                       `yaml:"-" json:"-"`
+	Providers         interface{}                 `yaml:"-" json:"providers,omitempty"`
+	RequiredProviders map[string]RequiredProvider `yaml:"-" json:"required_providers,omitempty"`
+	Initted           bool                        `yaml:"-" json:"-"` // True if unit was initted in this session.
 }
 
 func (m *Unit) AddRequiredProvider(name, source, version string) {
@@ -47,23 +47,35 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if exists {
 		terraformBin = envTfBin
 	}
-	m.InitConf.Commands = append(m.InitConf.Commands, fmt.Sprintf("%[1]s init", terraformBin))
-	m.ApplyConf.Commands = append(m.ApplyConf.Commands, fmt.Sprintf("%s apply -auto-approve", terraformBin))
-	m.PlanConf.Commands = append(m.PlanConf.Commands, fmt.Sprintf("%s plan", terraformBin))
-	m.DestroyConf.Commands = append(m.DestroyConf.Commands, fmt.Sprintf("%s destroy -auto-approve", terraformBin))
-	m.GetOutputsConf.Command = fmt.Sprintf("%s output -json", terraformBin)
-	m.OutputParsers = make(map[string]common.OutputParser)
-	m.GetOutputsConf.Type = "terraform"
+	m.InitConf = &common.OperationConfig{
+		Commands: []interface{}{
+			fmt.Sprintf("%[1]s init", terraformBin),
+		},
+	}
+	m.ApplyConf = &common.OperationConfig{
+		Commands: []interface{}{
+			fmt.Sprintf("%s apply -auto-approve", terraformBin),
+		},
+	}
+	m.DestroyConf = &common.OperationConfig{
+		Commands: []interface{}{
+			fmt.Sprintf("%s destroy -auto-approve", terraformBin),
+		},
+	}
+	m.PlanConf = &common.OperationConfig{
+		Commands: []interface{}{
+			fmt.Sprintf("%s plan", terraformBin),
+		},
+	}
+	m.GetOutputsConf = &common.OutputsConfigSpec{
+		Command: fmt.Sprintf("%s output -json", terraformBin),
+		Type:    "terraform",
+	}
 	err := m.Unit.ReadConfig(spec, stack)
 	if err != nil {
 		return err
 	}
-	// Check and set backend.
-	bPtr, exists := stack.ProjectPtr.Backends[stack.BackendName]
-	if !exists {
-		return fmt.Errorf("Backend '%s' not found, stack: '%s'", stack.BackendName, stack.Name)
-	}
-	m.BackendPtr = bPtr
+	m.OutputParsers["terraform"] = TerraformJSONParser
 
 	// Set providers.
 	providers, exists := spec["providers"]
@@ -75,8 +87,11 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		m.Env = make(map[string]interface{})
 	}
 	m.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
-	m.initted = false
-	return nil
+	m.Initted = false
+	err = utils.JSONCopy(m, m.StatePtr)
+	// jsstate, _ := utils.JSONEncodeString(m.StatePtr)
+	// log.Warnf("State: %v", jsstate)
+	return err
 }
 
 // Init unit.
@@ -87,13 +102,13 @@ func (m *Unit) Init() error {
 	if err != nil {
 		return err
 	}
-	m.initted = true
+	m.Initted = true
 	return nil
 }
 
 // Apply unit.
 func (m *Unit) Apply() error {
-	if !m.initted {
+	if !m.Initted {
 		if err := m.Init(); err != nil {
 			return err
 		}
@@ -103,7 +118,7 @@ func (m *Unit) Apply() error {
 
 // Plan unit.
 func (m *Unit) Plan() error {
-	if !m.initted {
+	if !m.Initted {
 		if err := m.Init(); err != nil {
 			return err
 		}
@@ -113,7 +128,7 @@ func (m *Unit) Plan() error {
 
 // Destroy unit.
 func (m *Unit) Destroy() error {
-	if !m.initted {
+	if !m.Initted {
 		if err := m.Init(); err != nil {
 			return err
 		}
@@ -149,18 +164,18 @@ func (m *Unit) Output() (string, error) {
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Unit) ReplaceMarkers(inheritedUnit project.Unit) error {
+func (m *Unit) ReplaceMarkers() error {
 	if err := m.Unit.ReplaceMarkers(); err != nil {
 		return fmt.Errorf("prepare terraform unit data: %w", err)
 	}
 	if m.PreHook != nil {
-		err := project.ScanMarkers(&m.PreHook.Command, m.RemoteStatesScanner, inheritedUnit)
+		err := project.ScanMarkers(&m.PreHook.Command, m.RemoteStatesScanner, m)
 		if err != nil {
 			return err
 		}
 	}
 	if m.PostHook != nil {
-		err := project.ScanMarkers(&m.PostHook.Command, m.RemoteStatesScanner, inheritedUnit)
+		err := project.ScanMarkers(&m.PostHook.Command, m.RemoteStatesScanner, m)
 		if err != nil {
 			return err
 		}

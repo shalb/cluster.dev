@@ -9,23 +9,26 @@ import (
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 type Unit struct {
 	base.Unit
-	outputRaw string
-	inputs    map[string]interface{}
+	OutputRaw string                 `yaml:"-" json:"output"`
+	Inputs    map[string]interface{} `yaml:"-" json:"inputs"`
+	UnitKind  string                 `yaml:"-" json:"type"`
+	StatePtr  *Unit                  `yaml:"-" json:"-"`
 }
 
 func (m *Unit) KindKey() string {
-	return "printer"
+	return unitKind
 }
 
 func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 
-	for key, val := range m.inputs {
+	for key, val := range m.Inputs {
 		dataBlock := rootBody.AppendNewBlock("output", []string{key})
 		dataBody := dataBlock.Body()
 		hclVal, err := hcltools.InterfaceToCty(val)
@@ -47,11 +50,7 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 }
 
 func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
-	err := m.Unit.ReadConfig(spec, stack)
-	if err != nil {
-		log.Debug(err.Error())
-		return err
-	}
+
 	modType, ok := spec["type"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect unit type")
@@ -63,17 +62,21 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if !ok {
 		return fmt.Errorf("Incorrect unit inputs")
 	}
-	m.inputs = mInputs
-	return nil
+	m.Inputs = mInputs
+	m.StatePtr = &Unit{
+		Unit: m.Unit,
+	}
+	err := utils.JSONCopy(m, m.StatePtr)
+	return err
 }
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Unit) ReplaceMarkers() error {
-	err := m.Unit.ReplaceMarkers(m)
+	err := m.Unit.ReplaceMarkers()
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.inputs, m.RemoteStatesScanner, m)
+	err = project.ScanMarkers(m.Inputs, m.RemoteStatesScanner, m)
 	if err != nil {
 		return err
 	}
@@ -104,12 +107,12 @@ func (m *Unit) Apply() (err error) {
 	if err != nil {
 		return
 	}
-	m.outputRaw = outputs
+	m.OutputRaw = outputs
 	return
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds printer unit outputs.
 func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
-	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: m.Key(), Output: m.outputRaw})
+	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: m.Key(), Output: m.OutputRaw})
 	return m.Unit.UpdateProjectRuntimeData(p)
 }

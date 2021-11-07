@@ -8,53 +8,45 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-type State struct {
-	base.StateSpec
-	ModType      string      `json:"type"`
-	Inputs       interface{} `json:"inputs"`
-	ModOutputRaw string      `json:"output"`
-}
-
 func (m *Unit) GetState() interface{} {
-	st := m.Unit.GetState()
-	printer := State{
-		StateSpec:    st,
-		Inputs:       m.inputs,
-		ModType:      m.KindKey(),
-		ModOutputRaw: m.outputRaw,
-	}
-	return printer
+	m.StatePtr.Unit = m.Unit.GetState().(base.Unit)
+	return *m.StatePtr
 }
 
-type StateDiff struct {
-	base.StateSpecDiff
+type UnitDiffSpec struct {
+	base.UnitDiffSpec
 	Inputs interface{} `json:"inputs"`
 }
 
-func (m *Unit) GetDiffData() interface{} {
-	st := m.GetStateDiff()
-	stTf := StateDiff{
-		StateSpecDiff: st,
-		Inputs:        m.inputs,
+func (m *Unit) GetUnitDiff() UnitDiffSpec {
+	diff := m.Unit.GetUnitDiff()
+	st := UnitDiffSpec{
+		UnitDiffSpec: diff,
+		Inputs:       m.Inputs,
 	}
-	diffData := map[string]interface{}{}
+	return st
+}
+
+func (m *Unit) GetDiffData() interface{} {
+	st := m.GetUnitDiff()
 	res := map[string]interface{}{}
-	utils.JSONCopy(stTf, &diffData)
-	m.ReplaceRemoteStatesForDiff(diffData, &res)
+	utils.JSONCopy(st, &res)
+	project.ScanMarkers(res, base.StateRemStScanner, m)
 	return res
 }
 
-func (s *State) GetType() string {
-	return s.ModType
-}
-
 func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
-	s := State{}
-	err := utils.JSONCopy(stateData, &s)
+	err := m.Unit.LoadState(stateData, modKey, p)
+	if err != nil {
+		return err
+	}
+	err = utils.JSONCopy(stateData, m)
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
-	m.inputs = s.Inputs.(map[string]interface{})
-	m.outputRaw = s.ModOutputRaw
-	return m.Unit.LoadState(s.StateSpec, modKey, p)
+	m.StatePtr = &Unit{
+		Unit: m.Unit,
+	}
+	err = utils.JSONCopy(m, m.StatePtr)
+	return err
 }

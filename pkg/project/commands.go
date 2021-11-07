@@ -216,6 +216,7 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 
 	for _, md := range curModsSeq {
 		_, exists := fProject.Units[md.Key()]
+
 		diff, stateUnit := fProject.CheckUnitChanges(md)
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning unit '%v':", md.Key()))
 		if len(diff) > 0 || config.Global.IgnoreState {

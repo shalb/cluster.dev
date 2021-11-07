@@ -22,6 +22,7 @@ type Unit interface {
 	ExpectedOutputs() map[string]*DependencyOutput
 	GetState() interface{}
 	GetDiffData() interface{}
+	GetStateDiffData() interface{}
 	LoadState(interface{}, string, *StateProject) error
 	KindKey() string
 	CodeDir() string

@@ -172,6 +172,8 @@ func LoadProjectFull() (*Project, error) {
 	if err != nil {
 		return nil, fmt.Errorf("loading project: %w", err)
 	}
+	// m, _ := utils.JSONEncodeString(project.ownState.Markers)
+	// log.Warnf("state markers: %v", m)
 	err = project.readUnits()
 	if err != nil {
 		return nil, err
@@ -424,7 +426,9 @@ func (p *Project) ExportEnvs(ex interface{}) error {
 
 func (p *Project) PrintOutputs() error {
 	for _, o := range p.RuntimeDataset.PrintersOutputs {
-		log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(o.Output))
+		if len(o.Output) > 0 {
+			log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(o.Output))
+		}
 	}
 	return nil
 }

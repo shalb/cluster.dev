@@ -93,7 +93,7 @@ func ReadFilesToExistentsList(filesPath, baseDir string, filesList map[string][]
 	return
 }
 
-func WriteFilesFromList(path string, filesList map[string][]byte) (err error) {
+func WriteFilesFromList(path string, filesList map[string]string) (err error) {
 	for fPath, fData := range filesList {
 		var fileName, fileDir, fileFullName string
 		splittedPath := strings.Split(fPath, "/")
@@ -111,7 +111,7 @@ func WriteFilesFromList(path string, filesList map[string][]byte) (err error) {
 
 		fileFullName = filepath.Join(fileDir, fileName)
 		log.Debugf("Writing file: %v", fileFullName)
-		err = ioutil.WriteFile(fileFullName, fData, os.ModePerm)
+		err = ioutil.WriteFile(fileFullName, []byte(fData), os.ModePerm)
 		if err != nil {
 			return err
 		}

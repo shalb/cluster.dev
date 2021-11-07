@@ -3,12 +3,19 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"reflect"
 
 	"gopkg.in/yaml.v3"
 )
 
 // JSONCopy - convert interface data in to type of out with JSON tags.
 func JSONCopy(in, out interface{}) error {
+	// t := reflect.TypeOf(out)
+	if reflect.ValueOf(out).IsNil() {
+		return fmt.Errorf("can't write to nil target")
+	}
+
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)
@@ -17,7 +24,7 @@ func JSONCopy(in, out interface{}) error {
 	if err != nil {
 		return err
 	}
-
+	//log.Warnf("JSON: %v", buffer.String())
 	decoder := json.NewDecoder(buffer)
 	err = decoder.Decode(&out)
 	if err != nil {

@@ -104,7 +104,9 @@ func (p *Project) LoadState() (*StateProject, error) {
 		return nil, err
 	}
 
-	stateD := stateData{}
+	stateD := stateData{
+		Markers: make(map[string]interface{}),
+	}
 	var stateStr string
 	var loadedStateFile []byte
 	if p.StateBackendName != "" {
@@ -124,6 +126,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			return nil, err
 		}
 	}
+
 	statePrj := StateProject{
 		Project: Project{
 			name:             p.Name(),
@@ -145,10 +148,10 @@ func (p *Project) LoadState() (*StateProject, error) {
 	if statePrj.Markers == nil {
 		statePrj.Markers = make(map[string]interface{})
 	}
-	for key, m := range p.Markers {
-		statePrj.Markers[key] = m
-	}
-
+	// for key, m := range p.Markers {
+	// 	statePrj.Markers[key] = m
+	// }
+	utils.JSONCopy(p.Markers, statePrj.Markers)
 	for mName, mState := range stateD.Units {
 		log.Debugf("Loading unit from state: %v", mName)
 
@@ -159,12 +162,16 @@ func (p *Project) LoadState() (*StateProject, error) {
 		if !exists {
 			return nil, fmt.Errorf("loading state: internal error: bad unit type in state")
 		}
-		mod, err := UnitFactoriesMap[key.(string)].NewFromState(mState.(map[string]interface{}), mName, &statePrj)
+		f, exists := UnitFactoriesMap[key.(string)]
+		if !exists {
+			return nil, fmt.Errorf("loading state: internal error: bad unit type in state")
+		}
+		unit, err := f.NewFromState(mState.(map[string]interface{}), mName, &statePrj)
 		if err != nil {
 			return nil, fmt.Errorf("loading state: error loading unit from state: %v", err.Error())
 		}
-		statePrj.Units[mName] = mod
-		mod.UpdateProjectRuntimeData(&statePrj.Project)
+		statePrj.Units[mName] = unit
+		unit.UpdateProjectRuntimeData(&statePrj.Project)
 	}
 	err = statePrj.prepareUnits()
 	if err != nil {
@@ -179,9 +186,18 @@ func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
 	if !exists {
 		return utils.Diff(nil, unit.GetDiffData(), true), nil
 	}
-	diffData := unit.GetDiffData()
 
-	df := utils.Diff(unitInState.GetDiffData(), diffData, true)
+	diffData := unit.GetDiffData()
+	stateDiffData := unitInState.GetDiffData()
+	// m, _ := utils.JSONEncodeString(diffData)
+	// log.Warnf("Diff data: %v", m)
+	// sm, _ := utils.JSONEncodeString(stateDiffData)
+	// log.Warnf("State diff data: %v", sm)
+	// mr, _ := utils.JSONEncodeString(unitInState.Project().Markers)
+	// log.Warnf("markers: %v", mr)
+	// smr, _ := utils.JSONEncodeString(unitInState.Project().Markers)
+	// log.Warnf("state markers: %v", smr)
+	df := utils.Diff(stateDiffData, diffData, true)
 	if len(df) > 0 {
 		return df, unitInState
 	}

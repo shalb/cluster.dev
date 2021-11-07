@@ -20,11 +20,13 @@ import (
 
 type Unit struct {
 	base.Unit
-	source          string
-	kubeconfig      string
-	inputs          map[string]interface{}
-	providerVersion string
-	ProviderConf    ProviderConfigSpec
+	StatePtr        *Unit                  `yaml:"-" json:"-"`
+	Source          string                 `yaml:"-" json:"source"`
+	Kubeconfig      string                 `yaml:"-" json:"kubeconfig"`
+	Inputs          map[string]interface{} `yaml:"-" json:"inputs"`
+	providerVersion string                 `yaml:"-" json:"-"`
+	ProviderConf    ProviderConfigSpec     `yaml:"-" json:"provider_conf"`
+	UnitKind        string                 `yaml:"-" json:"type"`
 }
 
 type ExecNestedSchema struct {
@@ -49,7 +51,7 @@ type ProviderConfigSpec struct {
 }
 
 func (m *Unit) KindKey() string {
-	return "kubernetes"
+	return unitKind
 }
 
 func (m *Unit) genMainCodeBlock() ([]byte, error) {
@@ -65,7 +67,7 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	for key, val := range providerCty.AsValueMap() {
 		providerBody.SetAttributeValue(key, val)
 	}
-	for key, manifest := range m.inputs {
+	for key, manifest := range m.Inputs {
 		unitBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
 		unitBody := unitBlock.Body()
 		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(" kubernetes-alpha"), SpacesBefore: 1}}
@@ -98,10 +100,6 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 }
 
 func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
-	err := m.Unit.ReadConfig(spec, stack)
-	if err != nil {
-		return fmt.Errorf("reading kubernetes unit: %v", err.Error())
-	}
 	source, ok := spec["source"].(string)
 	if !ok {
 		return fmt.Errorf("reading kubernetes unit '%v': malformed unit source", m.Key())
@@ -147,10 +145,10 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		for i, manifest := range manifests {
 			key := project.ConvertToTfVarName(strings.TrimSuffix(filepath.Base(fileName), ".yaml"))
 			key = fmt.Sprintf("%s_%v", key, i)
-			m.inputs[key] = manifest
+			m.Inputs[key] = manifest
 		}
 	}
-	if len(m.inputs) < 1 {
+	if len(m.Inputs) < 1 {
 		return fmt.Errorf("the kubernetes unit must contain at least one manifest")
 	}
 
@@ -166,17 +164,21 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if ok {
 		m.AddRequiredProvider("kubernetes-alpha", "hashicorp/kubernetes-alpha", pv)
 	}
-	m.source = source
-	return nil
+	m.Source = source
+	m.StatePtr = &Unit{
+		Unit: m.Unit,
+	}
+	err = utils.JSONCopy(m, m.StatePtr)
+	return err
 }
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Unit) ReplaceMarkers() error {
-	err := m.Unit.ReplaceMarkers(m)
+	err := m.Unit.ReplaceMarkers()
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.inputs, m.RemoteStatesScanner, m)
+	err = project.ScanMarkers(m.Inputs, m.RemoteStatesScanner, m)
 	if err != nil {
 		return err
 	}

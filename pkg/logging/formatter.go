@@ -49,7 +49,7 @@ func formatFuncName(v fmtVerb, f string) string {
 	panic("unexpected func formatter")
 }
 
-func formatCallpath(calldepth int, depth int) string {
+func FormatCallpath(calldepth int, depth int) string {
 	v := ""
 	callers := make([]uintptr, 64)
 	n := runtime.Callers(calldepth+2, callers)

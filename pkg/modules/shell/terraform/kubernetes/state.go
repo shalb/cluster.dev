@@ -8,61 +8,47 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-type State struct {
-	base.StateSpec
-	Source       string             `json:"source"`
-	Kubeconfig   string             `json:"kubeconfig"`
-	ModType      string             `json:"type"`
-	Inputs       interface{}        `json:"inputs"`
-	ProviderConf ProviderConfigSpec `json:"provider_conf"`
-}
-
 func (m *Unit) GetState() interface{} {
-	st := m.Unit.GetState()
-	stTf := State{
-		StateSpec:    st,
-		Inputs:       m.inputs,
-		ModType:      m.KindKey(),
-		Source:       m.source,
-		Kubeconfig:   m.kubeconfig,
-		ProviderConf: m.ProviderConf,
-	}
-	return stTf
+	m.StatePtr.Unit = m.Unit.GetState().(base.Unit)
+	return *m.StatePtr
 }
 
-type StateDiff struct {
-	base.StateSpecDiff
+type UnitDiffSpec struct {
+	base.UnitDiffSpec
 	ProviderConf ProviderConfigSpec `json:"provider_conf"`
 	Inputs       interface{}        `json:"inputs"`
+}
+
+func (m *Unit) GetUnitDiff() UnitDiffSpec {
+	diff := m.Unit.GetUnitDiff()
+	st := UnitDiffSpec{
+		UnitDiffSpec: diff,
+		ProviderConf: m.ProviderConf,
+		Inputs:       m.Inputs,
+	}
+	return st
 }
 
 func (m *Unit) GetDiffData() interface{} {
-	st := m.Unit.GetStateDiff()
-	stTf := StateDiff{
-		StateSpecDiff: st,
-		Inputs:        m.inputs,
-	}
-	diffData := map[string]interface{}{}
+	st := m.GetUnitDiff()
 	res := map[string]interface{}{}
-	utils.JSONCopy(stTf, &diffData)
-	m.ReplaceRemoteStatesForDiff(diffData, &res)
+	utils.JSONCopy(st, &res)
+	project.ScanMarkers(res, base.StateRemStScanner, m)
 	return res
 }
 
-func (s *State) GetType() string {
-	return s.ModType
-
-}
-
 func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
-	s := State{}
-	err := utils.JSONCopy(stateData, &s)
+	err := m.Unit.LoadState(stateData, modKey, p)
+	if err != nil {
+		return err
+	}
+	err = utils.JSONCopy(stateData, m)
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
-	m.inputs = s.Inputs.(map[string]interface{})
-	m.source = s.Source
-	m.kubeconfig = s.Kubeconfig
-	m.ProviderConf = s.ProviderConf
-	return m.Unit.LoadState(s.StateSpec, modKey, p)
+	m.StatePtr = &Unit{
+		Unit: m.Unit,
+	}
+	err = utils.JSONCopy(m, m.StatePtr)
+	return err
 }

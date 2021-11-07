@@ -13,7 +13,7 @@ import (
 // genBackendCodeBlock generate backend code block for this unit.
 func (m *Unit) genBackendCodeBlock() ([]byte, error) {
 
-	f, err := m.BackendPtr.GetBackendHCL(m.StackName(), m.Name())
+	f, err := (*m.BackendPtr).GetBackendHCL(m.StackName(), m.Name())
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err

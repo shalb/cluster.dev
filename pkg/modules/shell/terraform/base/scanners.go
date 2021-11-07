@@ -58,3 +58,31 @@ func (m *Unit) RemoteStatesScanner(data reflect.Value, unit project.Unit) (refle
 	// log.Infof("%v", reflect.ValueOf(resString).Kind())
 	return reflect.ValueOf(resString), nil
 }
+
+// StateRemStScanner scan state data for outputs markers and replaces them for placeholders with remote state ref like <remoteState "stack.unit.output" >
+func StateRemStScanner(data reflect.Value, unit project.Unit) (reflect.Value, error) {
+	var subVal = data
+	if data.Kind() != reflect.String {
+		subVal = reflect.ValueOf(data.Interface())
+	}
+	resString := subVal.String()
+	depMarkers, ok := unit.Project().Markers[RemoteStateMarkerCatName]
+	if !ok {
+		return subVal, nil
+	}
+	//markersList := map[string]*project.Dependency{}
+	markersList, ok := depMarkers.(map[string]*project.DependencyOutput)
+	if !ok {
+		err := utils.JSONCopy(depMarkers, &markersList)
+		if err != nil {
+			return reflect.ValueOf(nil), fmt.Errorf("remote state scanner: read dependency: bad type")
+		}
+	}
+
+	for key, marker := range markersList {
+		if strings.Contains(resString, key) {
+			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<remoteState %v.%v.%v>", marker.StackName, marker.UnitName, marker.Output))
+		}
+	}
+	return reflect.ValueOf(resString), nil
+}

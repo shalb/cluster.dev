@@ -8,68 +8,51 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-type State struct {
-	base.StateSpec
-	Source     string      `json:"source"`
-	Kubeconfig string      `json:"kubeconfig"`
-	ModType    string      `json:"type"`
-	HelmOpts   interface{} `json:"helm_opts,omitempty"`
-	Sets       interface{} `json:"sets,omitempty"`
-	Values     []string    `json:"values,omitempty"`
-}
-
 func (m *Unit) GetState() interface{} {
-	st := m.Unit.GetState()
-	stTf := State{
-		StateSpec:  st,
-		ModType:    m.KindKey(),
-		Source:     m.source,
-		Kubeconfig: m.kubeconfig,
-		HelmOpts:   m.helmOpts,
-		Sets:       m.sets,
-		Values:     m.valuesFilesList,
-	}
-	return stTf
+	m.StatePtr.Unit = m.Unit.GetState().(base.Unit)
+	return *m.StatePtr
 }
 
-type StateDiff struct {
-	base.StateSpecDiff
+type UnitDiffSpec struct {
+	base.UnitDiffSpec
 	Source   string      `json:"source"`
 	HelmOpts interface{} `json:"helm_opts,omitempty"`
 	Sets     interface{} `json:"sets,omitempty"`
 	Values   []string    `json:"values,omitempty"`
 }
 
-func (m *Unit) GetDiffData() interface{} {
-	st := m.Unit.GetStateDiff()
-	stTf := StateDiff{
-		StateSpecDiff: st,
-		Values:        m.valuesFilesList,
-		Source:        m.source,
-		HelmOpts:      m.helmOpts,
-		Sets:          m.sets,
+func (m *Unit) GetUnitDiff() UnitDiffSpec {
+	diff := m.Unit.GetUnitDiff()
+	st := UnitDiffSpec{
+		UnitDiffSpec: diff,
+		Source:       m.Source,
+		HelmOpts:     m.HelmOpts,
+		Sets:         m.Sets,
+		Values:       m.ValuesFilesList,
 	}
-	diffData := map[string]interface{}{}
+	return st
+}
+
+func (m *Unit) GetDiffData() interface{} {
+	st := m.GetUnitDiff()
 	res := map[string]interface{}{}
-	utils.JSONCopy(stTf, &diffData)
-	m.ReplaceRemoteStatesForDiff(diffData, &res)
+	utils.JSONCopy(st, &res)
+	project.ScanMarkers(res, base.StateRemStScanner, m)
 	return res
 }
 
-func (s *State) GetType() string {
-	return s.ModType
-}
-
 func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
-	s := State{}
-	err := utils.JSONCopy(stateData, &s)
+	err := m.Unit.LoadState(stateData, modKey, p)
+	if err != nil {
+		return err
+	}
+	err = utils.JSONCopy(stateData, m)
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
-	m.helmOpts = s.HelmOpts.(map[string]interface{})
-	m.sets = s.Sets.(map[string]interface{})
-	m.source = s.Source
-	m.kubeconfig = s.Kubeconfig
-	m.valuesFilesList = s.Values
-	return m.Unit.LoadState(s.StateSpec, modKey, p)
+	m.StatePtr = &Unit{
+		Unit: m.Unit,
+	}
+	err = utils.JSONCopy(m, m.StatePtr)
+	return err
 }

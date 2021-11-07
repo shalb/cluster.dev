@@ -41,18 +41,19 @@ type OutputsConfigSpec struct {
 // }
 
 // StateConfigSpec describes what data to save to the state.
-type StateConfigSpec struct {
-	CreateFiles   bool
-	ApplyConf     bool
-	DestroyConf   bool
-	InitConf      bool
-	PlanConf      bool
-	Hooks         bool
-	Env           bool
-	WorkDir       bool
-	GetOutputConf bool
-}
+// type StateConfigSpec struct {
+// 	CreateFiles   bool
+// 	ApplyConf     bool
+// 	DestroyConf   bool
+// 	InitConf      bool
+// 	PlanConf      bool
+// 	Hooks         bool
+// 	Env           bool
+// 	WorkDir       bool
+// 	GetOutputConf bool
+// }
 
+// OutputParser represents function for parsing unit output.
 type OutputParser func(string, interface{}) error
 
 // Unit describe cluster.dev shell unit.
@@ -69,27 +70,29 @@ type Unit struct {
 	MyName           string                               `yaml:"name" json:"name"`
 	WorkDir          string                               `yaml:"work_dir,omitempty" json:"work_dir,omitempty"`
 	Env              interface{}                          `yaml:"env,omitempty" json:"env,omitempty"`
-	CreateFiles      FilesListT                           `yaml:"create_files,omitempty" json:"create_files,omitempty"`
-	InitConf         OperationConfig                      `yaml:"init,omitempty" json:"init,omitempty"`
-	ApplyConf        OperationConfig                      `yaml:"apply" json:"apply"`
-	PlanConf         OperationConfig                      `yaml:"plan,omitempty" json:"plan,omitempty"`
-	DestroyConf      OperationConfig                      `yaml:"destroy" json:"destroy,omitempty"`
-	GetOutputsConf   OutputsConfigSpec                    `yaml:"outputs,omitempty" json:"outputs_config,omitempty"`
+	CreateFiles      *FilesListT                          `yaml:"create_files,omitempty" json:"create_files,omitempty"`
+	InitConf         *OperationConfig                     `yaml:"init,omitempty" json:"init,omitempty"`
+	ApplyConf        *OperationConfig                     `yaml:"apply" json:"apply"`
+	PlanConf         *OperationConfig                     `yaml:"plan,omitempty" json:"plan,omitempty"`
+	DestroyConf      *OperationConfig                     `yaml:"destroy" json:"destroy,omitempty"`
+	GetOutputsConf   *OutputsConfigSpec                   `yaml:"outputs,omitempty" json:"outputs_config,omitempty"`
 	OutputParsers    map[string]OutputParser              `yaml:"-" json:"-"`
 	Applied          bool                                 `yaml:"-" json:"-"`
 	PreHook          *HookSpec                            `yaml:"-" json:"pre_hook,omitempty"`
 	PostHook         *HookSpec                            `yaml:"-" json:"post_hook,omitempty"`
-	Kind             string                               `yaml:"-" json:"type"`
+	UnitKind         string                               `yaml:"-" json:"type"`
+	BackendPtr       *project.Backend                     `yaml:"-" json:"-"`
+	BackendName      string                               `yaml:"-" json:"backend_name"`
 }
 
 // WasApplied return true if unit's method Apply was runned.
-func (m *Unit) WasApplied() bool {
-	return m.Applied
+func (u *Unit) WasApplied() bool {
+	return u.Applied
 }
 
 // Markers returns list of the unit's markers.
-func (m *Unit) Markers() map[string]interface{} {
-	return m.UnitMarkers
+func (u *Unit) Markers() map[string]interface{} {
+	return u.UnitMarkers
 }
 
 // ReadConfig reads unit spec (unmarshaled YAML) and init the unit.
@@ -97,17 +100,9 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if stack == nil {
 		return fmt.Errorf("read shell unit: empty stack or project")
 	}
-	u.OutputParsers = map[string]OutputParser{
-		"json":      u.JSONOutputParser,
-		"regexp":    u.RegexOutputParser,
-		"separator": u.SeparatorOutputParser,
-	}
-	// Process dependencies.
-	u.UnitMarkers = make(map[string]interface{})
 	u.StackPtr = stack
 	u.ProjectPtr = stack.ProjectPtr
 	u.SpecRaw = spec
-	u.Kind = u.KindKey()
 	var modDeps []*project.DependencyOutput
 	var err error
 	dependsOn, ok := spec["depends_on"]
@@ -133,6 +128,12 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			return fmt.Errorf("read unit: check working dir: '%v' is not a directory", u.WorkDir)
 		}
 	}
+	// Check and set backend.
+	bk, exists := stack.ProjectPtr.Backends[stack.BackendName]
+	if !exists {
+		return fmt.Errorf("Backend '%s' not found, stack: '%s'", stack.BackendName, stack.Name)
+	}
+	u.BackendPtr = &bk
 	// Process hooks.
 	modPreHook, ok := spec["pre_hook"]
 	if ok {
@@ -150,12 +151,6 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		}
 	}
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
-	_, ok = u.OutputParsers[u.GetOutputsConf.Type]
-	// if !ok {
-	// 	log.Debugf("Parsers: %+v", u.OutputParsers)
-	// 	return fmt.Errorf("read unit: outputs config: unknown parser type '%v'", u.GetOutputsConf.Type)
-
-	// }
 	err = utils.JSONCopy(u, u.StatePtr)
 	if err != nil {
 		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
@@ -164,103 +159,103 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 }
 
 // ExpectedOutputs returns expected outputs of the unit.
-func (m *Unit) ExpectedOutputs() map[string]*project.DependencyOutput {
-	if m.Outputs == nil {
-		m.Outputs = make(map[string]*project.DependencyOutput)
+func (u *Unit) ExpectedOutputs() map[string]*project.DependencyOutput {
+	if u.Outputs == nil {
+		u.Outputs = make(map[string]*project.DependencyOutput)
 	}
-	return m.Outputs
+	return u.Outputs
 }
 
 // Name return unit name.
-func (m *Unit) Name() string {
-	return m.MyName
+func (u *Unit) Name() string {
+	return u.MyName
 }
 
 // Stack return ptr to unit stack.
-func (m *Unit) Stack() *project.Stack {
-	return m.StackPtr
+func (u *Unit) Stack() *project.Stack {
+	return u.StackPtr
 }
 
 // ApplyOutput return output of unit applying.
-func (m *Unit) ApplyOutput() []byte {
-	return m.OutputRaw
+func (u *Unit) ApplyOutput() []byte {
+	return u.OutputRaw
 }
 
 // Project return ptr to unit project.
-func (m *Unit) Project() *project.Project {
-	return m.ProjectPtr
+func (u *Unit) Project() *project.Project {
+	return u.ProjectPtr
 }
 
 // StackName return unit stack name.
-func (m *Unit) StackName() string {
-	return m.StackPtr.Name
+func (u *Unit) StackName() string {
+	return u.StackPtr.Name
 }
 
 // Backend return unit backend.
-func (m *Unit) Backend() project.Backend {
-	return m.StackPtr.Backend
+func (u *Unit) Backend() project.Backend {
+	return u.StackPtr.Backend
 }
 
 // Dependencies return slice of unit dependencies.
-func (m *Unit) Dependencies() *[]*project.DependencyOutput {
-	return &m.DependenciesList
+func (u *Unit) Dependencies() *[]*project.DependencyOutput {
+	return &u.DependenciesList
 }
 
 // Init runs init procedure for unit.
-func (m *Unit) Init() error {
-	_, err := m.runCommands(m.InitConf, "init")
+func (u *Unit) Init() error {
+	_, err := u.runCommands(*u.InitConf, "init")
 	return err
 }
 
 // Apply runs unit apply procedure.
-func (m *Unit) Apply() error {
+func (u *Unit) Apply() error {
 
 	var err error
 
 	applyCommands := OperationConfig{}
-	if m.PreHook != nil && m.PreHook.OnApply {
+	if u.PreHook != nil && u.PreHook.OnApply {
 		applyCommands.Commands = append(applyCommands.Commands, "./pre_hook.sh")
 	}
-	applyCommands.Commands = append(applyCommands.Commands, m.ApplyConf.Commands...)
-	if m.PostHook != nil && m.PostHook.OnApply {
+	applyCommands.Commands = append(applyCommands.Commands, u.ApplyConf.Commands...)
+	if u.PostHook != nil && u.PostHook.OnApply {
 		applyCommands.Commands = append(applyCommands.Commands, "./post_hook.sh")
 	}
-	err = project.ScanMarkers(m.Env, project.OutputsScanner, m)
+	err = project.ScanMarkers(u.Env, project.OutputsScanner, u)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.ApplyConf.Commands, project.OutputsScanner, m)
+	err = project.ScanMarkers(u.ApplyConf.Commands, project.OutputsScanner, u)
 	if err != nil {
 		return err
 	}
-	m.OutputRaw, err = m.runCommands(applyCommands, "apply")
+	u.OutputRaw, err = u.runCommands(applyCommands, "apply")
 	if err != nil {
-		return fmt.Errorf("apply unit '%v': %w", m.Key(), err)
+		return fmt.Errorf("apply unit '%v': %w", u.Key(), err)
 	}
 	// Get outputs.
-	if m.GetOutputsConf.Command != "" {
+	if u.GetOutputsConf.Command != "" {
 		cmdConf := OperationConfig{
 			Commands: []interface{}{
-				m.GetOutputsConf.Command,
+				u.GetOutputsConf.Command,
 			},
 		}
-		m.OutputRaw, err = m.runCommands(cmdConf, "retriving outputs")
+		u.OutputRaw, err = u.runCommands(cmdConf, "retriving outputs")
 		if err != nil {
-			return fmt.Errorf("retriving unit '%v' outputs: %w", m.Key(), err)
+			return fmt.Errorf("retriving unit '%v' outputs: %w", u.Key(), err)
 		}
 	}
 
-	if len(m.Outputs) > 0 {
+	if len(u.Outputs) > 0 {
 		var pOutputs map[string]string
-		parser, exists := m.OutputParsers[m.GetOutputsConf.Type]
+		parser, exists := u.OutputParsers[u.GetOutputsConf.Type]
 		if !exists {
-			return fmt.Errorf("retriving unit '%v' outputs: parser %v doesn't exists", m.Key(), m.GetOutputsConf.Type)
+			return fmt.Errorf("retriving unit '%v' outputs: parser %v doesn't exists", u.Key(), u.GetOutputsConf.Type)
 		}
-		err = parser(string(m.OutputRaw), &pOutputs)
+		err = parser(string(u.OutputRaw), &pOutputs)
 		if err != nil {
-			return fmt.Errorf("parse outputs '%v': %w", m.GetOutputsConf.Type, err)
+			return fmt.Errorf("parse outputs '%v': %w", u.GetOutputsConf.Type, err)
 		}
-		for _, eo := range m.Outputs {
+		for _, eo := range u.Outputs {
 			op, exists := pOutputs[eo.Output]
 			if !exists {
 				return fmt.Errorf("parse outputs: unit has no output named '%v', expected by another unit", eo.Output)
@@ -270,33 +265,34 @@ func (m *Unit) Apply() error {
 	}
 
 	if err == nil {
-		m.Applied = true
+		u.Applied = true
 	}
 	return err
 }
 
-func (m *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, error) {
+func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, error) {
 
 	if len(commandsCnf.Commands) == 0 {
-		log.Debugf("configuration for '%v' is empty for unit '%v'. Skip.", name, m.Key())
+		log.Debugf("configuration for '%v' is empty for unit '%v'. Skip.", name, u.Key())
 		return nil, nil
 	}
-	err := m.ReplaceMarkers()
+	err := u.ReplaceMarkers()
 	if err != nil {
 		return nil, err
 	}
-	rn, err := executor.NewExecutor(m.CacheDir)
+	rn, err := executor.NewExecutor(u.CacheDir)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	for key, val := range m.Env.(map[string]interface{}) {
+
+	for key, val := range u.Env.(map[string]interface{}) {
 		rn.Env = append(rn.Env, fmt.Sprintf("%v=%v", key, val))
 	}
 
 	rn.LogLabels = []string{
-		m.StackName(),
-		m.Name(),
+		u.StackName(),
+		u.Name(),
 		name,
 	}
 	var errMsg []byte
@@ -318,86 +314,116 @@ func (m *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, er
 }
 
 // Plan unit.
-func (m *Unit) Plan() error {
+func (u *Unit) Plan() error {
 	planCommands := OperationConfig{}
-	if m.PreHook != nil && m.PreHook.OnPlan {
+	if u.PreHook != nil && u.PreHook.OnPlan {
 		planCommands.Commands = append(planCommands.Commands, "./pre_hook.sh")
 	}
-	planCommands.Commands = append(planCommands.Commands, m.PlanConf.Commands...)
-	if m.PostHook != nil && m.PostHook.OnPlan {
+	planCommands.Commands = append(planCommands.Commands, u.PlanConf.Commands...)
+	if u.PostHook != nil && u.PostHook.OnPlan {
 		planCommands.Commands = append(planCommands.Commands, "./post_hook.sh")
 	}
-	_, err := m.runCommands(planCommands, "plan")
+	_, err := u.runCommands(planCommands, "plan")
 	return err
 }
 
 // Destroy unit.
-func (m *Unit) Destroy() error {
+func (u *Unit) Destroy() error {
 	destroyCommands := OperationConfig{}
-	if m.PreHook != nil && m.PreHook.OnDestroy {
+	if u.PreHook != nil && u.PreHook.OnDestroy {
 		destroyCommands.Commands = append(destroyCommands.Commands, "./pre_hook.sh")
 	}
-	destroyCommands.Commands = append(destroyCommands.Commands, m.DestroyConf.Commands...)
-	if m.PostHook != nil && m.PostHook.OnDestroy {
+	destroyCommands.Commands = append(destroyCommands.Commands, u.DestroyConf.Commands...)
+	if u.PostHook != nil && u.PostHook.OnDestroy {
 		destroyCommands.Commands = append(destroyCommands.Commands, "./post_hook.sh")
 	}
-	_, err := m.runCommands(destroyCommands, "destroy")
+	_, err := u.runCommands(destroyCommands, "destroy")
 	return err
 }
 
 // Key return uniq unit index (stackName.unitName).
-func (m *Unit) Key() string {
-	return fmt.Sprintf("%v.%v", m.StackName(), m.MyName)
+func (u *Unit) Key() string {
+	return fmt.Sprintf("%v.%v", u.StackName(), u.MyName)
 }
 
 // CodeDir return path to unit code directory.
-func (m *Unit) CodeDir() string {
-	return m.WorkDir
+func (u *Unit) CodeDir() string {
+	return u.WorkDir
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds unit outputs.
 // TODO: get unit outputs and write to project runtime dataset. Now this function is only for printer's unit interface.
-func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
+func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Unit) ReplaceMarkers() error {
+func (u *Unit) ReplaceMarkers() error {
 	// log.Warnf("Replacing markers...")
-	err := project.ScanMarkers(m.Env, project.OutputsScanner, m)
-	if err != nil {
-		return err
+	if u.Env != nil {
+		err := project.ScanMarkers(u.Env, project.OutputsScanner, u)
+		if err != nil {
+			return err
+		}
 	}
-	err = project.ScanMarkers(m.ApplyConf.Commands, project.OutputsScanner, m)
-	if err != nil {
-		return err
+
+	if u.ApplyConf != nil {
+		err := project.ScanMarkers(u.ApplyConf.Commands, project.OutputsScanner, u)
+		if err != nil {
+			return err
+		}
 	}
-	err = project.ScanMarkers(m.PlanConf.Commands, project.OutputsScanner, m)
-	if err != nil {
-		return err
+
+	if u.PlanConf != nil {
+		err := project.ScanMarkers(u.PlanConf.Commands, project.OutputsScanner, u)
+		if err != nil {
+			return err
+		}
 	}
-	err = project.ScanMarkers(m.DestroyConf.Commands, project.OutputsScanner, m)
-	if err != nil {
-		return err
+
+	if u.DestroyConf != nil {
+		err := project.ScanMarkers(u.DestroyConf.Commands, project.OutputsScanner, u)
+		if err != nil {
+			return err
+		}
+	}
+
+	if u.InitConf != nil {
+		err := project.ScanMarkers(u.InitConf.Commands, project.OutputsScanner, u)
+		if err != nil {
+			return err
+		}
+	}
+	if u.PreHook != nil {
+		err := project.ScanMarkers(&u.PreHook.Command, project.OutputsScanner, u)
+		if err != nil {
+			return err
+		}
+	}
+	if u.PostHook != nil {
+		err := project.ScanMarkers(&u.PostHook.Command, project.OutputsScanner, u)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 // KindKey returns unit kind.
-func (m *Unit) KindKey() string {
+func (u *Unit) KindKey() string {
 	return "shell"
 }
 
 // RequiredUnits list of dependencies in map representation.
-func (m *Unit) RequiredUnits() map[string]project.Unit {
+func (u *Unit) RequiredUnits() map[string]project.Unit {
 	res := make(map[string]project.Unit)
-	for _, dep := range m.DependenciesList {
-		res[dep.Unit.Key()] = m.Project().Units[dep.Unit.Key()]
+	for _, dep := range u.DependenciesList {
+		res[dep.Unit.Key()] = u.Project().Units[dep.Unit.Key()]
 	}
 	return res
 }
 
-func (m *Unit) readDeps(depsData interface{}) ([]*project.DependencyOutput, error) {
+func (u *Unit) readDeps(depsData interface{}) ([]*project.DependencyOutput, error) {
 	rawDepsList := []string{}
 	switch depsData.(type) {
 	case string:
@@ -413,13 +439,13 @@ func (m *Unit) readDeps(depsData interface{}) ([]*project.DependencyOutput, erro
 		}
 		infNm := splDep[0]
 		if infNm == "this" {
-			infNm = m.StackName()
+			infNm = u.StackName()
 		}
 		res = append(res, &project.DependencyOutput{
 			StackName: infNm,
 			UnitName:  splDep[1],
 		})
-		log.Debugf("Dependency added: %v --> %v.%v", m.Key(), infNm, splDep[1])
+		log.Debugf("Dependency added: %v --> %v.%v", u.Key(), infNm, splDep[1])
 	}
 	return res, nil
 }

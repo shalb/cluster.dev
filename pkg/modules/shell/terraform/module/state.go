@@ -9,93 +9,59 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-type State struct {
-	base.StateSpec
-	Source      string            `json:"source"`
-	Version     string            `json:"version,omitempty"`
-	ModType     string            `json:"type"`
-	Inputs      interface{}       `json:"inputs,omitempty"`
-	LocalModule map[string]string `json:"local_module"`
+type UnitDiffSpec struct {
+	base.UnitDiffSpec
+	Source    string            `json:"source"`
+	Version   string            `json:"version,omitempty"`
+	Inputs    interface{}       `json:"inputs,omitempty"`
+	LocalUnit map[string]string `json:"local_module"`
 }
 
-type StateDiff struct {
-	base.StateSpecDiff
-	Source      string            `json:"source"`
-	Version     string            `json:"version,omitempty"`
-	Inputs      interface{}       `json:"inputs,omitempty"`
-	LocalModule map[string]string `json:"local_module"`
+func (m *UnitTfModule) GetState() interface{} {
+	m.StatePtr.Unit = m.Unit.GetState().(base.Unit)
+	return *m.StatePtr
 }
 
-func (m *Unit) GetState() interface{} {
-	st := m.GetState()
-	stTf := State{
-		StateSpec: st.(base.StateSpec),
-		Inputs:    m.inputs,
-		ModType:   m.KindKey(),
-		Source:    m.source,
-		Version:   m.version,
+func (m *UnitTfModule) GetUnitDiff() UnitDiffSpec {
+	diff := m.Unit.GetUnitDiff()
+	st := UnitDiffSpec{
+		UnitDiffSpec: diff,
+		Source:       m.Source,
+		Version:      m.Version,
+		Inputs:       m.Inputs,
 	}
-	if m.localUnit != nil {
-		stTf.LocalModule = make(map[string]string)
-		for dir, file := range m.localUnit {
-			stTf.LocalModule[dir] = base64.StdEncoding.EncodeToString(file)
+	if m.LocalUnit != nil && utils.IsLocalPath(m.Source) {
+		st.LocalUnit = make(map[string]string)
+		for dir, file := range m.LocalUnit {
+			st.LocalUnit[dir] = base64.StdEncoding.EncodeToString([]byte(file))
 		}
 	}
-	return stTf
+	return st
 }
 
-func (m *Unit) GetDiffData() interface{} {
-	st := m.GetStateDiff()
-	stTf := StateDiff{
-		StateSpecDiff: st,
-		Inputs:        m.inputs,
-		Source:        m.source,
-		Version:       m.version,
-	}
-	if m.localUnit != nil && utils.IsLocalPath(m.source) {
-		stTf.LocalModule = make(map[string]string)
-		for dir, file := range m.localUnit {
-			stTf.LocalModule[dir] = base64.StdEncoding.EncodeToString(file)
-		}
-	}
-	diffData := map[string]interface{}{}
+func (m *UnitTfModule) GetDiffData() interface{} {
+	st := m.GetUnitDiff()
 	res := map[string]interface{}{}
-	utils.JSONCopy(stTf, &diffData)
-	m.ReplaceRemoteStatesForDiff(diffData, &res)
+	utils.JSONCopy(st, &res)
+	project.ScanMarkers(res, base.StateRemStScanner, m)
 	return res
 }
 
-func (s *State) GetType() string {
-	return s.ModType
-}
-
-func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
-	s := State{}
-	err := utils.JSONCopy(stateData, &s)
+func (m *UnitTfModule) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
+	err := m.Unit.LoadState(stateData, modKey, p)
+	if err != nil {
+		return err
+	}
+	err = utils.JSONCopy(stateData, m)
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
-	inputs, ok := s.Inputs.(map[string]interface{})
-	if !ok {
-		m.inputs = nil
-	} else {
-		m.inputs = inputs
+	m.StatePtr = &UnitTfModule{
+		Unit: m.Unit,
 	}
-	m.source = s.Source
-	m.version = s.Version
-	err = m.Unit.LoadState(s.StateSpec, modKey, p)
-	if err != nil {
-		return fmt.Errorf("load state: %v", err.Error())
+	err = utils.JSONCopy(m, m.StatePtr)
+	for dir, file := range m.LocalUnit {
+		m.StatePtr.LocalUnit[dir] = base64.StdEncoding.EncodeToString([]byte(file))
 	}
-	if utils.IsLocalPath(m.source) {
-		m.localUnit = make(map[string][]byte)
-		for dir, file := range s.LocalModule {
-			decodedFile, err := base64.StdEncoding.DecodeString(file)
-			if err != nil {
-				return fmt.Errorf("load state: %v", err.Error())
-			}
-			m.localUnit[dir] = decodedFile
-		}
-	}
-	return nil
+	return err
 }

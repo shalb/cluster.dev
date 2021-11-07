@@ -209,13 +209,13 @@ func OutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 		subVal = reflect.ValueOf(data.Interface())
 	}
 	resString := subVal.String()
-	markersList, err := getMarkers(unit.Project().Markers, OutputMarkerCatName)
+	markersList, err := GetMarkers(unit.Project().Markers, OutputMarkerCatName)
 	if err != nil {
 		return reflect.ValueOf(nil), fmt.Errorf("process outputs: %w", err)
 	}
 	// Add outputs markers from state to project outputs markers (if not exists).
 	if unit.Project().ownState != nil {
-		stateMarkersList, err := getMarkers(unit.Project().ownState.Markers, OutputMarkerCatName)
+		stateMarkersList, err := GetMarkers(unit.Project().ownState.Markers, OutputMarkerCatName)
 		if err != nil {
 			return reflect.ValueOf(nil), fmt.Errorf("process state outputs: %w", err)
 		}
