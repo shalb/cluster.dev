@@ -68,7 +68,7 @@ units:
 
     * `type` - *string*, *required*. A type of format to deliver the output. Could have 3 options: JSON, regexp, separator. According to the type specified, further options will differ.
 
-    * `JSON` - if the `type` is defined as JSON, outputs will be delivered in JSON format. This type of output makes all other options not required.
+    * `JSON` - if the `type` is defined as JSON, outputs will be parsed as key-value JSON. This type of output makes all other options not required.
 
     * `regexp` - if the `type` is defined as regexp, this introduces an additional required option `regexp`. Regexp is a regular expression which defines how to parse each line in the module output. Example:
 
