@@ -37,7 +37,7 @@ exports:
  
  Global variables could be used in all configurations of stacks and backends within a given project. To refer to a global variable, use the {{ .project.variables.KEY_NAME }} syntax, where KEY_NAME stands for the variable name defined in `project.yaml` and will be replaced by its value. Example of global variables in `infra.yaml`:
 
- ```yaml
+```yaml
 name: eks-demo
 template: https://github.com/shalb/cdev-aws-eks?ref=v0.2.0
 kind: Stack
