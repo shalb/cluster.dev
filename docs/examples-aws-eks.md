@@ -90,25 +90,7 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
     ```bash
       cdev project create https://github.com/shalb/cdev-aws-eks
     ```
-
-    !!! tip
-        The stack template's repo could contain several options for project generation. To list available generators, use ```--list-templates``` option:
-
-          ```bash
-          cdev project create https://github.com/shalb/cdev-aws-eks --list-templates
-          ```
-
-        Then you can specify which generator to use, for example:
-
-          ```bash
-          cdev project create https://github.com/shalb/cdev-aws-eks minimal
-          ```
-    !!! tip
-        If you leave it unspecified, Cluster.dev will generate a default project for you. You can also opt for an interactive mode with the extended menu:
-
-          ```bash
-          cdev project create https://github.com/shalb/cdev-aws-eks --interactive
-          ```
+    This will create a new empty project.  
 
 3. Edit variables in the example's files, if necessary:
 

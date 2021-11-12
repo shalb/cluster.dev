@@ -61,25 +61,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
     ```bash
       cdev project create https://github.com/shalb/cdev-do-k8s
     ```
-
-    !!! tip
-        The stack template's repo could contain several options for project generation. To list available generators, use ```--list-templates``` option:
-
-          ```bash
-          cdev project create https://github.com/shalb/cdev-do-k8s --list-templates
-          ```
-
-        Then you can specify which generator to use, for example:
-
-          ```bash
-          cdev project create https://github.com/shalb/cdev-do-k8s minimal
-          ```
-    !!! tip
-        If you leave it unspecified, Cluster.dev will generate a default project for you. You can also opt for an  interactive mode with the extended menu:
-
-          ```bash
-          cdev project create https://github.com/shalb/cdev-do-k8s --interactive
-          ```
+    This will create a new empty project.  
 
 3. Edit variables in the example's files, if necessary:
 

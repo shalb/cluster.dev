@@ -1,18 +1,8 @@
 # Overview
 
-Generators are part of the stack templates' functionality. They enable users to create parts of infrastructure just by filling stack variables in script dialogues, with no infrastructure coding required.
+Generators are part of the Cluster.dev functionality. They enable users to create parts of infrastructure just by filling stack variables in script dialogues, with no infrastructure coding required. This simplifies the creation of new stacks for developers who may lack the Ops skills, and could be useful for quick infrastructure deployment from ready parts (units).
 
-This simplifies the creation of new stacks for developers who may lack the Ops skills, or could be useful for quick infrastructure deployment from ready parts (units).
-
-Generators are stored within .cdev-metadata/generator directory of each template. The config.yaml in root is common to all generators:
-
-```yaml
-  header: Create project
-  question: Choose generator source
-  default: minimal
-```
-
-By default the generator is defined as minimal.
+Generators create project from a preset profile - a set of data predefined as a project, with variables for stack template. Each template may have a profile for generator, which is stored in the .cdev-metadata/generator directory.
 
 ## How it works
 

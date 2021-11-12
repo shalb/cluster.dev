@@ -1,4 +1,4 @@
-# Create Own Project
+# Create New Project
 
 ## Quick start
 
