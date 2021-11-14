@@ -51,5 +51,7 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 		log.Debug(err.Error())
 		return nil, err
 	}
+	// modjs, _ := utils.JSONEncodeString(mod)
+	// log.Warnf("Mod from state: %v", modjs)
 	return &mod, nil
 }

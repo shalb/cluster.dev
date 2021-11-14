@@ -42,7 +42,7 @@ func (p *Project) readStacks() error {
 			log.Debug(err.Error())
 			return err
 		}
-		log.Warnf("'Infrastructure' key is deprecated and will be remover in future releases. Use 'Stack' instead")
+		log.Warnf("'Infrastructure' key is deprecated and will be removed in future releases. Use 'Stack' instead")
 	}
 	for _, stack := range stacks {
 		err := p.readStackObj(stack)
@@ -59,7 +59,7 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 		return fmt.Errorf("stack object must contain field 'name'")
 	}
 	// Check if stack with this name is already exists in project.
-	if _, ok = p.Stack[name]; ok {
+	if _, ok = p.Stacks[name]; ok {
 		return fmt.Errorf("duplicate stack name '%s'", name)
 	}
 
@@ -106,7 +106,7 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 		return fmt.Errorf("backend '%s' not found, stack: '%s'", stack.BackendName, stack.Name)
 	}
 	stack.Backend = bPtr
-	p.Stack[name] = &stack
+	p.Stacks[name] = &stack
 	log.Debugf("Stack added: %v", name)
 	return nil
 }

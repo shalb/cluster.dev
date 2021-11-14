@@ -37,7 +37,7 @@ func (m *Unit) GetDiffData() interface{} {
 	st := m.GetUnitDiff()
 	res := map[string]interface{}{}
 	utils.JSONCopy(st, &res)
-	project.ScanMarkers(res, base.StateRemStScanner, m)
+	project.ScanMarkers(res, base.StringRemStScanner, m)
 	return res
 }
 

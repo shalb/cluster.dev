@@ -10,7 +10,7 @@ import (
 type Factory struct {
 }
 
-const unitKind string = "terraform"
+const unitKind string = "tfmodule"
 
 func NewEmptyUnit() UnitTfModule {
 	unit := UnitTfModule{

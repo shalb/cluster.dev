@@ -68,3 +68,13 @@ func JSONDecode(in []byte, out interface{}) error {
 	decoder := json.NewDecoder(buffer)
 	return decoder.Decode(&out)
 }
+
+func MergeMaps(mOne, mTwo map[string]interface{}) (res map[string]interface{}) {
+	for k, v := range mOne {
+		res[k] = v
+	}
+	for k, v := range mTwo {
+		res[k] = v
+	}
+	return
+}

@@ -1,9 +1,9 @@
 package tfmodule
 
 import (
-	"encoding/base64"
 	"fmt"
 
+	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -11,57 +11,52 @@ import (
 
 type UnitDiffSpec struct {
 	base.UnitDiffSpec
-	Source    string            `json:"source"`
-	Version   string            `json:"version,omitempty"`
-	Inputs    interface{}       `json:"inputs,omitempty"`
-	LocalUnit map[string]string `json:"local_module"`
+	Source      string             `json:"source"`
+	Version     string             `json:"version,omitempty"`
+	Inputs      interface{}        `json:"inputs,omitempty"`
+	LocalModule *common.FilesListT `json:"local_module,omitempty"`
 }
 
-func (m *UnitTfModule) GetState() interface{} {
-	m.StatePtr.Unit = m.Unit.GetState().(base.Unit)
-	return *m.StatePtr
+func (u *UnitTfModule) GetState() interface{} {
+	u.StatePtr.Unit = u.Unit.GetState().(base.Unit)
+	return *u.StatePtr
 }
 
-func (m *UnitTfModule) GetUnitDiff() UnitDiffSpec {
-	diff := m.Unit.GetUnitDiff()
+func (u *UnitTfModule) GetUnitDiff() UnitDiffSpec {
+	diff := u.Unit.GetUnitDiff()
 	st := UnitDiffSpec{
 		UnitDiffSpec: diff,
-		Source:       m.Source,
-		Version:      m.Version,
-		Inputs:       m.Inputs,
+		Source:       u.Source,
+		Version:      u.Version,
+		Inputs:       u.Inputs,
+		LocalModule:  u.LocalModule,
 	}
-	if m.LocalUnit != nil && utils.IsLocalPath(m.Source) {
-		st.LocalUnit = make(map[string]string)
-		for dir, file := range m.LocalUnit {
-			st.LocalUnit[dir] = base64.StdEncoding.EncodeToString([]byte(file))
-		}
-	}
+	//stt := m.GetState()
+	//sttjson, _ := utils.JSONEncodeString(stt)
+	// log.Warnf("Module State: %v", sttjson)
 	return st
 }
 
-func (m *UnitTfModule) GetDiffData() interface{} {
-	st := m.GetUnitDiff()
+func (u *UnitTfModule) GetDiffData() interface{} {
+	st := u.GetUnitDiff()
 	res := map[string]interface{}{}
 	utils.JSONCopy(st, &res)
-	project.ScanMarkers(res, base.StateRemStScanner, m)
+	project.ScanMarkers(res, base.StringRemStScanner, u)
 	return res
 }
 
-func (m *UnitTfModule) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
-	err := m.Unit.LoadState(stateData, modKey, p)
+func (u *UnitTfModule) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
+	err := u.Unit.LoadState(stateData, modKey, p)
 	if err != nil {
 		return err
 	}
-	err = utils.JSONCopy(stateData, m)
+	err = utils.JSONCopy(stateData, u)
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
-	m.StatePtr = &UnitTfModule{
-		Unit: m.Unit,
+	u.StatePtr = &UnitTfModule{
+		Unit: u.Unit,
 	}
-	err = utils.JSONCopy(m, m.StatePtr)
-	for dir, file := range m.LocalUnit {
-		m.StatePtr.LocalUnit[dir] = base64.StdEncoding.EncodeToString([]byte(file))
-	}
+	err = utils.JSONCopy(u, u.StatePtr)
 	return err
 }

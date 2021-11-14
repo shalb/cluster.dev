@@ -13,9 +13,9 @@ import (
 // UnitDiffSpec describe the pieces of StateSpec data, that will be comered in "plan" diff and should affect the unit redeployment.
 type UnitDiffSpec struct {
 	Outputs       map[string]string      `json:"outputs,omitempty"`
-	CreateFiles   FilesListT             `json:"create_files,omitempty"`
-	ApplyConf     *OperationConfig       `json:"apply"`
-	Env           map[string]interface{} `json:"env"`
+	CreateFiles   *FilesListT            `json:"create_files,omitempty"`
+	ApplyConf     *OperationConfig       `json:"apply,omitempty"`
+	Env           map[string]interface{} `json:"env,omitempty"`
 	OutputsConfig *OutputsConfigSpec     `json:"outputs_config,omitempty"`
 	PreHook       *HookSpec              `json:"pre_hook,omitempty"`
 	PostHook      *HookSpec              `json:"post_hook,omitempty"`
@@ -29,7 +29,7 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 	st := UnitDiffSpec{
 		Outputs:       make(map[string]string),
 		ApplyConf:     u.ApplyConf,
-		CreateFiles:   *u.CreateFiles,
+		CreateFiles:   u.CreateFiles,
 		Env:           make(map[string]interface{}),
 		OutputsConfig: u.GetOutputsConf,
 	}
@@ -79,8 +79,9 @@ func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 		return fmt.Errorf("loading unit state: can't parse state: %v", err.Error())
 	}
 
-	stack, exists := p.LoaderProjectPtr.Stack[stackName]
+	stack, exists := p.LoaderProjectPtr.Stacks[stackName]
 	if !exists {
+		log.Fatalf("asdasdasd")
 		stack = &project.Stack{
 			ProjectPtr: &p.Project,
 			Name:       stackName,
@@ -95,7 +96,7 @@ func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	u.StackPtr = stack
 	u.ProjectPtr = &p.Project
 	u.SpecRaw = make(map[string]interface{})
-	u.UnitMarkers = make(map[string]interface{})
+	//u.UnitMarkers = make(map[string]interface{})
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
 	u.BackendPtr = &backend
 	// m.Outputs = make(map[string]*project.DependencyOutput)

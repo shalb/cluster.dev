@@ -47,7 +47,7 @@ type RuntimeData struct {
 type Project struct {
 	name             string
 	Units            map[string]Unit
-	Stack            map[string]*Stack
+	Stacks           map[string]*Stack
 	TmplFunctionsMap template.FuncMap
 	Backends         map[string]Backend
 	Markers          map[string]interface{}
@@ -61,13 +61,13 @@ type Project struct {
 	InitLock         sync.Mutex
 	RuntimeDataset   RuntimeData
 	StateBackendName string
-	ownState         *StateProject
+	OwnState         *StateProject
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
 func NewEmptyProject() *Project {
 	project := &Project{
-		Stack:            make(map[string]*Stack),
+		Stacks:           make(map[string]*Stack),
 		Units:            make(map[string]Unit),
 		Backends:         make(map[string]Backend),
 		Markers:          make(map[string]interface{}),
@@ -168,9 +168,11 @@ func LoadProjectFull() (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = project.LoadState()
-	if err != nil {
-		return nil, fmt.Errorf("loading project: %w", err)
+	if !config.Global.NotLoadState {
+		_, err = project.LoadState()
+		if err != nil {
+			return nil, fmt.Errorf("loading project: %w", err)
+		}
 	}
 	// m, _ := utils.JSONEncodeString(project.ownState.Markers)
 	// log.Warnf("state markers: %v", m)
@@ -240,7 +242,7 @@ func (p *Project) checkGraph() error {
 
 func (p *Project) readUnits() error {
 	// Read units from all stacks.
-	for stackName, stack := range p.Stack {
+	for stackName, stack := range p.Stacks {
 		for _, stackTmpl := range stack.Templates {
 			for _, unitData := range stackTmpl.Units {
 				mod, err := NewUnit(unitData, stack)
@@ -358,7 +360,7 @@ func (p *Project) PrintInfo() error {
 	table.SetHeader([]string{"Name", "Stacks count", "units count", "Backends count", "Secrets count"})
 	table.Append([]string{
 		p.name,
-		fmt.Sprintf("%v", len(p.Stack)),
+		fmt.Sprintf("%v", len(p.Stacks)),
 		fmt.Sprintf("%v", len(p.Units)),
 		fmt.Sprintf("%v", len(p.Backends)),
 		fmt.Sprintf("%v", len(p.secrets)),
@@ -368,7 +370,7 @@ func (p *Project) PrintInfo() error {
 	fmt.Println("Stacks:")
 	table = tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "units count", "Backend name", "Backend type"})
-	for name, stack := range p.Stack {
+	for name, stack := range p.Stacks {
 		mCount := 0
 		for _, unit := range p.Units {
 			if unit.Stack().Name == stack.Name {

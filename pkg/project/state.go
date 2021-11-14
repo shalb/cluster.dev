@@ -7,6 +7,8 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/colors"
@@ -35,8 +37,9 @@ func (p *Project) SaveState() error {
 	p.StateMutex.Lock()
 	defer p.StateMutex.Unlock()
 	st := stateData{
-		Markers: p.Markers,
-		Units:   map[string]interface{}{},
+		CdevVersion: config.Global.Version,
+		Markers:     p.Markers,
+		Units:       map[string]interface{}{},
 	}
 	for key, mod := range p.Units {
 		st.Units[key] = mod.GetState()
@@ -60,9 +63,9 @@ func (p *Project) SaveState() error {
 }
 
 type stateData struct {
-	Markers map[string]interface{} `json:"markers"`
-	// Modules map[string]interface{} `json:"modules"`
-	Units map[string]interface{} `json:"units"`
+	CdevVersion string                 `json:version`
+	Markers     map[string]interface{} `json:"markers"`
+	Units       map[string]interface{} `json:"units"`
 }
 
 func (p *Project) LockState() error {
@@ -92,38 +95,71 @@ func (p *Project) UnLockState() error {
 	return os.Remove(config.Global.StateLocalLockFile)
 }
 
+func (p *Project) GetState() ([]byte, error) {
+	var stateStr string
+	var err error
+	var loadedStateFile []byte
+	if p.StateBackendName != "" {
+		sBk, ok := p.Backends[p.StateBackendName]
+		if !ok {
+			return nil, fmt.Errorf("get remote state data: state backend '%v' does not found", p.StateBackendName)
+		}
+		stateStr, err = sBk.ReadState()
+		if err != nil {
+			return nil, fmt.Errorf("get remote state data: %w", err)
+		}
+		loadedStateFile = []byte(stateStr)
+	} else {
+		loadedStateFile, err = ioutil.ReadFile(config.Global.StateLocalFileName)
+		if err != nil {
+			return nil, fmt.Errorf("get local state data: read file: %w", err)
+		}
+	}
+	return loadedStateFile, nil
+}
+
+func (p *Project) PullState() error {
+	loadedStateFile, err := p.GetState()
+	if err != nil {
+		return fmt.Errorf("backup state: %w", err)
+	}
+	bkFileName := filepath.Join(config.Global.WorkingDir, "cdev.state")
+	log.Infof("Pulling state file: %v", bkFileName)
+	return ioutil.WriteFile(bkFileName, loadedStateFile, 0660)
+}
+
+func (p *Project) BackupState() error {
+	loadedStateFile, err := p.GetState()
+	if err != nil {
+		return fmt.Errorf("backup state: %w", err)
+	}
+	const layout = "20060102150405"
+	bkFileName := filepath.Join(config.Global.WorkingDir, fmt.Sprintf("cdev.state.backup.%v", time.Now().Format(layout)))
+	log.Infof("Backuping state file: %v", bkFileName)
+	return ioutil.WriteFile(bkFileName, loadedStateFile, 0660)
+}
+
 func (p *Project) LoadState() (*StateProject, error) {
 	if _, err := os.Stat(config.Global.StateCacheDir); os.IsNotExist(err) {
 		err := os.Mkdir(config.Global.StateCacheDir, 0755)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("load state: create state cache dir: %w", err)
 		}
 	}
 	err := removeDirContent(config.Global.StateCacheDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load state: remove state cache dir: %w", err)
 	}
 
 	stateD := stateData{
 		Markers: make(map[string]interface{}),
 	}
-	var stateStr string
-	var loadedStateFile []byte
-	if p.StateBackendName != "" {
-		sBk, ok := p.Backends[p.StateBackendName]
-		if !ok {
-			return nil, fmt.Errorf("load state: state backend '%v' does not found", p.StateBackendName)
-		}
-		stateStr, err = sBk.ReadState()
-		loadedStateFile = []byte(stateStr)
-	} else {
-		loadedStateFile, err = ioutil.ReadFile(config.Global.StateLocalFileName)
-	}
 
+	loadedStateFile, err := p.GetState()
 	if err == nil {
 		err = utils.JSONDecode(loadedStateFile, &stateD)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("load state: %w", err)
 		}
 	}
 
@@ -136,7 +172,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			objects:          p.objects,
 			Units:            make(map[string]Unit),
 			Markers:          stateD.Markers,
-			Stack:            make(map[string]*Stack),
+			Stacks:           make(map[string]*Stack),
 			Backends:         p.Backends,
 			CodeCacheDir:     config.Global.StateCacheDir,
 			StateBackendName: p.StateBackendName,
@@ -158,17 +194,9 @@ func (p *Project) LoadState() (*StateProject, error) {
 		if mState == nil {
 			continue
 		}
-		key, exists := mState.(map[string]interface{})["type"]
-		if !exists {
-			return nil, fmt.Errorf("loading state: internal error: bad unit type in state")
-		}
-		f, exists := UnitFactoriesMap[key.(string)]
-		if !exists {
-			return nil, fmt.Errorf("loading state: internal error: bad unit type in state")
-		}
-		unit, err := f.NewFromState(mState.(map[string]interface{}), mName, &statePrj)
+		unit, err := NewUnitFromState(mState.(map[string]interface{}), mName, &statePrj)
 		if err != nil {
-			return nil, fmt.Errorf("loading state: error loading unit from state: %v", err.Error())
+			return nil, fmt.Errorf("loading unit from state: %v", err.Error())
 		}
 		statePrj.Units[mName] = unit
 		unit.UpdateProjectRuntimeData(&statePrj.Project)
@@ -177,7 +205,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.ownState = &statePrj
+	p.OwnState = &statePrj
 	return &statePrj, nil
 }
 

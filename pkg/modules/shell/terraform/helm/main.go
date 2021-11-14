@@ -71,13 +71,16 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 		helmBody.SetAttributeValue("values", cty.ListVal(ctyValuesList))
 		//hcltools.ReplaceStingMarkerInBody(helmBody, marker, "file(\"./values.yaml\")")
 	}
-	for hash, m := range m.Markers() {
-		marker, ok := m.(*project.DependencyOutput)
-		// log.Warnf("kubernetes marker HELM: %v", marker)
-		refStr := base.DependencyToRemoteStateRef(marker)
-		if !ok {
-			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+	markersList := map[string]*project.DependencyOutput{}
+	err := m.Project().GetMarkers(base.RemoteStateMarkerCatName, &markersList)
+	if err != nil {
+		return nil, err
+	}
+	for hash, marker := range markersList {
+		if marker.StackName == "this" {
+			marker.StackName = m.Stack().Name
 		}
+		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(helmBody, hash, refStr)
 	}
 	return f.Bytes(), nil
@@ -187,6 +190,23 @@ func (m *Unit) ReplaceMarkers() error {
 		return err
 	}
 	err = project.ScanMarkers(m.ValuesYAML, m.RemoteStatesScanner, m)
+	if err != nil {
+		return err
+	}
+
+	err = project.ScanMarkers(m.ValuesFilesList, project.OutputsScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.HelmOpts, project.OutputsScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.Sets, project.OutputsScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.ValuesYAML, project.OutputsScanner, m)
 	if err != nil {
 		return err
 	}

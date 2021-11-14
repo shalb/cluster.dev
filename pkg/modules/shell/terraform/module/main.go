@@ -1,7 +1,6 @@
 package tfmodule
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io/fs"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
+	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -19,49 +19,48 @@ import (
 
 type UnitTfModule struct {
 	base.Unit
-	Source    string                 `yaml:"-" json:"source"`
-	Version   string                 `yaml:"-" json:"version,omitempty"`
-	Inputs    map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
-	LocalUnit map[string]string      `yaml:"-" json:"local_module"`
-	StatePtr  *UnitTfModule          `yaml:"-" json:"-"`
-	UnitKind  string                 `yaml:"-" json:"type"`
+	Source      string                 `yaml:"-" json:"source"`
+	Version     string                 `yaml:"-" json:"version,omitempty"`
+	Inputs      map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
+	LocalModule *common.FilesListT     `yaml:"-" json:"local_module"`
+	StatePtr    *UnitTfModule          `yaml:"-" json:"-"`
+	UnitKind    string                 `yaml:"-" json:"type"`
 }
 
-func (m *UnitTfModule) KindKey() string {
+func (u *UnitTfModule) KindKey() string {
 	return unitKind
 }
 
-func (m *UnitTfModule) genMainCodeBlock() ([]byte, error) {
+func (u *UnitTfModule) genMainCodeBlock() ([]byte, error) {
 
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 
-	unitBlock := rootBody.AppendNewBlock("module", []string{m.Name()})
+	unitBlock := rootBody.AppendNewBlock("module", []string{u.Name()})
 	unitBody := unitBlock.Body()
-	unitBody.SetAttributeValue("source", cty.StringVal(m.Source))
-	if m.Version != "" {
-		unitBody.SetAttributeValue("version", cty.StringVal(m.Version))
+	unitBody.SetAttributeValue("source", cty.StringVal(u.Source))
+	if u.Version != "" {
+		unitBody.SetAttributeValue("version", cty.StringVal(u.Version))
 	}
 
-	for key, val := range m.Inputs {
+	for key, val := range u.Inputs {
 		ctyVal, err := hcltools.InterfaceToCty(val)
 		if err != nil {
 			return nil, err
 		}
 		unitBody.SetAttributeValue(key, ctyVal)
 	}
-	if utils.IsLocalPath(m.Source) {
-		log.Debugf("Writing local tf unit files to %v unit dir", m.Key())
-		err := utils.WriteFilesFromList(m.CodeDir(), m.LocalUnit)
-		if err != nil {
-			return nil, fmt.Errorf("%v, reading local unit: %v", m.Key(), err.Error())
-		}
-		unitBody.SetAttributeValue("source", cty.StringVal(m.Source))
+	if utils.IsLocalPath(u.Source) {
+		unitBody.SetAttributeValue("source", cty.StringVal(u.Source))
 	}
-	for hash, m := range m.Markers() {
-		marker, ok := m.(*project.DependencyOutput)
-		if !ok {
-			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+	markersList := map[string]*project.DependencyOutput{}
+	err := u.Project().GetMarkers(base.RemoteStateMarkerCatName, &markersList)
+	if err != nil {
+		return nil, err
+	}
+	for hash, marker := range markersList {
+		if marker.StackName == "this" {
+			marker.StackName = u.Stack().Name
 		}
 		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(unitBody, hash, refStr)
@@ -70,76 +69,76 @@ func (m *UnitTfModule) genMainCodeBlock() ([]byte, error) {
 }
 
 // genOutputsBlock generate output code block for this unit.
-func (m *UnitTfModule) genOutputs() ([]byte, error) {
+func (u *UnitTfModule) genOutputs() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	for output := range m.ExpectedOutputs() {
+	for output := range u.ExpectedOutputs() {
 		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
 		outputName := re.FindString(output)
 		if len(outputName) < 1 {
-			return nil, fmt.Errorf("invalid output '%v' in unit '%v'", output, m.Name())
+			return nil, fmt.Errorf("invalid output '%v' in unit '%v'", output, u.Name())
 		}
 		dataBlock := rootBody.AppendNewBlock("output", []string{outputName})
 		dataBody := dataBlock.Body()
-		outputStr := fmt.Sprintf("module.%s.%s", m.Name(), outputName)
+		outputStr := fmt.Sprintf("module.%s.%s", u.Name(), outputName)
 		dataBody.SetAttributeRaw("value", hcltools.CreateTokensForOutput(outputStr))
 	}
 	return f.Bytes(), nil
 
 }
 
-func (m *UnitTfModule) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
-	modType, ok := spec["type"].(string)
-	if !ok {
-		return fmt.Errorf("Incorrect unit type")
-	}
-	if modType != m.KindKey() {
-		return fmt.Errorf("Incorrect unit type")
-	}
-	m.UnitKind = m.KindKey()
+func (u *UnitTfModule) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+	u.UnitKind = u.KindKey()
 	source, ok := spec["source"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect unit source")
 	}
 	if utils.IsLocalPath(source) {
-		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, m.Stack().TemplateDir, source)
-		tfModuleBasePath := filepath.Join(config.Global.WorkingDir, m.Stack().TemplateDir)
+		u.LocalModule = &common.FilesListT{}
+		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, u.Stack().TemplateDir, source)
+		tfModuleBasePath := filepath.Join(config.Global.WorkingDir, u.Stack().TemplateDir)
 
 		log.Debugf("Reading local tf unit files %v %v ", tfModuleLocalDir, tfModuleBasePath)
 
-		err := m.CreateFiles.ReadDir(tfModuleLocalDir, tfModuleBasePath)
+		err := u.LocalModule.ReadDir(tfModuleLocalDir, tfModuleBasePath)
 		if err != nil {
-			return fmt.Errorf("%v, reading local unit: %v", m.Key(), err.Error())
+			return fmt.Errorf("%v, reading local unit: %v", u.Key(), err.Error())
 		}
 	}
 	if version, ok := spec["version"]; ok {
-		m.Version = fmt.Sprintf("%v", version)
+		u.Version = fmt.Sprintf("%v", version)
 	}
-	m.Source = source
+	u.Source = source
 	mInputs, ok := spec["inputs"].(map[string]interface{})
 	if !ok {
 		mInputs = nil
 	}
-	m.Inputs = mInputs
-	m.StatePtr = &UnitTfModule{
-		Unit: m.Unit,
+	u.Inputs = mInputs
+	u.StatePtr = &UnitTfModule{
+		Unit: u.Unit,
 	}
-	err := utils.JSONCopy(m, m.StatePtr)
-	for dir, file := range m.LocalUnit {
-		m.StatePtr.LocalUnit[dir] = base64.StdEncoding.EncodeToString([]byte(file))
-	}
+	u.StatePtr.LocalModule = u.LocalModule
+	// log.Warnf("CreateFiles: %v", m.StatePtr.CreateFiles)
+	err := utils.JSONCopy(u, u.StatePtr)
+	// for dir, file := range m.LocalUnit {
+	// 	m.StatePtr.LocalUnit[dir] = base64.StdEncoding.EncodeToString([]byte(file))
+	// }
 	return err
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *UnitTfModule) ReplaceMarkers() error {
-	err := m.Unit.ReplaceMarkers()
+func (u *UnitTfModule) ReplaceMarkers() error {
+	err := u.Unit.ReplaceMarkers()
 	if err != nil {
 		return err
 	}
 	// log.Warnf("%+v", m.inputs)
-	err = project.ScanMarkers(m.Inputs, m.RemoteStatesScanner, m)
+	err = project.ScanMarkers(u.Inputs, u.RemoteStatesScanner, u)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(u.Inputs, project.OutputsScanner, u)
 	if err != nil {
 		return err
 	}
@@ -147,32 +146,43 @@ func (m *UnitTfModule) ReplaceMarkers() error {
 }
 
 // Build generate all terraform code for project.
-func (m *UnitTfModule) Build() error {
-
-	mainFile, err := m.genMainCodeBlock()
+func (u *UnitTfModule) Build() error {
+	err := u.ReplaceMarkers()
+	if err != nil {
+		return err
+	}
+	mainFile, err := u.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
-	err = m.CreateFiles.Add("main.tf", string(mainFile), fs.ModePerm)
+	err = u.CreateFiles.Add("main.tf", string(mainFile), fs.ModePerm)
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
-	if len(m.ExpectedOutputs()) > 0 {
-		outputsFile, err := m.genOutputs()
+	if len(u.ExpectedOutputs()) > 0 {
+		outputsFile, err := u.genOutputs()
 		if err != nil {
 			log.Debug(err.Error())
 			return err
 		}
-		err = m.CreateFiles.Add("outputs.tf", string(outputsFile), fs.ModePerm)
+		err = u.CreateFiles.Add("outputs.tf", string(outputsFile), fs.ModePerm)
 		if err != nil {
 			log.Debug(err.Error())
 			return err
 		}
 	}
-
-	return m.Unit.Build()
+	if err = u.Unit.Build(); err != nil {
+		return err
+	}
+	if u.LocalModule != nil {
+		err = u.LocalModule.WriteFiles(u.CacheDir)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds module outputs.

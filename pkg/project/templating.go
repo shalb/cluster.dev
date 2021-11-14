@@ -209,28 +209,12 @@ func OutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 		subVal = reflect.ValueOf(data.Interface())
 	}
 	resString := subVal.String()
-	markersList, err := GetMarkers(unit.Project().Markers, OutputMarkerCatName)
+	markersList := map[string]*DependencyOutput{}
+	err := unit.Project().GetMarkers(OutputMarkerCatName, &markersList)
 	if err != nil {
 		return reflect.ValueOf(nil), fmt.Errorf("process outputs: %w", err)
 	}
-	// Add outputs markers from state to project outputs markers (if not exists).
-	if unit.Project().ownState != nil {
-		stateMarkersList, err := GetMarkers(unit.Project().ownState.Markers, OutputMarkerCatName)
-		if err != nil {
-			return reflect.ValueOf(nil), fmt.Errorf("process state outputs: %w", err)
-		}
-		// log.Errorf("State markers: %v", stateMarkersList)
-		// Insert outputs saved in state.
-		for key, m := range stateMarkersList {
-			if _, exists := markersList[key]; exists {
-				continue
-			}
-			markersList[key] = m
-		}
-	}
-
 	for key, marker := range markersList {
-		// log.Warnf("Key: %v Marker: %+v", key, marker)
 		if strings.Contains(resString, key) {
 			if marker.StackName == "this" {
 				marker.StackName = unit.Stack().Name
@@ -246,13 +230,52 @@ func OutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 				return reflect.ValueOf(resString), nil
 			}
 			outputTmp := marker
-			*unit.Dependencies() = append(*unit.Dependencies(), outputTmp)
-			unit.Markers()[key] = &outputTmp
+			if unit.FindDependency(outputTmp.StackName, outputTmp.UnitName) == nil {
+				*unit.Dependencies() = append(*unit.Dependencies(), outputTmp)
+			}
 			depUnit.ExpectedOutputs()[marker.Output] = outputTmp
 		}
 	}
 	return reflect.ValueOf(resString), nil
 }
+
+// // OutputsScanner - project scanner function, witch process dependencies markers in unit data setted by AddRemoteStateMarker template function.
+// func OutputsScannerDebug(data reflect.Value, unit Unit) (reflect.Value, error) {
+// 	var subVal = data
+// 	if data.Kind() != reflect.String {
+// 		subVal = reflect.ValueOf(data.Interface())
+// 	}
+// 	resString := subVal.String()
+// 	markersList := map[string]*DependencyOutput{}
+// 	err := unit.Project().GetMarkers(OutputMarkerCatName, &markersList)
+// 	if err != nil {
+// 		return reflect.ValueOf(nil), fmt.Errorf("process outputs: %w", err)
+// 	}
+// 	for key, marker := range markersList {
+// 		if strings.Contains(resString, key) {
+// 			if marker.StackName == "this" {
+// 				marker.StackName = unit.Stack().Name
+// 			}
+// 			modKey := fmt.Sprintf("%s.%s", marker.StackName, marker.UnitName)
+// 			depUnit, exists := unit.Project().Units[modKey]
+// 			if !exists {
+// 				log.Fatalf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.Stack().Name, unit.Name(), modKey)
+// 			}
+// 			o, exists := depUnit.ExpectedOutputs()[marker.Output]
+// 			log.Warnf("Output Marker found: %v, Output data: %+v", key, o)
+// 			if exists && o.OutputData != "" {
+// 				resString = strings.ReplaceAll(resString, key, o.OutputData)
+// 				return reflect.ValueOf(resString), nil
+// 			}
+// 			outputTmp := marker
+// 			if unit.FindDependency(outputTmp.StackName, outputTmp.UnitName) == nil {
+// 				*unit.Dependencies() = append(*unit.Dependencies(), outputTmp)
+// 			}
+// 			depUnit.ExpectedOutputs()[marker.Output] = outputTmp
+// 		}
+// 	}
+// 	return reflect.ValueOf(resString), nil
+// }
 
 // StateOutputsScanner scan state data for outputs markers and replaces them for placeholders with output ref like <output "stack.unit.output" >
 func StateOutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {

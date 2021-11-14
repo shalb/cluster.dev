@@ -13,7 +13,7 @@ import (
 func TerraformJSONParser(in string, out interface{}) error {
 	type tfOutputDataSpec struct {
 		Sensitive bool        `json:"sensitive"`
-		Type      string      `json:"type"`
+		Type      interface{} `json:"type"`
 		Value     interface{} `json:"value"`
 	}
 	tfOutputData := make(map[string]tfOutputDataSpec)
@@ -29,7 +29,8 @@ func TerraformJSONParser(in string, out interface{}) error {
 
 	outTmp := make(map[string]string)
 	for key, val := range tfOutputData {
-		if val.Type != "string" {
+		tp := reflect.ValueOf(val.Type)
+		if tp.Kind() != reflect.String || val.Type.(string) != "string" {
 			log.Warnf("parse terraform outputs: value not in string format! we will convert it to string, but it is recommended to use remote states instead of outputs")
 		}
 		strValue := fmt.Sprintf("%v", val.Value)

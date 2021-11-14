@@ -20,15 +20,15 @@ type Unit struct {
 	StatePtr  *Unit                  `yaml:"-" json:"-"`
 }
 
-func (m *Unit) KindKey() string {
+func (u *Unit) KindKey() string {
 	return unitKind
 }
 
-func (m *Unit) genMainCodeBlock() ([]byte, error) {
+func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 
-	for key, val := range m.Inputs {
+	for key, val := range u.Inputs {
 		dataBlock := rootBody.AppendNewBlock("output", []string{key})
 		dataBody := dataBlock.Body()
 		hclVal, err := hcltools.InterfaceToCty(val)
@@ -36,47 +36,56 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 			return nil, err
 		}
 		dataBody.SetAttributeValue("value", hclVal)
-		for hash, m := range m.Markers() {
-			marker, ok := m.(*project.DependencyOutput)
-			// log.Warnf("kubernetes marker printer: %v", marker)
-			refStr := base.DependencyToRemoteStateRef(marker)
-			if !ok {
-				return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+		markersList := map[string]*project.DependencyOutput{}
+		err = u.Project().GetMarkers(base.RemoteStateMarkerCatName, &markersList)
+		if err != nil {
+			return nil, err
+		}
+		for hash, marker := range markersList {
+			if marker.StackName == "this" {
+				marker.StackName = u.Stack().Name
 			}
+			refStr := base.DependencyToRemoteStateRef(marker)
 			hcltools.ReplaceStingMarkerInBody(dataBody, hash, refStr)
 		}
 	}
+	// log.Errorf("genMainCodeBlock: %v, %v", string(f.Bytes()))
 	return f.Bytes(), nil
 }
 
-func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 
 	modType, ok := spec["type"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect unit type")
 	}
-	if modType != m.KindKey() {
+	if modType != u.KindKey() {
 		return fmt.Errorf("Incorrect unit type")
 	}
 	mInputs, ok := spec["inputs"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("Incorrect unit inputs")
 	}
-	m.Inputs = mInputs
-	m.StatePtr = &Unit{
-		Unit: m.Unit,
+	u.Inputs = mInputs
+	u.StatePtr = &Unit{
+		Unit: u.Unit,
 	}
-	err := utils.JSONCopy(m, m.StatePtr)
+	err := utils.JSONCopy(u, u.StatePtr)
 	return err
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (m *Unit) ReplaceMarkers() error {
-	err := m.Unit.ReplaceMarkers()
+func (u *Unit) ReplaceMarkers() error {
+	err := u.Unit.ReplaceMarkers()
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.Inputs, m.RemoteStatesScanner, m)
+	// log.Infof("Scan inputs: %v", u.Inputs)
+	err = project.ScanMarkers(u.Inputs, u.RemoteStatesScanner, u)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(u.Inputs, project.OutputsScanner, u)
 	if err != nil {
 		return err
 	}
@@ -84,35 +93,40 @@ func (m *Unit) ReplaceMarkers() error {
 }
 
 // Build generate all terraform code for project.
-func (m *Unit) Build() error {
-	mainBlock, err := m.genMainCodeBlock()
+func (u *Unit) Build() error {
+	err := u.ReplaceMarkers()
+	if err != nil {
+		return err
+	}
+
+	mainBlock, err := u.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
-	if err = m.CreateFiles.Add("main.tf", string(mainBlock), fs.ModePerm); err != nil {
+	if err = u.CreateFiles.Add("main.tf", string(mainBlock), fs.ModePerm); err != nil {
 		return err
 	}
 
-	m.CreateFiles.Delete("init.tf")
-	return m.Unit.Build()
+	u.CreateFiles.Delete("init.tf")
+	return u.Unit.Build()
 }
 
-func (m *Unit) Apply() (err error) {
-	err = m.Unit.Apply()
+func (u *Unit) Apply() (err error) {
+	err = u.Unit.Apply()
 	if err != nil {
 		return
 	}
-	outputs, err := m.Output()
+	outputs, err := u.Output()
 	if err != nil {
 		return
 	}
-	m.OutputRaw = outputs
+	u.OutputRaw = outputs
 	return
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds printer unit outputs.
-func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
-	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: m.Key(), Output: m.OutputRaw})
-	return m.Unit.UpdateProjectRuntimeData(p)
+func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
+	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: u.Key(), Output: u.OutputRaw})
+	return u.Unit.UpdateProjectRuntimeData(p)
 }

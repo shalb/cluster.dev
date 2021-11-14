@@ -39,6 +39,7 @@ func (m *Unit) genDepsRemoteStates() ([]byte, error) {
 	var res []byte
 	depsUniq := map[project.Unit]bool{}
 	for _, dep := range *m.Dependencies() {
+		//log.Warnf("dep: %+v", dep)
 		// Ignore duplicated dependencies.
 		if _, ok := depsUniq[dep.Unit]; ok {
 			continue
@@ -47,7 +48,7 @@ func (m *Unit) genDepsRemoteStates() ([]byte, error) {
 		if dep.Output == "" {
 			continue
 		}
-		// Deduplication.
+		// De-duplication.
 		depsUniq[dep.Unit] = true
 		modBackend := dep.Unit.Stack().Backend
 		rs, err := modBackend.GetRemoteStateHCL(dep.Unit.Stack().Name, dep.Unit.Name())
@@ -73,13 +74,12 @@ func (m *Unit) Build() error {
 			log.Debug(err.Error())
 			return err
 		}
-
 		init = append(init, providers.Bytes()...)
 	}
 
 	err = m.CreateFiles.Add("init.tf", string(init), fs.ModePerm)
 	if err != nil {
-		return fmt.Errorf("build unit: %w", err)
+		return fmt.Errorf("build unit %v: %w\n%v", m.Key(), err, m.CreateFiles.SPrint())
 	}
 	// Create remote_state.tf
 	remoteStates, err := m.genDepsRemoteStates()
@@ -87,10 +87,11 @@ func (m *Unit) Build() error {
 		log.Debug(err.Error())
 		return err
 	}
+	// log.Errorf("Remote states: %v\nUnit name: %v", len(remoteStates), m.Key())
 	if len(remoteStates) > 0 {
 		err = m.CreateFiles.Add("remote_states.tf", string(remoteStates), fs.ModePerm)
 		if err != nil {
-			return fmt.Errorf("build unit: %w", err)
+			return fmt.Errorf("build unit %v: %w", m.Key(), err)
 		}
 	}
 	if m.PreHook != nil {
@@ -112,10 +113,14 @@ func (m *Unit) replaceRemoteStatesForBash(cmd *string) error {
 	if cmd == nil {
 		return nil
 	}
-	for hash, mr := range m.Markers() {
-		marker, ok := mr.(*project.DependencyOutput)
-		if !ok {
-			return fmt.Errorf("preparing unit: internal error: incorrect remote state type")
+	markersList := map[string]*project.DependencyOutput{}
+	err := m.Project().GetMarkers(RemoteStateMarkerCatName, &markersList)
+	if err != nil {
+		return err
+	}
+	for hash, marker := range markersList {
+		if marker.StackName == "this" {
+			marker.StackName = m.Stack().Name
 		}
 		refStr := DependencyToBashRemoteState(marker)
 		c := strings.ReplaceAll(*cmd, hash, refStr)

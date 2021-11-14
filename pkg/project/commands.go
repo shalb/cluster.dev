@@ -29,8 +29,7 @@ func (p *Project) Build() error {
 // Destroy all units.
 func (p *Project) Destroy() error {
 
-	fProject := p.ownState
-
+	fProject := p.OwnState
 	graph := grapher{}
 	if config.Global.IgnoreState {
 		graph.Init(p, 1, true)
@@ -54,23 +53,23 @@ func (p *Project) Destroy() error {
 	}
 	err := p.ClearCacheDir()
 	if err != nil {
-		return fmt.Errorf("project destroy: clear cache dir: %v", err.Error())
+		return fmt.Errorf("project destroy: clear cache dir: %w", err)
 	}
 	log.Info("Destroying...")
 	for _, md := range destSeq {
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Destroying unit '%v'", md.Key()))
-		err := md.Build()
+		err = md.Build()
 		if err != nil {
-			log.Errorf("project destroy: destroying deleted unit: %v", err.Error())
+			return fmt.Errorf("project destroy: destroying deleted unit: %w", err)
 		}
 		err = md.Destroy()
 		if err != nil {
-			return fmt.Errorf("project destroy: %v", err.Error())
+			return fmt.Errorf("project destroy: %w", err)
 		}
 		fProject.DeleteUnit(md)
 		err = fProject.SaveState()
 		if err != nil {
-			return fmt.Errorf("project destroy: saving state: %v", err.Error())
+			return fmt.Errorf("project destroy: saving state: %w", err)
 		}
 	}
 	os.Remove(config.Global.StateLocalFileName)
@@ -105,7 +104,7 @@ func (p *Project) Apply() error {
 		return err
 	}
 	defer gr.Close()
-	fProject := p.ownState
+	fProject := p.OwnState
 	if err != nil {
 		return err
 	}
@@ -121,7 +120,7 @@ func (p *Project) Apply() error {
 		if exists {
 			continue
 		}
-		err := md.Build()
+		err = md.Build()
 		if err != nil {
 			log.Errorf("project apply: destroying deleted unit: %v", err.Error())
 		}
@@ -160,9 +159,11 @@ func (p *Project) Apply() error {
 			var res error
 			if len(diff) > 0 || config.Global.IgnoreState {
 				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying unit '%v':", md.Key()))
-				err := mod.Build()
+				err = mod.Build()
 				if err != nil {
 					log.Errorf("project apply: unit build error: %v", err.Error())
+					finFunc(err)
+					return
 				}
 				res := mod.Apply()
 				if res == nil {
@@ -189,7 +190,7 @@ func (p *Project) Apply() error {
 
 // Plan and output result.
 func (p *Project) Plan() (hasChanges bool, err error) {
-	fProject := p.ownState
+	fProject := p.OwnState
 	if err != nil {
 		return
 	}

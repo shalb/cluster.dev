@@ -64,7 +64,6 @@ type Unit struct {
 	DependenciesList []*project.DependencyOutput          `yaml:"-" json:"dependencies,omitempty"`
 	Outputs          map[string]*project.DependencyOutput `yaml:"-" json:"outputs,omitempty"`
 	SpecRaw          map[string]interface{}               `yaml:"-" json:"-"`
-	UnitMarkers      map[string]interface{}               `yaml:"-" json:"-" json:"markers,omitempty"`
 	OutputRaw        []byte                               `yaml:"-" json:"-"`
 	CacheDir         string                               `yaml:"-" json:"-"`
 	MyName           string                               `yaml:"name" json:"name"`
@@ -72,9 +71,9 @@ type Unit struct {
 	Env              interface{}                          `yaml:"env,omitempty" json:"env,omitempty"`
 	CreateFiles      *FilesListT                          `yaml:"create_files,omitempty" json:"create_files,omitempty"`
 	InitConf         *OperationConfig                     `yaml:"init,omitempty" json:"init,omitempty"`
-	ApplyConf        *OperationConfig                     `yaml:"apply" json:"apply"`
+	ApplyConf        *OperationConfig                     `yaml:"apply,omitempty" json:"apply,omitempty"`
 	PlanConf         *OperationConfig                     `yaml:"plan,omitempty" json:"plan,omitempty"`
-	DestroyConf      *OperationConfig                     `yaml:"destroy" json:"destroy,omitempty"`
+	DestroyConf      *OperationConfig                     `yaml:"destroy,omitempty" json:"destroy,omitempty"`
 	GetOutputsConf   *OutputsConfigSpec                   `yaml:"outputs,omitempty" json:"outputs_config,omitempty"`
 	OutputParsers    map[string]OutputParser              `yaml:"-" json:"-"`
 	Applied          bool                                 `yaml:"-" json:"-"`
@@ -85,15 +84,24 @@ type Unit struct {
 	BackendName      string                               `yaml:"-" json:"backend_name"`
 }
 
+func (u *Unit) FindDependency(stackName, unitName string) *project.DependencyOutput {
+	for _, dep := range u.DependenciesList {
+		if dep.StackName == stackName && dep.UnitName == unitName {
+			return dep
+		}
+	}
+	return nil
+}
+
 // WasApplied return true if unit's method Apply was runned.
 func (u *Unit) WasApplied() bool {
 	return u.Applied
 }
 
-// Markers returns list of the unit's markers.
-func (u *Unit) Markers() map[string]interface{} {
-	return u.UnitMarkers
-}
+// // Markers returns list of the unit's markers.
+// func (u *Unit) Markers() map[string]interface{} {
+// 	return u.UnitMarkers
+// }
 
 // ReadConfig reads unit spec (unmarshaled YAML) and init the unit.
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
@@ -271,7 +279,6 @@ func (u *Unit) Apply() error {
 }
 
 func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, error) {
-
 	if len(commandsCnf.Commands) == 0 {
 		log.Debugf("configuration for '%v' is empty for unit '%v'. Skip.", name, u.Key())
 		return nil, nil

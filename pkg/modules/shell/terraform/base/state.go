@@ -12,11 +12,7 @@ import (
 type UnitDiffSpec struct {
 	// BackendName string      `json:"backend_name"`
 	common.UnitDiffSpec
-	CreateFiles   bool        `json:"-"`
-	ApplyConf     bool        `json:"-"`
-	Env           bool        `json:"-"`
-	OutputsConfig bool        `json:"-"`
-	Providers     interface{} `json:"providers,omitempty"`
+	Providers interface{} `json:"providers,omitempty"`
 }
 
 func (m *Unit) GetState() interface{} {
@@ -24,9 +20,9 @@ func (m *Unit) GetState() interface{} {
 	m.StatePtr.DestroyConf = nil
 	m.StatePtr.InitConf = nil
 	m.StatePtr.PlanConf = nil
-	m.StatePtr.CreateFiles = nil
 	m.StatePtr.Env = nil
 	m.StatePtr.OutputParsers = nil
+	m.StatePtr.CreateFiles = nil
 	m.StatePtr.WorkDir = ""
 	return *m.StatePtr
 }
@@ -39,9 +35,9 @@ func (m *Unit) GetUnitDiff() UnitDiffSpec {
 	}
 	st.UnitDiffSpec.ApplyConf = nil
 	st.UnitDiffSpec.ApplyConf = nil
-	st.UnitDiffSpec.CreateFiles = nil
 	st.UnitDiffSpec.Env = nil
-
+	st.UnitDiffSpec.CreateFiles = nil
+	st.UnitDiffSpec.OutputsConfig = nil
 	return st
 }
 
@@ -61,10 +57,12 @@ func (m *Unit) GetStateDiffData() interface{} {
 }
 
 func (m *Unit) LoadState(spec interface{}, modKey string, p *project.StateProject) error {
+
 	err := m.Unit.LoadState(spec, modKey, p)
 	if err != nil {
 		return err
 	}
+	m.fillShellUnit()
 	err = utils.JSONCopy(spec, &m)
 
 	if err != nil {

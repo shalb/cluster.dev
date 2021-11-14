@@ -43,6 +43,7 @@ type ConfSpec struct {
 	UseCache           bool
 	OptFooTest         bool
 	IgnoreState        bool
+	NotLoadState       bool
 	ShowTerraformPlan  bool
 	StateLocalFileName string
 	StateLocalLockFile string
@@ -78,6 +79,7 @@ func InitConfig() {
 	Global.StateLocalFileName = filepath.Join(curPath, "cdev.state")
 	Global.StateLocalLockFile = filepath.Join(curPath, "cdev.state.lock")
 	Global.TemplatesCacheDir = filepath.Join(Global.TmpDir, "templates")
+	Global.NotLoadState = false
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err.Error())

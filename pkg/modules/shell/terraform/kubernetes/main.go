@@ -67,6 +67,11 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	for key, val := range providerCty.AsValueMap() {
 		providerBody.SetAttributeValue(key, val)
 	}
+	markersList := map[string]*project.DependencyOutput{}
+	err = m.Project().GetMarkers(base.RemoteStateMarkerCatName, &markersList)
+	if err != nil {
+		return nil, err
+	}
 	for key, manifest := range m.Inputs {
 		unitBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
 		unitBody := unitBlock.Body()
@@ -78,22 +83,20 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 		}
 
 		unitBody.SetAttributeValue("manifest", ctyVal)
-		for hash, m := range m.Markers() {
-			marker, ok := m.(*project.DependencyOutput)
-			refStr := base.DependencyToRemoteStateRef(marker)
-			if !ok {
-				return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+		for hash, marker := range markersList {
+			if marker.StackName == "this" {
+				marker.StackName = m.Stack().Name
 			}
+			refStr := base.DependencyToRemoteStateRef(marker)
 			hcltools.ReplaceStingMarkerInBody(unitBody, hash, refStr)
 		}
 	}
 
-	for hash, m := range m.Markers() {
-		marker, ok := m.(*project.DependencyOutput)
-		refStr := base.DependencyToRemoteStateRef(marker)
-		if !ok {
-			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+	for hash, marker := range markersList {
+		if marker.StackName == "this" {
+			marker.StackName = m.Stack().Name
 		}
+		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(providerBody, hash, refStr)
 	}
 	return f.Bytes(), nil
@@ -183,6 +186,14 @@ func (m *Unit) ReplaceMarkers() error {
 		return err
 	}
 	err = project.ScanMarkers(&m.ProviderConf, m.RemoteStatesScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.Inputs, project.OutputsScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(&m.ProviderConf, project.OutputsScanner, m)
 	if err != nil {
 		return err
 	}

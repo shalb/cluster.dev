@@ -41,7 +41,7 @@ func (m *Unit) AddRequiredProvider(name, source, version string) {
 	}
 }
 
-func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (m *Unit) fillShellUnit() {
 	// Check if CDEV_TF_BINARY is set to change terraform binary name.
 	envTfBin, exists := os.LookupEnv("CDEV_TF_BINARY")
 	if exists {
@@ -71,24 +71,23 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		Command: fmt.Sprintf("%s output -json", terraformBin),
 		Type:    "terraform",
 	}
-	err := m.Unit.ReadConfig(spec, stack)
-	if err != nil {
-		return err
-	}
 	m.OutputParsers["terraform"] = TerraformJSONParser
+	if m.Env == nil {
+		m.Env = make(map[string]interface{})
+	}
 
-	// Set providers.
+}
+
+func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+	m.fillShellUnit()
 	providers, exists := spec["providers"]
 	if exists {
 		m.Providers = providers
 	}
 	m.CacheDir = filepath.Join(m.Project().CodeCacheDir, m.Key())
-	if m.Env == nil {
-		m.Env = make(map[string]interface{})
-	}
 	m.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
 	m.Initted = false
-	err = utils.JSONCopy(m, m.StatePtr)
+	err := utils.JSONCopy(m, m.StatePtr)
 	// jsstate, _ := utils.JSONEncodeString(m.StatePtr)
 	// log.Warnf("State: %v", jsstate)
 	return err

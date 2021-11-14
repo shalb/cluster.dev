@@ -35,6 +35,14 @@ func remove(slice []int, s int) []int {
 	return append(slice[:s], slice[s+1:]...)
 }
 
+func (l *FilesListT) SPrint() string {
+	var res string
+	for _, f := range *l {
+		res += fmt.Sprintf("%v: %v\n", f.FileName, f.FileMode)
+	}
+	return res
+}
+
 // Add insert the new file with name fileName, returns error if file with this name already exists.
 func (l *FilesListT) Add(fileName string, content string, mode fs.FileMode) error {
 	if l.Find(fileName) >= 0 {

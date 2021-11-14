@@ -55,7 +55,7 @@ func findUnit(unit Unit, modsList map[string]Unit) *Unit {
 
 // ScanMarkers use marker scanner function to replace templated markers.
 func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
-	if data == nil || reflect.ValueOf(data).IsNil() {
+	if data == nil {
 		return nil
 	}
 	out := reflect.ValueOf(data)
@@ -64,6 +64,9 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 
 		//log.Fatalf("%v \n%v ", out.Kind(), out)
 	}
+	// if data == nil || reflect.ValueOf(data).IsNil() {
+	// 	return nil
+	// }
 	// if out.IsNil() {
 	// 	log.Fatalf("%v \n%v ", out.Kind(), out)
 	// 	return nil
@@ -298,18 +301,33 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	table.Render()
 }
 
-func GetMarkers(markers map[string]interface{}, ctName string) (map[string]*DependencyOutput, error) {
-	depMarkers, ok := markers[ctName]
+func (p *Project) GetMarkers(ctName string, out interface{}) error {
+
+	// if p.OwnState != nil {
+	// 	log.Errorf("State markers: %v", p.OwnState.Markers)
+	// 	stateMarkers, ok := p.OwnState.Markers[ctName]
+	// 	if ok {
+	// 		err := utils.JSONCopy(stateMarkers, out)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
+	markers, ok := p.Markers[ctName]
 	if !ok {
-		return make(map[string]*DependencyOutput), nil
+		return nil
 	}
-	markersList, ok := depMarkers.(map[string]*DependencyOutput)
+	//log.Errorf("Markers[%v]: %v", ctName, p.Markers[ctName])
+	err := utils.JSONCopy(markers, &out)
+	// dbg, err := utils.JSONEncodeString(out)
+	//log.Errorf("JSON markers: %v", dbg)
+	return err
+}
+
+func (p *Project) GetMarkersMap(ctName string, out interface{}) error {
+	depMarkers, ok := p.Markers[ctName]
 	if !ok {
-		err := utils.JSONCopy(depMarkers, &markersList)
-		if err != nil {
-			return nil, fmt.Errorf("get markers: internal error: bad dependency")
-		}
+		return nil
 	}
-	// log.Errorf("From: %+v\n To: %+v", depMarkers, markersList)
-	return markersList, nil
+	return utils.JSONCopy(depMarkers, &out)
 }

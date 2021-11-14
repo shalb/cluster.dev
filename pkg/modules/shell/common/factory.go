@@ -14,7 +14,7 @@ const unitKind string = "shell"
 // NewEmptyUnit creates new unit.
 func NewEmptyUnit() Unit {
 	unit := Unit{
-		UnitMarkers: make(map[string]interface{}),
+		//UnitMarkers: make(map[string]interface{}),
 		Applied:     false,
 		StatePtr:    &Unit{},
 		UnitKind:    unitKind,
@@ -25,14 +25,14 @@ func NewEmptyUnit() Unit {
 		"regexp":    unit.RegexOutputParser,
 		"separator": unit.SeparatorOutputParser,
 	}
-	unit.StatePtr.UnitMarkers = unit.UnitMarkers
+	//unit.StatePtr.UnitMarkers = unit.UnitMarkers
 	return unit
 }
 
 // NewUnit creates new unit and load config.
 func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 	unit := NewEmptyUnit()
-	unit.StatePtr.UnitMarkers = unit.UnitMarkers
+	//unit.StatePtr.UnitMarkers = unit.UnitMarkers
 	err := unit.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
