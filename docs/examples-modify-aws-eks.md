@@ -1,28 +1,28 @@
-# Modify AWS-EKS 
+# Modify AWS-EKS
 
-Let's assume you want to make changes to AWS-EKS stack template. In the example below we have customized the existing template by adding some features and removing the functionality that we don't need. 
+Let's assume you want to make changes to AWS-EKS stack template. In the example below we have customized the existing template by adding some features and removing the functionality that we don't need.
 
-## Workflow steps   
+## Workflow steps
 
-1. Go to the GitHub page via the [AWS-EKS link](https://github.com/shalb/cdev-aws-eks) and download the stack template. 
+1. Go to the GitHub page via the [AWS-EKS link](https://github.com/shalb/cdev-aws-eks) and download the stack template.
 
 2. If you are not planning to use some preset addons, edit aws-eks.yaml to exclude them. In our case, it was cert-manager, cert-manager-issuer, ingress-nginx, argocd, and argocd_apps.
- 
+
 3. In order to dynamically retrieve the AWS account ID parameter, we have added a data block to our stack template:
 
     ```yaml
       - name: data
-        type: terraform
+        type: tfmodule
         providers: *provider_aws
         depends_on: this.eks
         source: ./terraform-submodules/data/
     ```
-    
+
     ```yaml
     {{ remoteState "this.data.account_id" }}
     ```
     
-    The block is also used in eks_auth ConfigMap and expands its functionality with groups of users:  
+    The block is also used in eks_auth ConfigMap and expands its functionality with groups of users:
     
     ```yaml
       apiVersion: v1
@@ -65,7 +65,7 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
     ```yaml
     {{- if .variables.ingressControllerEnabled }}
     - name: albs
-      type: terraform
+      type: tfmodule
       providers: *provider_aws
       source: ./terraform-submodules/albs/
       inputs:
@@ -119,7 +119,7 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
     ```yaml
      {{- if .variables.ingressControllerRoute53Enabled }}
      - name: route53_records
-       type: terraform
+       type: tfmodule
        providers: *provider_aws
        source: ./terraform-submodules/route53_records/
        inputs:
@@ -139,7 +139,7 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
       units:
         {{- if .variables.cluster_autoscaler_irsa.enabled }}
         - name: iam_assumable_role_autoscaling_autoscaler
-          type: terraform
+          type: tfmodule
           source: "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
           version: "~> 3.0"
           providers: *provider_aws
@@ -151,7 +151,7 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
             oidc_fully_qualified_subjects: {{ insertYAML .variables.cluster_autoscaler_irsa.subjects }}
             provider_url: {{ .variables.provider_url }}
         - name: iam_policy_autoscaling_autoscaler
-          type: terraform
+          type: tfmodule
           source: "terraform-aws-modules/iam/aws//modules/iam-policy"
           version: "~> 3.0"
           providers: *provider_aws

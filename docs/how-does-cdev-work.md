@@ -33,9 +33,9 @@ exports:
   AWS_PROFILE: cluster-dev  
 ```
 
- From `project.yaml` the variable value is passed to `infra.yaml` from where it is applied to a stack template. 
+ From `project.yaml` the variable value is passed to `stack.yaml` from where it is applied to a stack template.
  
- Global variables could be used in all configurations of stacks and backends within a given project. To refer to a global variable, use the {{ .project.variables.KEY_NAME }} syntax, where KEY_NAME stands for the variable name defined in `project.yaml` and will be replaced by its value. Example of global variables in `infra.yaml`:
+ Global variables could be used in all configurations of stacks and backends within a given project. To refer to a global variable, use the {{ .project.variables.KEY_NAME }} syntax, where KEY_NAME stands for the variable name defined in `project.yaml` and will be replaced by its value. Example of global variables in `stack.yaml`:
 
 ```yaml
 name: eks-demo
@@ -50,7 +50,7 @@ variables:
   eks_version: "1.20"
 ```
 
-Stack-specific variables are defined in `infra.yaml` and relate to a concrete infrastructure. They can be used solely in stack templates that are bound to this stack. 
+Stack-specific variables are defined in `stack.yaml` and relate to a concrete infrastructure. They can be used solely in stack templates that are bound to this stack.
 
 ## How to use Cluster.dev
 

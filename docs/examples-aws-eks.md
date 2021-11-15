@@ -81,7 +81,7 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
 
 3. Use "cluster.dev" domain for zone delegation.
 
-## Create project 
+## Create project
 
 1. Configure [access to AWS](#authentication) and export required variables.
 
@@ -90,7 +90,7 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
     ```bash
       cdev project create https://github.com/shalb/cdev-aws-eks
     ```
-    This will create a new empty project.  
+    This will create a new empty project.
 
 3. Edit variables in the example's files, if necessary:
 
@@ -98,7 +98,7 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
 
     * backend.yaml - configures backend for Cluster.dev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://docs.cluster.dev/structure-backend/).
 
-    * infra.yaml - describes stack configuration. See [stack docs](https://docs.cluster.dev/structure-stack/).
+    * stack.yaml - describes stack configuration. See [stack docs](https://docs.cluster.dev/structure-stack/).
 
 4. Run `cdev plan` to build the project. In the output you will see an infrastructure that is going to be created after running `cdev apply`.
 
