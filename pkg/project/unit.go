@@ -2,17 +2,21 @@ package project
 
 import (
 	"fmt"
+
+	"github.com/apex/log"
 )
 
 // Unit interface for unit drivers.
 type Unit interface {
 	Name() string
-	StackPtr() *Stack
-	ProjectPtr() *Project
-	StackName() string
+	Stack() *Stack
+	Project() *Project
+	Backend() Backend
 	ReplaceMarkers() error
 	Dependencies() *[]*DependencyOutput
+	RequiredUnits() map[string]Unit
 	Build() error
+	Init() error
 	Apply() error
 	Plan() error
 	Destroy() error
@@ -20,12 +24,13 @@ type Unit interface {
 	ExpectedOutputs() map[string]*DependencyOutput
 	GetState() interface{}
 	GetDiffData() interface{}
+	GetStateDiffData() interface{}
 	LoadState(interface{}, string, *StateProject) error
 	KindKey() string
 	CodeDir() string
-	Markers() map[string]interface{}
 	UpdateProjectRuntimeData(p *Project) error
 	WasApplied() bool
+	FindDependency(stackName, unitName string) *DependencyOutput
 }
 
 type UnitDriver interface {
@@ -54,7 +59,7 @@ type DependencyOutput struct {
 	UnitName   string
 	StackName  string
 	Output     string
-	OutputData interface{}
+	OutputData string
 }
 
 // NewUnit creates and return unit with needed driver.
@@ -63,26 +68,38 @@ func NewUnit(spec map[string]interface{}, stack *Stack) (Unit, error) {
 	if !ok {
 		return nil, fmt.Errorf("incorrect unit type")
 	}
+	uName, ok := spec["name"].(string)
 	modDrv, exists := UnitFactoriesMap[mType]
 	if !exists {
-		return nil, fmt.Errorf("incorrect unit type '%v'", mType)
+		// TODO remove deprecated unit type 'terraform'
+		if mType == "terraform" {
+			log.Warnf("Unit: '%v'. Unit type 'terraform' is deprecated and will be removed in future releases. Use 'tfmodule' instead", fmt.Sprintf("%v.%v", stack.Name, uName))
+			modDrv = UnitFactoriesMap["tfmodule"]
+		} else {
+			return nil, fmt.Errorf("new unit: bad unit type in state '%v'", mType)
+		}
 	}
 
 	return modDrv.New(spec, stack)
 }
 
 // NewUnitFromState creates unit from saved state.
-func NewUnitFromState(state map[string]interface{}, stack *Stack) (Unit, error) {
+func NewUnitFromState(state map[string]interface{}, name string, p *StateProject) (Unit, error) {
 	mType, ok := state["type"].(string)
 	if !ok {
-		return nil, fmt.Errorf("Incorrect unit type")
+		return nil, fmt.Errorf("internal error: unit type field in state does not found")
 	}
 	modDrv, exists := UnitFactoriesMap[mType]
 	if !exists {
-		return nil, fmt.Errorf("Incorrect unit type '%v'", mType)
+		// TODO remove deprecated unit type 'terraform'
+		if mType == "terraform" {
+			modDrv = UnitFactoriesMap["tfmodule"]
+		} else {
+			return nil, fmt.Errorf("internal error: bad unit type in state '%v'", mType)
+		}
 	}
 
-	return modDrv.New(state, stack)
+	return modDrv.NewFromState(state, name, p)
 }
 
 type UnitState interface {

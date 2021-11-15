@@ -3,12 +3,19 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"reflect"
 
 	"gopkg.in/yaml.v3"
 )
 
-// JSONInterfaceToType - convert interface data in to type of out with JSON tags.
-func JSONInterfaceToType(in, out interface{}) error {
+// JSONCopy - convert interface data in to type of out with JSON tags.
+func JSONCopy(in, out interface{}) error {
+	// t := reflect.TypeOf(out)
+	if reflect.ValueOf(out).IsNil() {
+		return fmt.Errorf("can't write to nil target")
+	}
+
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)
@@ -17,7 +24,7 @@ func JSONInterfaceToType(in, out interface{}) error {
 	if err != nil {
 		return err
 	}
-
+	//log.Warnf("JSON: %v", buffer.String())
 	decoder := json.NewDecoder(buffer)
 	err = decoder.Decode(&out)
 	if err != nil {
@@ -60,4 +67,14 @@ func JSONDecode(in []byte, out interface{}) error {
 	buffer := bytes.NewBuffer(in)
 	decoder := json.NewDecoder(buffer)
 	return decoder.Decode(&out)
+}
+
+func MergeMaps(mOne, mTwo map[string]interface{}) (res map[string]interface{}) {
+	for k, v := range mOne {
+		res[k] = v
+	}
+	for k, v := range mTwo {
+		res[k] = v
+	}
+	return
 }

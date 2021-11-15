@@ -34,7 +34,7 @@ func NewStackTemplate(data []byte) (*stackTemplate, error) {
 		}
 		iTmpl.Units = iTmpl.Modules
 		iTmpl.Modules = nil
-		log.Warnf("'modules' key is deprecated and will be remover in future releases. Use 'units' instead")
+		log.Warnf("'modules' key is deprecated and will be removed in future releases. Use 'units' instead")
 	}
 	if iTmpl.Name == "" {
 		return nil, fmt.Errorf("parsing template: template must contain 'name' field")
@@ -43,7 +43,7 @@ func NewStackTemplate(data []byte) (*stackTemplate, error) {
 		if iTmpl.Kind != "InfraTemplate" {
 			return nil, fmt.Errorf("parsing template: unknown template object kind or kind is not set: '%v'", iTmpl.Kind)
 		}
-		log.Warnf("'InfraTemplate' kind is deprecated and will be remover in future releases. Use 'StackTemplate' instead")
+		log.Warnf("'InfraTemplate' kind is deprecated and will be removed in future releases. Use 'StackTemplate' instead")
 	}
 	log.Debug("check client version")
 	if iTmpl.ReqClientVersion != "" {

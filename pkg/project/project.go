@@ -47,7 +47,7 @@ type RuntimeData struct {
 type Project struct {
 	name             string
 	Units            map[string]Unit
-	Stack            map[string]*Stack
+	Stacks           map[string]*Stack
 	TmplFunctionsMap template.FuncMap
 	Backends         map[string]Backend
 	Markers          map[string]interface{}
@@ -61,12 +61,13 @@ type Project struct {
 	InitLock         sync.Mutex
 	RuntimeDataset   RuntimeData
 	StateBackendName string
+	OwnState         *StateProject
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
 func NewEmptyProject() *Project {
 	project := &Project{
-		Stack:            make(map[string]*Stack),
+		Stacks:           make(map[string]*Stack),
 		Units:            make(map[string]Unit),
 		Backends:         make(map[string]Backend),
 		Markers:          make(map[string]interface{}),
@@ -90,7 +91,7 @@ func NewEmptyProject() *Project {
 // stacks, backends and other objects are not loads.
 func LoadProjectBase() (*Project, error) {
 	for mf := range UnitFactoriesMap {
-		log.Debugf("%v", mf)
+		log.Debugf("Registering unit type: %v", mf)
 	}
 	project := NewEmptyProject()
 	err := project.MkBuildDir()
@@ -140,7 +141,9 @@ func LoadProjectBase() (*Project, error) {
 // LoadProjectFull read project data in current directory, create base project, load secrets and all project's objects.
 func LoadProjectFull() (*Project, error) {
 	project, err := LoadProjectBase()
-
+	if err != nil {
+		return nil, fmt.Errorf("loading project: %w", err)
+	}
 	for filename, cnf := range project.objectsFiles {
 		templatedConf, isWarn, err := project.TemplateTry(cnf)
 		if project.fileIsSecret(filename) {
@@ -165,6 +168,14 @@ func LoadProjectFull() (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !config.Global.NotLoadState {
+		_, err = project.LoadState()
+		if err != nil {
+			return nil, fmt.Errorf("loading project: %w", err)
+		}
+	}
+	// m, _ := utils.JSONEncodeString(project.ownState.Markers)
+	// log.Warnf("state markers: %v", m)
 	err = project.readUnits()
 	if err != nil {
 		return nil, err
@@ -221,9 +232,9 @@ func (p *Project) prepareObjects() error {
 
 func (p *Project) checkGraph() error {
 	errDepth := 15
-	for _, mod := range p.Units {
-		if ok := checkDependenciesRecursive(mod, errDepth); !ok {
-			return fmt.Errorf("Unresolved dependency in unit %v.%v", mod.StackName(), mod.Name())
+	for _, unit := range p.Units {
+		if ok := checkDependenciesRecursive(unit, errDepth); !ok {
+			return fmt.Errorf("Unresolved dependency in unit %v.%v", unit.Stack().Name, unit.Name())
 		}
 	}
 	return nil
@@ -231,7 +242,7 @@ func (p *Project) checkGraph() error {
 
 func (p *Project) readUnits() error {
 	// Read units from all stacks.
-	for stackName, stack := range p.Stack {
+	for stackName, stack := range p.Stacks {
 		for _, stackTmpl := range stack.Templates {
 			for _, unitData := range stackTmpl.Units {
 				mod, err := NewUnit(unitData, stack)
@@ -349,7 +360,7 @@ func (p *Project) PrintInfo() error {
 	table.SetHeader([]string{"Name", "Stacks count", "units count", "Backends count", "Secrets count"})
 	table.Append([]string{
 		p.name,
-		fmt.Sprintf("%v", len(p.Stack)),
+		fmt.Sprintf("%v", len(p.Stacks)),
 		fmt.Sprintf("%v", len(p.Units)),
 		fmt.Sprintf("%v", len(p.Backends)),
 		fmt.Sprintf("%v", len(p.secrets)),
@@ -359,10 +370,10 @@ func (p *Project) PrintInfo() error {
 	fmt.Println("Stacks:")
 	table = tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Name", "units count", "Backend name", "Backend type"})
-	for name, stack := range p.Stack {
+	for name, stack := range p.Stacks {
 		mCount := 0
-		for _, mod := range p.Units {
-			if mod.StackName() == stack.Name {
+		for _, unit := range p.Units {
+			if unit.Stack().Name == stack.Name {
 				mCount++
 			}
 		}
@@ -380,21 +391,21 @@ func (p *Project) PrintInfo() error {
 	table.SetRowLine(true)
 	// table.SetRowSeparator(".")
 	table.SetHeader([]string{"Name", "Stack", "Kind", "Dependencies"})
-	for name, mod := range p.Units {
+	for name, unit := range p.Units {
 		deps := ""
-		for i, dep := range *mod.Dependencies() {
+		for i, dep := range *unit.Dependencies() {
 			deps = fmt.Sprintf("%s%s.%s", deps, dep.StackName, dep.UnitName)
 			if dep.Output != "" {
 				deps = fmt.Sprintf("%s.%s", deps, dep.Output)
 			}
-			if i != len(*mod.Dependencies())-1 {
+			if i != len(*unit.Dependencies())-1 {
 				deps += "\n"
 			}
 		}
 		table.Append([]string{
 			name,
-			mod.StackName(),
-			mod.KindKey(),
+			unit.Stack().Name,
+			unit.KindKey(),
 			deps,
 		})
 	}
@@ -417,7 +428,9 @@ func (p *Project) ExportEnvs(ex interface{}) error {
 
 func (p *Project) PrintOutputs() error {
 	for _, o := range p.RuntimeDataset.PrintersOutputs {
-		log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(o.Output))
+		if len(o.Output) > 0 {
+			log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(o.Output))
+		}
 	}
 	return nil
 }

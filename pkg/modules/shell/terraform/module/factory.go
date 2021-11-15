@@ -1,7 +1,8 @@
-package common
+package tfmodule
 
 import (
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
@@ -9,46 +10,39 @@ import (
 type Factory struct {
 }
 
-const unitKind string = "shell"
+const unitKind string = "tfmodule"
 
-// NewEmptyUnit creates new unit.
-func NewEmptyUnit() Unit {
-	unit := Unit{
-		//UnitMarkers: make(map[string]interface{}),
-		Applied:     false,
-		StatePtr:    &Unit{},
-		UnitKind:    unitKind,
-		CreateFiles: &FilesListT{},
+func NewEmptyUnit() UnitTfModule {
+	unit := UnitTfModule{
+		Unit:     base.NewEmptyUnit(),
+		StatePtr: &UnitTfModule{},
+		UnitKind: unitKind,
 	}
-	unit.OutputParsers = map[string]OutputParser{
-		"json":      unit.JSONOutputParser,
-		"regexp":    unit.RegexOutputParser,
-		"separator": unit.SeparatorOutputParser,
-	}
-	//unit.StatePtr.UnitMarkers = unit.UnitMarkers
 	return unit
 }
 
-// NewUnit creates new unit and load config.
-func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
+func NewUnit(spec map[string]interface{}, stack *project.Stack) (*UnitTfModule, error) {
 	unit := NewEmptyUnit()
-	//unit.StatePtr.UnitMarkers = unit.UnitMarkers
-	err := unit.ReadConfig(spec, stack)
+	cUnit, err := base.NewUnit(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	unit.BackendName = stack.Backend.Name()
-	// /log.Fatalf("%v", unit.BackendName)
+	unit.Unit = *cUnit
+	err = unit.ReadConfig(spec, stack)
+	if err != nil {
+		log.Debug(err.Error())
+		return nil, err
+	}
 	return &unit, nil
 }
 
-// New creates new units driver factory.
+// New creates new unit.
 func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (project.Unit, error) {
 	return NewUnit(spec, stack)
 }
 
-// NewFromState creates new units from state data.
+// NewFromState creates new unit from state data.
 func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Unit, error) {
 	mod := NewEmptyUnit()
 	err := mod.LoadState(spec, modKey, p)
@@ -56,7 +50,6 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 		log.Debug(err.Error())
 		return nil, err
 	}
-
 	return &mod, nil
 }
 

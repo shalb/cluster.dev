@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,18 +12,21 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
-	"github.com/shalb/cluster.dev/pkg/modules/terraform/common"
+	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
+
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 type Unit struct {
-	common.Unit
-	source          string
-	kubeconfig      string
-	inputs          map[string]interface{}
-	providerVersion string
-	ProviderConf    ProviderConfigSpec
+	base.Unit
+	StatePtr        *Unit                  `yaml:"-" json:"-"`
+	Source          string                 `yaml:"-" json:"source"`
+	Kubeconfig      string                 `yaml:"-" json:"kubeconfig"`
+	Inputs          map[string]interface{} `yaml:"-" json:"inputs"`
+	providerVersion string                 `yaml:"-" json:"-"`
+	ProviderConf    ProviderConfigSpec     `yaml:"-" json:"provider_conf"`
+	UnitKind        string                 `yaml:"-" json:"type"`
 }
 
 type ExecNestedSchema struct {
@@ -47,7 +51,7 @@ type ProviderConfigSpec struct {
 }
 
 func (m *Unit) KindKey() string {
-	return "kubernetes"
+	return unitKind
 }
 
 func (m *Unit) genMainCodeBlock() ([]byte, error) {
@@ -63,7 +67,12 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	for key, val := range providerCty.AsValueMap() {
 		providerBody.SetAttributeValue(key, val)
 	}
-	for key, manifest := range m.inputs {
+	markersList := map[string]*project.DependencyOutput{}
+	err = m.Project().GetMarkers(base.RemoteStateMarkerCatName, &markersList)
+	if err != nil {
+		return nil, err
+	}
+	for key, manifest := range m.Inputs {
 		unitBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
 		unitBody := unitBlock.Body()
 		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(" kubernetes-alpha"), SpacesBefore: 1}}
@@ -74,37 +83,31 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 		}
 
 		unitBody.SetAttributeValue("manifest", ctyVal)
-		for hash, m := range m.Markers() {
-			marker, ok := m.(*project.DependencyOutput)
-			refStr := common.DependencyToRemoteStateRef(marker)
-			if !ok {
-				return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+		for hash, marker := range markersList {
+			if marker.StackName == "this" {
+				marker.StackName = m.Stack().Name
 			}
+			refStr := base.DependencyToRemoteStateRef(marker)
 			hcltools.ReplaceStingMarkerInBody(unitBody, hash, refStr)
 		}
 	}
 
-	for hash, m := range m.Markers() {
-		marker, ok := m.(*project.DependencyOutput)
-		refStr := common.DependencyToRemoteStateRef(marker)
-		if !ok {
-			return nil, fmt.Errorf("generate main.tf: internal error: incorrect remote state type")
+	for hash, marker := range markersList {
+		if marker.StackName == "this" {
+			marker.StackName = m.Stack().Name
 		}
+		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(providerBody, hash, refStr)
 	}
 	return f.Bytes(), nil
 }
 
 func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
-	err := m.Unit.ReadConfig(spec, stack)
-	if err != nil {
-		return fmt.Errorf("reading kubernetes unit: %v", err.Error())
-	}
 	source, ok := spec["source"].(string)
 	if !ok {
 		return fmt.Errorf("reading kubernetes unit '%v': malformed unit source", m.Key())
 	}
-	tmplDir := m.StackPtr().TemplateDir
+	tmplDir := m.Stack().TemplateDir
 	var absSource string
 	if source[1:2] == "/" {
 		absSource = filepath.Join(tmplDir, source)
@@ -129,7 +132,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		if err != nil {
 			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
 		}
-		manifest, errIsWarn, err := m.StackPtr().TemplateTry(file)
+		manifest, errIsWarn, err := m.Stack().TemplateTry(file)
 		if err != nil {
 			if errIsWarn {
 				log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
@@ -145,14 +148,14 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		for i, manifest := range manifests {
 			key := project.ConvertToTfVarName(strings.TrimSuffix(filepath.Base(fileName), ".yaml"))
 			key = fmt.Sprintf("%s_%v", key, i)
-			m.inputs[key] = manifest
+			m.Inputs[key] = manifest
 		}
 	}
-	if len(m.inputs) < 1 {
+	if len(m.Inputs) < 1 {
 		return fmt.Errorf("the kubernetes unit must contain at least one manifest")
 	}
 
-	err = utils.JSONInterfaceToType(spec, &m.ProviderConf)
+	err = utils.JSONCopy(spec, &m.ProviderConf)
 	if err != nil {
 		return err
 	}
@@ -164,21 +167,33 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if ok {
 		m.AddRequiredProvider("kubernetes-alpha", "hashicorp/kubernetes-alpha", pv)
 	}
-	m.source = source
-	return nil
+	m.Source = source
+	m.StatePtr = &Unit{
+		Unit: m.Unit,
+	}
+	err = utils.JSONCopy(m, m.StatePtr)
+	return err
 }
 
 // ReplaceMarkers replace all templated markers with values.
 func (m *Unit) ReplaceMarkers() error {
-	err := m.Unit.ReplaceMarkers(m)
+	err := m.Unit.ReplaceMarkers()
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.inputs, m.RemoteStatesScanner, m)
+	err = project.ScanMarkers(m.Inputs, m.RemoteStatesScanner, m)
 	if err != nil {
 		return err
 	}
 	err = project.ScanMarkers(&m.ProviderConf, m.RemoteStatesScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(m.Inputs, project.OutputsScanner, m)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(&m.ProviderConf, project.OutputsScanner, m)
 	if err != nil {
 		return err
 	}
@@ -187,16 +202,15 @@ func (m *Unit) ReplaceMarkers() error {
 
 // Build generate all terraform code for project.
 func (m *Unit) Build() error {
-	err := m.Unit.Build()
-	if err != nil {
-		return err
-	}
-	m.FilesList()["main.tf"], err = m.genMainCodeBlock()
+	mainBlock, err := m.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
-	return m.CreateCodeDir()
+	if err = m.CreateFiles.Add("main.tf", string(mainBlock), fs.ModePerm); err != nil {
+		return err
+	}
+	return m.Unit.Build()
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds unit outputs.

@@ -7,6 +7,8 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/colors"
@@ -35,8 +37,9 @@ func (p *Project) SaveState() error {
 	p.StateMutex.Lock()
 	defer p.StateMutex.Unlock()
 	st := stateData{
-		Markers: p.Markers,
-		Units:   map[string]interface{}{},
+		CdevVersion: config.Global.Version,
+		Markers:     p.Markers,
+		Units:       map[string]interface{}{},
 	}
 	for key, mod := range p.Units {
 		st.Units[key] = mod.GetState()
@@ -60,9 +63,9 @@ func (p *Project) SaveState() error {
 }
 
 type stateData struct {
-	Markers map[string]interface{} `json:"markers"`
-	// Modules map[string]interface{} `json:"modules"`
-	Units map[string]interface{} `json:"units"`
+	CdevVersion string                 `json:version`
+	Markers     map[string]interface{} `json:"markers"`
+	Units       map[string]interface{} `json:"units"`
 }
 
 func (p *Project) LockState() error {
@@ -92,38 +95,74 @@ func (p *Project) UnLockState() error {
 	return os.Remove(config.Global.StateLocalLockFile)
 }
 
-func (p *Project) LoadState() (*StateProject, error) {
-	if _, err := os.Stat(config.Global.StateCacheDir); os.IsNotExist(err) {
-		err := os.Mkdir(config.Global.StateCacheDir, 0755)
-		if err != nil {
-			return nil, err
-		}
-	}
-	err := removeDirContent(config.Global.StateCacheDir)
-	if err != nil {
-		return nil, err
-	}
-
-	stateD := stateData{}
+func (p *Project) GetState() ([]byte, error) {
 	var stateStr string
+	var err error
 	var loadedStateFile []byte
 	if p.StateBackendName != "" {
 		sBk, ok := p.Backends[p.StateBackendName]
 		if !ok {
-			return nil, fmt.Errorf("load state: state backend '%v' does not found", p.StateBackendName)
+			return nil, fmt.Errorf("get remote state data: state backend '%v' does not found", p.StateBackendName)
 		}
 		stateStr, err = sBk.ReadState()
+		if err != nil {
+			return nil, fmt.Errorf("get remote state data: %w", err)
+		}
 		loadedStateFile = []byte(stateStr)
 	} else {
 		loadedStateFile, err = ioutil.ReadFile(config.Global.StateLocalFileName)
+		if err != nil {
+			return nil, fmt.Errorf("get local state data: read file: %w", err)
+		}
+	}
+	return loadedStateFile, nil
+}
+
+func (p *Project) PullState() error {
+	loadedStateFile, err := p.GetState()
+	if err != nil {
+		return fmt.Errorf("backup state: %w", err)
+	}
+	bkFileName := filepath.Join(config.Global.WorkingDir, "cdev.state")
+	log.Infof("Pulling state file: %v", bkFileName)
+	return ioutil.WriteFile(bkFileName, loadedStateFile, 0660)
+}
+
+func (p *Project) BackupState() error {
+	loadedStateFile, err := p.GetState()
+	if err != nil {
+		return fmt.Errorf("backup state: %w", err)
+	}
+	const layout = "20060102150405"
+	bkFileName := filepath.Join(config.Global.WorkingDir, fmt.Sprintf("cdev.state.backup.%v", time.Now().Format(layout)))
+	log.Infof("Backuping state file: %v", bkFileName)
+	return ioutil.WriteFile(bkFileName, loadedStateFile, 0660)
+}
+
+func (p *Project) LoadState() (*StateProject, error) {
+	if _, err := os.Stat(config.Global.StateCacheDir); os.IsNotExist(err) {
+		err := os.Mkdir(config.Global.StateCacheDir, 0755)
+		if err != nil {
+			return nil, fmt.Errorf("load state: create state cache dir: %w", err)
+		}
+	}
+	err := removeDirContent(config.Global.StateCacheDir)
+	if err != nil {
+		return nil, fmt.Errorf("load state: remove state cache dir: %w", err)
 	}
 
+	stateD := stateData{
+		Markers: make(map[string]interface{}),
+	}
+
+	loadedStateFile, err := p.GetState()
 	if err == nil {
 		err = utils.JSONDecode(loadedStateFile, &stateD)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("load state: %w", err)
 		}
 	}
+
 	statePrj := StateProject{
 		Project: Project{
 			name:             p.Name(),
@@ -133,7 +172,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			objects:          p.objects,
 			Units:            make(map[string]Unit),
 			Markers:          stateD.Markers,
-			Stack:            make(map[string]*Stack),
+			Stacks:           make(map[string]*Stack),
 			Backends:         p.Backends,
 			CodeCacheDir:     config.Global.StateCacheDir,
 			StateBackendName: p.StateBackendName,
@@ -145,76 +184,78 @@ func (p *Project) LoadState() (*StateProject, error) {
 	if statePrj.Markers == nil {
 		statePrj.Markers = make(map[string]interface{})
 	}
-	for key, m := range p.Markers {
-		statePrj.Markers[key] = m
-	}
-
+	// for key, m := range p.Markers {
+	// 	statePrj.Markers[key] = m
+	// }
+	utils.JSONCopy(p.Markers, statePrj.Markers)
 	for mName, mState := range stateD.Units {
 		log.Debugf("Loading unit from state: %v", mName)
 
 		if mState == nil {
 			continue
 		}
-		key, exists := mState.(map[string]interface{})["type"]
-		if !exists {
-			return nil, fmt.Errorf("loading state: internal error: bad unit type in state")
-		}
-		mod, err := UnitFactoriesMap[key.(string)].NewFromState(mState.(map[string]interface{}), mName, &statePrj)
+		unit, err := NewUnitFromState(mState.(map[string]interface{}), mName, &statePrj)
 		if err != nil {
-			return nil, fmt.Errorf("loading state: error loading unit from state: %v", err.Error())
+			return nil, fmt.Errorf("loading unit from state: %v", err.Error())
 		}
-		statePrj.Units[mName] = mod
-		mod.UpdateProjectRuntimeData(&statePrj.Project)
+		statePrj.Units[mName] = unit
+		unit.UpdateProjectRuntimeData(&statePrj.Project)
 	}
 	err = statePrj.prepareUnits()
 	if err != nil {
 		return nil, err
 	}
+	p.OwnState = &statePrj
 	return &statePrj, nil
 }
 
 func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
-	moddInState, exists := sp.Units[unit.Key()]
+	unitInState, exists := sp.Units[unit.Key()]
 	if !exists {
 		return utils.Diff(nil, unit.GetDiffData(), true), nil
 	}
-	var diffData interface{}
-	if unit != nil {
-		diffData = unit.GetDiffData()
-	}
-	df := utils.Diff(moddInState.GetDiffData(), diffData, true)
+
+	diffData := unit.GetDiffData()
+	stateDiffData := unitInState.GetDiffData()
+	// m, _ := utils.JSONEncodeString(diffData)
+	// log.Warnf("Diff data: %v", m)
+	// sm, _ := utils.JSONEncodeString(stateDiffData)
+	// log.Warnf("State diff data: %v", sm)
+	// mr, _ := utils.JSONEncodeString(unitInState.Project().Markers)
+	// log.Warnf("markers: %v", mr)
+	// smr, _ := utils.JSONEncodeString(unitInState.Project().Markers)
+	// log.Warnf("state markers: %v", smr)
+	df := utils.Diff(stateDiffData, diffData, true)
 	if len(df) > 0 {
-		return df, moddInState
+		return df, unitInState
 	}
-	for _, dep := range *unit.Dependencies() {
-		if sp.checkUnitChangesRecursive(dep.Unit) {
-			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), moddInState
+	for _, u := range unit.RequiredUnits() {
+		if sp.checkUnitChangesRecursive(u) {
+			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), unitInState
 		}
 	}
-	return "", moddInState
+	return "", unitInState
 }
 
 func (sp *StateProject) checkUnitChangesRecursive(unit Unit) bool {
 	if unit.WasApplied() {
 		return true
 	}
-	modNew, exists := sp.Units[unit.Key()]
+	unitInState, exists := sp.Units[unit.Key()]
 	if !exists {
 		return true
 	}
-	var diffData interface{}
-	if unit != nil {
-		diffData = unit.GetDiffData()
-	}
-	df := utils.Diff(diffData, modNew.GetDiffData(), true)
+	diffData := unit.GetDiffData()
+
+	df := utils.Diff(unitInState.GetDiffData(), diffData, true)
 	if len(df) > 0 {
 		return true
 	}
-	for _, dep := range *unit.Dependencies() {
-		if _, exists := sp.ChangedUnits[dep.Unit.Key()]; exists {
+	for _, u := range unit.RequiredUnits() {
+		if _, exists := sp.ChangedUnits[u.Key()]; exists {
 			return true
 		}
-		if sp.checkUnitChangesRecursive(dep.Unit) {
+		if sp.checkUnitChangesRecursive(u) {
 			return true
 		}
 	}

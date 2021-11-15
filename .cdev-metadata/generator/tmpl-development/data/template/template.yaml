@@ -23,7 +23,7 @@ units:
     inputs:
       bucket_name: {{ remoteState "this.create-bucket.s3_bucket_id" }}
       data: |
-        The data that will be saved in the S3 bucket after being processed by the template engine.
+        The data that will be saved in the s3 bucket after being processed by the template engine.
         Organization: {{ .variables.organization }}
         Name: {{ .variables.name }}
   -

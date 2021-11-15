@@ -45,7 +45,7 @@ func removeDirContent(dir string) error {
 }
 
 func findUnit(unit Unit, modsList map[string]Unit) *Unit {
-	mod, exists := modsList[fmt.Sprintf("%s.%s", unit.StackName(), unit.Name())]
+	mod, exists := modsList[fmt.Sprintf("%s.%s", unit.Stack().Name, unit.Name())]
 	// log.Printf("Check Mod: %s, exists: %v, list %v", name, exists, modsList)
 	if !exists {
 		return nil
@@ -59,10 +59,13 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 		return nil
 	}
 	out := reflect.ValueOf(data)
-	// if out.Kind() == reflect.Ptr && !out.IsNil() {
-	// 	 out = out.Elem()
+	if out.Kind() == reflect.Ptr && !out.IsNil() {
+		out = out.Elem()
 
-	// 	//log.Fatalf("%v \n%v ", out.Kind(), out)
+		//log.Fatalf("%v \n%v ", out.Kind(), out)
+	}
+	// if data == nil || reflect.ValueOf(data).IsNil() {
+	// 	return nil
 	// }
 	// if out.IsNil() {
 	// 	log.Fatalf("%v \n%v ", out.Kind(), out)
@@ -208,11 +211,11 @@ func BuildDep(m Unit, dep *DependencyOutput) error {
 	if dep.Unit == nil {
 
 		if dep.UnitName == "" || dep.StackName == "" {
-			return fmt.Errorf("Empty dependency in unit '%v.%v'", m.StackName(), m.Name())
+			return fmt.Errorf("Empty dependency in unit '%v.%v'", m.Stack().Name, m.Name())
 		}
-		depMod, exists := m.ProjectPtr().Units[fmt.Sprintf("%v.%v", dep.StackName, dep.UnitName)]
+		depMod, exists := m.Project().Units[fmt.Sprintf("%v.%v", dep.StackName, dep.UnitName)]
 		if !exists {
-			return fmt.Errorf("Error in unit '%v.%v' dependency, target '%v.%v' does not exist", m.StackName(), m.Name(), dep.StackName, dep.UnitName)
+			return fmt.Errorf("Error in unit '%v.%v' dependency, target '%v.%v' does not exist", m.Stack().Name, m.Name(), dep.StackName, dep.UnitName)
 		}
 		dep.Unit = depMod
 	}
@@ -296,4 +299,35 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	table.SetHeader(headers)
 	table.Append(unitsTable)
 	table.Render()
+}
+
+func (p *Project) GetMarkers(ctName string, out interface{}) error {
+
+	// if p.OwnState != nil {
+	// 	log.Errorf("State markers: %v", p.OwnState.Markers)
+	// 	stateMarkers, ok := p.OwnState.Markers[ctName]
+	// 	if ok {
+	// 		err := utils.JSONCopy(stateMarkers, out)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	}
+	// }
+	markers, ok := p.Markers[ctName]
+	if !ok {
+		return nil
+	}
+	//log.Errorf("Markers[%v]: %v", ctName, p.Markers[ctName])
+	err := utils.JSONCopy(markers, &out)
+	// dbg, err := utils.JSONEncodeString(out)
+	//log.Errorf("JSON markers: %v", dbg)
+	return err
+}
+
+func (p *Project) GetMarkersMap(ctName string, out interface{}) error {
+	depMarkers, ok := p.Markers[ctName]
+	if !ok {
+		return nil
+	}
+	return utils.JSONCopy(depMarkers, &out)
 }

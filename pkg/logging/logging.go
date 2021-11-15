@@ -72,7 +72,7 @@ func logFormatter(e *log.Entry) string {
 		output += fmt.Sprintf("[%v]", e.Fields.Get(name))
 	}
 	if traceLog {
-		traceMsg := colors.Fmt(colors.LightWhite).Sprintf("<%s>", formatCallpath(6, 15))
+		traceMsg := colors.Fmt(colors.LightWhite).Sprintf("<%s>", FormatCallpath(6, 15))
 		output = fmt.Sprintf("%s %s", output, traceMsg)
 	}
 	output = fmt.Sprintf("%s %-25s", output, e.Message)
