@@ -7,7 +7,7 @@ Example:
 ```yaml
 units:
   - name: vpc
-    type: terraform
+    type: tfmodule
     version: "2.77.0"
     source: terraform-aws-modules/vpc/aws
     inputs:

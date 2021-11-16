@@ -26,7 +26,7 @@
     ```yaml
     units:
       - name: k3s
-        type: terraform
+        type: tfmodule
         node_groups: {{ insertYAML .values.node_groups }}
     ```
 
@@ -35,7 +35,7 @@
     ```yaml
     units:
       - name: k3s
-        type: terraform
+        type: tfmodule
         node_groups:
         - name: ng1
           min_size: 1

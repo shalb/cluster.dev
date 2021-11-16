@@ -12,7 +12,7 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
 
     ```yaml
       - name: data
-        type: terraform
+        type: tfmodule
         providers: *provider_aws
         depends_on: this.eks
         source: ./terraform-submodules/data/
@@ -65,7 +65,7 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
     ```yaml
     {{- if .variables.ingressControllerEnabled }}
     - name: albs
-      type: terraform
+      type: tfmodule
       providers: *provider_aws
       source: ./terraform-submodules/albs/
       inputs:
@@ -119,7 +119,7 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
     ```yaml
      {{- if .variables.ingressControllerRoute53Enabled }}
      - name: route53_records
-       type: terraform
+       type: tfmodule
        providers: *provider_aws
        source: ./terraform-submodules/route53_records/
        inputs:
@@ -139,7 +139,7 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
       units:
         {{- if .variables.cluster_autoscaler_irsa.enabled }}
         - name: iam_assumable_role_autoscaling_autoscaler
-          type: terraform
+          type: tfmodule
           source: "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
           version: "~> 3.0"
           providers: *provider_aws
@@ -151,7 +151,7 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
             oidc_fully_qualified_subjects: {{ insertYAML .variables.cluster_autoscaler_irsa.subjects }}
             provider_url: {{ .variables.provider_url }}
         - name: iam_policy_autoscaling_autoscaler
-          type: terraform
+          type: tfmodule
           source: "terraform-aws-modules/iam/aws//modules/iam-policy"
           version: "~> 3.0"
           providers: *provider_aws

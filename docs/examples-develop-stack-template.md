@@ -16,7 +16,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
 
     ```yaml
     name: create-bucket
-    type: terraform
+    type: tfmodule
     providers: *provider_aws
     source: terraform-aws-modules/s3-bucket/aws
     version: "2.9.0"
@@ -29,7 +29,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
 
     ```yaml
     name: create-bucket
-    type: terraform
+    type: tfmodule
     providers: *provider_aws
     source: terraform-aws-modules/s3-bucket/aws
     version: "2.9.0"
@@ -39,7 +39,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
       tags: {{ insertYAML .variables.tags }}
     ```
 
-    Now we can see the tags in infra.yaml:
+    Now we can see the tags in `stack.yaml`:
 
     ```yaml
     name: cdev-tests-local
@@ -62,7 +62,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
 
     ```yaml
     name: create-s3-object
-    type: terraform
+    type: tfmodule
     providers: *provider_aws
     source: ./s3-file/
     depends_on: this.create-bucket
@@ -74,13 +74,13 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
         Name: {{ .variables.name }}
     ```
 
-    The unit sends 2 parameters. The *bucket_name* is retrieved from the `create-bucket` unit by means of [`remoteState`](https://docs.cluster.dev/stack-templates-functions/) function. The *data* parameter uses templating to obtain the *Organization* and *Name* variables from infra.yaml. 
+    The unit sends 2 parameters. The *bucket_name* is retrieved from the `create-bucket` unit by means of [`remoteState`](https://docs.cluster.dev/stack-templates-functions/) function. The *data* parameter uses templating to obtain the *Organization* and *Name* variables from stack.yaml. 
 
     Let's add to *data* input *bucket_regional_domain_name* variable to obtain the region-specific domain name of the bucket:
 
     ```yaml
     name: create-s3-object
-    type: terraform
+    type: tfmodule
     providers: *provider_aws
     source: ./s3-file/
     depends_on: this.create-bucket

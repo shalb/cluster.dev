@@ -69,19 +69,19 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
     * backend.yaml - configures backend for Cluster.dev states (including Terraform states). Uses variables from project.yaml. See [backend docs](https://docs.cluster.dev/structure-backend/).
 
-    * infra.yaml - describes stack configuration. See [stack docs](https://docs.cluster.dev/structure-stack/).
+    * stack.yaml - describes stack configuration. See [stack docs](https://docs.cluster.dev/structure-stack/).
 
 4. Run `cdev plan` to build the project. In the output you will see an infrastructure that is going to be created after running `cdev apply`.
 
     !!! note
-        Prior to running `cdev apply` make sure to look through the infra.yaml file and replace the commented fields with real values. In case you would like to use existing VPC and subnets, uncomment preset options and set correct VPC ID and subnets' IDs. If you leave them as is, Cluster.dev will have VPC and subnets created for you.
+        Prior to running `cdev apply` make sure to look through the stack.yaml file and replace the commented fields with real values. In case you would like to use existing VPC and subnets, uncomment preset options and set correct VPC ID and subnets' IDs. If you leave them as is, Cluster.dev will have VPC and subnets created for you.
 
 5. Run `cdev apply`
 
     !!! tip
         We highly recommend to run `cdev apply` in a debug mode so that you could see the Cluster.dev logging in the output: `cdev apply -l debug`
 
-6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the stack template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the infra.yaml.
+6. After `cdev apply` is successfully executed, in the output you will see the ArgoCD URL of your cluster. Sign in to the console to check whether ArgoCD is up and running and the stack template has been deployed correctly. To sign in, use the "admin" login and the bcrypted password that you have generated for the stack.yaml.
 
 7. Displayed in the output will be also a command on how to get kubeconfig and connect to your Kubernetes cluster.
 
