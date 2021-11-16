@@ -10,14 +10,14 @@ import (
 type Factory struct {
 }
 
-func NewEmptyUnit() Unit {
+func NewEmptyUnit() *Unit {
 	unit := Unit{
-		Unit:              common.NewEmptyUnit(),
+		Unit:              *common.NewEmptyUnit(),
 		StatePtr:          &Unit{},
 		RequiredProviders: make(map[string]RequiredProvider),
 		Initted:           false,
 	}
-	return unit
+	return &unit
 }
 
 func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
@@ -35,7 +35,7 @@ func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 		return nil, err
 	}
 	mod.BackendName = stack.BackendName
-	return &mod, nil
+	return mod, nil
 }
 
 // New creates new unit driver factory.
@@ -53,5 +53,5 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 	}
 	// modjs, _ := utils.JSONEncodeString(mod)
 	// log.Warnf("Mod from state: %v", modjs)
-	return &mod, nil
+	return mod, nil
 }

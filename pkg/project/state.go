@@ -217,14 +217,6 @@ func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
 
 	diffData := unit.GetDiffData()
 	stateDiffData := unitInState.GetDiffData()
-	// m, _ := utils.JSONEncodeString(diffData)
-	// log.Warnf("Diff data: %v", m)
-	// sm, _ := utils.JSONEncodeString(stateDiffData)
-	// log.Warnf("State diff data: %v", sm)
-	// mr, _ := utils.JSONEncodeString(unitInState.Project().Markers)
-	// log.Warnf("markers: %v", mr)
-	// smr, _ := utils.JSONEncodeString(unitInState.Project().Markers)
-	// log.Warnf("state markers: %v", smr)
 	df := utils.Diff(stateDiffData, diffData, true)
 	if len(df) > 0 {
 		return df, unitInState

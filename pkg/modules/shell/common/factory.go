@@ -12,7 +12,7 @@ type Factory struct {
 const unitKind string = "shell"
 
 // NewEmptyUnit creates new unit.
-func NewEmptyUnit() Unit {
+func NewEmptyUnit() *Unit {
 	unit := Unit{
 		//UnitMarkers: make(map[string]interface{}),
 		Applied:     false,
@@ -26,21 +26,21 @@ func NewEmptyUnit() Unit {
 		"separator": unit.SeparatorOutputParser,
 	}
 	//unit.StatePtr.UnitMarkers = unit.UnitMarkers
-	return unit
+	return &unit
 }
 
 // NewUnit creates new unit and load config.
 func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 	unit := NewEmptyUnit()
 	//unit.StatePtr.UnitMarkers = unit.UnitMarkers
+	unit.BackendName = stack.Backend.Name()
 	err := unit.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	unit.BackendName = stack.Backend.Name()
-	// /log.Fatalf("%v", unit.BackendName)
-	return &unit, nil
+	// log.Fatalf("%v", unit.BackendName)
+	return unit, nil
 }
 
 // New creates new units driver factory.
@@ -57,7 +57,7 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 		return nil, err
 	}
 
-	return &mod, nil
+	return mod, nil
 }
 
 func init() {

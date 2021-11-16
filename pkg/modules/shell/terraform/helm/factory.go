@@ -14,7 +14,7 @@ const unitKind string = "helm"
 
 func NewEmptyUnit() Unit {
 	unit := Unit{
-		Unit:     base.NewEmptyUnit(),
+		Unit:     *base.NewEmptyUnit(),
 		HelmOpts: map[string]interface{}{},
 		Sets:     map[string]interface{}{},
 		StatePtr: &Unit{},
