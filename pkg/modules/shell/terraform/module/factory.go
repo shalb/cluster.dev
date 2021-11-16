@@ -14,7 +14,7 @@ const unitKind string = "tfmodule"
 
 func NewEmptyUnit() UnitTfModule {
 	unit := UnitTfModule{
-		Unit:     base.NewEmptyUnit(),
+		Unit:     *base.NewEmptyUnit(),
 		StatePtr: &UnitTfModule{},
 		UnitKind: unitKind,
 	}

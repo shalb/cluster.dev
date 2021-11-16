@@ -303,16 +303,6 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 
 func (p *Project) GetMarkers(ctName string, out interface{}) error {
 
-	// if p.OwnState != nil {
-	// 	log.Errorf("State markers: %v", p.OwnState.Markers)
-	// 	stateMarkers, ok := p.OwnState.Markers[ctName]
-	// 	if ok {
-	// 		err := utils.JSONCopy(stateMarkers, out)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
 	markers, ok := p.Markers[ctName]
 	if !ok {
 		return nil

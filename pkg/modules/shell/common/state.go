@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
@@ -46,8 +45,6 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 
 // GetDiffData return unit representation as a data set for diff and reapply.
 func (u *Unit) GetDiffData() interface{} {
-	md, _ := utils.JSONEncodeString(u.Project().Markers)
-	log.Warnf("state markers GetDiffData base: %v", md)
 	diffData := map[string]interface{}{}
 	diff := u.GetUnitDiff()
 	utils.JSONCopy(diff, &diffData)
@@ -78,10 +75,8 @@ func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	if err != nil {
 		return fmt.Errorf("loading unit state: can't parse state: %v", err.Error())
 	}
-
 	stack, exists := p.LoaderProjectPtr.Stacks[stackName]
 	if !exists {
-		log.Fatalf("asdasdasd")
 		stack = &project.Stack{
 			ProjectPtr: &p.Project,
 			Name:       stackName,

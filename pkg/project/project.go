@@ -174,8 +174,6 @@ func LoadProjectFull() (*Project, error) {
 			return nil, fmt.Errorf("loading project: %w", err)
 		}
 	}
-	// m, _ := utils.JSONEncodeString(project.ownState.Markers)
-	// log.Warnf("state markers: %v", m)
 	err = project.readUnits()
 	if err != nil {
 		return nil, err

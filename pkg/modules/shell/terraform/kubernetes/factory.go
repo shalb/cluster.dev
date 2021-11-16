@@ -14,7 +14,7 @@ const unitKind string = "kubernetes"
 
 func NewEmptyUnit() Unit {
 	unit := Unit{
-		Unit:     base.NewEmptyUnit(),
+		Unit:     *base.NewEmptyUnit(),
 		Inputs:   map[string]interface{}{},
 		StatePtr: &Unit{},
 		UnitKind: unitKind,
