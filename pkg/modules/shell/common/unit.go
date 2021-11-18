@@ -482,7 +482,7 @@ func readHook(hookData interface{}, hookType string) (*HookSpec, error) {
 	err = yaml.Unmarshal(ymlTmp, &ScriptData)
 	if err != nil {
 		log.Debug(err.Error())
-		return nil, err
+		return nil, utils.ResolveYamlError(ymlTmp, err)
 	}
 	ScriptData.Command = fmt.Sprintf("#!/usr/bin/env sh\nset -e\n\n%s", cmd)
 	return &ScriptData, nil

@@ -5,6 +5,7 @@ import (
 
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
 
@@ -93,6 +94,7 @@ func getStateMap(in Backend) (res map[string]interface{}, err error) {
 	}
 	res = map[string]interface{}{}
 	err = yaml.Unmarshal(tmpData, &res)
+	err = utils.ResolveYamlError(tmpData, err)
 	return
 }
 

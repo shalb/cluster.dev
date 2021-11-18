@@ -8,6 +8,7 @@ import (
 	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
 	ctyjson "github.com/zclconf/go-cty/cty/json"
 	"gopkg.in/yaml.v3"
@@ -113,7 +114,7 @@ func ProvidersToHCL(in interface{}) (*hclwrite.File, error) {
 	err := yaml.Unmarshal([]byte(providersSpec), provSpecConf)
 	if err != nil {
 		log.Debugf("Internal error ProvidersToHCL: %v", providersSpec)
-		return nil, fmt.Errorf("ProvidersToHCL: %v", err.Error())
+		return nil, fmt.Errorf("ProvidersToHCL: %v", utils.ResolveYamlError([]byte(providersSpec), err))
 	}
 	data, ok := in.([]interface{})
 	if !ok {

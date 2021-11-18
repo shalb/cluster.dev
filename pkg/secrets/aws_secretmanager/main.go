@@ -49,7 +49,7 @@ func (s *smDriver) Read(rawData []byte) (name string, data interface{}, err erro
 	var spec secretmanagerSpec
 	err = yaml.Unmarshal(specRaw, &spec)
 	if err != nil {
-		err = fmt.Errorf("aws_secretmanager: can't parse secret '%v' spec %v", name, err)
+		err = fmt.Errorf("aws_secretmanager: can't parse secret '%v' spec %v", name, utils.ResolveYamlError(specRaw, err))
 		return
 	}
 	if spec.Region == "" || spec.SecretName == "" {
