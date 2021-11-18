@@ -31,4 +31,4 @@ All units described below have a common format and common fields. Base example:
 
 * `depends_on` - *string* or *list of strings*. One or multiple unit dependencies in the format "stack_name.unit_name". Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`.
 
-* `pre_hook` and `post_hook` blocks: See the description in [Shell unit](https://docs.cluster.dev/units-shell/). 
+* `pre_hook` and `post_hook` blocks: See the description in [Shell unit](https://docs.cluster.dev/units-shell/#options). 
