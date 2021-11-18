@@ -1,5 +1,7 @@
 # Shell Unit
 
+The unit executes Shell commands and scripts. 
+
 Example:
 
 ```yaml

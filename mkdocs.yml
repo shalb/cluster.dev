@@ -36,6 +36,7 @@ nav:
       - Stack Templates List: stack-templates-list.md
     - Units:
       - Overview: units-overview.md
+      - Shell: units-shell.md
       - Terraform: units-terraform.md
       - Helm: units-helm.md
       - Kubernetes: units-kubernetes.md

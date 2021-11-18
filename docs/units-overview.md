@@ -31,14 +31,4 @@ All units described below have a common format and common fields. Base example:
 
 * `depends_on` - *string* or *list of strings*. One or multiple unit dependencies in the format "stack_name.unit_name". Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`.
 
-* `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the unit, respectively. The commands will be executed in the same context as the actions of the unit. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the unit execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the unit.
-
-    * `command` - *string*. Shell command in text format. Will be executed in Bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
-
-    * `script` - *string*. Path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
-
-    * `on_apply` *bool*, *optional*. Turn off/on when unit applying. **Default: "true"**.
-
-    * `on_destroy` - *bool*, *optional*. Turn off/on when unit destroying. **Default: "false"**.
-
-    * `on_plan` - *bool*, *optional*. Turn off/on when unit plan executing. **Default: "false"**.
+* `pre_hook` and `post_hook` blocks: See the description in [Shell unit](https://docs.cluster.dev/units-shell/). 
