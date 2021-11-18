@@ -55,7 +55,7 @@ func ResolveYamlError(data []byte, err error) error {
 	if err != nil {
 		errNum := FindLineNumInYamlError(err)
 		yamlErr := NewYamlError(data, errNum)
-		return fmt.Errorf("yaml error details: %v %v", err.Error(), yamlErr)
+		return fmt.Errorf("%v %v", err.Error(), yamlErr)
 	}
 	return nil
 }
