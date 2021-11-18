@@ -7,7 +7,7 @@ Example:
 ```yaml
 units:
   - name: my-tf-code
-    kind: shell
+    type: shell
     env: 
       AWS_PROFILE: {{ .variables.aws_profile }}
       TF_VAR_region: {{ .project.region }}
