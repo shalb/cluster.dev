@@ -27,7 +27,7 @@ All units described below have a common format and common fields. Base example:
 
 * `name` - unit name. *Required*.
 
-* `type` - unit type. One of: `tfmodule`, `helm`, `kubernetes`, `printer`. 
+* `type` - unit type. One of: `shell`, `tfmodule`, `helm`, `kubernetes`, `printer`. 
 
 * `depends_on` - *string* or *list of strings*. One or multiple unit dependencies in the format "stack_name.unit_name". Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`.
 
