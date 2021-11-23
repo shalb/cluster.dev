@@ -1,11 +1,13 @@
 # Shell Unit
 
+The module executes Shell commands and scripts.
+
 Example:
 
 ```yaml
 units:
   - name: my-tf-code
-    kind: shell
+    type: shell
     env: 
       AWS_PROFILE: {{ .variables.aws_profile }}
       TF_VAR_region: {{ .project.region }}
