@@ -61,7 +61,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
     ```bash
       cdev project create https://github.com/shalb/cdev-do-k8s
     ```
-    This will create a new empty project.  
+    This will create a new empty project.
 
 3. Edit variables in the example's files, if necessary:
 
@@ -87,7 +87,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 
 8. Destroy the cluster and all created resources with the command `cdev destroy`
 
-## Resources 
+## Resources
 
 Resources to be created within the project:
 

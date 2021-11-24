@@ -81,7 +81,7 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
 
 3. Use "cluster.dev" domain for zone delegation.
 
-## Create project 
+## Create project
 
 1. Configure [access to AWS](#authentication) and export required variables.
 
@@ -90,7 +90,7 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
     ```bash
       cdev project create https://github.com/shalb/cdev-aws-eks
     ```
-    This will create a new empty project.  
+    This will create a new empty project.
 
 3. Edit variables in the example's files, if necessary:
 

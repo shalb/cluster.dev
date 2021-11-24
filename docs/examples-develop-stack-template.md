@@ -74,7 +74,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
         Name: {{ .variables.name }}
     ```
 
-    The unit sends 2 parameters. The *bucket_name* is retrieved from the `create-bucket` unit by means of [`remoteState`](https://docs.cluster.dev/stack-templates-functions/) function. The *data* parameter uses templating to obtain the *Organization* and *Name* variables from stack.yaml. 
+    The unit sends 2 parameters. The *bucket_name* is retrieved from the `create-bucket` unit by means of [`remoteState`](https://docs.cluster.dev/stack-templates-functions/) function. The *data* parameter uses templating to retrieve the *Organization* and *Name* variables from stack.yaml. 
 
     Let's add to *data* input *bucket_regional_domain_name* variable to obtain the region-specific domain name of the bucket:
 
@@ -93,7 +93,7 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
         Bucket regional domain name: {{ remoteState "this.create-bucket.s3_bucket_bucket_regional_domain_name" }}
     ```
 
-    Check the configuration by running `cdev plan` command; apply it with `cdev apply -l debug`. 
+    Check the configuration by running `cdev plan` command; apply it with `cdev apply -l debug`.
 
 5. The `print_outputs` unit retrieves data from two other units by means of [`remoteState`](https://docs.cluster.dev/stack-templates-functions/) function: *bucket_domain* variable from `create-bucket` unit and *s3_file_info* from `create-s3-object` unit:
 

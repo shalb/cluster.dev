@@ -1,5 +1,9 @@
 # Overview
 
+![cdev template diagram](./images/cdev-template.png)
+
+## Description
+
 A stack template is a yaml file that tells Cluster.dev which units to run and how. It is a core Cluster.dev resource that makes for its flexibility. Stack templates use Go template language to allow you customise and select the units you want to run.
 
 The stack template's config files are stored within the stack template directory that could be located either locally or in a Git repo. Cluster.dev reads all _./*.yaml files from the directory (non-recursively), renders a stack template with the project's data, parse the yaml file and loads [units](https://docs.cluster.dev/units-overview/) - the most primitive elements of a stack template. 
