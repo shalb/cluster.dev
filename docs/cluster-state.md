@@ -8,6 +8,8 @@ The location of cdev and Terraform states is determined in backend. By default t
 
 State is created during units applying stage. When we make changes into a project, Cluster.dev builds state from the current project considering the changes. Then it compares the two configurations (the actual with the desired one) and shows the difference between them, i.e. the units to be modified, applied or destroyed. Executing `cdev apply` deploys the changes and updates the state.
 
+Deleting the cdev state is discouraged, however, is not critical unlike Terraform state. This is because Cluster.dev units are Terraform based and have their own states. In case of deletion the state will be redeployed with the next `cdev apply`.
+
 To work with the cdev state, use dedicated [commands](https://docs.cluster.dev/cli-commands/). Manual editing of the state file is highly undesirable. 
 
 
