@@ -5,6 +5,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -20,11 +21,11 @@ func (f *Factory) New(config []byte, name string, p *project.Project) (project.B
 	state := map[string]interface{}{}
 	err := yaml.Unmarshal(config, &bk)
 	if err != nil {
-		return nil, err
+		return nil, utils.ResolveYamlError(config, err)
 	}
 	err = yaml.Unmarshal(config, &state)
 	if err != nil {
-		return nil, err
+		return nil, utils.ResolveYamlError(config, err)
 	}
 	bk.state = state
 	if bk.AccessKey != "" && bk.SecretKey != "" {

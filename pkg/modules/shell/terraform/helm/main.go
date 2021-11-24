@@ -154,7 +154,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			vYAML := make(map[string]interface{})
 			err = yaml.Unmarshal(values, &vYAML)
 			if err != nil {
-				return fmt.Errorf("read unit config: unmarshal values file: ", err.Error())
+				return fmt.Errorf("read unit config: unmarshal values file: ", utils.ResolveYamlError(values, err))
 			}
 			m.ValuesYAML = append(m.ValuesYAML, vYAML)
 			m.ValuesFilesList = append(m.ValuesFilesList, string(values))

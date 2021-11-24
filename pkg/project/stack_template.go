@@ -6,6 +6,7 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,10 +24,7 @@ func NewStackTemplate(data []byte) (*stackTemplate, error) {
 	iTmpl := stackTemplate{}
 	err := yaml.Unmarshal(data, &iTmpl)
 	if err != nil {
-		if config.Global.TraceLog {
-			log.Debug(string(data))
-		}
-		return nil, fmt.Errorf("unmarshal template data: %v", err.Error())
+		return nil, fmt.Errorf("unmarshal template data: %v", utils.ResolveYamlError(data, err))
 	}
 	if len(iTmpl.Units) < 1 {
 		if len(iTmpl.Modules) < 1 {

@@ -106,7 +106,7 @@ func LoadProjectBase() (*Project, error) {
 	var prjConfParsed map[string]interface{}
 	err = yaml.Unmarshal(project.configDataFile, &prjConfParsed)
 	if err != nil {
-		log.Fatalf("Loading project: parsing project config: ", err.Error())
+		log.Fatalf("Loading project: parsing project config: ", utils.ResolveYamlError(project.configDataFile, err))
 	}
 	if name, ok := prjConfParsed["name"].(string); !ok {
 		log.Fatal("Loading project: error in project config: name is required.")

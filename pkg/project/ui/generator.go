@@ -349,7 +349,7 @@ func getTemplateSpec(catDir, templateName string, tFS TmplFS) (res templateConfS
 	}
 	err = yaml.Unmarshal(configRaw, &rs)
 	if err != nil {
-		err = fmt.Errorf("reading template: config parse '%v': %v", confFileName, err.Error())
+		err = fmt.Errorf("reading template: config parse '%v': %v", confFileName, utils.ResolveYamlError(configRaw, err))
 		return
 	}
 	res = rs
@@ -366,7 +366,7 @@ func getCategorySpec(catDir string, tFS TmplFS) (res categoryConfSpec, err error
 	}
 	err = yaml.Unmarshal(configRaw, &rs)
 	if err != nil {
-		err = fmt.Errorf("reading template: config parse %v: %v", confFileName, err.Error())
+		err = fmt.Errorf("reading template: config parse %v: %v", confFileName, utils.ResolveYamlError(configRaw, err))
 		return
 	}
 	res = rs

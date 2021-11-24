@@ -39,7 +39,7 @@ func YAMLInterfaceToType(in, out interface{}) error {
 	if err != nil {
 		return err
 	}
-	return yaml.Unmarshal(res, out)
+	return ResolveYamlError(res, yaml.Unmarshal(res, out))
 }
 
 // JSONEncode encode in to JSON.
