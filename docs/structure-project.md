@@ -23,8 +23,7 @@ exports:
 
 * `kind`: object kind. Must be set as `project`. *Required*.
 
-* `backend`: name of the backend that will be used to store the Cluster.dev state of the current project. *Optional*. If the backend is not specified the state will be saved locally in the ./
-.state file. For now only S3 bucket backends are supported. 
+* `backend`: name of the backend that will be used to store the Cluster.dev state of the current project. *Optional*. If the backend is not specified the state will be saved locally in the ./cdev.state file. For now only S3 bucket backends are supported. 
 
 * `variables`: a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the organization name will look like this: `{{ .project.variables.organization }}`.
 

@@ -28,3 +28,5 @@ Available commands:
 * `state`       State operations.
 
     * `unlock`     Unlock state forcibly.
+    * `pull`       Download remote state locally in ./cdev.state file.    
+    * `update`     Is used when after applying a project and cdev update its state becomes incompatible with the existing one.
