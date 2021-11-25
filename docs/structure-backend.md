@@ -4,7 +4,10 @@ Backend is an object that describes backend storage for Terraform and Cluster.de
 
 File: searching in `./*.yaml`. *Required at least one*.
 In the backends' configuration you can use any options of the appropriate Terraform backend. They will be converted as is.
-Currently 4 types of backends are supported:
+Cluster.dev supports 4 types of backends.
+
+!!! Info
+    Please note that for now only S3 bucket backends are supported.
 
 * `s3` AWS S3 backend:
 

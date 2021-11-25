@@ -30,6 +30,7 @@ nav:
       - Stack: structure-stack.md
       - Backend: structure-backend.md
       - Secrets: structure-secrets.md
+      - State: cluster-state.md
     - Stack Templates:
       - Overview: stack-templates-overview.md
       - Functions: stack-templates-functions.md
