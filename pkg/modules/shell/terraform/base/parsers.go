@@ -31,7 +31,7 @@ func TerraformJSONParser(in string, out interface{}) error {
 	for key, val := range tfOutputData {
 		tp := reflect.ValueOf(val.Type)
 		if tp.Kind() != reflect.String || val.Type.(string) != "string" {
-			log.Warnf("parse terraform outputs: value not in string format! we will convert it to string, but it is recommended to use remote states instead of outputs")
+			log.Warnf("parse terraform outputs: the value is not in string format! we will convert it to string, but it is recommended to use remote states instead of outputs")
 		}
 		strValue := fmt.Sprintf("%v", val.Value)
 		outTmp[key] = strValue

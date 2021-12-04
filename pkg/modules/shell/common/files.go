@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/apex/log"
@@ -21,6 +22,14 @@ type CreateFileRepresentation struct {
 // FilesListT describes all unit's files will be write to the unit's working directory when building.
 type FilesListT []*CreateFileRepresentation
 
+func (l *FilesListT) Len() int {
+	return len(*l)
+}
+
+func (l *FilesListT) IsEmpty() bool {
+	return len(*l) == 0
+}
+
 // Find searchs file and returns a pointer to it or nil if not found.
 func (l *FilesListT) Find(fileName string) int {
 	for i, f := range *l {
@@ -35,7 +44,7 @@ func remove(slice []int, s int) []int {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func (l *FilesListT) SPrint() string {
+func (l *FilesListT) SPrintLs() string {
 	var res string
 	for _, f := range *l {
 		res += fmt.Sprintf("%v: %v\n", f.FileName, f.FileMode)
@@ -58,7 +67,7 @@ func (l *FilesListT) Add(fileName string, content string, mode fs.FileMode) erro
 }
 
 // ReadDir recursively reads files in path, saving relative pathes from baseDir.
-func (l *FilesListT) ReadDir(path, baseDir string) (err error) {
+func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error) {
 	_, err = filepath.Rel(baseDir, path)
 	if err != nil {
 		return
@@ -73,6 +82,16 @@ func (l *FilesListT) ReadDir(path, baseDir string) (err error) {
 				if err != nil {
 					return err
 				}
+				matchPattern := true
+				for _, p := range pattern {
+					match := regexp.MustCompile(p).MatchString(relPath)
+					if match != true {
+						break
+					}
+				}
+				if !matchPattern {
+					return nil
+				}
 				content, err := ioutil.ReadFile(path)
 				if err != nil {
 					return err
@@ -84,6 +103,31 @@ func (l *FilesListT) ReadDir(path, baseDir string) (err error) {
 			}
 			return nil
 		})
+	return
+}
+
+// ReadFile reads file to list.
+func (l *FilesListT) ReadFile(path, baseDir string) (err error) {
+	_, err = filepath.Rel(baseDir, path)
+	if err != nil {
+		return
+	}
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return
+	}
+	relPath, err := filepath.Rel(baseDir, path)
+	if err != nil {
+		return
+	}
+	err = l.Add(relPath, string(content), fileInfo.Mode())
+	if err != nil {
+		return
+	}
 	return
 }
 

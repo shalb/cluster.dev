@@ -20,7 +20,6 @@ import (
 
 type Unit struct {
 	base.Unit
-	StatePtr        *Unit                  `yaml:"-" json:"-"`
 	Source          string                 `yaml:"-" json:"source"`
 	Kubeconfig      string                 `yaml:"-" json:"kubeconfig"`
 	Inputs          map[string]interface{} `yaml:"-" json:"inputs"`
@@ -68,7 +67,7 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 		providerBody.SetAttributeValue(key, val)
 	}
 	markersList := map[string]*project.DependencyOutput{}
-	err = m.Project().GetMarkers(base.RemoteStateMarkerCatName, &markersList)
+	err = m.Project().GetMarkers(base.RemoteStateMarkerCatName, markersList)
 	if err != nil {
 		return nil, err
 	}
@@ -168,11 +167,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		m.AddRequiredProvider("kubernetes-alpha", "hashicorp/kubernetes-alpha", pv)
 	}
 	m.Source = source
-	m.StatePtr = &Unit{
-		Unit: m.Unit,
-	}
-	err = utils.JSONCopy(m, m.StatePtr)
-	return err
+	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.

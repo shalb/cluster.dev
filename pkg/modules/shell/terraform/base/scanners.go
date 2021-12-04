@@ -21,7 +21,7 @@ func (m *Unit) RemoteStatesScanner(data reflect.Value, unit project.Unit) (refle
 	resString := subVal.String()
 
 	markersList := map[string]*project.DependencyOutput{}
-	err := unit.Project().GetMarkers(RemoteStateMarkerCatName, &markersList)
+	err := unit.Project().GetMarkers(RemoteStateMarkerCatName, markersList)
 	if err != nil {
 		return reflect.ValueOf(nil), fmt.Errorf("process outputs: %w", err)
 	}
@@ -41,16 +41,16 @@ func (m *Unit) RemoteStatesScanner(data reflect.Value, unit project.Unit) (refle
 			}
 			markerTmp := project.DependencyOutput{Unit: depUnit, UnitName: marker.UnitName, StackName: stackName, Output: marker.Output}
 
-			if unit.FindDependency(markerTmp.StackName, markerTmp.UnitName) == nil {
-				*unit.Dependencies() = append(*unit.Dependencies(), &markerTmp)
+			if unit.Dependencies().Get(depUnit.Key()) == nil {
+				unit.Dependencies().Add(depUnit.Key(), &markerTmp)
 			} else {
-				unit.FindDependency(markerTmp.StackName, markerTmp.UnitName).Output = marker.Output
+				unit.Dependencies().Get(depUnit.Key()).Output = marker.Output
 			}
-			_, exists = depUnit.ExpectedOutputs()[marker.Output]
+			_, exists = depUnit.ExpectedOutputs().List[marker.Output]
 			if !exists {
-				depUnit.ExpectedOutputs()[marker.Output] = &markerTmp
+				depUnit.ExpectedOutputs().List[marker.Output] = &markerTmp
 			} else {
-				depUnit.ExpectedOutputs()[marker.Output].Output = marker.Output
+				depUnit.ExpectedOutputs().List[marker.Output].Output = marker.Output
 			}
 		}
 	}

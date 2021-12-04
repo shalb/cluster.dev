@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"sync"
 	"text/template"
 
@@ -17,8 +18,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ConfigFileName name of required project config file.
-const ConfigFileName = "project.yaml"
+// ConfigFilePattern name of required project config file.
+const ConfigFilePattern = "^project.y[a]{0,1}ml$"
 const projectObjKindKey = "Project"
 
 // MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
@@ -100,7 +101,7 @@ func LoadProjectBase() (*Project, error) {
 	}
 	err = project.readManifests()
 	if project.configDataFile == nil {
-		log.Fatalf("Loading project: loading project config: file '%v', empty configuration	.", ConfigFileName)
+		log.Fatalf("Loading project: loading project config: file does not exists or empty configuration (project.yaml).")
 	}
 
 	var prjConfParsed map[string]interface{}
@@ -331,14 +332,18 @@ func (p *Project) Name() string {
 }
 
 // Return project conf and slice of others config files.
-func (p *Project) readManifests() error {
+func (p *Project) readManifests() (err error) {
 	var files []string
-	var err error
 	files, _ = filepath.Glob(config.Global.WorkingDir + "/*.yaml")
+	filesYML, _ := filepath.Glob(config.Global.WorkingDir + "/*.yml")
+	files = append(files, filesYML...)
 	objFiles := make(map[string][]byte)
+
 	for _, file := range files {
+		// log.Warnf("%v", file)
 		fileName, _ := filepath.Rel(config.Global.WorkingDir, file)
-		if fileName == ConfigFileName {
+		isProjectConfig := regexp.MustCompile(ConfigFilePattern).MatchString(fileName)
+		if isProjectConfig {
 			p.configDataFile, err = ioutil.ReadFile(file)
 		} else {
 			objFiles[file], err = ioutil.ReadFile(file)
@@ -391,12 +396,12 @@ func (p *Project) PrintInfo() error {
 	table.SetHeader([]string{"Name", "Stack", "Kind", "Dependencies"})
 	for name, unit := range p.Units {
 		deps := ""
-		for i, dep := range *unit.Dependencies() {
+		for i, dep := range unit.Dependencies().GetSlice() {
 			deps = fmt.Sprintf("%s%s.%s", deps, dep.StackName, dep.UnitName)
 			if dep.Output != "" {
 				deps = fmt.Sprintf("%s.%s", deps, dep.Output)
 			}
-			if i != len(*unit.Dependencies())-1 {
+			if i != len(unit.Dependencies().GetSlice())-1 {
 				deps += "\n"
 			}
 		}

@@ -17,21 +17,20 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
-type UnitTfModule struct {
+type Unit struct {
 	base.Unit
 	Source      string                 `yaml:"-" json:"source"`
 	Version     string                 `yaml:"-" json:"version,omitempty"`
 	Inputs      map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
 	LocalModule *common.FilesListT     `yaml:"-" json:"local_module"`
-	StatePtr    *UnitTfModule          `yaml:"-" json:"-"`
 	UnitKind    string                 `yaml:"-" json:"type"`
 }
 
-func (u *UnitTfModule) KindKey() string {
+func (u *Unit) KindKey() string {
 	return unitKind
 }
 
-func (u *UnitTfModule) genMainCodeBlock() ([]byte, error) {
+func (u *Unit) genMainCodeBlock() ([]byte, error) {
 
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
@@ -54,7 +53,7 @@ func (u *UnitTfModule) genMainCodeBlock() ([]byte, error) {
 		unitBody.SetAttributeValue("source", cty.StringVal(u.Source))
 	}
 	markersList := map[string]*project.DependencyOutput{}
-	err := u.Project().GetMarkers(base.RemoteStateMarkerCatName, &markersList)
+	err := u.Project().GetMarkers(base.RemoteStateMarkerCatName, markersList)
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +68,11 @@ func (u *UnitTfModule) genMainCodeBlock() ([]byte, error) {
 }
 
 // genOutputsBlock generate output code block for this unit.
-func (u *UnitTfModule) genOutputs() ([]byte, error) {
+func (u *Unit) genOutputs() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	for output := range u.ExpectedOutputs() {
+	for output := range u.ExpectedOutputs().List {
 		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
 		outputName := re.FindString(output)
 		if len(outputName) < 1 {
@@ -88,7 +87,7 @@ func (u *UnitTfModule) genOutputs() ([]byte, error) {
 
 }
 
-func (u *UnitTfModule) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	u.UnitKind = u.KindKey()
 	source, ok := spec["source"].(string)
 	if !ok {
@@ -115,20 +114,11 @@ func (u *UnitTfModule) ReadConfig(spec map[string]interface{}, stack *project.St
 		mInputs = nil
 	}
 	u.Inputs = mInputs
-	u.StatePtr = &UnitTfModule{
-		Unit: u.Unit,
-	}
-	u.StatePtr.LocalModule = u.LocalModule
-	// log.Warnf("CreateFiles: %v", m.StatePtr.CreateFiles)
-	err := utils.JSONCopy(u, u.StatePtr)
-	// for dir, file := range m.LocalUnit {
-	// 	m.StatePtr.LocalUnit[dir] = base64.StdEncoding.EncodeToString([]byte(file))
-	// }
-	return err
+	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.
-func (u *UnitTfModule) ReplaceMarkers() error {
+func (u *Unit) ReplaceMarkers() error {
 	err := u.Unit.ReplaceMarkers()
 	if err != nil {
 		return err
@@ -146,7 +136,7 @@ func (u *UnitTfModule) ReplaceMarkers() error {
 }
 
 // Build generate all terraform code for project.
-func (u *UnitTfModule) Build() error {
+func (u *Unit) Build() error {
 	err := u.ReplaceMarkers()
 	if err != nil {
 		return err
@@ -161,7 +151,7 @@ func (u *UnitTfModule) Build() error {
 		log.Debug(err.Error())
 		return err
 	}
-	if len(u.ExpectedOutputs()) > 0 {
+	if len(u.ExpectedOutputs().List) > 0 {
 		outputsFile, err := u.genOutputs()
 		if err != nil {
 			log.Debug(err.Error())
@@ -186,6 +176,6 @@ func (u *UnitTfModule) Build() error {
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
-func (m *UnitTfModule) UpdateProjectRuntimeData(p *project.Project) error {
+func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return m.Unit.UpdateProjectRuntimeData(p)
 }

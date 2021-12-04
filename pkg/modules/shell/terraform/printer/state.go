@@ -8,9 +8,14 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-func (m *Unit) GetState() interface{} {
-	m.StatePtr.Unit = m.Unit.GetState().(base.Unit)
-	return *m.StatePtr
+func (u *Unit) GetState() interface{} {
+	unitState := Unit{}
+	err := utils.JSONCopy(*u, &unitState)
+	if err != nil {
+		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
+	}
+	unitState.Unit = u.Unit.GetState().(base.Unit)
+	return unitState
 }
 
 type UnitDiffSpec struct {
@@ -47,9 +52,5 @@ func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateP
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
-	m.StatePtr = &Unit{
-		Unit: m.Unit,
-	}
-	err = utils.JSONCopy(m, m.StatePtr)
 	return err
 }

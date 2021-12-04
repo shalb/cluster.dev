@@ -12,16 +12,15 @@ type Factory struct {
 
 const unitKind string = "tfmodule"
 
-func NewEmptyUnit() UnitTfModule {
-	unit := UnitTfModule{
+func NewEmptyUnit() Unit {
+	unit := Unit{
 		Unit:     *base.NewEmptyUnit(),
-		StatePtr: &UnitTfModule{},
 		UnitKind: unitKind,
 	}
 	return unit
 }
 
-func NewUnit(spec map[string]interface{}, stack *project.Stack) (*UnitTfModule, error) {
+func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 	unit := NewEmptyUnit()
 	cUnit, err := base.NewUnit(spec, stack)
 	if err != nil {

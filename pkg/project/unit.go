@@ -13,7 +13,7 @@ type Unit interface {
 	Project() *Project
 	Backend() Backend
 	ReplaceMarkers() error
-	Dependencies() *[]*DependencyOutput
+	Dependencies() *DependenciesOutputsT
 	RequiredUnits() map[string]Unit
 	Build() error
 	Init() error
@@ -21,7 +21,7 @@ type Unit interface {
 	Plan() error
 	Destroy() error
 	Key() string
-	ExpectedOutputs() map[string]*DependencyOutput
+	ExpectedOutputs() *DependenciesOutputsT
 	GetState() interface{}
 	GetDiffData() interface{}
 	GetStateDiffData() interface{}
@@ -30,7 +30,6 @@ type Unit interface {
 	CodeDir() string
 	UpdateProjectRuntimeData(p *Project) error
 	WasApplied() bool
-	FindDependency(stackName, unitName string) *DependencyOutput
 }
 
 type UnitDriver interface {
@@ -98,7 +97,6 @@ func NewUnitFromState(state map[string]interface{}, name string, p *StateProject
 			return nil, fmt.Errorf("internal error: bad unit type in state '%v'", mType)
 		}
 	}
-
 	return modDrv.NewFromState(state, name, p)
 }
 

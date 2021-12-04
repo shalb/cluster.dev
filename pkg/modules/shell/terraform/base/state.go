@@ -15,16 +15,23 @@ type UnitDiffSpec struct {
 	Providers interface{} `json:"providers,omitempty"`
 }
 
-func (m *Unit) GetState() interface{} {
-	m.StatePtr.ApplyConf = nil
-	m.StatePtr.DestroyConf = nil
-	m.StatePtr.InitConf = nil
-	m.StatePtr.PlanConf = nil
-	m.StatePtr.Env = nil
-	m.StatePtr.OutputParsers = nil
-	m.StatePtr.CreateFiles = nil
-	m.StatePtr.WorkDir = ""
-	return *m.StatePtr
+func (u *Unit) GetState() interface{} {
+
+	unitState := Unit{}
+	err := utils.JSONCopy(*u, &unitState)
+	if err != nil {
+		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
+	}
+	unitState.Unit = u.Unit.GetState().(common.Unit)
+	unitState.ApplyConf = nil
+	unitState.DestroyConf = nil
+	unitState.InitConf = nil
+	unitState.PlanConf = nil
+	unitState.Env = nil
+	unitState.OutputParsers = nil
+	unitState.CreateFiles = nil
+	unitState.WorkDir = ""
+	return unitState
 }
 
 func (m *Unit) GetUnitDiff() UnitDiffSpec {
@@ -43,7 +50,7 @@ func (m *Unit) GetUnitDiff() UnitDiffSpec {
 
 func (m *Unit) GetDiffData() interface{} {
 	diff := m.GetUnitDiff()
-	for output := range m.Outputs {
+	for output := range m.Outputs.List {
 		diff.Outputs[output] = "<terraform output>"
 	}
 	diffData := map[string]interface{}{}
@@ -65,10 +72,6 @@ func (m *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	m.fillShellUnit()
 	err = utils.JSONCopy(spec, &m)
 
-	if err != nil {
-		return fmt.Errorf("loading unit state: can't parse state: %v", err.Error())
-	}
-	err = utils.JSONCopy(m, m.StatePtr)
 	return err
 }
 

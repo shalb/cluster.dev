@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/shalb/cluster.dev/pkg/colors"
 )
 
 func FindLineNumInYamlError(err error) []int {
@@ -38,9 +40,9 @@ func NewYamlError(data []byte, lines []int) string {
 	}
 	for _, k := range strings.Split(string(data), "\n")[startPosition:] {
 		lineNum := startPosition + 1 + iterator
-		lineText := fmt.Sprintf("%v: %s", lineNum, k)
+		lineText := fmt.Sprintf("%4d: %-20s", lineNum, k)
 		if iterator == num-startPosition-1 {
-			lineText = lineText + "   <<<<<<<<<"
+			lineText = lineText + colors.Fmt(colors.RedBold).Sprint("<<<<<<<<<")
 		}
 		errString = append(errString, lineText)
 		iterator++

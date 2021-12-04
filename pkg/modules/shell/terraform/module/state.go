@@ -17,12 +17,17 @@ type UnitDiffSpec struct {
 	LocalModule *common.FilesListT `json:"local_module,omitempty"`
 }
 
-func (u *UnitTfModule) GetState() interface{} {
-	u.StatePtr.Unit = u.Unit.GetState().(base.Unit)
-	return *u.StatePtr
+func (u *Unit) GetState() interface{} {
+	unitState := Unit{}
+	err := utils.JSONCopy(*u, &unitState)
+	if err != nil {
+		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
+	}
+	unitState.Unit = u.Unit.GetState().(base.Unit)
+	return unitState
 }
 
-func (u *UnitTfModule) GetUnitDiff() UnitDiffSpec {
+func (u *Unit) GetUnitDiff() UnitDiffSpec {
 	diff := u.Unit.GetUnitDiff()
 	st := UnitDiffSpec{
 		UnitDiffSpec: diff,
@@ -37,7 +42,7 @@ func (u *UnitTfModule) GetUnitDiff() UnitDiffSpec {
 	return st
 }
 
-func (u *UnitTfModule) GetDiffData() interface{} {
+func (u *Unit) GetDiffData() interface{} {
 	st := u.GetUnitDiff()
 	res := map[string]interface{}{}
 	utils.JSONCopy(st, &res)
@@ -45,7 +50,7 @@ func (u *UnitTfModule) GetDiffData() interface{} {
 	return res
 }
 
-func (u *UnitTfModule) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
+func (u *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
 	err := u.Unit.LoadState(stateData, modKey, p)
 	if err != nil {
 		return err
@@ -54,9 +59,5 @@ func (u *UnitTfModule) LoadState(stateData interface{}, modKey string, p *projec
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
-	u.StatePtr = &UnitTfModule{
-		Unit: u.Unit,
-	}
-	err = utils.JSONCopy(u, u.StatePtr)
-	return err
+	return nil
 }

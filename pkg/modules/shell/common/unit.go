@@ -26,6 +26,10 @@ type OperationConfig struct {
 	Commands []interface{} `yaml:"commands" json:"commands"`
 }
 
+type OutputsT struct {
+	List map[string]*project.DependencyOutput `json:"outputs_list,omitempty"`
+}
+
 // OutputsConfigSpec describe how to retrive parse unit outputs.
 type OutputsConfigSpec struct {
 	Command   string `yaml:"command,omitempty" json:"command,omitempty"`
@@ -58,39 +62,29 @@ type OutputParser func(string, interface{}) error
 
 // Unit describe cluster.dev shell unit.
 type Unit struct {
-	StatePtr         *Unit                                `yaml:"-" json:"-"`
-	StackPtr         *project.Stack                       `yaml:"-" json:"-"`
-	ProjectPtr       *project.Project                     `yaml:"-" json:"-"`
-	DependenciesList []*project.DependencyOutput          `yaml:"-" json:"dependencies,omitempty"`
-	Outputs          map[string]*project.DependencyOutput `yaml:"-" json:"outputs,omitempty"`
-	SpecRaw          map[string]interface{}               `yaml:"-" json:"-"`
-	OutputRaw        []byte                               `yaml:"-" json:"-"`
-	CacheDir         string                               `yaml:"-" json:"-"`
-	MyName           string                               `yaml:"name" json:"name"`
-	WorkDir          string                               `yaml:"work_dir,omitempty" json:"work_dir,omitempty"`
-	Env              interface{}                          `yaml:"env,omitempty" json:"env,omitempty"`
-	CreateFiles      *FilesListT                          `yaml:"create_files,omitempty" json:"create_files,omitempty"`
-	InitConf         *OperationConfig                     `yaml:"init,omitempty" json:"init,omitempty"`
-	ApplyConf        *OperationConfig                     `yaml:"apply,omitempty" json:"apply,omitempty"`
-	PlanConf         *OperationConfig                     `yaml:"plan,omitempty" json:"plan,omitempty"`
-	DestroyConf      *OperationConfig                     `yaml:"destroy,omitempty" json:"destroy,omitempty"`
-	GetOutputsConf   *OutputsConfigSpec                   `yaml:"outputs,omitempty" json:"outputs_config,omitempty"`
-	OutputParsers    map[string]OutputParser              `yaml:"-" json:"-"`
-	Applied          bool                                 `yaml:"-" json:"-"`
-	PreHook          *HookSpec                            `yaml:"-" json:"pre_hook,omitempty"`
-	PostHook         *HookSpec                            `yaml:"-" json:"post_hook,omitempty"`
-	UnitKind         string                               `yaml:"-" json:"type"`
-	BackendPtr       *project.Backend                     `yaml:"-" json:"-"`
-	BackendName      string                               `yaml:"-" json:"backend_name"`
-}
-
-func (u *Unit) FindDependency(stackName, unitName string) *project.DependencyOutput {
-	for _, dep := range u.DependenciesList {
-		if dep.StackName == stackName && dep.UnitName == unitName {
-			return dep
-		}
-	}
-	return nil
+	StackPtr         *project.Stack                `yaml:"-" json:"-"`
+	ProjectPtr       *project.Project              `yaml:"-" json:"-"`
+	DependenciesList *project.DependenciesOutputsT `yaml:"-" json:"dependencies,omitempty"`
+	Outputs          *project.DependenciesOutputsT `yaml:"-" json:"outputs,omitempty"`
+	SpecRaw          map[string]interface{}        `yaml:"-" json:"-"`
+	OutputRaw        []byte                        `yaml:"-" json:"-"`
+	CacheDir         string                        `yaml:"-" json:"-"`
+	MyName           string                        `yaml:"name" json:"name"`
+	WorkDir          string                        `yaml:"work_dir,omitempty" json:"work_dir,omitempty"`
+	Env              interface{}                   `yaml:"env,omitempty" json:"env,omitempty"`
+	CreateFiles      *FilesListT                   `yaml:"create_files,omitempty" json:"create_files,omitempty"`
+	InitConf         *OperationConfig              `yaml:"init,omitempty" json:"init,omitempty"`
+	ApplyConf        *OperationConfig              `yaml:"apply,omitempty" json:"apply,omitempty"`
+	PlanConf         *OperationConfig              `yaml:"plan,omitempty" json:"plan,omitempty"`
+	DestroyConf      *OperationConfig              `yaml:"destroy,omitempty" json:"destroy,omitempty"`
+	GetOutputsConf   *OutputsConfigSpec            `yaml:"outputs,omitempty" json:"outputs_config,omitempty"`
+	OutputParsers    map[string]OutputParser       `yaml:"-" json:"-"`
+	Applied          bool                          `yaml:"-" json:"-"`
+	PreHook          *HookSpec                     `yaml:"-" json:"pre_hook,omitempty"`
+	PostHook         *HookSpec                     `yaml:"-" json:"post_hook,omitempty"`
+	UnitKind         string                        `yaml:"-" json:"type"`
+	BackendPtr       *project.Backend              `yaml:"-" json:"-"`
+	BackendName      string                        `yaml:"-" json:"backend_name"`
 }
 
 // WasApplied return true if unit's method Apply was runned.
@@ -105,13 +99,14 @@ func (u *Unit) WasApplied() bool {
 
 // ReadConfig reads unit spec (unmarshaled YAML) and init the unit.
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+
 	if stack == nil {
 		return fmt.Errorf("read shell unit: empty stack or project")
 	}
 	u.StackPtr = stack
 	u.ProjectPtr = stack.ProjectPtr
 	u.SpecRaw = spec
-	var modDeps []*project.DependencyOutput
+	var modDeps *project.DependenciesOutputsT
 	var err error
 	dependsOn, ok := spec["depends_on"]
 	if ok {
@@ -159,17 +154,13 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		}
 	}
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
-	err = utils.JSONCopy(u, u.StatePtr)
-	if err != nil {
-		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
-	}
 	return nil
 }
 
 // ExpectedOutputs returns expected outputs of the unit.
-func (u *Unit) ExpectedOutputs() map[string]*project.DependencyOutput {
+func (u *Unit) ExpectedOutputs() *project.DependenciesOutputsT {
 	if u.Outputs == nil {
-		u.Outputs = make(map[string]*project.DependencyOutput)
+		u.Outputs = &project.DependenciesOutputsT{}
 	}
 	return u.Outputs
 }
@@ -205,8 +196,11 @@ func (u *Unit) Backend() project.Backend {
 }
 
 // Dependencies return slice of unit dependencies.
-func (u *Unit) Dependencies() *[]*project.DependencyOutput {
-	return &u.DependenciesList
+func (u *Unit) Dependencies() *project.DependenciesOutputsT {
+	if u.DependenciesList == nil {
+		u.DependenciesList = &project.DependenciesOutputsT{}
+	}
+	return u.DependenciesList
 }
 
 // Init runs init procedure for unit.
@@ -241,7 +235,7 @@ func (u *Unit) Apply() error {
 		return fmt.Errorf("apply unit '%v': %w", u.Key(), err)
 	}
 	// Get outputs.
-	if u.GetOutputsConf.Command != "" {
+	if u.GetOutputsConf != nil && u.GetOutputsConf.Command != "" {
 		cmdConf := OperationConfig{
 			Commands: []interface{}{
 				u.GetOutputsConf.Command,
@@ -253,7 +247,7 @@ func (u *Unit) Apply() error {
 		}
 	}
 
-	if len(u.Outputs) > 0 {
+	if u.Outputs != nil && len(u.Outputs.List) > 0 {
 		var pOutputs map[string]string
 		parser, exists := u.OutputParsers[u.GetOutputsConf.Type]
 		if !exists {
@@ -263,7 +257,7 @@ func (u *Unit) Apply() error {
 		if err != nil {
 			return fmt.Errorf("parse outputs '%v': %w", u.GetOutputsConf.Type, err)
 		}
-		for _, eo := range u.Outputs {
+		for _, eo := range u.Outputs.List {
 			op, exists := pOutputs[eo.Output]
 			if !exists {
 				return fmt.Errorf("parse outputs: unit has no output named '%v', expected by another unit", eo.Output)
@@ -292,9 +286,10 @@ func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, er
 		log.Debug(err.Error())
 		return nil, err
 	}
-
-	for key, val := range u.Env.(map[string]interface{}) {
-		rn.Env = append(rn.Env, fmt.Sprintf("%v=%v", key, val))
+	if u.Env != nil {
+		for key, val := range u.Env.(map[string]interface{}) {
+			rn.Env = append(rn.Env, fmt.Sprintf("%v=%v", key, val))
+		}
 	}
 
 	rn.LogLabels = []string{
@@ -314,8 +309,10 @@ func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, er
 	}
 	otp, errMsg, err := rn.Run(cmd)
 	if len(errMsg) > 1 {
-		log.Errorf("%v", string(errMsg))
-		return otp, fmt.Errorf("%v, error output:\n %v", err.Error(), string(errMsg))
+		if err != nil {
+			log.Errorf("%v", string(errMsg))
+		}
+		return otp, fmt.Errorf("%w, error output:\n %v", err, string(errMsg))
 	}
 	return otp, err
 }
@@ -424,13 +421,13 @@ func (u *Unit) KindKey() string {
 // RequiredUnits list of dependencies in map representation.
 func (u *Unit) RequiredUnits() map[string]project.Unit {
 	res := make(map[string]project.Unit)
-	for _, dep := range u.DependenciesList {
+	for _, dep := range u.DependenciesList.GetSlice() {
 		res[dep.Unit.Key()] = u.Project().Units[dep.Unit.Key()]
 	}
 	return res
 }
 
-func (u *Unit) readDeps(depsData interface{}) ([]*project.DependencyOutput, error) {
+func (u *Unit) readDeps(depsData interface{}) (res *project.DependenciesOutputsT, err error) {
 	rawDepsList := []string{}
 	switch depsData.(type) {
 	case string:
@@ -438,23 +435,23 @@ func (u *Unit) readDeps(depsData interface{}) ([]*project.DependencyOutput, erro
 	case []string:
 		rawDepsList = append(rawDepsList, depsData.([]string)...)
 	}
-	var res []*project.DependencyOutput
+	res = &project.DependenciesOutputsT{}
 	for _, dep := range rawDepsList {
 		splDep := strings.Split(dep, ".")
 		if len(splDep) != 2 {
-			return nil, fmt.Errorf("Incorrect unit dependency '%v'", dep)
+			return
 		}
 		infNm := splDep[0]
 		if infNm == "this" {
 			infNm = u.StackName()
 		}
-		res = append(res, &project.DependencyOutput{
+		res.Add(fmt.Sprintf("%v.%v", infNm, splDep[1]), &project.DependencyOutput{
 			StackName: infNm,
 			UnitName:  splDep[1],
 		})
 		log.Debugf("Dependency added: %v --> %v.%v", u.Key(), infNm, splDep[1])
 	}
-	return res, nil
+	return
 }
 
 func readHook(hookData interface{}, hookType string) (*HookSpec, error) {

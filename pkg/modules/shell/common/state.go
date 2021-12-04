@@ -21,7 +21,15 @@ type UnitDiffSpec struct {
 }
 
 func (u *Unit) GetState() interface{} {
-	return *u.StatePtr
+	unitState := Unit{}
+	err := utils.JSONCopy(*u, &unitState)
+	if err != nil {
+		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
+	}
+	u.Outputs = &project.DependenciesOutputsT{
+		List: nil,
+	}
+	return unitState
 }
 
 func (u *Unit) GetUnitDiff() UnitDiffSpec {
@@ -37,8 +45,10 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 			st.Env[key] = val
 		}
 	}
-	for output := range u.Outputs {
-		st.Outputs[output] = "<output>"
+	if u.Outputs != nil {
+		for output := range u.Outputs.List {
+			st.Outputs[output] = "<output>"
+		}
 	}
 	return st
 }
@@ -94,12 +104,6 @@ func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	//u.UnitMarkers = make(map[string]interface{})
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
 	u.BackendPtr = &backend
-	// m.Outputs = make(map[string]*project.DependencyOutput)
-	u.StatePtr = &Unit{}
-	err = utils.JSONCopy(u, u.StatePtr)
-	if err != nil {
-		return fmt.Errorf("load state: %w", err)
-	}
 	return nil
 }
 

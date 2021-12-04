@@ -10,7 +10,6 @@ import (
 	"github.com/shalb/cluster.dev/pkg/executor"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
-	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 const remoteStateMarkerName = "RemoteStateMarkers"
@@ -25,7 +24,7 @@ type RequiredProvider struct {
 // Unit describe cluster.dev unit to deploy/destroy terraform modules.
 type Unit struct {
 	common.Unit
-	StatePtr          *Unit                       `yaml:"-" json:"-"`
+	// StatePtr          *Unit                       `yaml:"-" json:"-"`
 	Providers         interface{}                 `yaml:"-" json:"providers,omitempty"`
 	RequiredProviders map[string]RequiredProvider `yaml:"-" json:"required_providers,omitempty"`
 	Initted           bool                        `yaml:"-" json:"-"` // True if unit was initted in this session.
@@ -87,10 +86,8 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	m.CacheDir = filepath.Join(m.Project().CodeCacheDir, m.Key())
 	m.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
 	m.Initted = false
-	err := utils.JSONCopy(m, m.StatePtr)
-	// jsstate, _ := utils.JSONEncodeString(m.StatePtr)
-	// log.Warnf("State: %v", jsstate)
-	return err
+	//err := utils.JSONCopy(m, m.StatePtr)
+	return nil
 }
 
 // Init unit.

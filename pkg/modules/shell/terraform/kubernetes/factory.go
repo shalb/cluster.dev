@@ -16,7 +16,6 @@ func NewEmptyUnit() Unit {
 	unit := Unit{
 		Unit:     *base.NewEmptyUnit(),
 		Inputs:   map[string]interface{}{},
-		StatePtr: &Unit{},
 		UnitKind: unitKind,
 	}
 	return unit

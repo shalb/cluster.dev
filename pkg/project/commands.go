@@ -236,7 +236,7 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 					return false, fmt.Errorf("project plan: clear cache dir: %v", err.Error())
 				}
 				allDepsDeployed := true
-				for _, planModDep := range *md.Dependencies() {
+				for _, planModDep := range md.Dependencies().GetSlice() {
 					_, exists := fProject.Units[planModDep.Unit.Key()]
 					if !exists {
 						allDepsDeployed = false
@@ -259,8 +259,9 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 				}
 			}
 		} else {
-			// Update project printers and outputs with state unit.
-			stateUnit.UpdateProjectRuntimeData(p)
+			if stateUnit != nil {
+				stateUnit.UpdateProjectRuntimeData(p)
+			}
 			modsUnchanged = append(modsUnchanged, md.Key())
 			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
 		}

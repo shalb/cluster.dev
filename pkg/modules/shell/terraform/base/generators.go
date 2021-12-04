@@ -38,7 +38,7 @@ func (m *Unit) genBackendCodeBlock() ([]byte, error) {
 func (m *Unit) genDepsRemoteStates() ([]byte, error) {
 	var res []byte
 	depsUniq := map[project.Unit]bool{}
-	for _, dep := range *m.Dependencies() {
+	for _, dep := range m.Dependencies().GetSlice() {
 		//log.Warnf("dep: %+v", dep)
 		// Ignore duplicated dependencies.
 		if _, ok := depsUniq[dep.Unit]; ok {
@@ -79,7 +79,7 @@ func (m *Unit) Build() error {
 
 	err = m.CreateFiles.Add("init.tf", string(init), fs.ModePerm)
 	if err != nil {
-		return fmt.Errorf("build unit %v: %w\n%v", m.Key(), err, m.CreateFiles.SPrint())
+		return fmt.Errorf("build unit %v: %w\n%v", m.Key(), err, m.CreateFiles.SPrintLs())
 	}
 	// Create remote_state.tf
 	remoteStates, err := m.genDepsRemoteStates()
@@ -114,7 +114,7 @@ func (m *Unit) replaceRemoteStatesForBash(cmd *string) error {
 		return nil
 	}
 	markersList := map[string]*project.DependencyOutput{}
-	err := m.Project().GetMarkers(RemoteStateMarkerCatName, &markersList)
+	err := m.Project().GetMarkers(RemoteStateMarkerCatName, markersList)
 	if err != nil {
 		return err
 	}

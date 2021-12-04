@@ -9,7 +9,6 @@ import (
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/project"
-	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 type Unit struct {
@@ -17,7 +16,6 @@ type Unit struct {
 	OutputRaw string                 `yaml:"-" json:"output"`
 	Inputs    map[string]interface{} `yaml:"-" json:"inputs"`
 	UnitKind  string                 `yaml:"-" json:"type"`
-	StatePtr  *Unit                  `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -37,7 +35,7 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 		}
 		dataBody.SetAttributeValue("value", hclVal)
 		markersList := map[string]*project.DependencyOutput{}
-		err = u.Project().GetMarkers(base.RemoteStateMarkerCatName, &markersList)
+		err = u.Project().GetMarkers(base.RemoteStateMarkerCatName, markersList)
 		if err != nil {
 			return nil, err
 		}
@@ -67,11 +65,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		return fmt.Errorf("Incorrect unit inputs")
 	}
 	u.Inputs = mInputs
-	u.StatePtr = &Unit{
-		Unit: u.Unit,
-	}
-	err := utils.JSONCopy(u, u.StatePtr)
-	return err
+	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.
@@ -85,7 +79,7 @@ func (u *Unit) ReplaceMarkers() error {
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(u.Inputs, project.OutputsScanner, u)
+	err = project.ScanMarkers(u.Inputs, project.OutputsScannerDebug, u)
 	if err != nil {
 		return err
 	}

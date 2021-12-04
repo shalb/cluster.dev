@@ -16,7 +16,6 @@ func NewEmptyUnit() *Unit {
 	unit := Unit{
 		//UnitMarkers: make(map[string]interface{}),
 		Applied:     false,
-		StatePtr:    &Unit{},
 		UnitKind:    unitKind,
 		CreateFiles: &FilesListT{},
 	}

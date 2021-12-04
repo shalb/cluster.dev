@@ -19,7 +19,6 @@ import (
 
 type Unit struct {
 	base.Unit
-	StatePtr        *Unit                    `yaml:"-" json:"-"`
 	Source          string                   `yaml:"-" json:"source"`
 	HelmOpts        map[string]interface{}   `yaml:"-" json:"helm_opts,omitempty"`
 	Sets            map[string]interface{}   `yaml:"-" json:"sets,omitempty"`
@@ -72,7 +71,7 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 		//hcltools.ReplaceStingMarkerInBody(helmBody, marker, "file(\"./values.yaml\")")
 	}
 	markersList := map[string]*project.DependencyOutput{}
-	err := m.Project().GetMarkers(base.RemoteStateMarkerCatName, &markersList)
+	err := m.Project().GetMarkers(base.RemoteStateMarkerCatName, markersList)
 	if err != nil {
 		return nil, err
 	}
@@ -164,11 +163,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if ok {
 		m.AddRequiredProvider("helm", "hashicorp/helm", pv)
 	}
-	m.StatePtr = &Unit{
-		Unit: m.Unit,
-	}
-	err := utils.JSONCopy(m, m.StatePtr)
-	return err
+	return nil
 }
 
 // ReplaceMarkers replace all templated markers with values.

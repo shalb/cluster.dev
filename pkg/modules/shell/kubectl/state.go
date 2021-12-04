@@ -1,4 +1,4 @@
-package tfmodule
+package base
 
 import (
 	"fmt"
@@ -8,51 +8,80 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-type State struct {
-	common.Unit
-	ModType      string      `json:"type"`
-	Inputs       interface{} `json:"inputs"`
-	ModOutputRaw string      `json:"output"`
-}
-
-func (m *Unit) GetState() interface{} {
-	st := m.Unit.GetState()
-	printer := State{
-		Unit:         st.(common.Unit),
-		Inputs:       m.inputs,
-		ModType:      m.KindKey(),
-		ModOutputRaw: m.outputRaw,
-	}
-	return printer
-}
-
-type StateDiff struct {
+type UnitDiffSpec struct {
 	common.UnitDiffSpec
-	Inputs interface{} `json:"inputs"`
+	Manifests interface{} `json:"manifests"`
 }
 
-func (m *Unit) GetDiffData() interface{} {
-	st := m.Unit.GetUnitDiff()
-	stTf := StateDiff{
-		UnitDiffSpec: st,
-		Inputs:       m.inputs,
-	}
-	diffData := map[string]interface{}{}
-	utils.JSONCopy(stTf, &diffData)
-	return diffData
-}
+func (u *Unit) GetState() interface{} {
+	// u.StatePtr.ApplyConf = nil
+	// u.StatePtr.DestroyConf = nil
+	// u.StatePtr.InitConf = nil
+	// u.StatePtr.PlanConf = nil
+	// u.StatePtr.Env = nil
+	// u.StatePtr.OutputParsers = nil
+	// u.StatePtr.CreateFiles = nil
+	// u.StatePtr.WorkDir = ""
+	// log.Warnf("%+v")
+	// return *u.StatePtr
 
-func (s *State) GetType() string {
-	return s.ModType
-}
-
-func (m *Unit) LoadState(stateData interface{}, modKey string, p *project.StateProject) error {
-	s := State{}
-	err := utils.JSONCopy(stateData, &s)
+	unitState := Unit{}
+	err := utils.JSONCopy(*u, &unitState)
 	if err != nil {
-		return fmt.Errorf("load state: %v", err.Error())
+		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
 	}
-	m.inputs = s.Inputs.(map[string]interface{})
-	m.outputRaw = s.ModOutputRaw
-	return m.Unit.LoadState(s.Unit, modKey, p)
+	unitState.Unit = u.Unit.GetState().(common.Unit)
+	unitState.ApplyConf = nil
+	unitState.DestroyConf = nil
+	unitState.InitConf = nil
+	unitState.PlanConf = nil
+	unitState.Env = nil
+	unitState.OutputParsers = nil
+	unitState.CreateFiles = nil
+	unitState.WorkDir = ""
+	return unitState
+}
+
+func (u *Unit) GetUnitDiff() UnitDiffSpec {
+	diff := u.Unit.GetUnitDiff()
+	st := UnitDiffSpec{
+		UnitDiffSpec: diff,
+		Manifests:    u.GetManifestsMap(),
+	}
+	st.UnitDiffSpec.ApplyConf = nil
+	st.UnitDiffSpec.ApplyConf = nil
+	st.UnitDiffSpec.Env = nil
+	st.UnitDiffSpec.CreateFiles = nil
+	st.UnitDiffSpec.OutputsConfig = nil
+	return st
+}
+
+func (u *Unit) GetDiffData() interface{} {
+	diff := u.GetUnitDiff()
+	diffData := map[string]interface{}{}
+	utils.JSONCopy(diff, &diffData)
+	project.ScanMarkers(&diffData, project.StateOutputsScanner, u)
+	u.ReplaceOutputsForDiff(diffData, &diffData)
+	return diffData
+
+}
+
+func (u *Unit) GetStateDiffData() interface{} {
+	// return nothing
+	return ""
+}
+
+func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProject) error {
+	// log.Fatal("BOOO")
+	err := u.Unit.LoadState(spec, modKey, p)
+	if err != nil {
+		return err
+	}
+	// log.Warnf("%+v", spec)
+	err = utils.JSONCopy(spec, &u)
+	if err != nil {
+		return fmt.Errorf("loading unit state: can't parse state: %v", err.Error())
+	}
+	u.fillShellUnit()
+	return err
 }

@@ -13,7 +13,6 @@ type Factory struct {
 func NewEmptyUnit() *Unit {
 	unit := Unit{
 		Unit:              *common.NewEmptyUnit(),
-		StatePtr:          &Unit{},
 		RequiredProviders: make(map[string]RequiredProvider),
 		Initted:           false,
 	}

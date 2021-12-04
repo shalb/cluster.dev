@@ -213,9 +213,16 @@ func BuildDep(m Unit, dep *DependencyOutput) error {
 		if dep.UnitName == "" || dep.StackName == "" {
 			return fmt.Errorf("Empty dependency in unit '%v.%v'", m.Stack().Name, m.Name())
 		}
-		depMod, exists := m.Project().Units[fmt.Sprintf("%v.%v", dep.StackName, dep.UnitName)]
+		depKey := fmt.Sprintf("%v.%v", dep.StackName, dep.UnitName)
+		depMod, exists := m.Project().Units[depKey]
 		if !exists {
 			return fmt.Errorf("Error in unit '%v.%v' dependency, target '%v.%v' does not exist", m.Stack().Name, m.Name(), dep.StackName, dep.UnitName)
+		}
+		if dep.Output != "" {
+			otp := depMod.ExpectedOutputs().Get(dep.Output)
+			if otp != nil {
+				m.Dependencies().Add(depKey, otp)
+			}
 		}
 		dep.Unit = depMod
 	}
@@ -224,7 +231,7 @@ func BuildDep(m Unit, dep *DependencyOutput) error {
 
 // BuildunitDeps check all dependencies and add unit pointer.
 func BuildUnitsDeps(m Unit) error {
-	for _, dep := range *m.Dependencies() {
+	for _, dep := range m.Dependencies().GetSlice() {
 		err := BuildDep(m, dep)
 		if err != nil {
 			log.Debug(err.Error())
@@ -301,23 +308,122 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	table.Render()
 }
 
-func (p *Project) GetMarkers(ctName string, out interface{}) error {
+// func (p *Project) GetMarkersCopy(ctName string, out interface{}) error {
 
-	markers, ok := p.Markers[ctName]
-	if !ok {
-		return nil
-	}
-	//log.Errorf("Markers[%v]: %v", ctName, p.Markers[ctName])
-	err := utils.JSONCopy(markers, &out)
-	// dbg, err := utils.JSONEncodeString(out)
-	//log.Errorf("JSON markers: %v", dbg)
-	return err
-}
+// 	markers, ok := p.Markers[ctName]
+// 	if !ok {
+// 		return nil
+// 	}
+// 	//log.Errorf("Markers[%v]: %v", ctName, p.Markers[ctName])
+// 	err := utils.JSONCopy(markers, &out)
+// 	// dbg, err := utils.JSONEncodeString(out)
+// 	//log.Errorf("JSON markers: %v", dbg)
+// 	return err
+// }
 
-func (p *Project) GetMarkersMap(ctName string, out interface{}) error {
+func (p *Project) GetMarkers(ctName string, data interface{}) error {
+
 	depMarkers, ok := p.Markers[ctName]
 	if !ok {
 		return nil
 	}
-	return utils.JSONCopy(depMarkers, &out)
+	out := reflect.ValueOf(data)
+	// log.Warnf("Type().Name(): %+v", out.Type().Name())
+	// log.Warnf("Type().Name(): %+v", out.Kind())
+	// log.Warnf("Type().Name(): %+v", out.Interface())
+	if out.Kind() == reflect.Ptr && !out.IsNil() {
+		out = out.Elem()
+	}
+	// log.Warnf("Type().Name(): %+v", out.Type().Name())
+	// log.Warnf("Type().Name(): %+v", out.Kind())
+	// log.Warnf("Type().Name(): %+v", out.Interface())
+	if out.Kind() != reflect.Map {
+		return fmt.Errorf("GetMarkers: output type mismatch, internall error")
+	}
+	in := reflect.ValueOf(depMarkers)
+	if in.Kind() == reflect.Ptr && !in.IsNil() {
+		in = in.Elem()
+	}
+	if in.Kind() != reflect.Map {
+		return fmt.Errorf("GetMarkers: output type mismatch, internall error")
+	}
+
+	// var keyTypeM = reflect.TypeOf(depMarkers).Key()
+	// var valueTypeM = reflect.TypeOf(depMarkers).Elem()
+	// // log.Warnf("GetMarkerskey: %v, GetMarkers value: %v", keyTypeM, valueTypeM)
+
+	if in.Type().Key() != reflect.TypeOf(data).Key() {
+		// log.Errorf("BOOOOOO, %v, %v", in.Type(), reflect.TypeOf(data).Key())
+		return nil
+	}
+	if in.Type().Elem() != reflect.TypeOf(data).Elem() {
+		// log.Errorf("FOOOOOO, marker: %v value: %v, cat: %v\n %+v", reflect.TypeOf(data).Elem(), reflect.TypeOf(depMarkers).Elem(), ctName, depMarkers)
+		return nil
+	}
+	// var aMapType = reflect.MapOf(keyTypeM, valueTypeM)
+	//out = reflect.MakeMapWithSize(aMapType, len(in.MapKeys()))
+	for _, key := range in.MapKeys() {
+		// log.Warnf("GetMarkerskey for: %v %v", key.Type(), in.MapIndex(key).Kind())
+		if in.MapIndex(key).Kind() == reflect.Interface {
+			out.SetMapIndex(key, in.MapIndex(key).Elem())
+		} else {
+			out.SetMapIndex(key, in.MapIndex(key))
+		}
+
+	}
+	// log.Warnf("OUT: %+v", out)
+	// log.Warnf("Type().Name(): %+v", out.Kind())
+	// log.Warnf("Type().Name(): %+v", out.Interface())
+
+	// aMap.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(value))
+	// fmt.Printf("%T:  %v\n", aMap.Interface(), aMap.Interface())
+
+	return nil
+}
+
+// GetMarkersMap return project markers as is (map[string]interface{}).
+func (p *Project) GetMarkersMap(ctName string, out interface{}) (res map[string]interface{}, err error) {
+	depMarkers, ok := p.Markers[ctName]
+	if !ok {
+		res = make(map[string]interface{})
+		return
+	}
+	res, ok = depMarkers.(map[string]interface{})
+	if !ok {
+		log.Fatalf("GetMarkersMap: type mismatch, internall error.")
+	}
+	return
+}
+
+type DependenciesOutputsT struct {
+	List map[string]*DependencyOutput `json:"outputs_list,omitempty"`
+}
+
+func (o *DependenciesOutputsT) Add(key string, outputPtr *DependencyOutput) {
+	if o.List == nil {
+		o.List = make(map[string]*DependencyOutput)
+	}
+	o.List[key] = outputPtr
+}
+
+func (o *DependenciesOutputsT) Get(key string) (res *DependencyOutput) {
+	if o.List == nil {
+		return nil
+	}
+	res, _ = o.List[key]
+	return
+}
+
+func (o *DependenciesOutputsT) GetSlice() (res []*DependencyOutput) {
+	if o.List == nil {
+		return nil
+	}
+	for _, el := range o.List {
+		res = append(res, el)
+	}
+	return
+}
+
+func (o *DependenciesOutputsT) IsEmpty() bool {
+	return o.List == nil || len(o.List) == 0
 }

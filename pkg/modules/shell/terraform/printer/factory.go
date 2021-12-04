@@ -15,7 +15,6 @@ const unitKind string = "printer"
 func NewEmptyUnit() Unit {
 	unit := Unit{
 		Unit:     *base.NewEmptyUnit(),
-		StatePtr: &Unit{},
 		UnitKind: unitKind,
 	}
 	return unit

@@ -17,7 +17,6 @@ func NewEmptyUnit() Unit {
 		Unit:     *base.NewEmptyUnit(),
 		HelmOpts: map[string]interface{}{},
 		Sets:     map[string]interface{}{},
-		StatePtr: &Unit{},
 		UnitKind: unitKind,
 	}
 	return unit
