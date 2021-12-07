@@ -6,7 +6,11 @@
 
 3) Enhanced functions: all functions described above allow you to modify the text of a stack template. Apart from these, some special enhanced functions are available. They cannot be used everywhere. The functions are integrated within the functionality of the program and with the yaml syntax:
 
-* `insertYAML` - pass yaml block as value of target yaml template. **Argument**: data to pass, any value or reference to block. **Allowed use**: only as full yaml value, in unit `inputs`. Example:
+* `insertYAML` - pass yaml block as value of target yaml template. 
+
+  **Argument**: data to pass, any value or reference to a block. 
+    
+  **Allowed use**: only as full yaml value, in unit `inputs`. Example:
 
     Source yaml:
 
@@ -45,7 +49,11 @@
           type: spot
     ```
 
-* `remoteState` - is used for passing data across units and stacks, can be used in pre/post hooks. **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"stack_name.unit_name.output_name"`. Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`. **Allowed use**: 
+* `remoteState` - is used for passing data across units and stacks, can be used in pre/post hooks. 
+
+  **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"stack_name.unit_name.output_name"`. Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`. 
+  
+  **Allowed use**: 
 
     * all units types: in `inputs`;
 
