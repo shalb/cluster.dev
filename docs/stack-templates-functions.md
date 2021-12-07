@@ -8,52 +8,52 @@
 
 * `insertYAML` - pass yaml block as value of target yaml template. 
 
-  **Argument**: data to pass, any value or reference to a block. 
+    **Argument**: data to pass, any value or reference to a block. 
     
-  **Allowed use**: only as full yaml value, in unit `inputs`. Example:
+    **Allowed use**: only as full yaml value, in unit `inputs`. Example:
 
     Source yaml:
 
     ```yaml
-    values:
-      node_groups:
-        - name: ng1
-          min_size: 1
-          max_size: 5
-        - name: ng2
-          max_size: 2
-          type: spot
+          values:
+            node_groups:
+              - name: ng1
+                min_size: 1
+                max_size: 5
+              - name: ng2
+                max_size: 2
+                type: spot
     ```
 
     Target yaml template:
 
     ```yaml
-    units:
-      - name: k3s
-        type: tfmodule
-        node_groups: {{ insertYAML .values.node_groups }}
+        units:
+          - name: k3s
+            type: tfmodule
+            node_groups: {{ insertYAML .values.node_groups }}
     ```
 
     Rendered stack template:
 
     ```yaml
-    units:
-      - name: k3s
-        type: tfmodule
-        node_groups:
-        - name: ng1
-          min_size: 1
-          max_size: 5
-        - name: ng2
-          max_size: 2
-          type: spot
+        units:
+          - name: k3s
+            type: tfmodule
+            node_groups:
+              - name: ng1
+                min_size: 1
+                max_size: 5
+              - name: ng2
+                max_size: 2
+                type: spot
     ```
 
 * `remoteState` - is used for passing data across units and stacks, can be used in pre/post hooks. 
 
-  **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"stack_name.unit_name.output_name"`. Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`. 
+    **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"stack_name.unit_name.output_name"`. Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`. 
   
-  **Allowed use**: 
+    **Allowed use**: 
 
     * all units types: in `inputs`;
 
