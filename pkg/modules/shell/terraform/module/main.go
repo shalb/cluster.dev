@@ -24,6 +24,7 @@ type Unit struct {
 	Inputs      map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
 	LocalModule *common.FilesListT     `yaml:"-" json:"local_module"`
 	UnitKind    string                 `yaml:"-" json:"type"`
+	StateData   interface{}            `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -52,14 +53,10 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	if utils.IsLocalPath(u.Source) {
 		unitBody.SetAttributeValue("source", cty.StringVal(u.Source))
 	}
-	markersList := map[string]*project.DependencyOutput{}
-	err := u.Project().GetMarkers(base.RemoteStateMarkerCatName, markersList)
-	if err != nil {
-		return nil, err
-	}
-	for hash, marker := range markersList {
-		if marker.StackName == "this" {
-			marker.StackName = u.Stack().Name
+
+	for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(base.RemoteStateLinkType).Map() {
+		if marker.TargenStackName == "this" {
+			marker.TargenStackName = u.Stack().Name
 		}
 		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(unitBody, hash, refStr)
@@ -72,11 +69,16 @@ func (u *Unit) genOutputs() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	for output := range u.ExpectedOutputs().List {
+	// log.Errorf("genOutputs: %v, %v", u.StackPtr.Name, u.Name())
+	// for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).List {
+	// 	log.Errorf("     allOutputs: %v.%v --> %v", link.TargenStackName, link.TargetUnitName, link.OutputName)
+	// }
+	for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(base.RemoteStateLinkType).Map() {
+		// log.Warnf("     output: %v --> %v", u.Name(), link.OutputName)
 		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
-		outputName := re.FindString(output)
-		if len(outputName) < 1 {
-			return nil, fmt.Errorf("invalid output '%v' in unit '%v'", output, u.Name())
+		outputName := re.FindString(link.OutputName)
+		if len(link.OutputName) < 1 {
+			return nil, fmt.Errorf("invalid output '%v' in unit '%v'", link, u.Name())
 		}
 		dataBlock := rootBody.AppendNewBlock("output", []string{outputName})
 		dataBody := dataBlock.Body()
@@ -117,18 +119,26 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	return nil
 }
 
-// ReplaceMarkers replace all templated markers with values.
-func (u *Unit) ReplaceMarkers() error {
-	err := u.Unit.ReplaceMarkers()
+func (u *Unit) ScanData(scanner project.MarkerScanner) error {
+	err := project.ScanMarkers(u.Inputs, scanner, u)
 	if err != nil {
 		return err
 	}
-	// log.Warnf("%+v", m.inputs)
-	err = project.ScanMarkers(u.Inputs, u.RemoteStatesScanner, u)
+	return nil
+}
+
+// Prepare scan all markers in unit, and build project unit links, and unit dependencies.
+func (u *Unit) Prepare() error {
+
+	err := u.Unit.Prepare()
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(u.Inputs, project.OutputsScanner, u)
+	err = u.ScanData(project.OutputsScanner)
+	if err != nil {
+		return err
+	}
+	err = u.ScanData(u.RemoteStatesScanner)
 	if err != nil {
 		return err
 	}
@@ -137,10 +147,9 @@ func (u *Unit) ReplaceMarkers() error {
 
 // Build generate all terraform code for project.
 func (u *Unit) Build() error {
-	err := u.ReplaceMarkers()
-	if err != nil {
-		return err
-	}
+	u.SavedState = u.GetState()
+	u.ScanData(project.OutputsReplacer)
+
 	mainFile, err := u.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
@@ -151,7 +160,7 @@ func (u *Unit) Build() error {
 		log.Debug(err.Error())
 		return err
 	}
-	if len(u.ExpectedOutputs().List) > 0 {
+	if !u.ProjectPtr.UnitLinks.ByTargetUnit(u).IsEmpty() {
 		outputsFile, err := u.genOutputs()
 		if err != nil {
 			log.Debug(err.Error())
@@ -176,6 +185,6 @@ func (u *Unit) Build() error {
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
-func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
-	return m.Unit.UpdateProjectRuntimeData(p)
+func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
+	return u.Unit.UpdateProjectRuntimeData(p)
 }

@@ -12,16 +12,14 @@ type Unit interface {
 	Stack() *Stack
 	Project() *Project
 	Backend() Backend
-	ReplaceMarkers() error
-	Dependencies() *DependenciesOutputsT
-	RequiredUnits() map[string]Unit
+	Prepare() error // Prepare scan all markers in unit, and build project unit links, and unit dependencies.
+	Dependencies() *UnitLinksT
 	Build() error
 	Init() error
 	Apply() error
 	Plan() error
 	Destroy() error
 	Key() string
-	ExpectedOutputs() *DependenciesOutputsT
 	GetState() interface{}
 	GetDiffData() interface{}
 	GetStateDiffData() interface{}
@@ -51,15 +49,6 @@ func RegisterUnitFactory(f UnitFactory, modType string) error {
 }
 
 var UnitFactoriesMap = map[string]UnitFactory{}
-
-// DependencyOutput describe unit dependency.
-type DependencyOutput struct {
-	Unit       Unit `json:"-"`
-	UnitName   string
-	StackName  string
-	Output     string
-	OutputData string
-}
 
 // NewUnit creates and return unit with needed driver.
 func NewUnit(spec map[string]interface{}, stack *Stack) (Unit, error) {

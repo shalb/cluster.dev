@@ -16,6 +16,7 @@ type Unit struct {
 	OutputRaw string                 `yaml:"-" json:"output"`
 	Inputs    map[string]interface{} `yaml:"-" json:"inputs"`
 	UnitKind  string                 `yaml:"-" json:"type"`
+	StateData interface{}            `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -34,15 +35,9 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 			return nil, err
 		}
 		dataBody.SetAttributeValue("value", hclVal)
-		markersList := map[string]*project.DependencyOutput{}
-		err = u.Project().GetMarkers(base.RemoteStateMarkerCatName, markersList)
-		if err != nil {
-			return nil, err
-		}
-		for hash, marker := range markersList {
-			if marker.StackName == "this" {
-				marker.StackName = u.Stack().Name
-			}
+
+		for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(base.RemoteStateLinkType).Map() {
+
 			refStr := base.DependencyToRemoteStateRef(marker)
 			hcltools.ReplaceStingMarkerInBody(dataBody, hash, refStr)
 		}
@@ -68,31 +63,34 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	return nil
 }
 
-// ReplaceMarkers replace all templated markers with values.
-func (u *Unit) ReplaceMarkers() error {
-	err := u.Unit.ReplaceMarkers()
-	if err != nil {
-		return err
-	}
+func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 	// log.Infof("Scan inputs: %v", u.Inputs)
-	err = project.ScanMarkers(u.Inputs, u.RemoteStatesScanner, u)
-	if err != nil {
-		return err
-	}
-	err = project.ScanMarkers(u.Inputs, project.OutputsScannerDebug, u)
+	err := project.ScanMarkers(u.Inputs, scanner, u)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// Build generate all terraform code for project.
-func (u *Unit) Build() error {
-	err := u.ReplaceMarkers()
+// Prepare scan all markers in unit, and build project unit links, and unit dependencies.
+func (u *Unit) Prepare() error {
+	err := u.Unit.Prepare()
 	if err != nil {
 		return err
 	}
+	err = u.ScanData(project.OutputsScanner)
+	if err != nil {
+		return err
+	}
+	return u.ScanData(u.RemoteStatesScanner)
+}
 
+// Build generate all terraform code for project.
+func (u *Unit) Build() error {
+	// Save state before outputs replacing.
+	u.StateData = u.GetState()
+	// Replace outputs.
+	u.ScanData(project.OutputsReplacer)
 	mainBlock, err := u.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
@@ -116,6 +114,7 @@ func (u *Unit) Apply() (err error) {
 		return
 	}
 	u.OutputRaw = outputs
+	// log.Warnf("Printer outputs: %v", u.ProjectPtr.UnitLinks.ByTargetUnit(u))
 	return
 }
 

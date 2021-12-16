@@ -26,6 +26,7 @@ type Unit struct {
 	providerVersion string                 `yaml:"-" json:"-"`
 	ProviderConf    ProviderConfigSpec     `yaml:"-" json:"provider_conf"`
 	UnitKind        string                 `yaml:"-" json:"type"`
+	StateData       interface{}            `yaml:"-" json:"-"`
 }
 
 type ExecNestedSchema struct {
@@ -49,29 +50,24 @@ type ProviderConfigSpec struct {
 	Username             string            `yaml:"username,omitempty" json:"username,omitempty"`
 }
 
-func (m *Unit) KindKey() string {
+func (u *Unit) KindKey() string {
 	return unitKind
 }
 
-func (m *Unit) genMainCodeBlock() ([]byte, error) {
+func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	providerBlock := rootBody.AppendNewBlock("provider", []string{"kubernetes-alpha"})
 	providerBody := providerBlock.Body()
 
-	providerCty, err := hcltools.InterfaceToCty(m.ProviderConf)
+	providerCty, err := hcltools.InterfaceToCty(u.ProviderConf)
 	if err != nil {
 		return nil, err
 	}
 	for key, val := range providerCty.AsValueMap() {
 		providerBody.SetAttributeValue(key, val)
 	}
-	markersList := map[string]*project.DependencyOutput{}
-	err = m.Project().GetMarkers(base.RemoteStateMarkerCatName, markersList)
-	if err != nil {
-		return nil, err
-	}
-	for key, manifest := range m.Inputs {
+	for key, manifest := range u.Inputs {
 		unitBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
 		unitBody := unitBlock.Body()
 		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(" kubernetes-alpha"), SpacesBefore: 1}}
@@ -82,18 +78,18 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 		}
 
 		unitBody.SetAttributeValue("manifest", ctyVal)
-		for hash, marker := range markersList {
-			if marker.StackName == "this" {
-				marker.StackName = m.Stack().Name
+		for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(base.RemoteStateLinkType).Map() {
+			if marker.TargenStackName == "this" {
+				marker.TargenStackName = u.Stack().Name
 			}
 			refStr := base.DependencyToRemoteStateRef(marker)
 			hcltools.ReplaceStingMarkerInBody(unitBody, hash, refStr)
 		}
 	}
 
-	for hash, marker := range markersList {
-		if marker.StackName == "this" {
-			marker.StackName = m.Stack().Name
+	for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(base.RemoteStateLinkType).Map() {
+		if marker.TargenStackName == "this" {
+			marker.TargenStackName = u.Stack().Name
 		}
 		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(providerBody, hash, refStr)
@@ -101,12 +97,12 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	source, ok := spec["source"].(string)
 	if !ok {
-		return fmt.Errorf("reading kubernetes unit '%v': malformed unit source", m.Key())
+		return fmt.Errorf("reading kubernetes unit '%v': malformed unit source", u.Key())
 	}
-	tmplDir := m.Stack().TemplateDir
+	tmplDir := u.Stack().TemplateDir
 	var absSource string
 	if source[1:2] == "/" {
 		absSource = filepath.Join(tmplDir, source)
@@ -115,13 +111,13 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	}
 	fileInfo, err := os.Stat(absSource)
 	if err != nil {
-		return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
+		return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
 	}
 	var filesList []string
 	if fileInfo.IsDir() {
 		filesList, err = filepath.Glob(absSource + "/*.yaml")
 		if err != nil {
-			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
+			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
 		}
 	} else {
 		filesList = append(filesList, absSource)
@@ -129,9 +125,9 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	for _, fileName := range filesList {
 		file, err := ioutil.ReadFile(fileName)
 		if err != nil {
-			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
+			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
 		}
-		manifest, errIsWarn, err := m.Stack().TemplateTry(file)
+		manifest, errIsWarn, err := u.Stack().TemplateTry(file)
 		if err != nil {
 			if errIsWarn {
 				log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
@@ -141,54 +137,58 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		}
 		manifests, err := utils.ReadYAMLObjects(manifest)
 		if err != nil {
-			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", m.Key(), source, err.Error())
+			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
 		}
 
 		for i, manifest := range manifests {
 			key := project.ConvertToTfVarName(strings.TrimSuffix(filepath.Base(fileName), ".yaml"))
 			key = fmt.Sprintf("%s_%v", key, i)
-			m.Inputs[key] = manifest
+			u.Inputs[key] = manifest
 		}
 	}
-	if len(m.Inputs) < 1 {
+	if len(u.Inputs) < 1 {
 		return fmt.Errorf("the kubernetes unit must contain at least one manifest")
 	}
 
-	err = utils.JSONCopy(spec, &m.ProviderConf)
+	err = utils.JSONCopy(spec, &u.ProviderConf)
 	if err != nil {
 		return err
 	}
 	kubeconfig, ok := spec["kubeconfig"].(string)
-	if ok && m.ProviderConf.ConfigPath == "" {
-		m.ProviderConf.ConfigPath = kubeconfig
+	if ok && u.ProviderConf.ConfigPath == "" {
+		u.ProviderConf.ConfigPath = kubeconfig
 	}
 	pv, ok := spec["provider_version"].(string)
 	if ok {
-		m.AddRequiredProvider("kubernetes-alpha", "hashicorp/kubernetes-alpha", pv)
+		u.AddRequiredProvider("kubernetes-alpha", "hashicorp/kubernetes-alpha", pv)
 	}
-	m.Source = source
+	u.Source = source
 	return nil
 }
 
-// ReplaceMarkers replace all templated markers with values.
-func (m *Unit) ReplaceMarkers() error {
-	err := m.Unit.ReplaceMarkers()
+func (u *Unit) ScanData(scanner project.MarkerScanner) error {
+	err := project.ScanMarkers(u.Inputs, scanner, u)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.Inputs, m.RemoteStatesScanner, m)
+	err = project.ScanMarkers(&u.ProviderConf, scanner, u)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(&m.ProviderConf, m.RemoteStatesScanner, m)
+	return nil
+}
+
+// Prepare scan all markers in unit, and build project unit links, and unit dependencies.
+func (u *Unit) Prepare() error {
+	err := u.Unit.Prepare()
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.Inputs, project.OutputsScanner, m)
+	err = u.ScanData(project.OutputsScanner)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(&m.ProviderConf, project.OutputsScanner, m)
+	err = u.ScanData(u.RemoteStatesScanner)
 	if err != nil {
 		return err
 	}
@@ -196,19 +196,22 @@ func (m *Unit) ReplaceMarkers() error {
 }
 
 // Build generate all terraform code for project.
-func (m *Unit) Build() error {
-	mainBlock, err := m.genMainCodeBlock()
+func (u *Unit) Build() error {
+	u.SavedState = u.GetState()
+	u.ScanData(project.OutputsReplacer)
+
+	mainBlock, err := u.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
-	if err = m.CreateFiles.Add("main.tf", string(mainBlock), fs.ModePerm); err != nil {
+	if err = u.CreateFiles.Add("main.tf", string(mainBlock), fs.ModePerm); err != nil {
 		return err
 	}
-	return m.Unit.Build()
+	return u.Unit.Build()
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds unit outputs.
-func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
-	return m.Unit.UpdateProjectRuntimeData(p)
+func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
+	return u.Unit.UpdateProjectRuntimeData(p)
 }

@@ -12,7 +12,10 @@ import (
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
-const remoteStateMarkerName = "RemoteStateMarkers"
+// const remoteStateLinkType = "RemoteStateMarkers"
+
+// RemoteStateLinkType - name of markers category for remote states
+const RemoteStateLinkType = "RemoteStateMarkers"
 
 var terraformBin = "terraform"
 
@@ -28,121 +31,122 @@ type Unit struct {
 	Providers         interface{}                 `yaml:"-" json:"providers,omitempty"`
 	RequiredProviders map[string]RequiredProvider `yaml:"-" json:"required_providers,omitempty"`
 	Initted           bool                        `yaml:"-" json:"-"` // True if unit was initted in this session.
+	StateData         interface{}                 `yaml:"-" json:"-"`
 }
 
-func (m *Unit) AddRequiredProvider(name, source, version string) {
-	if m.RequiredProviders == nil {
-		m.RequiredProviders = make(map[string]RequiredProvider)
+func (u *Unit) AddRequiredProvider(name, source, version string) {
+	if u.RequiredProviders == nil {
+		u.RequiredProviders = make(map[string]RequiredProvider)
 	}
-	m.RequiredProviders[name] = RequiredProvider{
+	u.RequiredProviders[name] = RequiredProvider{
 		Version: version,
 		Source:  source,
 	}
 }
 
-func (m *Unit) fillShellUnit() {
+func (u *Unit) fillShellUnit() {
 	// Check if CDEV_TF_BINARY is set to change terraform binary name.
 	envTfBin, exists := os.LookupEnv("CDEV_TF_BINARY")
 	if exists {
 		terraformBin = envTfBin
 	}
-	m.InitConf = &common.OperationConfig{
+	u.InitConf = &common.OperationConfig{
 		Commands: []interface{}{
 			fmt.Sprintf("%[1]s init", terraformBin),
 		},
 	}
-	m.ApplyConf = &common.OperationConfig{
+	u.ApplyConf = &common.OperationConfig{
 		Commands: []interface{}{
 			fmt.Sprintf("%s apply -auto-approve", terraformBin),
 		},
 	}
-	m.DestroyConf = &common.OperationConfig{
+	u.DestroyConf = &common.OperationConfig{
 		Commands: []interface{}{
 			fmt.Sprintf("%s destroy -auto-approve", terraformBin),
 		},
 	}
-	m.PlanConf = &common.OperationConfig{
+	u.PlanConf = &common.OperationConfig{
 		Commands: []interface{}{
 			fmt.Sprintf("%s plan", terraformBin),
 		},
 	}
-	m.GetOutputsConf = &common.OutputsConfigSpec{
+	u.GetOutputsConf = &common.OutputsConfigSpec{
 		Command: fmt.Sprintf("%s output -json", terraformBin),
 		Type:    "terraform",
 	}
-	m.OutputParsers["terraform"] = TerraformJSONParser
-	if m.Env == nil {
-		m.Env = make(map[string]interface{})
+	u.OutputParsers["terraform"] = TerraformJSONParser
+	if u.Env == nil {
+		u.Env = make(map[string]interface{})
 	}
 
 }
 
-func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
-	m.fillShellUnit()
+func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+	u.fillShellUnit()
 	providers, exists := spec["providers"]
 	if exists {
-		m.Providers = providers
+		u.Providers = providers
 	}
-	m.CacheDir = filepath.Join(m.Project().CodeCacheDir, m.Key())
-	m.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
-	m.Initted = false
+	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
+	u.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
+	u.Initted = false
 	//err := utils.JSONCopy(m, m.StatePtr)
 	return nil
 }
 
 // Init unit.
-func (m *Unit) Init() error {
-	m.ProjectPtr.InitLock.Lock()
-	defer m.ProjectPtr.InitLock.Unlock()
-	err := m.Unit.Init()
+func (u *Unit) Init() error {
+	u.ProjectPtr.InitLock.Lock()
+	defer u.ProjectPtr.InitLock.Unlock()
+	err := u.Unit.Init()
 	if err != nil {
 		return err
 	}
-	m.Initted = true
+	u.Initted = true
 	return nil
 }
 
 // Apply unit.
-func (m *Unit) Apply() error {
-	if !m.Initted {
-		if err := m.Init(); err != nil {
+func (u *Unit) Apply() error {
+	if !u.Initted {
+		if err := u.Init(); err != nil {
 			return err
 		}
 	}
-	return m.Unit.Apply()
+	return u.Unit.Apply()
 }
 
 // Plan unit.
-func (m *Unit) Plan() error {
-	if !m.Initted {
-		if err := m.Init(); err != nil {
+func (u *Unit) Plan() error {
+	if !u.Initted {
+		if err := u.Init(); err != nil {
 			return err
 		}
 	}
-	return m.Unit.Plan()
+	return u.Unit.Plan()
 }
 
 // Destroy unit.
-func (m *Unit) Destroy() error {
-	if !m.Initted {
-		if err := m.Init(); err != nil {
+func (u *Unit) Destroy() error {
+	if !u.Initted {
+		if err := u.Init(); err != nil {
 			return err
 		}
 	}
-	return m.Unit.Destroy()
+	return u.Unit.Destroy()
 }
 
 // Output unit.
-func (m *Unit) Output() (string, error) {
-	rn, err := executor.NewExecutor(m.CacheDir)
+func (u *Unit) Output() (string, error) {
+	rn, err := executor.NewExecutor(u.CacheDir)
 	if err != nil {
 		log.Debug(err.Error())
 		return "", err
 	}
 	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
-		m.StackName(),
-		m.Name(),
+		u.StackName(),
+		u.Name(),
 		"plan",
 	}
 	var cmd = ""
@@ -157,24 +161,4 @@ func (m *Unit) Output() (string, error) {
 		}
 	}
 	return string(res), err
-}
-
-// ReplaceMarkers replace all templated markers with values.
-func (m *Unit) ReplaceMarkers() error {
-	if err := m.Unit.ReplaceMarkers(); err != nil {
-		return fmt.Errorf("prepare terraform unit data: %w", err)
-	}
-	if m.PreHook != nil {
-		err := project.ScanMarkers(&m.PreHook.Command, m.RemoteStatesScanner, m)
-		if err != nil {
-			return err
-		}
-	}
-	if m.PostHook != nil {
-		err := project.ScanMarkers(&m.PostHook.Command, m.RemoteStatesScanner, m)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

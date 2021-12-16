@@ -24,19 +24,6 @@ type KustomizeT struct {
 	Path string `yaml:"path" json:"path"`
 }
 
-// name: kubectl-test2
-// type: kubectl
-// namespace: dev
-// path: ./crd.yaml
-// kubeconfig: ./kubeconfig_{{ .name }}
-// kubectl_opts: "--wait=true"
-// recursive: true
-// kubectl:
-//   version: "v1.19.3"
-//   autoinstall: true
-// kustomize:
-//   path: ./kustomize/prod/
-
 // Unit describe cluster.dev unit to deploy/destroy k8s resources with kubectl.
 type Unit struct {
 	common.Unit
@@ -49,16 +36,16 @@ type Unit struct {
 	ApplyTemplate  bool               `yaml:"apply_template" json:"-"`
 	recursive      bool               `yaml:"-" json:"-"`
 	UnitKind       string             `yaml:"-" json:"type"`
+	SavedState     interface{}        `yaml:"-" json:"-"`
 }
 
 var kubectlBin = "kubectl"
 
-func (m *Unit) KindKey() string {
+func (u *Unit) KindKey() string {
 	return unitKind
 }
 
 func (u *Unit) fillShellUnit() {
-	// Check if CDEV_TF_BINARY is set to change terraform binary name.
 	commandOpts := ""
 	if u.recursive {
 		commandOpts += "-R "
@@ -130,7 +117,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	// u.StatePtr.ManifestsFiles = u.ManifestsFiles
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
 	u.fillShellUnit()
-	u.ReplaceMarkers()
+	u.Prepare()
 	return err
 }
 
@@ -194,9 +181,9 @@ func (u *Unit) GetManifestsMap() (res map[string]interface{}) {
 	return
 }
 
-// ReplaceMarkers replace all templated markers with values.
-func (u *Unit) ReplaceMarkers() error {
-	if err := u.Unit.ReplaceMarkers(); err != nil {
+// ScanData scan all markers in unit, and build project unit links, and unit dependencies.
+func (u *Unit) ScanData(scanner project.MarkerScanner) error {
+	if err := u.Unit.ScanData(scanner); err != nil {
 		return fmt.Errorf("prepare kubectl unit data: %w", err)
 	}
 	for _, file := range *u.ManifestsFiles {
@@ -209,22 +196,33 @@ func (u *Unit) ReplaceMarkers() error {
 			if i != 0 {
 				scannedFile = append(scannedFile, []byte(fmt.Sprint("---\n"))...)
 			}
-			err := project.ScanMarkers(mn, project.OutputsScanner, u)
+			err := project.ScanMarkers(mn, scanner, u)
 			if err != nil {
 				return err
 			}
 			fmn, err := yaml.Marshal(mn)
 			scannedFile = append(scannedFile, fmn...)
+			// log.Debugf("Scanned file: %v", string(scannedFile))
 		}
 		file.Content = string(scannedFile)
 	}
 	return nil
 }
 
+// Prepare scan all markers in unit, and build project unit links, and unit dependencies.
+func (u *Unit) Prepare() error {
+	return u.ScanData(project.OutputsScanner)
+}
+
 func (u *Unit) Build() error {
-	u.ReplaceMarkers()
+	// Save state before output markers replace.
+	u.SavedState = u.GetState()
+	err := u.ScanData(project.OutputsReplacer)
+	if err != nil {
+		return err
+	}
 	// u.CreateFiles = u.ManifestsFiles
-	err := u.Unit.Build()
+	err = u.Unit.Build()
 	if err != nil {
 		return err
 	}

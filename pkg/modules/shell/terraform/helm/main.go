@@ -26,13 +26,14 @@ type Unit struct {
 	ValuesFilesList []string                 `yaml:"-" json:"values,omitempty"`
 	ValuesYAML      []map[string]interface{} `yaml:"-" json:"-"`
 	UnitKind        string                   `yaml:"-" json:"type"`
+	StateData       interface{}              `yaml:"-" json:"-"`
 }
 
-func (m *Unit) KindKey() string {
+func (u *Unit) KindKey() string {
 	return unitKind
 }
 
-func (m *Unit) genMainCodeBlock() ([]byte, error) {
+func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	// var marker string
 	// if len(m.valuesFileContent) > 0 {
 	// 	m.FilesList()["values.yaml"] = m.valuesFileContent
@@ -42,18 +43,18 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	providerBlock := rootBody.AppendNewBlock("provider", []string{"helm"})
 	providerBody := providerBlock.Body()
 	provederKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
-	provederKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(m.Kubeconfig))
+	provederKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(u.Kubeconfig))
 
-	helmBlock := rootBody.AppendNewBlock("resource", []string{"helm_release", project.ConvertToTfVarName(m.Name())})
+	helmBlock := rootBody.AppendNewBlock("resource", []string{"helm_release", project.ConvertToTfVarName(u.Name())})
 	helmBody := helmBlock.Body()
-	for key, val := range m.HelmOpts {
+	for key, val := range u.HelmOpts {
 		ctyVal, err := hcltools.InterfaceToCty(val)
 		if err != nil {
 			return nil, err
 		}
 		helmBody.SetAttributeValue(key, ctyVal)
 	}
-	for key, val := range m.Sets {
+	for key, val := range u.Sets {
 		ctyVal, err := hcltools.InterfaceToCty(val)
 		if err != nil {
 			return nil, err
@@ -62,22 +63,17 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 		setBlock.Body().SetAttributeValue("name", cty.StringVal(key))
 		setBlock.Body().SetAttributeValue("value", ctyVal)
 	}
-	if len(m.ValuesFilesList) > 0 {
+	if len(u.ValuesFilesList) > 0 {
 		ctyValuesList := []cty.Value{}
-		for _, v := range m.ValuesFilesList {
+		for _, v := range u.ValuesFilesList {
 			ctyValuesList = append(ctyValuesList, cty.StringVal(string(v)))
 		}
 		helmBody.SetAttributeValue("values", cty.ListVal(ctyValuesList))
 		//hcltools.ReplaceStingMarkerInBody(helmBody, marker, "file(\"./values.yaml\")")
 	}
-	markersList := map[string]*project.DependencyOutput{}
-	err := m.Project().GetMarkers(base.RemoteStateMarkerCatName, markersList)
-	if err != nil {
-		return nil, err
-	}
-	for hash, marker := range markersList {
-		if marker.StackName == "this" {
-			marker.StackName = m.Stack().Name
+	for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(base.RemoteStateLinkType).Map() {
+		if marker.TargenStackName == "this" {
+			marker.TargenStackName = u.Stack().Name
 		}
 		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(helmBody, hash, refStr)
@@ -85,40 +81,40 @@ func (m *Unit) genMainCodeBlock() ([]byte, error) {
 	return f.Bytes(), nil
 }
 
-func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 
 	source, ok := spec["source"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("read unit config: incorrect unit source, %v", m.Key())
+		return fmt.Errorf("read unit config: incorrect unit source, %v", u.Key())
 	}
 	for key, val := range source {
-		m.HelmOpts[key] = val
+		u.HelmOpts[key] = val
 	}
 	kubeconfig, ok := spec["kubeconfig"].(string)
 	if !ok {
 		return fmt.Errorf("Incorrect kubeconfig")
 	}
-	m.Kubeconfig = kubeconfig
+	u.Kubeconfig = kubeconfig
 	addOp, ok := spec["additional_options"].(map[string]interface{})
 	if ok {
 		for key, val := range addOp {
-			m.HelmOpts[key] = val
+			u.HelmOpts[key] = val
 		}
 	}
 	sets, ok := spec["inputs"].(map[string]interface{})
 	if ok {
 		for key, val := range sets {
-			m.Sets[key] = val
+			u.Sets[key] = val
 		}
 	}
-	m.HelmOpts["name"] = spec["name"]
+	u.HelmOpts["name"] = spec["name"]
 	valuesCat, ok := spec["values"]
 	if ok {
 		valuesCatList, check := valuesCat.([]interface{})
 		if !check {
 			return fmt.Errorf("read unit config: 'values' have unknown type: %v", reflect.TypeOf(valuesCat))
 		}
-		m.ValuesFilesList = []string{}
+		u.ValuesFilesList = []string{}
 		//log.Warnf("%v", ok)
 
 		for _, valuesCat := range valuesCatList {
@@ -134,7 +130,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			if !ok {
 				return fmt.Errorf("read unit config: 'values.file' is required field")
 			}
-			vfPath := filepath.Join(m.Stack().TemplateDir, valuesFileName)
+			vfPath := filepath.Join(u.Stack().TemplateDir, valuesFileName)
 			valuesFileContent, err := ioutil.ReadFile(vfPath)
 			if err != nil {
 				log.Debugf(err.Error())
@@ -142,7 +138,7 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			}
 			values := valuesFileContent
 			if applyTemplate {
-				renderedValues, errIsWarn, err := m.Stack().TemplateTry(valuesFileContent)
+				renderedValues, errIsWarn, err := u.Stack().TemplateTry(valuesFileContent)
 				if err != nil {
 					if !errIsWarn {
 						log.Fatal(err.Error())
@@ -155,53 +151,48 @@ func (m *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			if err != nil {
 				return fmt.Errorf("read unit config: unmarshal values file: ", utils.ResolveYamlError(values, err))
 			}
-			m.ValuesYAML = append(m.ValuesYAML, vYAML)
-			m.ValuesFilesList = append(m.ValuesFilesList, string(values))
+			u.ValuesYAML = append(u.ValuesYAML, vYAML)
+			u.ValuesFilesList = append(u.ValuesFilesList, string(values))
 		}
 	}
 	pv, ok := spec["provider_version"].(string)
 	if ok {
-		m.AddRequiredProvider("helm", "hashicorp/helm", pv)
+		u.AddRequiredProvider("helm", "hashicorp/helm", pv)
 	}
 	return nil
 }
 
-// ReplaceMarkers replace all templated markers with values.
-func (m *Unit) ReplaceMarkers() error {
-	err := m.Unit.ReplaceMarkers()
+func (u *Unit) ScanData(scanner project.MarkerScanner) error {
+	err := project.ScanMarkers(u.ValuesFilesList, scanner, u)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.ValuesFilesList, m.RemoteStatesScanner, m)
+	err = project.ScanMarkers(u.HelmOpts, scanner, u)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.HelmOpts, m.RemoteStatesScanner, m)
+	err = project.ScanMarkers(u.Sets, scanner, u)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.Sets, m.RemoteStatesScanner, m)
+	err = project.ScanMarkers(u.ValuesYAML, scanner, u)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.ValuesYAML, m.RemoteStatesScanner, m)
-	if err != nil {
-		return err
-	}
+	return nil
+}
 
-	err = project.ScanMarkers(m.ValuesFilesList, project.OutputsScanner, m)
+// Prepare scan all markers in unit, and build project unit links, and unit dependencies.
+func (u *Unit) Prepare() error {
+	err := u.Unit.Prepare()
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.HelmOpts, project.OutputsScanner, m)
+	err = u.ScanData(project.OutputsScanner)
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(m.Sets, project.OutputsScanner, m)
-	if err != nil {
-		return err
-	}
-	err = project.ScanMarkers(m.ValuesYAML, project.OutputsScanner, m)
+	err = u.ScanData(u.RemoteStatesScanner)
 	if err != nil {
 		return err
 	}
@@ -209,21 +200,23 @@ func (m *Unit) ReplaceMarkers() error {
 }
 
 // Build generate all terraform code for project.
-func (m *Unit) Build() error {
+func (u *Unit) Build() error {
+	u.SavedState = u.GetState()
+	u.ScanData(project.OutputsReplacer)
 
-	mainBlock, err := m.genMainCodeBlock()
+	mainBlock, err := u.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
-	if err = m.CreateFiles.Add("main.tf", string(mainBlock), fs.ModePerm); err != nil {
+	if err = u.CreateFiles.Add("main.tf", string(mainBlock), fs.ModePerm); err != nil {
 		return err
 	}
-	return m.Unit.Build()
+	return u.Unit.Build()
 
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds unit outputs.
-func (m *Unit) UpdateProjectRuntimeData(p *project.Project) error {
-	return m.Unit.UpdateProjectRuntimeData(p)
+func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
+	return u.Unit.UpdateProjectRuntimeData(p)
 }

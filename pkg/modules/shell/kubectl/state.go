@@ -14,23 +14,15 @@ type UnitDiffSpec struct {
 }
 
 func (u *Unit) GetState() interface{} {
-	// u.StatePtr.ApplyConf = nil
-	// u.StatePtr.DestroyConf = nil
-	// u.StatePtr.InitConf = nil
-	// u.StatePtr.PlanConf = nil
-	// u.StatePtr.Env = nil
-	// u.StatePtr.OutputParsers = nil
-	// u.StatePtr.CreateFiles = nil
-	// u.StatePtr.WorkDir = ""
-	// log.Warnf("%+v")
-	// return *u.StatePtr
-
+	if u.SavedState != nil {
+		return u.SavedState
+	}
 	unitState := Unit{}
 	err := utils.JSONCopy(*u, &unitState)
 	if err != nil {
 		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
 	}
-	unitState.Unit = u.Unit.GetState().(common.Unit)
+	unitState.Unit = *u.Unit.GetStateUnit()
 	unitState.ApplyConf = nil
 	unitState.DestroyConf = nil
 	unitState.InitConf = nil
@@ -60,7 +52,7 @@ func (u *Unit) GetDiffData() interface{} {
 	diff := u.GetUnitDiff()
 	diffData := map[string]interface{}{}
 	utils.JSONCopy(diff, &diffData)
-	project.ScanMarkers(&diffData, project.StateOutputsScanner, u)
+	project.ScanMarkers(&diffData, project.StateOutputsReplacer, u)
 	u.ReplaceOutputsForDiff(diffData, &diffData)
 	return diffData
 

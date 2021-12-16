@@ -11,19 +11,19 @@ import (
 )
 
 // genBackendCodeBlock generate backend code block for this unit.
-func (m *Unit) genBackendCodeBlock() ([]byte, error) {
+func (u *Unit) genBackendCodeBlock() ([]byte, error) {
 
-	f, err := (*m.BackendPtr).GetBackendHCL(m.StackName(), m.Name())
+	f, err := (*u.BackendPtr).GetBackendHCL(u.StackName(), u.Name())
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	if len(m.RequiredProviders) < 1 {
+	if len(u.RequiredProviders) < 1 {
 		return f.Bytes(), nil
 	}
 	tb := f.Body().Blocks()[0]
 	tfBlock := tb.Body().AppendNewBlock("required_providers", []string{})
-	for name, prov := range m.RequiredProviders {
+	for name, prov := range u.RequiredProviders {
 
 		reqProvs, err := hcltools.InterfaceToCty(prov)
 		if err != nil {
@@ -35,21 +35,20 @@ func (m *Unit) genBackendCodeBlock() ([]byte, error) {
 }
 
 // genDepsRemoteStates generate terraform remote states for all dependencies of this unit.
-func (m *Unit) genDepsRemoteStates() ([]byte, error) {
+func (u *Unit) genDepsRemoteStates() ([]byte, error) {
 	var res []byte
-	depsUniq := map[project.Unit]bool{}
-	for _, dep := range m.Dependencies().GetSlice() {
-		//log.Warnf("dep: %+v", dep)
+	DeDuplication := map[project.Unit]bool{}
+	for _, dep := range u.Dependencies().ByLinkTypes(RemoteStateLinkType).Slice() {
 		// Ignore duplicated dependencies.
-		if _, ok := depsUniq[dep.Unit]; ok {
+		if _, ok := DeDuplication[dep.Unit]; ok {
 			continue
 		}
 		// Ignore dependencies without output (user defined as 'depends_on' option.)
-		if dep.Output == "" {
+		if dep.OutputName == "" {
 			continue
 		}
 		// De-duplication.
-		depsUniq[dep.Unit] = true
+		DeDuplication[dep.Unit] = true
 		modBackend := dep.Unit.Stack().Backend
 		rs, err := modBackend.GetRemoteStateHCL(dep.Unit.Stack().Name, dep.Unit.Name())
 		if err != nil {
@@ -61,15 +60,15 @@ func (m *Unit) genDepsRemoteStates() ([]byte, error) {
 	return res, nil
 }
 
-func (m *Unit) Build() error {
+func (u *Unit) Build() error {
 	var err error
-	init, err := m.genBackendCodeBlock()
+	init, err := u.genBackendCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
-	if m.Providers != nil {
-		providers, err := hcltools.ProvidersToHCL(m.Providers)
+	if u.Providers != nil {
+		providers, err := hcltools.ProvidersToHCL(u.Providers)
 		if err != nil {
 			log.Debug(err.Error())
 			return err
@@ -77,50 +76,47 @@ func (m *Unit) Build() error {
 		init = append(init, providers.Bytes()...)
 	}
 
-	err = m.CreateFiles.Add("init.tf", string(init), fs.ModePerm)
+	err = u.CreateFiles.Add("init.tf", string(init), fs.ModePerm)
 	if err != nil {
-		return fmt.Errorf("build unit %v: %w\n%v", m.Key(), err, m.CreateFiles.SPrintLs())
+		return fmt.Errorf("build unit %v: %w\n%v", u.Key(), err, u.CreateFiles.SPrintLs())
 	}
 	// Create remote_state.tf
-	remoteStates, err := m.genDepsRemoteStates()
+	remoteStates, err := u.genDepsRemoteStates()
 	if err != nil {
 		log.Debug(err.Error())
 		return err
 	}
 	// log.Errorf("Remote states: %v\nUnit name: %v", len(remoteStates), m.Key())
 	if len(remoteStates) > 0 {
-		err = m.CreateFiles.Add("remote_states.tf", string(remoteStates), fs.ModePerm)
+		err = u.CreateFiles.Add("remote_states.tf", string(remoteStates), fs.ModePerm)
 		if err != nil {
-			return fmt.Errorf("build unit %v: %w", m.Key(), err)
+			return fmt.Errorf("build unit %v: %w", u.Key(), err)
 		}
 	}
-	if m.PreHook != nil {
-		err := m.replaceRemoteStatesForBash(&m.PreHook.Command)
+	if u.PreHook != nil {
+		err := u.replaceRemoteStatesForBash(&u.PreHook.Command)
 		if err != nil {
 			return err
 		}
 	}
-	if m.PostHook != nil {
-		err := m.replaceRemoteStatesForBash(&m.PostHook.Command)
+	if u.PostHook != nil {
+		err := u.replaceRemoteStatesForBash(&u.PostHook.Command)
 		if err != nil {
 			return err
 		}
 	}
 
-	return m.Unit.Build()
+	return u.Unit.Build()
 }
-func (m *Unit) replaceRemoteStatesForBash(cmd *string) error {
+func (u *Unit) replaceRemoteStatesForBash(cmd *string) error {
 	if cmd == nil {
 		return nil
 	}
-	markersList := map[string]*project.DependencyOutput{}
-	err := m.Project().GetMarkers(RemoteStateMarkerCatName, markersList)
-	if err != nil {
-		return err
-	}
+	markersList := u.ProjectPtr.UnitLinks.ByLinkTypes(RemoteStateLinkType).Map()
 	for hash, marker := range markersList {
-		if marker.StackName == "this" {
-			marker.StackName = m.Stack().Name
+		if marker.TargenStackName == "this" {
+			log.Fatalf("Internal error, debug: %+v", marker)
+			//marker.TargenStackName = m.Stack().Name
 		}
 		refStr := DependencyToBashRemoteState(marker)
 		c := strings.ReplaceAll(*cmd, hash, refStr)

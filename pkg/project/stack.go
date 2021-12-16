@@ -17,16 +17,15 @@ const stackObjKindKey = "Stack"
 
 // Stack represent stack object.
 type Stack struct {
-	ProjectPtr       *Project
-	Backend          Backend
-	Name             string
-	BackendName      string
-	TemplateSrc      string
-	TemplateDir      string
-	Templates        []stackTemplate
-	Variables        map[string]interface{}
-	ConfigData       map[string]interface{}
-	TmplFunctionsMap template.FuncMap
+	ProjectPtr  *Project
+	Backend     Backend
+	Name        string
+	BackendName string
+	TemplateSrc string
+	TemplateDir string
+	Templates   []stackTemplate
+	Variables   map[string]interface{}
+	ConfigData  map[string]interface{}
 }
 
 type stackState struct {
@@ -64,21 +63,10 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 	}
 
 	stack := Stack{
-		ProjectPtr:       p,
-		ConfigData:       stackSpec.data,
-		Name:             name,
-		TmplFunctionsMap: make(template.FuncMap),
+		ProjectPtr: p,
+		ConfigData: stackSpec.data,
+		Name:       name,
 	}
-
-	// Copy project template functions and add stack based (like readFile and templateFile)
-	for fName, f := range p.TmplFunctionsMap {
-		stack.TmplFunctionsMap[fName] = f
-	}
-	fReader := tmplFileReader{
-		stackPtr: &stack,
-	}
-	stack.TmplFunctionsMap["readFile"] = fReader.ReadFile
-	stack.TmplFunctionsMap["templateFile"] = fReader.TemplateFile
 
 	// Copy secrets from project for templating.
 	stack.ConfigData["secret"], _ = p.configData["secret"]
@@ -91,7 +79,7 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 	if !ok {
 		return fmt.Errorf("stack object must contain field 'variables'")
 	}
-	err := stack.ReadTemplates(tmplSource)
+	err := stack.ReadTemplate(tmplSource)
 	if err != nil {
 		return err
 	}
@@ -111,8 +99,8 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 	return nil
 }
 
-// ReadTemplates read all templates in src.
-func (i *Stack) ReadTemplates(src string) (err error) {
+// ReadTemplate read all templates in src.
+func (s *Stack) ReadTemplate(src string) (err error) {
 	// Read stack template data and apply variables.
 	var templatesDir string
 	if utils.IsLocalPath(src) {
@@ -129,35 +117,35 @@ func (i *Stack) ReadTemplates(src string) (err error) {
 			return fmt.Errorf("reading templates: local source should be a dir")
 		}
 		log.Debugf("Template dir: %v", templatesDir)
-		i.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, templatesDir)
+		s.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, templatesDir)
 		if err != nil {
-			i.TemplateDir = templatesDir
+			s.TemplateDir = templatesDir
 		}
 	} else {
 		os.Mkdir(config.Global.TemplatesCacheDir, os.ModePerm)
-		dr, err := utils.GetTemplate(src, config.Global.TemplatesCacheDir, i.Name)
+		dr, err := utils.GetTemplate(src, config.Global.TemplatesCacheDir, s.Name)
 		if err != nil {
 			return fmt.Errorf("download template: %v\n   See details about stack template reference: https://github.com/shalb/cluster.dev#stack_options_template", err.Error())
 		}
 		log.Debugf("Template dir: %v", dr)
-		i.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, dr)
+		s.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, dr)
 		if err != nil {
 			return fmt.Errorf("reading templates: error parsing tmpl dir")
 		}
 	}
 
-	templatesFilesList, err := filepath.Glob(i.TemplateDir + "/*.yaml")
+	templatesFilesList, err := filepath.Glob(s.TemplateDir + "/*.yaml")
 	if err != nil {
 		return err
 	}
-	i.Templates = []stackTemplate{}
+	s.Templates = []stackTemplate{}
 	for _, fn := range templatesFilesList {
 		tmplData, err := ioutil.ReadFile(fn)
 		if err != nil {
 			return err
 		}
 		var errIsWarn bool
-		template, errIsWarn, err := i.TemplateTry(tmplData)
+		template, errIsWarn, err := s.TemplateTry(tmplData)
 		if err != nil {
 			if !errIsWarn {
 				log.Fatal(err.Error())
@@ -168,12 +156,12 @@ func (i *Stack) ReadTemplates(src string) (err error) {
 			log.Debugf("reading templates: %v", err.Error())
 			return err
 		}
-		i.Templates = append(i.Templates, *stackTemplate)
+		s.Templates = append(s.Templates, *stackTemplate)
 	}
-	if len(i.Templates) < 1 {
+	if len(s.Templates) < 1 {
 		return fmt.Errorf("reading templates: no templates found")
 	}
-	i.TemplateSrc = src
+	s.TemplateSrc = src
 	return nil
 }
 
@@ -194,13 +182,20 @@ func (i *Stack) TemplateTry(data []byte) (res []byte, warn bool, err error) {
 	return res, missingKeysErr != nil, missingKeysErr
 }
 
-func (i *Stack) tmplWithMissingKey(data []byte, missingKey string) (res []byte, err error) {
-
-	tmpl, err := template.New("main").Funcs(i.ProjectPtr.TmplFunctionsMap).Option("missingkey=" + missingKey).Parse(string(data))
+func (s *Stack) tmplWithMissingKey(data []byte, missingKey string) (res []byte, err error) {
+	tmplFuncMap := template.FuncMap{}
+	// Copy common template functions.
+	for k, v := range templateFunctionsMap {
+		tmplFuncMap[k] = v
+	}
+	for _, drv := range TemplateDriversMap {
+		drv.AddTemplateFunctions(tmplFuncMap, s.ProjectPtr, s)
+	}
+	tmpl, err := template.New("main").Funcs(tmplFuncMap).Option("missingkey=" + missingKey).Parse(string(data))
 	if err != nil {
 		return
 	}
 	templatedConf := bytes.Buffer{}
-	err = tmpl.Execute(&templatedConf, i.ConfigData)
+	err = tmpl.Execute(&templatedConf, s.ConfigData)
 	return templatedConf.Bytes(), err
 }

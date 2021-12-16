@@ -3,8 +3,8 @@ package base
 import (
 	"fmt"
 	"strings"
+	"text/template"
 
-	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
@@ -15,16 +15,37 @@ type terraformTemplateFunctions struct {
 type TerraformTemplateDriver struct {
 }
 
-func (d *TerraformTemplateDriver) AddTemplateFunctions(p *project.Project) {
-	f := terraformTemplateFunctions{projectPtr: p}
+func (d *TerraformTemplateDriver) AddTemplateFunctions(mp template.FuncMap, p *project.Project, s *project.Stack) {
+	addRemoteStateMarker := func(path string) (string, error) {
+		splittedPath := strings.Split(path, ".")
+		if len(splittedPath) != 3 {
+			return "", fmt.Errorf("bad dependency path")
+		}
+		dep := project.ULinkT{
+			Unit:            nil,
+			LinkType:        RemoteStateLinkType,
+			TargenStackName: splittedPath[0],
+			TargetUnitName:  splittedPath[1],
+			OutputName:      splittedPath[2],
+		}
+		if s == nil && dep.TargenStackName == "this" {
+			return "", fmt.Errorf("remoteState tmpl: using 'this' allowed only in template, use stack name instead")
+		}
+		if dep.TargenStackName == "this" {
+			dep.TargenStackName = s.Name
+		}
+		return p.UnitLinks.Set(&dep)
+
+	}
+
 	funcs := map[string]interface{}{
-		"remoteState": f.addRemoteStateMarker,
+		"remoteState": addRemoteStateMarker,
 	}
 	for k, f := range funcs {
-		_, ok := p.TmplFunctionsMap[k]
+		_, ok := mp[k]
 		if !ok {
-			log.Debugf("Template Function '%v' added (%v)", k, d.Name())
-			p.TmplFunctionsMap[k] = f
+			// log.Debugf("Template Function '%v' added (%v)", k, d.Name())
+			mp[k] = f
 		}
 	}
 }
@@ -33,32 +54,8 @@ func (m *TerraformTemplateDriver) Name() string {
 	return "terraform-new"
 }
 
-// RemoteStateMarkerCatName - name of markers category for remote states
-const RemoteStateMarkerCatName = "RemoteStateMarkers"
-
-// addRemoteStateMarker function for template. Add hash marker, witch will be replaced with desired remote state.
-func (m *terraformTemplateFunctions) addRemoteStateMarker(path string) (string, error) {
-	_, ok := m.projectPtr.Markers[RemoteStateMarkerCatName]
-	if !ok {
-		m.projectPtr.Markers[RemoteStateMarkerCatName] = map[string]*project.DependencyOutput{}
-	}
-	splittedPath := strings.Split(path, ".")
-	if len(splittedPath) != 3 {
-		return "", fmt.Errorf("bad dependency path")
-	}
-	dep := project.DependencyOutput{
-		Unit:      nil,
-		StackName: splittedPath[0],
-		UnitName:  splittedPath[1],
-		Output:    splittedPath[2],
-	}
-	marker := project.CreateMarker("remoteState", fmt.Sprintf("%s.%s.%s", splittedPath[0], splittedPath[1], splittedPath[2]))
-	m.projectPtr.Markers[RemoteStateMarkerCatName].(map[string]*project.DependencyOutput)[marker] = &dep
-	return fmt.Sprintf("%s", marker), nil
-}
-
 // GetTemplateDriver return template driver to add template functions into the project.
-func (m *Unit) GetTemplateDriver() (string, project.TemplateDriver) {
+func (u *Unit) GetTemplateDriver() (string, project.TemplateDriver) {
 	return "terraform", &TerraformTemplateDriver{}
 }
 

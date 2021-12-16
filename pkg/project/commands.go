@@ -29,7 +29,16 @@ func (p *Project) Build() error {
 // Destroy all units.
 func (p *Project) Destroy() error {
 
-	fProject := p.OwnState
+	fProject, err := p.LoadState()
+	if err != nil {
+		return fmt.Errorf("project destroy: %w", err)
+	}
+	// graphDebug := grapher{}
+	// graphDebug.Init(&fProject.Project, 1, true)
+	// for _, unit := range graphDebug.GetSequenceSet() {
+	// 	log.Warnf("Destroy: %v", unit.Name())
+	// }
+	// return nil
 	graph := grapher{}
 	if config.Global.IgnoreState {
 		graph.Init(p, 1, true)
@@ -51,7 +60,7 @@ func (p *Project) Destroy() error {
 			return nil
 		}
 	}
-	err := p.ClearCacheDir()
+	err = p.ClearCacheDir()
 	if err != nil {
 		return fmt.Errorf("project destroy: clear cache dir: %w", err)
 	}
@@ -78,7 +87,11 @@ func (p *Project) Destroy() error {
 
 // Apply all units.
 func (p *Project) Apply() error {
-
+	grDebug := grapher{}
+	err := grDebug.Init(p, config.Global.MaxParallel, false)
+	if err != nil {
+		return err
+	}
 	if !config.Global.Force {
 		hasChanges, err := p.Plan()
 		if err != nil {
@@ -93,7 +106,7 @@ func (p *Project) Apply() error {
 			return nil
 		}
 	}
-	err := p.ClearCacheDir()
+	err = p.ClearCacheDir()
 	if err != nil {
 		return fmt.Errorf("project apply: clear cache dir: %v", err.Error())
 	}
@@ -104,7 +117,7 @@ func (p *Project) Apply() error {
 		return err
 	}
 	defer gr.Close()
-	fProject := p.OwnState
+	fProject, err := p.LoadState()
 	if err != nil {
 		return err
 	}
@@ -134,8 +147,8 @@ func (p *Project) Apply() error {
 			return fmt.Errorf("project apply: saving state: %v", err.Error())
 		}
 	}
-
 	for {
+		// log.Warnf("FOR Project apply. Unit links: %+v", p.UnitLinks)
 		if gr.Len() == 0 {
 			p.SaveState()
 			return nil
@@ -190,7 +203,7 @@ func (p *Project) Apply() error {
 
 // Plan and output result.
 func (p *Project) Plan() (hasChanges bool, err error) {
-	fProject := p.OwnState
+	fProject, err := p.LoadState()
 	if err != nil {
 		return
 	}
@@ -236,7 +249,7 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 					return false, fmt.Errorf("project plan: clear cache dir: %v", err.Error())
 				}
 				allDepsDeployed := true
-				for _, planModDep := range md.Dependencies().GetSlice() {
+				for _, planModDep := range md.Dependencies().Slice() {
 					_, exists := fProject.Units[planModDep.Unit.Key()]
 					if !exists {
 						allDepsDeployed = false
@@ -263,6 +276,10 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 				stateUnit.UpdateProjectRuntimeData(p)
 			}
 			modsUnchanged = append(modsUnchanged, md.Key())
+			// log.Warnf("Plan before: %+v", p.UnitLinks.List)
+			// Unit was not changed. Copy unit outputs from state.
+			p.UnitLinks.Join(fProject.UnitLinks.ByTargetUnit(md))
+			// log.Warnf("Plan after: %+v", p.UnitLinks.List)
 			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
 		}
 	}

@@ -18,6 +18,9 @@ func NewEmptyUnit() *Unit {
 		Applied:     false,
 		UnitKind:    unitKind,
 		CreateFiles: &FilesListT{},
+		DependenciesList: &project.UnitLinksT{
+			List: make(map[string]*project.ULinkT),
+		},
 	}
 	unit.OutputParsers = map[string]OutputParser{
 		"json":      unit.JSONOutputParser,

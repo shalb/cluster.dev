@@ -27,7 +27,7 @@ type OperationConfig struct {
 }
 
 type OutputsT struct {
-	List map[string]*project.DependencyOutput `json:"outputs_list,omitempty"`
+	List map[string]*project.ULinkT `json:"outputs_list,omitempty"`
 }
 
 // OutputsConfigSpec describe how to retrive parse unit outputs.
@@ -58,44 +58,40 @@ type OutputsConfigSpec struct {
 // }
 
 // OutputParser represents function for parsing unit output.
-type OutputParser func(string, interface{}) error
+type OutputParser func(string, *project.UnitLinksT) error
 
 // Unit describe cluster.dev shell unit.
 type Unit struct {
-	StackPtr         *project.Stack                `yaml:"-" json:"-"`
-	ProjectPtr       *project.Project              `yaml:"-" json:"-"`
-	DependenciesList *project.DependenciesOutputsT `yaml:"-" json:"dependencies,omitempty"`
-	Outputs          *project.DependenciesOutputsT `yaml:"-" json:"outputs,omitempty"`
-	SpecRaw          map[string]interface{}        `yaml:"-" json:"-"`
-	OutputRaw        []byte                        `yaml:"-" json:"-"`
-	CacheDir         string                        `yaml:"-" json:"-"`
-	MyName           string                        `yaml:"name" json:"name"`
-	WorkDir          string                        `yaml:"work_dir,omitempty" json:"work_dir,omitempty"`
-	Env              interface{}                   `yaml:"env,omitempty" json:"env,omitempty"`
-	CreateFiles      *FilesListT                   `yaml:"create_files,omitempty" json:"create_files,omitempty"`
-	InitConf         *OperationConfig              `yaml:"init,omitempty" json:"init,omitempty"`
-	ApplyConf        *OperationConfig              `yaml:"apply,omitempty" json:"apply,omitempty"`
-	PlanConf         *OperationConfig              `yaml:"plan,omitempty" json:"plan,omitempty"`
-	DestroyConf      *OperationConfig              `yaml:"destroy,omitempty" json:"destroy,omitempty"`
-	GetOutputsConf   *OutputsConfigSpec            `yaml:"outputs,omitempty" json:"outputs_config,omitempty"`
-	OutputParsers    map[string]OutputParser       `yaml:"-" json:"-"`
-	Applied          bool                          `yaml:"-" json:"-"`
-	PreHook          *HookSpec                     `yaml:"-" json:"pre_hook,omitempty"`
-	PostHook         *HookSpec                     `yaml:"-" json:"post_hook,omitempty"`
-	UnitKind         string                        `yaml:"-" json:"type"`
-	BackendPtr       *project.Backend              `yaml:"-" json:"-"`
-	BackendName      string                        `yaml:"-" json:"backend_name"`
+	StackPtr         *project.Stack          `yaml:"-" json:"-"`
+	ProjectPtr       *project.Project        `yaml:"-" json:"-"`
+	DependenciesList *project.UnitLinksT     `yaml:"-" json:"-"`
+	SpecRaw          map[string]interface{}  `yaml:"-" json:"-"`
+	OutputRaw        []byte                  `yaml:"-" json:"-"`
+	CacheDir         string                  `yaml:"-" json:"-"`
+	MyName           string                  `yaml:"name" json:"name"`
+	WorkDir          string                  `yaml:"work_dir,omitempty" json:"work_dir,omitempty"`
+	Env              interface{}             `yaml:"env,omitempty" json:"env,omitempty"`
+	CreateFiles      *FilesListT             `yaml:"create_files,omitempty" json:"create_files,omitempty"`
+	InitConf         *OperationConfig        `yaml:"init,omitempty" json:"init,omitempty"`
+	ApplyConf        *OperationConfig        `yaml:"apply,omitempty" json:"apply,omitempty"`
+	PlanConf         *OperationConfig        `yaml:"plan,omitempty" json:"plan,omitempty"`
+	DestroyConf      *OperationConfig        `yaml:"destroy,omitempty" json:"destroy,omitempty"`
+	GetOutputsConf   *OutputsConfigSpec      `yaml:"outputs,omitempty" json:"outputs_config,omitempty"`
+	OutputParsers    map[string]OutputParser `yaml:"-" json:"-"`
+	Applied          bool                    `yaml:"-" json:"-"`
+	PreHook          *HookSpec               `yaml:"-" json:"pre_hook,omitempty"`
+	PostHook         *HookSpec               `yaml:"-" json:"post_hook,omitempty"`
+	UnitKind         string                  `yaml:"-" json:"type"`
+	BackendPtr       *project.Backend        `yaml:"-" json:"-"`
+	BackendName      string                  `yaml:"-" json:"backend_name"`
+	SavedState       interface{}             `yaml:"-" json:"-"`
+	DependsOn        interface{}             `yaml:"depends_on,omitempty" json:"depends_on,omitempty"`
 }
 
 // WasApplied return true if unit's method Apply was runned.
 func (u *Unit) WasApplied() bool {
 	return u.Applied
 }
-
-// // Markers returns list of the unit's markers.
-// func (u *Unit) Markers() map[string]interface{} {
-// 	return u.UnitMarkers
-// }
 
 // ReadConfig reads unit spec (unmarshaled YAML) and init the unit.
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
@@ -106,20 +102,13 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	u.StackPtr = stack
 	u.ProjectPtr = stack.ProjectPtr
 	u.SpecRaw = spec
-	var modDeps *project.DependenciesOutputsT
-	var err error
-	dependsOn, ok := spec["depends_on"]
-	if ok {
-		modDeps, err = u.readDeps(dependsOn)
-		if err != nil {
-			log.Debug(err.Error())
-			return err
-		}
-	}
-	u.DependenciesList = modDeps
-	err = utils.YAMLInterfaceToType(spec, u)
+	err := utils.YAMLInterfaceToType(spec, u)
 	if err != nil {
 		return err
+	}
+	err = u.readDeps()
+	if err != nil {
+		return fmt.Errorf("read dependencies: %w", err)
 	}
 	if u.WorkDir != "" {
 		u.WorkDir = filepath.Join(config.Global.WorkingDir, u.StackPtr.TemplateDir, u.WorkDir)
@@ -157,14 +146,6 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	return nil
 }
 
-// ExpectedOutputs returns expected outputs of the unit.
-func (u *Unit) ExpectedOutputs() *project.DependenciesOutputsT {
-	if u.Outputs == nil {
-		u.Outputs = &project.DependenciesOutputsT{}
-	}
-	return u.Outputs
-}
-
 // Name return unit name.
 func (u *Unit) Name() string {
 	return u.MyName
@@ -196,9 +177,9 @@ func (u *Unit) Backend() project.Backend {
 }
 
 // Dependencies return slice of unit dependencies.
-func (u *Unit) Dependencies() *project.DependenciesOutputsT {
+func (u *Unit) Dependencies() *project.UnitLinksT {
 	if u.DependenciesList == nil {
-		u.DependenciesList = &project.DependenciesOutputsT{}
+		u.DependenciesList = &project.UnitLinksT{}
 	}
 	return u.DependenciesList
 }
@@ -213,7 +194,6 @@ func (u *Unit) Init() error {
 func (u *Unit) Apply() error {
 
 	var err error
-
 	applyCommands := OperationConfig{}
 	if u.PreHook != nil && u.PreHook.OnApply {
 		applyCommands.Commands = append(applyCommands.Commands, "./pre_hook.sh")
@@ -221,14 +201,6 @@ func (u *Unit) Apply() error {
 	applyCommands.Commands = append(applyCommands.Commands, u.ApplyConf.Commands...)
 	if u.PostHook != nil && u.PostHook.OnApply {
 		applyCommands.Commands = append(applyCommands.Commands, "./post_hook.sh")
-	}
-	err = project.ScanMarkers(u.Env, project.OutputsScanner, u)
-	if err != nil {
-		return err
-	}
-	err = project.ScanMarkers(u.ApplyConf.Commands, project.OutputsScanner, u)
-	if err != nil {
-		return err
 	}
 	u.OutputRaw, err = u.runCommands(applyCommands, "apply")
 	if err != nil {
@@ -246,26 +218,17 @@ func (u *Unit) Apply() error {
 			return fmt.Errorf("retriving unit '%v' outputs: %w", u.Key(), err)
 		}
 	}
-
-	if u.Outputs != nil && len(u.Outputs.List) > 0 {
-		var pOutputs map[string]string
+	if u.GetOutputsConf != nil {
 		parser, exists := u.OutputParsers[u.GetOutputsConf.Type]
 		if !exists {
 			return fmt.Errorf("retriving unit '%v' outputs: parser %v doesn't exists", u.Key(), u.GetOutputsConf.Type)
 		}
-		err = parser(string(u.OutputRaw), &pOutputs)
+		err = parser(string(u.OutputRaw), u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(project.OutputLinkType))
 		if err != nil {
 			return fmt.Errorf("parse outputs '%v': %w", u.GetOutputsConf.Type, err)
 		}
-		for _, eo := range u.Outputs.List {
-			op, exists := pOutputs[eo.Output]
-			if !exists {
-				return fmt.Errorf("parse outputs: unit has no output named '%v', expected by another unit", eo.Output)
-			}
-			eo.OutputData = op
-		}
-	}
 
+	}
 	if err == nil {
 		u.Applied = true
 	}
@@ -277,7 +240,7 @@ func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, er
 		log.Debugf("configuration for '%v' is empty for unit '%v'. Skip.", name, u.Key())
 		return nil, nil
 	}
-	err := u.ReplaceMarkers()
+	err := u.Prepare()
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +310,7 @@ func (u *Unit) Destroy() error {
 
 // Key return uniq unit index (stackName.unitName).
 func (u *Unit) Key() string {
-	return fmt.Sprintf("%v.%v", u.StackName(), u.MyName)
+	return fmt.Sprintf("%v.%v", u.StackName(), u.Name())
 }
 
 // CodeDir return path to unit code directory.
@@ -361,51 +324,49 @@ func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return nil
 }
 
-// ReplaceMarkers replace all templated markers with values.
-func (u *Unit) ReplaceMarkers() error {
+func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 	// log.Warnf("Replacing markers...")
 	if u.Env != nil {
-		err := project.ScanMarkers(u.Env, project.OutputsScanner, u)
+		err := project.ScanMarkers(u.Env, scanner, u)
 		if err != nil {
 			return err
 		}
 	}
-
 	if u.ApplyConf != nil {
-		err := project.ScanMarkers(u.ApplyConf.Commands, project.OutputsScanner, u)
+		err := project.ScanMarkers(u.ApplyConf.Commands, scanner, u)
 		if err != nil {
 			return err
 		}
 	}
 
 	if u.PlanConf != nil {
-		err := project.ScanMarkers(u.PlanConf.Commands, project.OutputsScanner, u)
+		err := project.ScanMarkers(u.PlanConf.Commands, scanner, u)
 		if err != nil {
 			return err
 		}
 	}
 
 	if u.DestroyConf != nil {
-		err := project.ScanMarkers(u.DestroyConf.Commands, project.OutputsScanner, u)
+		err := project.ScanMarkers(u.DestroyConf.Commands, scanner, u)
 		if err != nil {
 			return err
 		}
 	}
 
 	if u.InitConf != nil {
-		err := project.ScanMarkers(u.InitConf.Commands, project.OutputsScanner, u)
+		err := project.ScanMarkers(u.InitConf.Commands, scanner, u)
 		if err != nil {
 			return err
 		}
 	}
 	if u.PreHook != nil {
-		err := project.ScanMarkers(&u.PreHook.Command, project.OutputsScanner, u)
+		err := project.ScanMarkers(&u.PreHook.Command, scanner, u)
 		if err != nil {
 			return err
 		}
 	}
 	if u.PostHook != nil {
-		err := project.ScanMarkers(&u.PostHook.Command, project.OutputsScanner, u)
+		err := project.ScanMarkers(&u.PostHook.Command, scanner, u)
 		if err != nil {
 			return err
 		}
@@ -413,29 +374,33 @@ func (u *Unit) ReplaceMarkers() error {
 	return nil
 }
 
+// Prepare scan all markers in unit, and build project unit links, and unit dependencies.
+func (u *Unit) Prepare() error {
+	for _, link := range u.Dependencies().ByLinkTypes("custom").Slice() {
+		err := link.InitUnitPtr(u.ProjectPtr)
+		if err != nil {
+			return err
+		}
+	}
+	return u.ScanData(project.OutputsScanner)
+}
+
 // KindKey returns unit kind.
 func (u *Unit) KindKey() string {
 	return "shell"
 }
 
-// RequiredUnits list of dependencies in map representation.
-func (u *Unit) RequiredUnits() map[string]project.Unit {
-	res := make(map[string]project.Unit)
-	for _, dep := range u.DependenciesList.GetSlice() {
-		res[dep.Unit.Key()] = u.Project().Units[dep.Unit.Key()]
+func (u *Unit) readDeps() (err error) {
+	if u.DependsOn == nil {
+		return nil
 	}
-	return res
-}
-
-func (u *Unit) readDeps(depsData interface{}) (res *project.DependenciesOutputsT, err error) {
 	rawDepsList := []string{}
-	switch depsData.(type) {
+	switch u.DependsOn.(type) {
 	case string:
-		rawDepsList = append(rawDepsList, depsData.(string))
+		rawDepsList = append(rawDepsList, u.DependsOn.(string))
 	case []string:
-		rawDepsList = append(rawDepsList, depsData.([]string)...)
+		rawDepsList = append(rawDepsList, u.DependsOn.([]string)...)
 	}
-	res = &project.DependenciesOutputsT{}
 	for _, dep := range rawDepsList {
 		splDep := strings.Split(dep, ".")
 		if len(splDep) != 2 {
@@ -445,10 +410,13 @@ func (u *Unit) readDeps(depsData interface{}) (res *project.DependenciesOutputsT
 		if infNm == "this" {
 			infNm = u.StackName()
 		}
-		res.Add(fmt.Sprintf("%v.%v", infNm, splDep[1]), &project.DependencyOutput{
-			StackName: infNm,
-			UnitName:  splDep[1],
-		})
+		dp := &project.ULinkT{
+			TargenStackName: infNm,
+			TargetUnitName:  splDep[1],
+			LinkType:        "custom",
+		}
+		u.ProjectPtr.UnitLinks.Set(dp)
+		u.DependenciesList.Set(dp)
 		log.Debugf("Dependency added: %v --> %v.%v", u.Key(), infNm, splDep[1])
 	}
 	return

@@ -3,6 +3,8 @@ package tfmodule
 import (
 	"fmt"
 
+	"github.com/apex/log"
+
 	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/project"
@@ -17,14 +19,21 @@ type UnitDiffSpec struct {
 	LocalModule *common.FilesListT `json:"local_module,omitempty"`
 }
 
-func (u *Unit) GetState() interface{} {
+func (u *Unit) GetStateUnit() *Unit {
 	unitState := Unit{}
 	err := utils.JSONCopy(*u, &unitState)
 	if err != nil {
-		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
+		log.Fatalf("read unit '%v': create state: %w", u.Name(), err)
 	}
-	unitState.Unit = u.Unit.GetState().(base.Unit)
-	return unitState
+	unitState.Unit = *u.Unit.GetStateUnit()
+	return &unitState
+}
+
+func (u *Unit) GetState() interface{} {
+	if u.StateData != nil {
+		return u.StateData
+	}
+	return *u.GetStateUnit()
 }
 
 func (u *Unit) GetUnitDiff() UnitDiffSpec {

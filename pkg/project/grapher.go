@@ -76,7 +76,7 @@ func (g *grapher) updateDirectQueue() int {
 	for key, mod := range g.units {
 		isReady := true
 		if !mod.Dependencies().IsEmpty() {
-			for _, dep := range mod.Dependencies().GetSlice() {
+			for _, dep := range mod.Dependencies().Slice() {
 				if er, ok := g.finished[dep.Unit.Key()]; !ok || er.Error != nil {
 					isReady = false
 					break
@@ -207,8 +207,10 @@ func checkDependenciesRecursive(mod Unit, maxDepth int) bool {
 	if maxDepth == 0 {
 		return false
 	}
-	for _, u := range mod.RequiredUnits() {
-		if ok := checkDependenciesRecursive(u, maxDepth-1); !ok {
+	//log.Errorf("checkDependenciesRecursive %v", mod.Dependencies())
+	for _, dep := range mod.Dependencies().Slice() {
+		// log.Errorf("checkDependenciesRecursive FOR %v\n %+v", dep.Unit.Name(), mod.Name())
+		if ok := checkDependenciesRecursive(dep.Unit, maxDepth-1); !ok {
 			return false
 		}
 	}
@@ -218,9 +220,14 @@ func checkDependenciesRecursive(mod Unit, maxDepth int) bool {
 func findDependedUnits(modList map[string]Unit, targetMod Unit) map[string]Unit {
 	res := map[string]Unit{}
 	for key, mod := range modList {
-		for _, dep := range mod.Dependencies().GetSlice() {
-			//log.Debugf("Tm: %v, M: %v Dependency: %v", targetMod.Name(), mod.Name(), dep.unitName)
+		log.Infof("findDependedUnits '%v':", mod.Name())
+		if mod.Key() == targetMod.Key() {
+			continue
+		}
+		for _, dep := range mod.Dependencies().Slice() {
 			if dep.Unit.Key() == targetMod.Key() {
+				log.Infof("      '%v':", dep.TargetUnitName)
+				// log.Warnf("Tm: %v, M: %v Dependency: %v", targetMod.Name(), mod.Name(), dep.TargetUnitName)
 				res[key] = mod
 			}
 		}

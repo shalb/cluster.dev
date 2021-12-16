@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -15,14 +16,16 @@ type UnitDiffSpec struct {
 	Providers interface{} `json:"providers,omitempty"`
 }
 
-func (u *Unit) GetState() interface{} {
+func (u *Unit) GetStateUnit() *Unit {
 
-	unitState := Unit{}
+	unitState := Unit{
+		Unit: *u.Unit.GetStateUnit(),
+	}
 	err := utils.JSONCopy(*u, &unitState)
 	if err != nil {
-		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
+		log.Fatalf("read unit '%v': create state: %w", u.Name(), err)
 	}
-	unitState.Unit = u.Unit.GetState().(common.Unit)
+	unitState.Unit = *u.Unit.GetStateUnit()
 	unitState.ApplyConf = nil
 	unitState.DestroyConf = nil
 	unitState.InitConf = nil
@@ -31,14 +34,23 @@ func (u *Unit) GetState() interface{} {
 	unitState.OutputParsers = nil
 	unitState.CreateFiles = nil
 	unitState.WorkDir = ""
-	return unitState
+	// log.Errorf("GetState '%v' terraform %+v", unitState.Name(), unitState.Unit.Outputs)
+	return &unitState
 }
 
-func (m *Unit) GetUnitDiff() UnitDiffSpec {
-	diff := m.Unit.GetUnitDiff()
+func (u *Unit) GetState() interface{} {
+
+	if u.StateData != nil {
+		return u.StateData
+	}
+	return *u.GetStateUnit()
+}
+
+func (u *Unit) GetUnitDiff() UnitDiffSpec {
+	diff := u.Unit.GetUnitDiff()
 	st := UnitDiffSpec{
 		UnitDiffSpec: diff,
-		Providers:    m.Providers,
+		Providers:    u.Providers,
 	}
 	st.UnitDiffSpec.ApplyConf = nil
 	st.UnitDiffSpec.ApplyConf = nil
@@ -48,57 +60,50 @@ func (m *Unit) GetUnitDiff() UnitDiffSpec {
 	return st
 }
 
-func (m *Unit) GetDiffData() interface{} {
-	diff := m.GetUnitDiff()
-	for output := range m.Outputs.List {
-		diff.Outputs[output] = "<terraform output>"
+func (u *Unit) GetDiffData() interface{} {
+	diff := u.GetUnitDiff()
+	for _, output := range u.Project().UnitLinks.ByTargetUnit(u).ByLinkTypes(RemoteStateLinkType).Map() {
+		diff.Outputs[output.OutputName] = "<terraform output>"
 	}
 	diffData := map[string]interface{}{}
 	utils.JSONCopy(diff, &diffData)
 	return diffData
 }
 
-func (m *Unit) GetStateDiffData() interface{} {
+func (u *Unit) GetStateDiffData() interface{} {
 	// return nothing
 	return ""
 }
 
-func (m *Unit) LoadState(spec interface{}, modKey string, p *project.StateProject) error {
+func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProject) error {
 
-	err := m.Unit.LoadState(spec, modKey, p)
+	err := u.Unit.LoadState(spec, modKey, p)
 	if err != nil {
 		return err
 	}
-	m.fillShellUnit()
-	err = utils.JSONCopy(spec, &m)
+	u.fillShellUnit()
+	err = utils.JSONCopy(spec, &u)
 
 	return err
 }
 
 // ReplaceRemoteStatesForDiff replace remote state markers in struct to <remote state stack.mod.output> to show in diff.
-func (m *Unit) ReplaceRemoteStatesForDiff(in, out interface{}) error {
+func (u *Unit) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	inJSON, err := utils.JSONEncode(in)
 	if err != nil {
 		return fmt.Errorf("unit diff: internal error")
 	}
 	inJSONstr := string(inJSON)
-	depMarkers, ok := m.Project().Markers[RemoteStateMarkerCatName]
-	if !ok {
+
+	markersList := u.Project().UnitLinks.ByLinkTypes(RemoteStateLinkType).Map()
+
+	if len(markersList) == 0 {
 		return utils.JSONDecode([]byte(inJSONstr), out)
 	}
-	markersList, ok := depMarkers.(map[string]*project.DependencyOutput)
-	if !ok {
-		markersList := make(map[string]*project.DependencyOutput)
-		err := utils.JSONCopy(depMarkers, &markersList)
-		if err != nil {
-			return fmt.Errorf("remote state scanner: read dependency: bad type")
-		}
-	}
-
 	for key, marker := range markersList {
 		//log.Warnf("marker replace: %v", key)
 		if strings.Contains(inJSONstr, key) {
-			remoteStateRef := fmt.Sprintf("<remoteState %s.%s.%s>", marker.StackName, marker.UnitName, marker.Output)
+			remoteStateRef := fmt.Sprintf("<remoteState %s.%s.%s>", marker.TargenStackName, marker.TargetUnitName, marker.OutputName)
 			replacer := strings.NewReplacer(key, remoteStateRef)
 			inJSONstr = replacer.Replace(inJSONstr)
 		}

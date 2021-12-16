@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
@@ -20,18 +21,23 @@ type UnitDiffSpec struct {
 	PostHook      *HookSpec              `json:"post_hook,omitempty"`
 }
 
-func (u *Unit) GetState() interface{} {
+func (u *Unit) GetStateUnit() *Unit {
 	unitState := Unit{}
 	err := utils.JSONCopy(*u, &unitState)
 	if err != nil {
-		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
+		log.Fatalf("read unit '%v': create state: %w", u.Name(), err)
 	}
-	u.Outputs = &project.DependenciesOutputsT{
-		List: nil,
-	}
-	return unitState
+	return &unitState
 }
 
+func (u *Unit) GetState() interface{} {
+	if u.SavedState != nil {
+		return u.SavedState
+	}
+	res := u.GetStateUnit()
+	return &res
+
+}
 func (u *Unit) GetUnitDiff() UnitDiffSpec {
 	st := UnitDiffSpec{
 		Outputs:       make(map[string]string),
@@ -45,10 +51,8 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 			st.Env[key] = val
 		}
 	}
-	if u.Outputs != nil {
-		for output := range u.Outputs.List {
-			st.Outputs[output] = "<output>"
-		}
+	for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).Map() {
+		st.Outputs[link.OutputName] = "<output>"
 	}
 	return st
 }
@@ -58,7 +62,7 @@ func (u *Unit) GetDiffData() interface{} {
 	diffData := map[string]interface{}{}
 	diff := u.GetUnitDiff()
 	utils.JSONCopy(diff, &diffData)
-	project.ScanMarkers(&diffData, project.StateOutputsScanner, u)
+	project.ScanMarkers(&diffData, project.StateOutputsReplacer, u)
 	u.ReplaceOutputsForDiff(diffData, &diffData)
 	return diffData
 }
@@ -96,7 +100,6 @@ func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	if !exists {
 		return fmt.Errorf("load unit from state: backend '%v' does not exists in curent project", u.BackendName)
 	}
-
 	u.MyName = modName
 	u.StackPtr = stack
 	u.ProjectPtr = &p.Project
@@ -104,6 +107,10 @@ func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	//u.UnitMarkers = make(map[string]interface{})
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
 	u.BackendPtr = &backend
+	err = u.readDeps()
+	if err != nil {
+		return fmt.Errorf("read state dependencies: %w", err)
+	}
 	return nil
 }
 
@@ -114,22 +121,10 @@ func (u *Unit) ReplaceOutputsForDiff(in, out interface{}) error {
 		return fmt.Errorf("unit diff: internal error")
 	}
 	inJSONstr := string(inJSON)
-	depMarkers, ok := u.Project().Markers[project.OutputMarkerCatName]
-	if !ok {
-		return utils.JSONDecode([]byte(inJSONstr), out)
-	}
-	markersList, ok := depMarkers.(map[string]*project.DependencyOutput)
-	if !ok {
-		markersList := make(map[string]*project.DependencyOutput)
-		err := utils.JSONCopy(depMarkers, &markersList)
-		if err != nil {
-			return fmt.Errorf("remote state scanner: read dependency: bad type")
-		}
-	}
-
-	for key, marker := range markersList {
+	// log.Warnf("ReplaceOutputsForDiff %v\n%v", inJSONstr, u.Project().UnitLinks.ByLinkTypes(project.OutputMarkerCatName).Map())
+	for key, marker := range u.Project().UnitLinks.ByLinkTypes(project.OutputLinkType).Map() {
 		if strings.Contains(inJSONstr, key) {
-			remoteStateRef := fmt.Sprintf("<output %s.%s.%s>", marker.StackName, marker.UnitName, marker.Output)
+			remoteStateRef := fmt.Sprintf("<output %s.%s.%s>", marker.TargenStackName, marker.TargetUnitName, marker.OutputName)
 			replacer := strings.NewReplacer(key, remoteStateRef)
 			inJSONstr = replacer.Replace(inJSONstr)
 		}

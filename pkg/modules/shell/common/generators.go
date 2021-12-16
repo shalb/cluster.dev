@@ -5,20 +5,21 @@ import (
 	"io/fs"
 	"os"
 
+	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 // CreateCodeDir generate all terraform code for project.
-func (m *Unit) createCodeDir() error {
+func (u *Unit) createCodeDir() error {
 
-	err := os.Mkdir(m.CacheDir, 0755)
+	err := os.Mkdir(u.CacheDir, 0755)
 	if err != nil {
-		return fmt.Errorf("build unit '%v': mkdir '%v': '%v'", m.Name(), m.CacheDir, err.Error())
+		return fmt.Errorf("build unit '%v': mkdir '%v': '%v'", u.Name(), u.CacheDir, err.Error())
 	}
-	if m.WorkDir != "" {
-		err = utils.CopyDirectory(m.WorkDir, m.CacheDir)
+	if u.WorkDir != "" {
+		err = utils.CopyDirectory(u.WorkDir, u.CacheDir)
 		if err != nil {
-			return fmt.Errorf("read unit '%v': creating cache: '%v'", m.Name(), err.Error())
+			return fmt.Errorf("read unit '%v': creating cache: '%v'", u.Name(), err.Error())
 		}
 	}
 	// for _, f := range *m.CreateFiles {
@@ -28,16 +29,22 @@ func (m *Unit) createCodeDir() error {
 	// 	}
 	// }
 
-	return m.CreateFiles.WriteFiles(m.CacheDir)
+	return u.CreateFiles.WriteFiles(u.CacheDir)
 }
 
-func (m *Unit) Build() error {
+func (u *Unit) Build() error {
+	// Save state before create code dir.
+	u.SavedState = u.GetState()
+	err := u.ScanData(project.OutputsReplacer)
+	if err != nil {
+		return err
+	}
+	if u.PreHook != nil {
+		u.CreateFiles.Add("pre_hook.sh", u.PreHook.Command, fs.ModePerm)
+	}
+	if u.PostHook != nil {
+		u.CreateFiles.Add("post_hook.sh", u.PostHook.Command, fs.ModePerm)
+	}
 
-	if m.PreHook != nil {
-		m.CreateFiles.Add("pre_hook.sh", m.PreHook.Command, fs.ModePerm)
-	}
-	if m.PostHook != nil {
-		m.CreateFiles.Add("post_hook.sh", m.PostHook.Command, fs.ModePerm)
-	}
-	return m.createCodeDir()
+	return u.createCodeDir()
 }
