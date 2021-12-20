@@ -235,8 +235,8 @@ func (u *Unit) Apply() error {
 		err = parser(string(u.OutputRaw), u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(project.OutputLinkType))
 		if err != nil {
 
-			str := fmt.Sprintf("Outputs data: %s", string(u.OutputRaw))
-			log.Warnf("Len: %v", len(str))
+			//str := fmt.Sprintf("Outputs data: %s", string(u.OutputRaw))
+			// log.Warnf("Len: %v", len(str))
 			return fmt.Errorf("parse outputs '%v': %w", u.GetOutputsConf.Type, err)
 		}
 

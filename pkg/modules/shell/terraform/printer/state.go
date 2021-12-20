@@ -16,6 +16,7 @@ func (u *Unit) GetStateUnit() *Unit {
 	if err != nil {
 		log.Fatalf("read unit '%v': create state: %w", u.Name(), err)
 	}
+	unitState.OutputRaw = u.OutputRaw
 	unitState.Unit = *u.Unit.GetStateUnit()
 	return &unitState
 }

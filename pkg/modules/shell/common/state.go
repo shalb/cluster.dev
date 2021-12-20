@@ -121,7 +121,6 @@ func (u *Unit) ReplaceOutputsForDiff(in, out interface{}) error {
 		return fmt.Errorf("unit diff: internal error")
 	}
 	inJSONstr := string(inJSON)
-	// log.Warnf("ReplaceOutputsForDiff %v\n%v", inJSONstr, u.Project().UnitLinks.ByLinkTypes(project.OutputMarkerCatName).Map())
 	for key, marker := range u.Project().UnitLinks.ByLinkTypes(project.OutputLinkType).Map() {
 		if strings.Contains(inJSONstr, key) {
 			remoteStateRef := fmt.Sprintf("<output %s.%s.%s>", marker.TargenStackName, marker.TargetUnitName, marker.OutputName)

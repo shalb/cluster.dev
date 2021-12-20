@@ -86,7 +86,7 @@ func (u *Unit) SeparatorOutputParser(in string, out *project.UnitLinksT) error {
 	}
 	outTmp := make(map[string]string)
 	for _, ln := range lines {
-		log.Warn(ln)
+		// log.Warn(ln)
 		if len(ln) == 0 {
 			// ignore empty string
 			continue

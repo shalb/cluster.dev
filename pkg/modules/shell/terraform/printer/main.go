@@ -16,7 +16,7 @@ type Unit struct {
 	OutputRaw string                 `yaml:"-" json:"output"`
 	Inputs    map[string]interface{} `yaml:"-" json:"inputs"`
 	UnitKind  string                 `yaml:"-" json:"type"`
-	StateData interface{}            `yaml:"-" json:"-"`
+	StateData *Unit                  `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -88,7 +88,7 @@ func (u *Unit) Prepare() error {
 // Build generate all terraform code for project.
 func (u *Unit) Build() error {
 	// Save state before outputs replacing.
-	u.StateData = u.GetState()
+	u.StateData = u.GetStateUnit()
 	// Replace outputs.
 	u.ScanData(project.OutputsReplacer)
 	mainBlock, err := u.genMainCodeBlock()
@@ -114,6 +114,7 @@ func (u *Unit) Apply() (err error) {
 		return
 	}
 	u.OutputRaw = outputs
+	u.StateData.OutputRaw = outputs
 	// log.Warnf("Printer outputs: %v", u.ProjectPtr.UnitLinks.ByTargetUnit(u))
 	return
 }
@@ -121,5 +122,6 @@ func (u *Unit) Apply() (err error) {
 // UpdateProjectRuntimeData update project runtime dataset, adds printer unit outputs.
 func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: u.Key(), Output: u.OutputRaw})
+	// log.Warnf("Printer UpdateProjectRuntimeData: %v", u.OutputRaw)
 	return u.Unit.UpdateProjectRuntimeData(p)
 }
