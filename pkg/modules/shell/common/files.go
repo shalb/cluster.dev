@@ -84,8 +84,8 @@ func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error
 				}
 				matchPattern := true
 				for _, p := range pattern {
-					match := regexp.MustCompile(p).MatchString(relPath)
-					if match != true {
+					matchPattern = regexp.MustCompile(p).MatchString(relPath)
+					if matchPattern != true {
 						break
 					}
 				}

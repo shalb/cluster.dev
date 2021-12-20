@@ -185,7 +185,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 	// log.Warnf("StateProject. Unit links: %+v", statePrj.UnitLinks)
 	// utils.JSONCopy(p.Markers, statePrj.Markers)
 	for mName, mState := range stateD.Units {
-		log.Debugf("Loading unit from state: %v", mName)
+		// log.Debugf("Loading unit from state: %v", mName)
 
 		if mState == nil {
 			continue

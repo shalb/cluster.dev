@@ -56,14 +56,14 @@ func OutputsReplacer(data reflect.Value, unit Unit) (reflect.Value, error) {
 				return reflect.ValueOf(nil), fmt.Errorf("replace output internal error: unit link does not initted")
 			}
 			if link.OutputData == nil {
-				return reflect.ValueOf(nil), fmt.Errorf("replace output internal error: output data is empty")
+				resString = strings.ReplaceAll(resString, marker, fmt.Sprintf("<output %s.%s>", link.TargenStackName, link.TargetUnitName))
 			}
 			if resString == marker {
 				return reflect.ValueOf(link.OutputData), nil
 			} else {
 				var dataStr string
 				if reflect.ValueOf(link.OutputData).Kind() != reflect.String {
-					// TODO process error id output data is not string.
+					// TODO process error if output data is not string.
 					// For now - convert to string.
 					dataStr = fmt.Sprintf("%v", link.OutputData)
 				} else {

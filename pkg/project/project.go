@@ -60,6 +60,7 @@ type Project struct {
 	InitLock         sync.Mutex
 	RuntimeDataset   RuntimeData
 	StateBackendName string
+	OwnState         *StateProject
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
@@ -163,7 +164,7 @@ func LoadProjectFull() (*Project, error) {
 		return nil, err
 	}
 	if !config.Global.NotLoadState {
-		_, err = project.LoadState()
+		project.OwnState, err = project.LoadState()
 		if err != nil {
 			return nil, fmt.Errorf("loading project: %w", err)
 		}

@@ -220,13 +220,13 @@ func checkDependenciesRecursive(mod Unit, maxDepth int) bool {
 func findDependedUnits(modList map[string]Unit, targetMod Unit) map[string]Unit {
 	res := map[string]Unit{}
 	for key, mod := range modList {
-		log.Infof("findDependedUnits '%v':", mod.Name())
+		// log.Infof("findDependedUnits '%v':", mod.Name())
 		if mod.Key() == targetMod.Key() {
 			continue
 		}
 		for _, dep := range mod.Dependencies().Slice() {
 			if dep.Unit.Key() == targetMod.Key() {
-				log.Infof("      '%v':", dep.TargetUnitName)
+				// log.Infof("      '%v':", dep.TargetUnitName)
 				// log.Warnf("Tm: %v, M: %v Dependency: %v", targetMod.Name(), mod.Name(), dep.TargetUnitName)
 				res[key] = mod
 			}

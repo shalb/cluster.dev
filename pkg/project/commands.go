@@ -144,7 +144,7 @@ func (p *Project) Apply() error {
 		fProject.DeleteUnit(md)
 		err = fProject.SaveState()
 		if err != nil {
-			return fmt.Errorf("project apply: saving state: %v", err.Error())
+			return fmt.Errorf("project apply: %v", err.Error())
 		}
 	}
 	for {

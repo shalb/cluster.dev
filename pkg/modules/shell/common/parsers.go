@@ -26,7 +26,7 @@ func (u *Unit) JSONOutputParser(in string, out *project.UnitLinksT) error {
 	for _, expOutput := range out.List {
 		data, exists := outTmp[expOutput.OutputName]
 		if !exists {
-			return fmt.Errorf("parse outputs: unit has no output named '%v', expected by another unit", expOutput.OutputName)
+			return fmt.Errorf("unit has no output named '%v', expected by another unit", expOutput.OutputName)
 		}
 		expOutput.OutputData = data
 	}
@@ -66,7 +66,7 @@ func (u *Unit) RegexOutputParser(in string, out *project.UnitLinksT) error {
 	for _, expOutput := range out.List {
 		data, exists := outTmp[expOutput.OutputName]
 		if !exists {
-			return fmt.Errorf("parse outputs: unit has no output named '%v', expected by another unit", expOutput.OutputName)
+			return fmt.Errorf("unit has no output named '%v', expected by another unit", expOutput.OutputName)
 		}
 		expOutput.OutputData = data
 	}
@@ -86,6 +86,7 @@ func (u *Unit) SeparatorOutputParser(in string, out *project.UnitLinksT) error {
 	}
 	outTmp := make(map[string]string)
 	for _, ln := range lines {
+		log.Warn(ln)
 		if len(ln) == 0 {
 			// ignore empty string
 			continue
@@ -96,12 +97,13 @@ func (u *Unit) SeparatorOutputParser(in string, out *project.UnitLinksT) error {
 			log.Warnf("can't parse the output string '%v' , separator '%v' does not found", ln, u.GetOutputsConf.Separator)
 			continue
 		}
-		outTmp[kv[0]] = kv[1]
+		key := strings.Trim(kv[0], " ")
+		outTmp[key] = kv[1]
 	}
 	for _, expOutput := range out.List {
 		data, exists := outTmp[expOutput.OutputName]
 		if !exists {
-			return fmt.Errorf("parse outputs: unit has no output named '%v', expected by another unit", expOutput.OutputName)
+			return fmt.Errorf("unit has no output named '%v', expected by another unit", expOutput.OutputName)
 		}
 		expOutput.OutputData = data
 	}

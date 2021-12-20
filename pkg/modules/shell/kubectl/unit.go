@@ -2,8 +2,10 @@ package base
 
 import (
 	"fmt"
+	"io/fs"
 	"path/filepath"
 
+	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
@@ -20,23 +22,20 @@ type KubectlCliT struct {
 	Autoinstall bool   `yaml:"autoinstall" json:"autoinstall"`
 }
 
-type KustomizeT struct {
-	Path string `yaml:"path" json:"path"`
-}
-
 // Unit describe cluster.dev unit to deploy/destroy k8s resources with kubectl.
 type Unit struct {
 	common.Unit
-	Namespace      string             `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Kubeconfig     string             `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
-	KubectlOpts    string             `yaml:"kubectl_opts,omitempty" json:"kubectl_opts,omitempty"`
-	KubectlCliConf *KubectlCliT       `yaml:"kubectl,omitempty" json:"kubectl,omitempty"`
-	Path           string             `yaml:"path" json:"path"`
-	ManifestsFiles *common.FilesListT `yaml:"-" json:"manifests"`
-	ApplyTemplate  bool               `yaml:"apply_template" json:"-"`
-	recursive      bool               `yaml:"-" json:"-"`
-	UnitKind       string             `yaml:"-" json:"type"`
-	SavedState     interface{}        `yaml:"-" json:"-"`
+	Namespace          string             `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	Kubeconfig         string             `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
+	KubectlOpts        string             `yaml:"kubectl_opts,omitempty" json:"kubectl_opts,omitempty"`
+	KubectlCliConf     *KubectlCliT       `yaml:"kubectl,omitempty" json:"kubectl,omitempty"`
+	Path               string             `yaml:"path" json:"path"`
+	ManifestsFiles     *common.FilesListT `yaml:"-" json:"manifests"`
+	ApplyTemplate      bool               `yaml:"apply_template" json:"-"`
+	recursive          bool               `yaml:"-" json:"-"`
+	UnitKind           string             `yaml:"-" json:"type"`
+	SavedState         interface{}        `yaml:"-" json:"-"`
+	manifestsForDelete *common.FilesListT `yaml:"-" json:"-"`
 }
 
 var kubectlBin = "kubectl"
@@ -59,15 +58,21 @@ func (u *Unit) fillShellUnit() {
 	if u.Kubeconfig != "" {
 		commandOpts = fmt.Sprintf("%s --kubeconfig='%s'", commandOpts, u.Kubeconfig)
 	}
-	u.ApplyConf = &common.OperationConfig{
-		Commands: []interface{}{
-			fmt.Sprintf("%s apply %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, u.Path)),
-		},
+	if u.manifestsForDelete != nil {
+		u.ApplyConf = &common.OperationConfig{
+			Commands: []interface{}{
+				fmt.Sprintf("%s delete %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, "delete/main.yaml")),
+			},
+		}
+	} else {
+		u.ApplyConf = &common.OperationConfig{}
 	}
+	u.ApplyConf.Commands = append(u.ApplyConf.Commands, fmt.Sprintf("%s apply %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, "workdir", u.Path)))
+
 	// log.Warnf("path: %v", u.Path)
 	u.DestroyConf = &common.OperationConfig{
 		Commands: []interface{}{
-			fmt.Sprintf("%s delete %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, u.Path)),
+			fmt.Sprintf("%s delete %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, "workdir", u.Path)),
 		},
 	}
 	// u.CreateFiles = nil
@@ -116,8 +121,6 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	u.UnitKind = u.KindKey()
 	// u.StatePtr.ManifestsFiles = u.ManifestsFiles
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
-	u.fillShellUnit()
-	u.Prepare()
 	return err
 }
 
@@ -174,7 +177,7 @@ func (u *Unit) GetManifestsMap() (res map[string]interface{}) {
 			if keyS.Metadata.Namespace == "" {
 				keyS.Metadata.Namespace = "<default namespace>"
 			}
-			key := fmt.Sprintf("%s-->%s.%s.%s", file.FileName, keyS.Kind, keyS.Metadata.Namespace, keyS.Metadata.Name)
+			key := fmt.Sprintf("%s.%s.%s", keyS.Kind, keyS.Metadata.Namespace, keyS.Metadata.Name)
 			res[key] = obj
 		}
 	}
@@ -226,5 +229,41 @@ func (u *Unit) Build() error {
 	if err != nil {
 		return err
 	}
-	return u.ManifestsFiles.WriteFiles(u.CacheDir)
+	if u.ProjectPtr.OwnState != nil {
+		stateUnit, exists := u.ProjectPtr.OwnState.Units[u.Key()]
+		deleteYAML := ""
+		if exists {
+			stateUnit, ok := stateUnit.(*Unit)
+			if !ok {
+				log.Fatalf("internal error")
+			}
+			stateManifests := stateUnit.GetManifestsMap()
+			manifests := u.GetManifestsMap()
+			i := 0
+			for key, man := range stateManifests {
+				// log.Warnf("stateManifests: %v", key)
+				if i > 0 {
+					deleteYAML = deleteYAML + "\n---\n"
+				}
+				if _, ok := manifests[key]; !ok {
+					manifestData, err := yaml.Marshal(man)
+					if err != nil {
+						return err
+					}
+					deleteYAML = deleteYAML + string(manifestData)
+				}
+			}
+		}
+		if deleteYAML != "" {
+			u.manifestsForDelete = &common.FilesListT{}
+			u.manifestsForDelete.Add("./delete/main.yaml", deleteYAML, fs.ModePerm)
+			err := u.manifestsForDelete.WriteFiles(u.CacheDir)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	u.fillShellUnit()
+	return u.ManifestsFiles.WriteFiles(filepath.Join(u.CacheDir, "workdir"))
 }

@@ -165,7 +165,6 @@ func (b *ShRunner) Run(command string) ([]byte, []byte, error) {
 	}
 	log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("In progress..."))
 	log.Debugf("%s Executing command '%s':", logPrefix, command)
-
 	// Create log writer.
 	logWriter, err := logging.NewLogWriter(log.DebugLevel, logging.SliceFielder{Flds: b.LogLabels})
 	if err != nil {

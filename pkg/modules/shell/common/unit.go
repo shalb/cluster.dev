@@ -81,7 +81,7 @@ type Unit struct {
 	Applied          bool                    `yaml:"-" json:"-"`
 	PreHook          *HookSpec               `yaml:"-" json:"pre_hook,omitempty"`
 	PostHook         *HookSpec               `yaml:"-" json:"post_hook,omitempty"`
-	UnitKind         string                  `yaml:"-" json:"type"`
+	UnitKind         string                  `yaml:"type" json:"type"`
 	BackendPtr       *project.Backend        `yaml:"-" json:"-"`
 	BackendName      string                  `yaml:"-" json:"backend_name"`
 	SavedState       interface{}             `yaml:"-" json:"-"`
@@ -143,6 +143,16 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		}
 	}
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
+	return u.checkShellUnitConfig()
+}
+
+func (u *Unit) checkShellUnitConfig() error {
+	if u.UnitKind != "shell" {
+		return nil
+	}
+	if u.ApplyConf == nil {
+		return fmt.Errorf("unit '%v': apply configuration does not exists in unit", u.Key())
+	}
 	return nil
 }
 
@@ -192,7 +202,6 @@ func (u *Unit) Init() error {
 
 // Apply runs unit apply procedure.
 func (u *Unit) Apply() error {
-
 	var err error
 	applyCommands := OperationConfig{}
 	if u.PreHook != nil && u.PreHook.OnApply {
@@ -225,6 +234,9 @@ func (u *Unit) Apply() error {
 		}
 		err = parser(string(u.OutputRaw), u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(project.OutputLinkType))
 		if err != nil {
+
+			str := fmt.Sprintf("Outputs data: %s", string(u.OutputRaw))
+			log.Warnf("Len: %v", len(str))
 			return fmt.Errorf("parse outputs '%v': %w", u.GetOutputsConf.Type, err)
 		}
 
@@ -417,7 +429,7 @@ func (u *Unit) readDeps() (err error) {
 		}
 		u.ProjectPtr.UnitLinks.Set(dp)
 		u.DependenciesList.Set(dp)
-		log.Debugf("Dependency added: %v --> %v.%v", u.Key(), infNm, splDep[1])
+		// log.Debugf("Dependency added: %v --> %v.%v", u.Key(), infNm, splDep[1])
 	}
 	return
 }
