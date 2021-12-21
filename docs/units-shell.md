@@ -1,6 +1,6 @@
 # Shell Unit
 
-The unit executes Shell commands and scripts. 
+Executes Shell commands and scripts. 
 
 Example:
 
