@@ -2,8 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"math/big"
 	"net"
+	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/apparentlymart/go-cidr/cidr"
 )
@@ -34,4 +38,25 @@ func CidrSubnet(netCidr string, newbits int, netnum interface{}) (ret string, er
 	}
 
 	return newNetwork.String(), nil
+}
+
+func GetFileByUrl(srcUrl string) (string, error) {
+
+	_, err := url.ParseRequestURI(srcUrl)
+	if err != nil {
+		return "", err
+	}
+	// Get the data
+	resp, err := http.Get(srcUrl)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	buf := new(strings.Builder)
+	_, err = io.Copy(buf, resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }

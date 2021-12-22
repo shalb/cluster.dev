@@ -308,11 +308,15 @@ func (u *Unit) Plan() error {
 
 // Destroy unit.
 func (u *Unit) Destroy() error {
-	destroyCommands := OperationConfig{}
+	destroyCommands := OperationConfig{
+		Commands: []interface{}{},
+	}
 	if u.PreHook != nil && u.PreHook.OnDestroy {
 		destroyCommands.Commands = append(destroyCommands.Commands, "./pre_hook.sh")
 	}
-	destroyCommands.Commands = append(destroyCommands.Commands, u.DestroyConf.Commands...)
+	if u.DestroyConf != nil {
+		destroyCommands.Commands = append(destroyCommands.Commands, u.DestroyConf.Commands...)
+	}
 	if u.PostHook != nil && u.PostHook.OnDestroy {
 		destroyCommands.Commands = append(destroyCommands.Commands, "./post_hook.sh")
 	}

@@ -32,7 +32,7 @@ func IsLocalPath(path string) bool {
 }
 
 func IsAbsolutePath(path string) bool {
-	if path[1:2] == "/" {
+	if path[0:1] == "/" {
 		return true
 	}
 	return false

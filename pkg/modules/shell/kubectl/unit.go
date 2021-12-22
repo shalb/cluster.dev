@@ -67,12 +67,12 @@ func (u *Unit) fillShellUnit() {
 	} else {
 		u.ApplyConf = &common.OperationConfig{}
 	}
-	u.ApplyConf.Commands = append(u.ApplyConf.Commands, fmt.Sprintf("%s apply %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, "workdir", u.Path)))
+	u.ApplyConf.Commands = append(u.ApplyConf.Commands, fmt.Sprintf("%s apply %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, "workdir")))
 
 	// log.Warnf("path: %v", u.Path)
 	u.DestroyConf = &common.OperationConfig{
 		Commands: []interface{}{
-			fmt.Sprintf("%s delete %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, "workdir", u.Path)),
+			fmt.Sprintf("%s delete %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, "workdir")),
 		},
 	}
 	// u.CreateFiles = nil
@@ -81,30 +81,59 @@ func (u *Unit) fillShellUnit() {
 	u.GetOutputsConf = nil
 }
 
+func (u *Unit) ReadManifestsPath(src string) error {
+	// Check if path is URL or local dir.
+	var manifestsPath string
+	baseDir := filepath.Join(config.Global.WorkingDir, u.StackPtr.TemplateDir)
+	if utils.IsLocalPath(src) {
+		if utils.IsAbsolutePath(src) {
+			log.Warnf("ReadManifestsPath: IsAbsolutePath")
+			manifestsPath = src
+		} else {
+			log.Warnf("ReadManifestsPath: NOT IsAbsolutePath")
+			manifestsPath = filepath.Join(baseDir, src)
+		}
+		isDir, err := utils.CheckDir(manifestsPath)
+		if err != nil {
+			return fmt.Errorf("check path: %w", err)
+		}
+		if isDir {
+			u.ManifestsFiles.ReadDir(manifestsPath, baseDir, `.ya{0,1}ml$`)
+			// log.Debugf("List %v", u.ManifestsFiles.SPrintLs())
+			if u.ManifestsFiles.IsEmpty() {
+				return fmt.Errorf("read unit '%v': no manifests found in path %v", u.Name(), u.Path)
+			}
+			u.recursive = true
+		} else {
+			err = u.ManifestsFiles.ReadFile(manifestsPath, baseDir)
+			if err != nil {
+				return fmt.Errorf("read unit '%v': read manifest: %w", u.Name(), err)
+			}
+		}
+		log.Debugf("Template dir: %v", manifestsPath)
+
+	} else {
+		manifest, err := utils.GetFileByUrl(src)
+		if err != nil {
+			return fmt.Errorf("get remote file: %w", err)
+		}
+		err = u.ManifestsFiles.Add("./main.yaml", manifest, fs.ModePerm)
+		if err != nil {
+			return fmt.Errorf("add remote file: %w", err)
+		}
+	}
+	return nil
+
+}
+
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
 	err := utils.YAMLInterfaceToType(spec, u)
 	if err != nil {
 		return err
 	}
-	// Read manifests.
-	baseDir := filepath.Join(config.Global.WorkingDir, u.StackPtr.TemplateDir)
-	manifestsPath := filepath.Join(baseDir, u.Path)
-	isDir, err := utils.CheckDir(manifestsPath)
-	if isDir {
-		if err != nil {
-			return fmt.Errorf("read unit '%v': check path: %w", u.Name(), err)
-		}
-		u.ManifestsFiles.ReadDir(manifestsPath, baseDir, `.ya{0,1}ml$`)
-		// log.Debugf("List %v", u.ManifestsFiles.SPrintLs())
-		if u.ManifestsFiles.IsEmpty() {
-			return fmt.Errorf("read unit '%v': no manifests found in path %v", u.Name(), u.Path)
-		}
-		u.recursive = true
-	} else {
-		err = u.ManifestsFiles.ReadFile(manifestsPath, baseDir)
-		if err != nil {
-			return fmt.Errorf("read unit '%v': read manifest: %w", u.Name(), err)
-		}
+	err = u.ReadManifestsPath(u.Path)
+	if err != nil {
+		return fmt.Errorf("read unit '%v': read manifests: %w", u.Name(), err)
 	}
 
 	for i, f := range *u.ManifestsFiles {
@@ -208,6 +237,10 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 			// log.Debugf("Scanned file: %v", string(scannedFile))
 		}
 		file.Content = string(scannedFile)
+	}
+	err := project.ScanMarkers(&u.Kubeconfig, scanner, u)
+	if err != nil {
+		return err
 	}
 	return nil
 }
