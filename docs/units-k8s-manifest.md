@@ -23,11 +23,11 @@ Example:
     The `path` value can also be a URL:
 
     ```yaml
-  - name: kubectl-test2
-    type: k8s-manifest
-    namespace: default
-    path: https://git.io/vPieo
-    kubeconfig: {{ output "this.kubeconfig.kubeconfig_path" }}
+    - name: kubectl-test2
+      type: k8s-manifest
+      namespace: default
+      path: https://git.io/vPieo
+      kubeconfig: {{ output "this.kubeconfig.kubeconfig_path" }}
     ```
 
 * `apply_template` - *bool*. By default is set to `true`. See the [Templating usage](#templating-usage) subsection below. 
