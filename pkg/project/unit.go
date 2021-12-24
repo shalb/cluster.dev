@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/apex/log"
 )
@@ -28,6 +29,8 @@ type Unit interface {
 	CodeDir() string
 	UpdateProjectRuntimeData(p *Project) error
 	WasApplied() bool
+	ForceApply() bool
+	Mux() *sync.Mutex
 }
 
 type UnitDriver interface {

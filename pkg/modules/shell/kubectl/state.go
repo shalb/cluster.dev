@@ -36,9 +36,10 @@ func (u *Unit) GetState() interface{} {
 
 func (u *Unit) GetUnitDiff() UnitDiffSpec {
 	diff := u.Unit.GetUnitDiff()
+	manifests, _ := u.GetManifestsMap()
 	st := UnitDiffSpec{
 		UnitDiffSpec: diff,
-		Manifests:    u.GetManifestsMap(),
+		Manifests:    manifests,
 	}
 	st.UnitDiffSpec.ApplyConf = nil
 	st.UnitDiffSpec.ApplyConf = nil

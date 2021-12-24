@@ -225,6 +225,7 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 	modsForApply := []string{}
 	modsForUpdate := []string{}
 	modsUnchanged := []string{}
+	changedUnits := map[string]Unit{}
 	log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Checking units in state"))
 	modsForDestroy := planDestroy(stateModsSeq, curModsSeq)
 
@@ -234,9 +235,8 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 		diff, stateUnit := fProject.CheckUnitChanges(md)
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning unit '%v':", md.Key()))
 		if len(diff) > 0 || config.Global.IgnoreState {
-			if len(diff) == 0 {
-				diff = colors.Fmt(colors.GreenBold).Sprint("Not changed.")
-			}
+
+			changedUnits[md.Key()] = md
 			fmt.Printf("%v\n", diff)
 			if exists {
 				modsForUpdate = append(modsForUpdate, md.Key())
@@ -281,6 +281,17 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 			p.UnitLinks.Join(fProject.UnitLinks.ByTargetUnit(md))
 			// log.Warnf("Plan after: %+v", p.UnitLinks.List)
 			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
+		}
+	}
+	// Check "force_apply" units.
+	for _, un := range changedUnits {
+		for _, dep := range un.Dependencies().List {
+			if dep.Unit.ForceApply() {
+				if _, exists := changedUnits[dep.Unit.Key()]; !exists {
+					modsForUpdate = append(modsForUpdate, dep.Unit.Key())
+					changedUnits[dep.Unit.Key()] = dep.Unit
+				}
+			}
 		}
 	}
 	showPlanResults(modsForApply, modsForUpdate, modsForDestroy, modsUnchanged)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
@@ -86,6 +87,18 @@ type Unit struct {
 	BackendName      string                  `yaml:"-" json:"backend_name"`
 	SavedState       interface{}             `yaml:"-" json:"-"`
 	DependsOn        interface{}             `yaml:"depends_on,omitempty" json:"depends_on,omitempty"`
+	FApply           bool                    `yaml:"force_apply" json:"force_apply"`
+	LockedMux        sync.Mutex
+}
+
+// Mux return unit mutex to lock apply.
+func (u *Unit) Mux() *sync.Mutex {
+	return &u.LockedMux
+}
+
+// ForceApply return true if unit need apply regardless of state.
+func (u *Unit) ForceApply() bool {
+	return u.FApply
 }
 
 // WasApplied return true if unit's method Apply was runned.
@@ -200,9 +213,37 @@ func (u *Unit) Init() error {
 	return err
 }
 
+func (u *Unit) forceApplyDependencies() (err error) {
+	for _, dep := range u.DependenciesList.List {
+		if dep.Unit.ForceApply() {
+			dep.Unit.Mux().Lock()
+			if dep.Unit.WasApplied() {
+				dep.Unit.Mux().Unlock()
+				continue
+			}
+			log.Debugf("Force applying dependency '%v'...", dep.Unit.Key())
+			err = dep.Unit.Build()
+			if err != nil {
+				dep.Unit.Mux().Unlock()
+				return err
+			}
+			err = dep.Unit.Apply()
+			if err != nil {
+				dep.Unit.Mux().Unlock()
+				return err
+			}
+			dep.Unit.Mux().Unlock()
+		}
+	}
+	return
+}
+
 // Apply runs unit apply procedure.
 func (u *Unit) Apply() error {
-	var err error
+	err := u.forceApplyDependencies()
+	if err != nil {
+		return err
+	}
 	applyCommands := OperationConfig{}
 	if u.PreHook != nil && u.PreHook.OnApply {
 		applyCommands.Commands = append(applyCommands.Commands, "./pre_hook.sh")
@@ -308,6 +349,10 @@ func (u *Unit) Plan() error {
 
 // Destroy unit.
 func (u *Unit) Destroy() error {
+	err := u.forceApplyDependencies()
+	if err != nil {
+		return err
+	}
 	destroyCommands := OperationConfig{
 		Commands: []interface{}{},
 	}
@@ -320,7 +365,7 @@ func (u *Unit) Destroy() error {
 	if u.PostHook != nil && u.PostHook.OnDestroy {
 		destroyCommands.Commands = append(destroyCommands.Commands, "./post_hook.sh")
 	}
-	_, err := u.runCommands(destroyCommands, "destroy")
+	_, err = u.runCommands(destroyCommands, "destroy")
 	return err
 }
 

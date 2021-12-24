@@ -21,6 +21,7 @@ func NewEmptyUnit() *Unit {
 		DependenciesList: &project.UnitLinksT{
 			List: make(map[string]*project.ULinkT),
 		},
+		FApply: false,
 	}
 	unit.OutputParsers = map[string]OutputParser{
 		"json":      unit.JSONOutputParser,

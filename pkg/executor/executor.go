@@ -107,8 +107,8 @@ func (b *ShRunner) commandExecCommonInShell(command string, outputBuff io.Writer
 		ctx, cancel = context.WithTimeout(context.Background(), b.Timeout)
 		defer cancel()
 	}
-
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	// Add set -e to handle errors in multiline commands.
+	cmd := exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("set -e\n%v", command))
 	cmd.Stdout = outputBuff
 	cmd.Stderr = errBuff
 

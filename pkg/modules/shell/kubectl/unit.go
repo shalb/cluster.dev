@@ -7,6 +7,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/executor"
 	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -36,6 +37,8 @@ type Unit struct {
 	UnitKind           string             `yaml:"-" json:"type"`
 	SavedState         interface{}        `yaml:"-" json:"-"`
 	manifestsForDelete *common.FilesListT `yaml:"-" json:"-"`
+	CreateNamespaces   bool               `yaml:"create_namespaces" json:"-"`
+	createNSList       []string           `yaml:"-" json:"-"`
 }
 
 var kubectlBin = "kubectl"
@@ -81,16 +84,43 @@ func (u *Unit) fillShellUnit() {
 	u.GetOutputsConf = nil
 }
 
+func (u *Unit) createNamespacesIfNotExists() error {
+	rn, err := executor.NewExecutor(u.CacheDir)
+	if err != nil {
+		log.Debug(err.Error())
+		return fmt.Errorf("create namespace: %w", err)
+	}
+	if u.Env != nil {
+		for key, val := range u.Env.(map[string]interface{}) {
+			rn.Env = append(rn.Env, fmt.Sprintf("%v=%v", key, val))
+		}
+	}
+	if len(u.createNSList) > 0 {
+		for _, ns := range u.createNSList {
+			kubeconfigOpt := ""
+			if u.Kubeconfig != "" {
+				kubeconfigOpt = fmt.Sprintf("--kubeconfig='%s'", u.Kubeconfig)
+			}
+			cmd := fmt.Sprintf("%s %s create ns %s", kubectlBin, kubeconfigOpt, ns)
+			_, errMsg, err := rn.Run(cmd)
+			if len(errMsg) > 1 {
+				if err != nil {
+					log.Debugf("Failed attempt to create namespace (ignore) %v", string(errMsg))
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (u *Unit) ReadManifestsPath(src string) error {
 	// Check if path is URL or local dir.
 	var manifestsPath string
 	baseDir := filepath.Join(config.Global.WorkingDir, u.StackPtr.TemplateDir)
 	if utils.IsLocalPath(src) {
 		if utils.IsAbsolutePath(src) {
-			log.Warnf("ReadManifestsPath: IsAbsolutePath")
 			manifestsPath = src
 		} else {
-			log.Warnf("ReadManifestsPath: NOT IsAbsolutePath")
 			manifestsPath = filepath.Join(baseDir, src)
 		}
 		isDir, err := utils.CheckDir(manifestsPath)
@@ -160,7 +190,11 @@ func (u *Unit) Init() error {
 
 // Apply unit.
 func (u *Unit) Apply() error {
-	err := u.Unit.Apply()
+	err := u.createNamespacesIfNotExists()
+	if err != nil {
+		return err
+	}
+	err = u.Unit.Apply()
 	if err != nil {
 		return err
 	}
@@ -183,12 +217,14 @@ func (u *Unit) Destroy() error {
 	return nil
 }
 
-func (u *Unit) GetManifestsMap() (res map[string]interface{}) {
+func (u *Unit) GetManifestsMap() (res map[string]interface{}, namespaces []string) {
 	res = make(map[string]interface{})
+	namespaces = []string{}
+	nsUniq := map[string]bool{}
 	for _, file := range *u.ManifestsFiles {
 		mns, err := utils.ReadYAMLObjects([]byte(file.Content))
 		if err != nil {
-			return nil
+			return nil, nil
 		}
 		type manifestKey struct {
 			Kind     string `yaml:"kind"`
@@ -201,13 +237,24 @@ func (u *Unit) GetManifestsMap() (res map[string]interface{}) {
 			keyS := manifestKey{}
 			err = utils.YAMLInterfaceToType(obj, &keyS)
 			if err != nil {
-				return nil
+				return nil, nil
+			}
+			if keyS.Metadata.Namespace != "" {
+				if exists := nsUniq[keyS.Metadata.Namespace]; !exists {
+					nsUniq[keyS.Metadata.Namespace] = true
+					namespaces = append(namespaces, keyS.Metadata.Namespace)
+				}
 			}
 			if keyS.Metadata.Namespace == "" {
 				keyS.Metadata.Namespace = "<default namespace>"
 			}
 			key := fmt.Sprintf("%s.%s.%s", keyS.Kind, keyS.Metadata.Namespace, keyS.Metadata.Name)
 			res[key] = obj
+		}
+	}
+	if u.Namespace != "" {
+		if exists := nsUniq[u.Namespace]; !exists {
+			namespaces = append(namespaces, u.Namespace)
 		}
 	}
 	return
@@ -270,8 +317,9 @@ func (u *Unit) Build() error {
 			if !ok {
 				log.Fatalf("internal error")
 			}
-			stateManifests := stateUnit.GetManifestsMap()
-			manifests := u.GetManifestsMap()
+			stateManifests, _ := stateUnit.GetManifestsMap()
+			manifests, createNSList := u.GetManifestsMap()
+			u.createNSList = createNSList
 			i := 0
 			for key, man := range stateManifests {
 				// log.Warnf("stateManifests: %v", key)
