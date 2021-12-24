@@ -32,7 +32,7 @@ Example:
 
 * `apply_template` - *bool*. By default is set to `true`. See the [Templating usage](#templating-usage) subsection below. 
 
-* `kubeconfig` - *optional*. Specifies the path to a kubeconfig file. The file is retrieved by shell unit and is passed to other units as an output. The kubeconfig path is passed as an input to k8s-manifest unit. 
+* `kubeconfig` - *optional*. Specifies the path to a kubeconfig file. 
 
 * `kubectl_opts` - *optional*. Lists additional arguments of the `kubectl` command.   
 

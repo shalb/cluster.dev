@@ -1,5 +1,8 @@
 # Kubernetes Unit
 
+!!! Info
+    The unit is deprecated and will be removed soon.
+
 Describes [Terraform kubernetes-alpha provider](https://github.com/hashicorp/terraform-provider-kubernetes-alpha) invocation.
 
 Example:
