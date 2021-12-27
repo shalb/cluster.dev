@@ -15,12 +15,6 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-// // CreateMarkerOld generate hash string for template markers.
-// func CreateMarkerOld(markerPath, dataForHash string) string {
-// 	hash := utils.Md5(dataForHash)
-// 	return fmt.Sprintf("%s.%s.%s", hash, markerPath, hash)
-// }
-
 // CreateMarker generate hash string for template markers.
 func CreateMarker(link ULinkT) (string, error) {
 	if link.LinkType == "" {
@@ -229,34 +223,6 @@ func ConvertToShellVar(name string) string {
 	return fmt.Sprintf("${%s}", ConvertToShellVarName(name))
 }
 
-// func BuildDep(u Unit, dep *ULinkT) error {
-// 	if dep.Unit == nil {
-// 		if dep.TargetUnitName == "" || dep.TargenStackName == "" {
-// 			return fmt.Errorf("Empty dependency in unit '%v.%v'", u.Stack().Name, u.Name())
-// 		}
-// 		depKey := fmt.Sprintf("%v.%v", dep.TargenStackName, dep.TargetUnitName)
-// 		depUnit, exists := u.Project().Units[depKey]
-// 		if !exists {
-// 			return fmt.Errorf("Error in unit '%v.%v' dependency, target '%v.%v' does not exist", u.Stack().Name, u.Name(), dep.TargenStackName, dep.TargetUnitName)
-// 		}
-// 		dep.Unit = depUnit
-// 		log.Warnf("BuildDep %+v", dep)
-// 	}
-// 	return nil
-// }
-
-// // BuildunitDeps check all dependencies and add unit pointer.
-// func BuildUnitsDeps(u Unit) error {
-// 	for _, dep := range u.Dependencies().GetSlice() {
-// 		err := BuildDep(u, dep)
-// 		if err != nil {
-// 			log.Debug(err.Error())
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
-
 func ProjectsFilesExists() bool {
 	project := NewEmptyProject()
 	_ = project.readManifests()
@@ -323,55 +289,3 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	table.Append(unitsTable)
 	table.Render()
 }
-
-// func (p *Project) GetMarkers(ctName string, data interface{}) error {
-
-// 	depMarkers, ok := p.Markers[ctName]
-// 	if !ok {
-// 		return nil
-// 	}
-// 	out := reflect.ValueOf(data)
-// 	if out.Kind() == reflect.Ptr && !out.IsNil() {
-// 		out = out.Elem()
-// 	}
-// 	if out.Kind() != reflect.Map {
-// 		return fmt.Errorf("GetMarkers: output type mismatch, internall error")
-// 	}
-// 	in := reflect.ValueOf(depMarkers)
-// 	if in.Kind() == reflect.Ptr && !in.IsNil() {
-// 		in = in.Elem()
-// 	}
-// 	if in.Kind() != reflect.Map {
-// 		return fmt.Errorf("GetMarkers: output type mismatch, internall error")
-// 	}
-
-// 	if in.Type().Key() != reflect.TypeOf(data).Key() {
-// 		return nil
-// 	}
-// 	if in.Type().Elem() != reflect.TypeOf(data).Elem() {
-// 		return nil
-// 	}
-// 	for _, key := range in.MapKeys() {
-// 		if in.MapIndex(key).Kind() == reflect.Interface {
-// 			out.SetMapIndex(key, in.MapIndex(key).Elem())
-// 		} else {
-// 			out.SetMapIndex(key, in.MapIndex(key))
-// 		}
-
-// 	}
-// 	return nil
-// }
-
-// // GetMarkersMap return project markers as is (map[string]interface{}).
-// func (p *Project) GetMarkersMap(ctName string, out interface{}) (res map[string]interface{}, err error) {
-// 	depMarkers, ok := p.Markers[ctName]
-// 	if !ok {
-// 		res = make(map[string]interface{})
-// 		return
-// 	}
-// 	res, ok = depMarkers.(map[string]interface{})
-// 	if !ok {
-// 		log.Fatalf("GetMarkersMap: type mismatch, internall error.")
-// 	}
-// 	return
-// }

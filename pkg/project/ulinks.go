@@ -162,16 +162,3 @@ func (o *UnitLinksT) IsEmpty() bool {
 func (o *UnitLinksT) Size() int {
 	return len(o.List)
 }
-
-// func (o *UnitLinksT) Init(unitList map[string]Unit) error {
-// 	for _, el := range o.List {
-// 		log.Warnf("UnitLinksT init %v", el.TargetUnitName)
-// 		uKey := fmt.Sprintf("%v.%v", el.TargenStackName, el.TargetUnitName)
-// 		unit, exists := unitList[uKey]
-// 		if !exists {
-// 			return fmt.Errorf("init unit link: unit '%v' does not found", uKey)
-// 		}
-// 		el.Unit = unit
-// 	}
-// 	return nil
-// }
