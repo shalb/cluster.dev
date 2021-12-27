@@ -10,7 +10,7 @@ import (
 type Factory struct {
 }
 
-const unitKind string = "kubectl"
+const unitKind string = "k8s-manifest"
 
 func NewEmptyUnit() *Unit {
 	unit := Unit{
@@ -61,8 +61,8 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 
 func init() {
 	modDrv := Factory{}
-	log.Debug("Registering unit driver 'kubectl'")
-	if err := project.RegisterUnitFactory(&modDrv, "kubectl"); err != nil {
-		log.Trace("Can't register unit driver 'kubectl'.")
+	log.Debugf("Registering unit driver '%v'", unitKind)
+	if err := project.RegisterUnitFactory(&modDrv, unitKind); err != nil {
+		log.Fatalf("Can't register unit driver '%v'.", unitKind)
 	}
 }
