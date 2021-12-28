@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"sync"
-	"text/template"
 
 	"github.com/apex/log"
 	"github.com/gookit/color"
@@ -17,8 +17,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ConfigFileName name of required project config file.
-const ConfigFileName = "project.yaml"
+// ConfigFilePattern name of required project config file.
+const ConfigFilePattern = "^project.y[a]{0,1}ml$"
 const projectObjKindKey = "Project"
 
 // MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
@@ -48,9 +48,8 @@ type Project struct {
 	name             string
 	Units            map[string]Unit
 	Stacks           map[string]*Stack
-	TmplFunctionsMap template.FuncMap
 	Backends         map[string]Backend
-	Markers          map[string]interface{}
+	UnitLinks        UnitLinksT
 	secrets          map[string]Secret
 	configData       map[string]interface{}
 	configDataFile   []byte
@@ -67,22 +66,18 @@ type Project struct {
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
 func NewEmptyProject() *Project {
 	project := &Project{
-		Stacks:           make(map[string]*Stack),
-		Units:            make(map[string]Unit),
-		Backends:         make(map[string]Backend),
-		Markers:          make(map[string]interface{}),
-		TmplFunctionsMap: templateFunctionsMap,
-		objects:          make(map[string][]ObjectData),
-		configData:       make(map[string]interface{}),
-		secrets:          make(map[string]Secret),
+		Stacks:     make(map[string]*Stack),
+		Units:      make(map[string]Unit),
+		Backends:   make(map[string]Backend),
+		objects:    make(map[string][]ObjectData),
+		configData: make(map[string]interface{}),
+		secrets:    make(map[string]Secret),
+		UnitLinks:  UnitLinksT{},
 		RuntimeDataset: RuntimeData{
 			UnitsOutputs:    make(map[string]interface{}),
 			PrintersOutputs: make([]PrinterOutput, 0),
 		},
 		CodeCacheDir: config.Global.CacheDir,
-	}
-	for _, drv := range TemplateDriversMap {
-		drv.AddTemplateFunctions(project)
 	}
 	return project
 }
@@ -100,7 +95,7 @@ func LoadProjectBase() (*Project, error) {
 	}
 	err = project.readManifests()
 	if project.configDataFile == nil {
-		log.Fatalf("Loading project: loading project config: file '%v', empty configuration	.", ConfigFileName)
+		log.Fatalf("Loading project: loading project config: file does not exists or empty configuration (project.yaml).")
 	}
 
 	var prjConfParsed map[string]interface{}
@@ -169,7 +164,7 @@ func LoadProjectFull() (*Project, error) {
 		return nil, err
 	}
 	if !config.Global.NotLoadState {
-		_, err = project.LoadState()
+		project.OwnState, err = project.LoadState()
 		if err != nil {
 			return nil, fmt.Errorf("loading project: %w", err)
 		}
@@ -182,8 +177,20 @@ func LoadProjectFull() (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	// log.Errorf("LoadProjectFull: %+v", project.UnitLinks)
 	return project, nil
 }
+
+// func (p *Project) initUnitLinks() error {
+// 	for _, link := range p.UnitLinks.List {
+// 		modKey := fmt.Sprintf("%s.%s", link.TargenStackName, link.TargetUnitName)
+// 		targetUnit, exists := p.Units[modKey]
+// 		if !exists {
+// 			log.Fatalf("Target unit does not exists: '%s'", modKey)
+// 		}
+// 		link.Unit = targetUnit
+// 	}
+// }
 
 // ObjectData simple representation of project object.
 type ObjectData struct {
@@ -263,15 +270,21 @@ func (p *Project) readUnits() error {
 
 func (p *Project) prepareUnits() error {
 	// After reads all units to project - process templated markers and set all dependencies between units.
-	for _, mod := range p.Units {
-		err := mod.ReplaceMarkers()
+	for _, un := range p.Units {
+		err := un.Prepare()
 		if err != nil {
 			return err
 		}
-		if err = BuildUnitsDeps(mod); err != nil {
-			return err
-		}
+		// if err = BuildUnitsDeps(un); err != nil {
+		// 	return err
+		// }
 	}
+	// for _, u := range p.Units {
+	// 	// log.Errorf("prepareUnits unit %v", u.Name())
+	// 	for _, d := range u.Dependencies().Slice() {
+	// 		log.Errorf("prepareUnits Dep:%v %v", d.TargetUnitName, d.Unit)
+	// 	}
+	// }
 	if err := p.checkGraph(); err != nil {
 		return err
 	}
@@ -331,14 +344,18 @@ func (p *Project) Name() string {
 }
 
 // Return project conf and slice of others config files.
-func (p *Project) readManifests() error {
+func (p *Project) readManifests() (err error) {
 	var files []string
-	var err error
 	files, _ = filepath.Glob(config.Global.WorkingDir + "/*.yaml")
+	filesYML, _ := filepath.Glob(config.Global.WorkingDir + "/*.yml")
+	files = append(files, filesYML...)
 	objFiles := make(map[string][]byte)
+
 	for _, file := range files {
+		// log.Warnf("%v", file)
 		fileName, _ := filepath.Rel(config.Global.WorkingDir, file)
-		if fileName == ConfigFileName {
+		isProjectConfig := regexp.MustCompile(ConfigFilePattern).MatchString(fileName)
+		if isProjectConfig {
 			p.configDataFile, err = ioutil.ReadFile(file)
 		} else {
 			objFiles[file], err = ioutil.ReadFile(file)
@@ -391,12 +408,12 @@ func (p *Project) PrintInfo() error {
 	table.SetHeader([]string{"Name", "Stack", "Kind", "Dependencies"})
 	for name, unit := range p.Units {
 		deps := ""
-		for i, dep := range *unit.Dependencies() {
-			deps = fmt.Sprintf("%s%s.%s", deps, dep.StackName, dep.UnitName)
-			if dep.Output != "" {
-				deps = fmt.Sprintf("%s.%s", deps, dep.Output)
+		for i, dep := range unit.Dependencies().Slice() {
+			deps = fmt.Sprintf("%s%s.%s", deps, dep.TargenStackName, dep.TargetUnitName)
+			if dep.OutputName != "" {
+				deps = fmt.Sprintf("%s.%s", deps, dep.OutputName)
 			}
-			if i != len(*unit.Dependencies())-1 {
+			if i != len(unit.Dependencies().Slice())-1 {
 				deps += "\n"
 			}
 		}

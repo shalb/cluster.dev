@@ -16,9 +16,25 @@ import (
 )
 
 // CreateMarker generate hash string for template markers.
-func CreateMarker(markerPath, dataForHash string) string {
-	hash := utils.Md5(dataForHash)
-	return fmt.Sprintf("%s.%s.%s", hash, markerPath, hash)
+func CreateMarker(link ULinkT) (string, error) {
+	if link.LinkType == "" {
+		return "", fmt.Errorf("internal error: create unit link: LinkType field is empty")
+	}
+	if link.TargenStackName == "" {
+		return "", fmt.Errorf("internal error: create unit link: StackName field is empty")
+	}
+	if link.TargetUnitName == "" {
+		return "", fmt.Errorf("internal error: create unit link: UnitName field is empty")
+	}
+
+	var markerPath string
+	if link.OutputName == "" {
+		markerPath = fmt.Sprintf("%v.%v.%v", link.LinkType, link.TargenStackName, link.TargetUnitName)
+	} else {
+		markerPath = fmt.Sprintf("%v.%v.%v.%v", link.LinkType, link.TargenStackName, link.TargetUnitName, link.OutputName)
+	}
+	hash := utils.Md5(markerPath)
+	return fmt.Sprintf("%s.%s.%s", hash, markerPath, hash), nil
 }
 
 func printVersion() string {
@@ -207,33 +223,6 @@ func ConvertToShellVar(name string) string {
 	return fmt.Sprintf("${%s}", ConvertToShellVarName(name))
 }
 
-func BuildDep(m Unit, dep *DependencyOutput) error {
-	if dep.Unit == nil {
-
-		if dep.UnitName == "" || dep.StackName == "" {
-			return fmt.Errorf("Empty dependency in unit '%v.%v'", m.Stack().Name, m.Name())
-		}
-		depMod, exists := m.Project().Units[fmt.Sprintf("%v.%v", dep.StackName, dep.UnitName)]
-		if !exists {
-			return fmt.Errorf("Error in unit '%v.%v' dependency, target '%v.%v' does not exist", m.Stack().Name, m.Name(), dep.StackName, dep.UnitName)
-		}
-		dep.Unit = depMod
-	}
-	return nil
-}
-
-// BuildunitDeps check all dependencies and add unit pointer.
-func BuildUnitsDeps(m Unit) error {
-	for _, dep := range *m.Dependencies() {
-		err := BuildDep(m, dep)
-		if err != nil {
-			log.Debug(err.Error())
-			return err
-		}
-	}
-	return nil
-}
-
 func ProjectsFilesExists() bool {
 	project := NewEmptyProject()
 	_ = project.readManifests()
@@ -299,25 +288,4 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	table.SetHeader(headers)
 	table.Append(unitsTable)
 	table.Render()
-}
-
-func (p *Project) GetMarkers(ctName string, out interface{}) error {
-
-	markers, ok := p.Markers[ctName]
-	if !ok {
-		return nil
-	}
-	//log.Errorf("Markers[%v]: %v", ctName, p.Markers[ctName])
-	err := utils.JSONCopy(markers, &out)
-	// dbg, err := utils.JSONEncodeString(out)
-	//log.Errorf("JSON markers: %v", dbg)
-	return err
-}
-
-func (p *Project) GetMarkersMap(ctName string, out interface{}) error {
-	depMarkers, ok := p.Markers[ctName]
-	if !ok {
-		return nil
-	}
-	return utils.JSONCopy(depMarkers, &out)
 }
