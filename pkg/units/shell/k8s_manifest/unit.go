@@ -8,8 +8,8 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/executor"
-	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -75,7 +75,7 @@ func (u *Unit) fillShellUnit() {
 	// log.Warnf("path: %v", u.Path)
 	u.DestroyConf = &common.OperationConfig{
 		Commands: []interface{}{
-			fmt.Sprintf("%s delete %s -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, "workdir")),
+			fmt.Sprintf("%s delete %s -R -f %s", kubectlBin, commandOpts, filepath.Join(u.CacheDir, "workdir")),
 		},
 	}
 	// u.CreateFiles = nil

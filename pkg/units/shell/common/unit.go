@@ -88,12 +88,12 @@ type Unit struct {
 	SavedState       interface{}             `yaml:"-" json:"-"`
 	DependsOn        interface{}             `yaml:"depends_on,omitempty" json:"depends_on,omitempty"`
 	FApply           bool                    `yaml:"force_apply" json:"force_apply"`
-	LockedMux        sync.Mutex
+	lockedMux        sync.Mutex              `yaml:"-" json:"-"`
 }
 
 // Mux return unit mutex to lock apply.
 func (u *Unit) Mux() *sync.Mutex {
-	return &u.LockedMux
+	return &u.lockedMux
 }
 
 // ForceApply return true if unit need apply regardless of state.

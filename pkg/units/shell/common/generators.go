@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 
+	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
@@ -14,7 +15,7 @@ func (u *Unit) createCodeDir() error {
 
 	err := os.Mkdir(u.CacheDir, 0755)
 	if err != nil {
-		return fmt.Errorf("build unit '%v': mkdir '%v': '%v'", u.Name(), u.CacheDir, err.Error())
+		log.Debugf("build unit '%v': mkdir '%v': '%v'", u.Name(), u.CacheDir, err.Error())
 	}
 	if u.WorkDir != "" {
 		err = utils.CopyDirectory(u.WorkDir, u.CacheDir)

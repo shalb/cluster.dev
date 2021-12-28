@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 

@@ -1,40 +1,41 @@
-package kubernetes
+package helm
 
 import (
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
 )
 
 // Factory factory for s3 backends.
 type Factory struct {
 }
 
-const unitKind string = "kubernetes"
+const unitKind string = "helm"
 
 func NewEmptyUnit() Unit {
 	unit := Unit{
 		Unit:     *base.NewEmptyUnit(),
-		Inputs:   map[string]interface{}{},
+		HelmOpts: map[string]interface{}{},
+		Sets:     map[string]interface{}{},
 		UnitKind: unitKind,
 	}
 	return unit
 }
 
 func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
-	unit := NewEmptyUnit()
+	mod := NewEmptyUnit()
 	cUnit, err := base.NewUnit(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	unit.Unit = *cUnit
-	err = unit.ReadConfig(spec, stack)
+	mod.Unit = *cUnit
+	err = mod.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	return &unit, nil
+	return &mod, nil
 }
 
 // New creates new unit driver factory.

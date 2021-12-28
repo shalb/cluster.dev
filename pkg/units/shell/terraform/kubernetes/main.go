@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
-	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
+	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
 
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"

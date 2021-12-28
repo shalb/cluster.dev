@@ -1,20 +1,21 @@
-package tfmodule
+package kubernetes
 
 import (
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/pkg/modules/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
 )
 
 // Factory factory for s3 backends.
 type Factory struct {
 }
 
-const unitKind string = "printer"
+const unitKind string = "kubernetes"
 
 func NewEmptyUnit() Unit {
 	unit := Unit{
 		Unit:     *base.NewEmptyUnit(),
+		Inputs:   map[string]interface{}{},
 		UnitKind: unitKind,
 	}
 	return unit
@@ -53,9 +54,9 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 }
 
 func init() {
-	unitDrv := Factory{}
+	modDrv := Factory{}
 	log.Debugf("Registering unit driver '%v'", unitKind)
-	if err := project.RegisterUnitFactory(&unitDrv, unitKind); err != nil {
+	if err := project.RegisterUnitFactory(&modDrv, unitKind); err != nil {
 		log.Trace("Can't register unit driver '" + unitKind + "'.")
 	}
 }

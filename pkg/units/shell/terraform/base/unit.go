@@ -8,8 +8,8 @@ import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/executor"
-	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 )
 
 // const remoteStateLinkType = "RemoteStateMarkers"

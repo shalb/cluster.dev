@@ -3,8 +3,8 @@ package base
 import (
 	"fmt"
 
-	"github.com/shalb/cluster.dev/pkg/modules/shell/common"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
@@ -18,7 +18,7 @@ func (u *Unit) GetState() interface{} {
 		return u.SavedState
 	}
 	unitState := Unit{}
-	err := utils.JSONCopy(*u, &unitState)
+	err := utils.JSONCopy(u, &unitState)
 	if err != nil {
 		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
 	}
@@ -31,7 +31,7 @@ func (u *Unit) GetState() interface{} {
 	unitState.OutputParsers = nil
 	unitState.CreateFiles = nil
 	unitState.WorkDir = ""
-	return unitState
+	return &unitState
 }
 
 func (u *Unit) GetUnitDiff() UnitDiffSpec {
