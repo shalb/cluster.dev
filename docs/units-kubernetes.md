@@ -1,7 +1,7 @@
 # Kubernetes Unit
 
 !!! Info
-    The unit is deprecated and will be removed soon. Please use the k8s-manifest unit instead.
+    This unit is deprecated and will be removed soon. Please use the k8s-manifest unit instead.
 
 Describes [Terraform kubernetes-alpha provider](https://github.com/hashicorp/terraform-provider-kubernetes-alpha) invocation.
 
@@ -11,11 +11,14 @@ Example:
 units:
   - name: argocd_apps
     type: kubernetes
+    force_apply: true
     provider_version: "0.2.1"
     source: ./argocd-apps/app1.yaml
     kubeconfig: ../kubeconfig
     depends_on: this.argocd
 ```
+
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
 
 * `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of kubernetes-alpha provider. **Source file will be rendered with the stack template, and also allows to use functions `remoteState` and `insertYAML`**.
 
