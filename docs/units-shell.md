@@ -8,7 +8,6 @@ Example:
 units:
   - name: my-tf-code
     type: shell
-    force_apply: true
     env: 
       AWS_PROFILE: {{ .variables.aws_profile }}
       TF_VAR_region: {{ .project.region }}
