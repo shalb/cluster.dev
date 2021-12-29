@@ -11,7 +11,6 @@ Example:
 units:
   - name: argocd_apps
     type: kubernetes
-    force_apply: true
     provider_version: "0.2.1"
     source: ./argocd-apps/app1.yaml
     kubeconfig: ../kubeconfig
