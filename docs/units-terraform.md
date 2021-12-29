@@ -8,7 +8,6 @@ Example:
 units:
   - name: vpc
     type: tfmodule
-    force_apply: true
     version: "2.77.0"
     source: terraform-aws-modules/vpc/aws
     inputs:
