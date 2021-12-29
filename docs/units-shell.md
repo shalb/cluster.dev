@@ -66,6 +66,8 @@ units:
 
     * `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev destroy`.
 
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+
 * `outputs` - *optional*, *map*. Describes how to get outputs from a command.
 
     * `type` - *string*, *required*. A type of format to deliver the output. Could have 3 options: JSON, regexp, separator. According to the type specified, further options will differ.
