@@ -8,6 +8,7 @@ Example:
 units:
   - name: my-tf-code
     type: shell
+    force_apply: true
     env: 
       AWS_PROFILE: {{ .variables.aws_profile }}
       TF_VAR_region: {{ .project.region }}
@@ -44,6 +45,8 @@ units:
 
 ## Options
 
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+
 * `env` - *map*, *optional*. The list of environment variables that will be exported before executing commands of this unit. The variables defined in shell unit have a priority over variables defined in the project (the option `exports`) and will rewrite them.
 
 * `work_dir` - *string*, *required*. The working directory within which the code of the unit will be executed.
@@ -65,8 +68,6 @@ units:
     * `init` - *optional*. Describes commands to be executed prior to running `cdev destroy`.
 
     * `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev destroy`.
-
-* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
 
 * `outputs` - *optional*, *map*. Describes how to get outputs from a command.
 
