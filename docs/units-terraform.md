@@ -8,6 +8,7 @@ Example:
 units:
   - name: vpc
     type: tfmodule
+    force_apply: true
     version: "2.77.0"
     source: terraform-aws-modules/vpc/aws
     inputs:
@@ -18,8 +19,12 @@ units:
 
 In addition to common options the following are available:
 
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+
 * `source` - *string*, *required*. Terraform module [source](https://www.terraform.io/docs/language/modules/syntax.html#source). **It is not allowed to use local folders in source!**
 
 * `version` - *string*, *optional*. Module [version](https://www.terraform.io/docs/language/modules/syntax.html#version).
 
 * `inputs` - *map of any*, *required*. A map that corresponds to [input variables](https://www.terraform.io/docs/language/values/variables.html) defined by the module. This block allows to use functions `remoteState` and `insertYAML`.
+
+
