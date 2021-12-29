@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/apex/log"
 )
@@ -12,16 +13,14 @@ type Unit interface {
 	Stack() *Stack
 	Project() *Project
 	Backend() Backend
-	ReplaceMarkers() error
-	Dependencies() *[]*DependencyOutput
-	RequiredUnits() map[string]Unit
+	Prepare() error // Prepare scan all markers in unit, and build project unit links, and unit dependencies.
+	Dependencies() *UnitLinksT
 	Build() error
 	Init() error
 	Apply() error
 	Plan() error
 	Destroy() error
 	Key() string
-	ExpectedOutputs() map[string]*DependencyOutput
 	GetState() interface{}
 	GetDiffData() interface{}
 	GetStateDiffData() interface{}
@@ -30,7 +29,8 @@ type Unit interface {
 	CodeDir() string
 	UpdateProjectRuntimeData(p *Project) error
 	WasApplied() bool
-	FindDependency(stackName, unitName string) *DependencyOutput
+	ForceApply() bool
+	Mux() *sync.Mutex
 }
 
 type UnitDriver interface {
@@ -53,15 +53,6 @@ func RegisterUnitFactory(f UnitFactory, modType string) error {
 
 var UnitFactoriesMap = map[string]UnitFactory{}
 
-// DependencyOutput describe unit dependency.
-type DependencyOutput struct {
-	Unit       Unit `json:"-"`
-	UnitName   string
-	StackName  string
-	Output     string
-	OutputData string
-}
-
 // NewUnit creates and return unit with needed driver.
 func NewUnit(spec map[string]interface{}, stack *Stack) (Unit, error) {
 	mType, ok := spec["type"].(string)
@@ -70,6 +61,10 @@ func NewUnit(spec map[string]interface{}, stack *Stack) (Unit, error) {
 	}
 	uName, ok := spec["name"].(string)
 	modDrv, exists := UnitFactoriesMap[mType]
+	// TODO remove deprecated unit type 'kubernetes'
+	if mType == "kubernetes" {
+		log.Warnf("Unit: '%v'. Unit type 'kubernetes' is deprecated and will be removed in future releases. Use 'k8s-manifest' instead", fmt.Sprintf("%v.%v", stack.Name, uName))
+	}
 	if !exists {
 		// TODO remove deprecated unit type 'terraform'
 		if mType == "terraform" {
@@ -98,7 +93,6 @@ func NewUnitFromState(state map[string]interface{}, name string, p *StateProject
 			return nil, fmt.Errorf("internal error: bad unit type in state '%v'", mType)
 		}
 	}
-
 	return modDrv.NewFromState(state, name, p)
 }
 

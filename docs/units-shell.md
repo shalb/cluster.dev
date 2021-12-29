@@ -44,6 +44,8 @@ units:
 
 ## Options
 
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+
 * `env` - *map*, *optional*. The list of environment variables that will be exported before executing commands of this unit. The variables defined in shell unit have a priority over variables defined in the project (the option `exports`) and will rewrite them.
 
 * `work_dir` - *string*, *required*. The working directory within which the code of the unit will be executed.

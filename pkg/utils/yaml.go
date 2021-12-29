@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/apex/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,7 +17,7 @@ func ReadYAMLObjects(objData []byte) ([]map[string]interface{}, error) {
 			if err.Error() == "EOF" {
 				break
 			}
-			log.Debugf("can't decode config to yaml: %s", err.Error())
+			// log.Debugf("can't decode config to yaml: %s", err.Error())
 			return nil, fmt.Errorf("can't decode config to yaml: %s", ResolveYamlError(objData, err))
 		}
 		objects = append(objects, parsedConf)

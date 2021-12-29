@@ -107,8 +107,8 @@ func (b *ShRunner) commandExecCommonInShell(command string, outputBuff io.Writer
 		ctx, cancel = context.WithTimeout(context.Background(), b.Timeout)
 		defer cancel()
 	}
-
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	// Add set -e to handle errors in multiline commands.
+	cmd := exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("set -e\n%v", command))
 	cmd.Stdout = outputBuff
 	cmd.Stderr = errBuff
 
@@ -165,7 +165,6 @@ func (b *ShRunner) Run(command string) ([]byte, []byte, error) {
 	}
 	log.Infof("%s %-7s", logPrefix, colors.Fmt(colors.LightWhiteBold).Sprint("In progress..."))
 	log.Debugf("%s Executing command '%s':", logPrefix, command)
-
 	// Create log writer.
 	logWriter, err := logging.NewLogWriter(log.DebugLevel, logging.SliceFielder{Flds: b.LogLabels})
 	if err != nil {

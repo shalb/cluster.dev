@@ -21,6 +21,7 @@ func (sp *StateProject) UpdateUnit(mod Unit) {
 	defer sp.StateMutex.Unlock()
 	sp.Units[mod.Key()] = mod
 	sp.ChangedUnits[mod.Key()] = mod
+	sp.UnitLinks.Join(sp.LoaderProjectPtr.UnitLinks.ByTargetUnit(mod))
 }
 
 func (sp *StateProject) DeleteUnit(mod Unit) {
@@ -38,9 +39,10 @@ func (p *Project) SaveState() error {
 	defer p.StateMutex.Unlock()
 	st := stateData{
 		CdevVersion: config.Global.Version,
-		Markers:     p.Markers,
+		UnitLinks:   p.UnitLinks,
 		Units:       map[string]interface{}{},
 	}
+	// log.Errorf("units links: %+v\n Project: %+v", st.UnitLinks, p.UnitLinks)
 	for key, mod := range p.Units {
 		st.Units[key] = mod.GetState()
 	}
@@ -63,8 +65,8 @@ func (p *Project) SaveState() error {
 }
 
 type stateData struct {
-	CdevVersion string                 `json:version`
-	Markers     map[string]interface{} `json:"markers"`
+	CdevVersion string                 `json:"version"`
+	UnitLinks   UnitLinksT             `json:"unit_links"`
 	Units       map[string]interface{} `json:"units"`
 }
 
@@ -152,7 +154,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 	}
 
 	stateD := stateData{
-		Markers: make(map[string]interface{}),
+		UnitLinks: UnitLinksT{},
 	}
 
 	loadedStateFile, err := p.GetState()
@@ -171,7 +173,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			configDataFile:   p.configDataFile,
 			objects:          p.objects,
 			Units:            make(map[string]Unit),
-			Markers:          stateD.Markers,
+			UnitLinks:        stateD.UnitLinks,
 			Stacks:           make(map[string]*Stack),
 			Backends:         p.Backends,
 			CodeCacheDir:     config.Global.StateCacheDir,
@@ -180,16 +182,10 @@ func (p *Project) LoadState() (*StateProject, error) {
 		LoaderProjectPtr: p,
 		ChangedUnits:     make(map[string]Unit),
 	}
-
-	if statePrj.Markers == nil {
-		statePrj.Markers = make(map[string]interface{})
-	}
-	// for key, m := range p.Markers {
-	// 	statePrj.Markers[key] = m
-	// }
-	utils.JSONCopy(p.Markers, statePrj.Markers)
+	// log.Warnf("StateProject. Unit links: %+v", statePrj.UnitLinks)
+	// utils.JSONCopy(p.Markers, statePrj.Markers)
 	for mName, mState := range stateD.Units {
-		log.Debugf("Loading unit from state: %v", mName)
+		// log.Debugf("Loading unit from state: %v", mName)
 
 		if mState == nil {
 			continue
@@ -205,7 +201,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 	if err != nil {
 		return nil, err
 	}
-	p.OwnState = &statePrj
+
 	return &statePrj, nil
 }
 
@@ -221,8 +217,8 @@ func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
 	if len(df) > 0 {
 		return df, unitInState
 	}
-	for _, u := range unit.RequiredUnits() {
-		if sp.checkUnitChangesRecursive(u) {
+	for _, dep := range unit.Dependencies().List {
+		if sp.checkUnitChangesRecursive(dep.Unit) {
 			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), unitInState
 		}
 	}
@@ -243,11 +239,11 @@ func (sp *StateProject) checkUnitChangesRecursive(unit Unit) bool {
 	if len(df) > 0 {
 		return true
 	}
-	for _, u := range unit.RequiredUnits() {
-		if _, exists := sp.ChangedUnits[u.Key()]; exists {
+	for _, dep := range unit.Dependencies().List {
+		if _, exists := sp.ChangedUnits[dep.Unit.Key()]; exists {
 			return true
 		}
-		if sp.checkUnitChangesRecursive(u) {
+		if sp.checkUnitChangesRecursive(dep.Unit) {
 			return true
 		}
 	}
