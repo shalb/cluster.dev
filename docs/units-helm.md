@@ -8,7 +8,6 @@ Example:
 units:
   - name: argocd
     type: helm
-    force_apply: true
     source:
       repository: "https://argoproj.github.io/argo-helm"
       chart: "argo-cd"
