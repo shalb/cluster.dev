@@ -179,6 +179,10 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 	if err != nil {
 		return err
 	}
+	err = project.ScanMarkers(&u.Kubeconfig, scanner, u)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

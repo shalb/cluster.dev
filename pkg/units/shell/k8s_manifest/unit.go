@@ -294,6 +294,10 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 
 // Prepare scan all markers in unit, and build project unit links, and unit dependencies.
 func (u *Unit) Prepare() error {
+	err := u.Unit.Prepare()
+	if err != nil {
+		return err
+	}
 	return u.ScanData(project.OutputsScanner)
 }
 
