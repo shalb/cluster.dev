@@ -79,6 +79,26 @@ func (o *UnitLinksT) Join(l *UnitLinksT) error {
 	return nil
 }
 
+// JoinWithDataReplace join source links into o. If link exists - only copy output data.
+func (o *UnitLinksT) JoinWithDataReplace(source *UnitLinksT) error {
+	if source.IsEmpty() {
+		return nil
+	}
+	for key, linkl := range source.Map() {
+		targetLink := o.Get(key)
+		if targetLink != nil {
+			if targetLink.OutputData == nil {
+				targetLink.OutputData = linkl.OutputData
+			}
+		} else {
+			_, err := o.Set(linkl)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
 func (o *UnitLinksT) Get(key string) (res *ULinkT) {
 	if o.List == nil {
 		return nil

@@ -278,11 +278,14 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 			modsUnchanged = append(modsUnchanged, md.Key())
 			// log.Warnf("Plan before: %+v", p.UnitLinks.List)
 			// Unit was not changed. Copy unit outputs from state.
-			p.UnitLinks.Join(fProject.UnitLinks.ByTargetUnit(md))
+			p.UnitLinks.JoinWithDataReplace(fProject.UnitLinks.ByTargetUnit(md))
 			// log.Warnf("Plan after: %+v", p.UnitLinks.List)
 			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
 		}
 	}
+	// for k, l := range p.UnitLinks.Map() {
+	// 	log.Warnf("Link: %v\n    %v - %v", k, l.OutputName, l.OutputData)
+	// }
 	// Check "force_apply" units.
 	for _, un := range changedUnits {
 		for _, dep := range un.Dependencies().List {

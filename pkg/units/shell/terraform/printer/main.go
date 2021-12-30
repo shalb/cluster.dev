@@ -90,7 +90,10 @@ func (u *Unit) Build() error {
 	// Save state before outputs replacing.
 	u.StateData = u.GetStateUnit()
 	// Replace outputs.
-	u.ScanData(project.OutputsReplacer)
+	err := u.ScanData(project.OutputsReplacer)
+	if err != nil {
+		return err
+	}
 	mainBlock, err := u.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())

@@ -206,8 +206,10 @@ func (u *Unit) Prepare() error {
 // Build generate all terraform code for project.
 func (u *Unit) Build() error {
 	u.SavedState = u.GetState()
-	u.ScanData(project.OutputsReplacer)
-
+	err := u.ScanData(project.OutputsReplacer)
+	if err != nil {
+		return err
+	}
 	mainBlock, err := u.genMainCodeBlock()
 	if err != nil {
 		log.Debug(err.Error())

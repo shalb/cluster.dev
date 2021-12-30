@@ -48,10 +48,10 @@ func (u *Unit) KindKey() string {
 }
 
 func (u *Unit) fillShellUnit() {
-	commandOpts := ""
-	if u.recursive {
-		commandOpts += "-R "
-	}
+	commandOpts := "-R "
+	// if u.recursive {
+	// 	commandOpts += "-R "
+	// }
 	if u.Namespace != "" {
 		commandOpts += "-n " + u.Namespace
 	}
