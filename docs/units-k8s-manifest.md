@@ -17,7 +17,7 @@ Example:
 
 ## Options
 
-* `force_apply` - bool, optional. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
 
 * `namespace` - *optional*. Corresponds to `kubectl -n`.
 
@@ -37,14 +37,44 @@ Example:
 
 * `apply_template` - *bool*. By default is set to `true`. See the [Templating usage](#templating-usage) subsection below. 
 
-* `kubeconfig` - *optional*. Specifies the path to a kubeconfig file. 
+* `kubeconfig` - *optional*. Specifies the path to a kubeconfig file. See the [How to get kubeconfig](#how-to-get-kubeconfig) subsection below.
 
-* `kubectl_opts` - *optional*. Lists additional arguments of the `kubectl` command.   
+* `kubectl_opts` - *optional*. Lists additional arguments of the `kubectl` command. 
 
 ## Templating usage
 
 As manifests are part of a stack template, they also maintain templating options. Specifying the `apply_template` option enables you to use templating in all Kubernetes manifests located with the specified `path`. 
 
+## How to get kubeconfig
+
+Instead of using `pre_hook`, Cluster.dev has a dedicated unit to get and pass a kubeconfig file: 
+
+```yaml
+- name: kubeconfig
+  type: shell
+  force_apply: true
+  depends_on: this.k3s
+  apply:
+    commands:
+      - aws s3 cp s3://{{ .variables.bucket }}/{{ .variables.cluster_name }}/kubeconfig /tmp/kubeconfig_{{ .variables.cluster_name }}
+      - echo "kubeconfig_base64=$(cat /tmp/kubeconfig_{{ .variables.cluster_name }} | base64 -w 0)"
+      - echo "kubeconfig_path=/tmp/kubeconfig_{{ .variables.cluster_name }}"
+  outputs:
+    type: separator
+    separator: "="
+```
+
+In the example above, the `K3s` unit (the one referred to) will deploy a Kubernetes cluster in AWS and place a kubeconfig file in S3 bucket. The `kubeconfig` unit will download the kubeconfig from the storage and place it within the /tmp directory. Then it can be passed to other units:
+
+```yaml
+- name: cert-manager-issuer
+  type: k8s-manifest
+  path: ./cert-manager/issuer.yaml
+  kubeconfig: {{ output "this.kubeconfig.kubeconfig_path" }}
+```
+
+!!! Info
+    Please make sure to set `force_apply: true`. Specifying the option is compulsory in such cases.
 
 
 
