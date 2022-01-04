@@ -64,7 +64,9 @@ Instead of using `pre_hook`, Cluster.dev has a dedicated unit to get and pass a 
     separator: "="
 ```
 
-In the example above, the `K3s` unit (the one referred to) will deploy a Kubernetes cluster in AWS and place a kubeconfig file in S3 bucket. The `kubeconfig` unit will download the kubeconfig from the storage and place it within the /tmp directory. Then it can be passed to other units:
+In the example above, the `K3s` unit (the one referred to) will deploy a Kubernetes cluster in AWS and place a kubeconfig file in S3 bucket. The `kubeconfig` unit will download the kubeconfig from the storage and place it within the /tmp directory. 
+
+The kubeconfig can then be passed as an output to other units:
 
 ```yaml
 - name: cert-manager-issuer
