@@ -35,9 +35,9 @@ Example:
       kubeconfig: {{ output "this.kubeconfig.kubeconfig_path" }}
     ```
 
-* `apply_template` - *bool*. By default is set to `true`. See the [Templating usage](#templating-usage) subsection below. 
+* `apply_template` - *bool*. By default is set to `true`. See [Templating usage](#templating-usage) subsection below. 
 
-* `kubeconfig` - *optional*. Specifies the path to a kubeconfig file. See the [How to get kubeconfig](#how-to-get-kubeconfig) subsection below.
+* `kubeconfig` - *optional*. Specifies the path to a kubeconfig file. See [How to get kubeconfig](#how-to-get-kubeconfig) subsection below.
 
 * `kubectl_opts` - *optional*. Lists additional arguments of the `kubectl` command. 
 
@@ -47,7 +47,7 @@ As manifests are part of a stack template, they also maintain templating options
 
 ## How to get kubeconfig
 
-Instead of using `pre_hook`, Cluster.dev has a dedicated unit to get and pass a kubeconfig file: 
+There are several ways to get a kubeconfig from a cluster and pass it to the units that require it (for example, `helm`, `K8s-manifest`). The recommended way is to use the `shell` unit with the option `force_apply`. Here is an example of such unit: 
 
 ```yaml
 - name: kubeconfig
@@ -75,9 +75,26 @@ The kubeconfig can then be passed as an output to other units:
   kubeconfig: {{ output "this.kubeconfig.kubeconfig_path" }}
 ```
 
-!!! Info
-    Please make sure to set `force_apply: true`. Specifying the option is compulsory in such cases.
+An alternative (but not recommended) way is to create a yaml hook in a stack template that would take the required set of commands:
 
+```yaml
+_: &getKubeconfig "rm -f ../kubeconfig_{{ .name }}; aws eks --region {{ .variables.region }} update-kubeconfig --name {{ .name }} --kubeconfig ../kubeconfig_{{ .name }}"
+```
+
+and execute it with a pre-hook in each unit:
+
+```yaml
+- name: cert-manager-issuer
+  type: kubernetes
+  source: ./cert-manager/
+  provider_version: "0.6.0"
+  config_path: ../kubeconfig_{{ .name }}
+  depends_on: this.cert-manager
+  pre_hook:
+    command: *getKubeconfig
+    on_destroy: true
+    on_plan: true
+```
 
 
 
