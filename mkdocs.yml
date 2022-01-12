@@ -41,7 +41,6 @@ nav:
       - Terraform: units-terraform.md
       - Helm: units-helm.md
       - K8s-manifest: units-k8s-manifest.md
-      - Kubernetes: units-kubernetes.md
       - Printer: units-printer.md
     - CLI Reference:
       - CLI Commands: cli-commands.md
