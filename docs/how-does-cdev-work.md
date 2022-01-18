@@ -52,9 +52,15 @@ variables:
 
 Stack-specific variables are defined in `stack.yaml` and relate to a concrete infrastructure. They can be used solely in stack templates that are bound to this stack. 
 
+## Templating
+
+Templating is one of the key features that underlie powerful capabilities of Cluster.dev. Same like with Helm, the cdev templating is based on Go template language and uses Sprig and some other extra functions to expose objects to the templates.
+
+Cluster.dev has a two-level templating that involves template rendering on a project level and on a stack template level. For more information please refer to the [Templating section](https://docs.cluster.dev/templating/).
+
 ## How to use Cluster.dev
 
-Cluster.dev is quite a powerful framework that can be operated in several modes.
+Cluster.dev is a powerful framework that can be operated in several modes.
 
 ### Deploy infrastructures from existing stack templates
 

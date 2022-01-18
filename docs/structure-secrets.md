@@ -24,11 +24,11 @@ Secrets are encoded/decoded with [SOPS](https://github.com/mozilla/sops) utility
 
 4. Use references to the secret data in a stack template (you can find the examples in the generated secret file).
 
-## Amazon secret manager
+## AWS Secrets Manager
 
 Cluster.dev client can use AWS SSM as a secret storage. How to use:
 
-1. Create a new secret in AWS secret manager using AWS CLI or web console. Both raw and JSON data formats are supported.
+1. Create a new secret in AWS Secrets Manager using AWS CLI or web console. Both raw and JSON data formats are supported.
 
 2. Use Cluster.dev console client to create a new secret from scratch:
 
@@ -36,7 +36,7 @@ Cluster.dev client can use AWS SSM as a secret storage. How to use:
      cdev secret create
      ```
 
-3. Answer the questions. For `Name of secret in AWS Secrets manager` enter the name of the AWS secret created above.
+3. Answer the questions. For the `Name of secret in AWS Secrets Manager` enter the name of the AWS secret created above.
 
 4. Use references to the secret data in a stack template (you can find the examples in the generated secret file).
 
