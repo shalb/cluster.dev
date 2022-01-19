@@ -17,6 +17,7 @@ nav:
       - Create New Project: get-started-create-project.md
     - Examples:
       - AWS-EKS: examples-aws-eks.md
+      - AWS-K3s: examples-aws-k3s.md
       - DO-K8s: examples-do-k8s.md
       - Modify AWS-EKS: examples-modify-aws-eks.md
       - Develop Stack Template: examples-develop-stack-template.md

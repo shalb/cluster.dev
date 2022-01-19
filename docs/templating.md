@@ -26,7 +26,7 @@ The templating process could be described as follows:
 
 ## Variables reference
 
-To use data from a `project.yaml` in templating, define the path as `.project.variables`. Such a path follows the structure of variables in project.yaml, for example:
+To use data from a `project.yaml` in templating, define the path as `.project.variables`. Such a path follows the structure of variables in `project.yaml`, for example:
 
 ```yaml
 name: demo

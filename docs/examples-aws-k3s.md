@@ -1,6 +1,6 @@
-# AWS-EKS
+# AWS-K3s
 
-This section provides information on how to create a new project on AWS with [AWS-EKS](https://github.com/shalb/cdev-aws-eks) stack template.
+This section provides information on how to create a new project on AWS with [AWS-K3s](https://github.com/shalb/cdev-aws-k3s) stack template.
 
 ## Prerequisites
 
@@ -73,7 +73,7 @@ aws s3 mb s3://cdev-states
 
 ### DNS Zone
 
-In AWS-EKS stack template example you need to define a Route 53 hosted zone. Options:
+In AWS-K3s stack template example you need to define a Route 53 hosted zone. Options:
 
 1. You already have a Route 53 hosted zone.
 
@@ -88,7 +88,7 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
 2. Create locally a project directory, cd into it and execute the command:
 
     ```bash
-      cdev project create https://github.com/shalb/cdev-aws-eks
+      cdev project create https://github.com/shalb/cdev-aws-k3s
     ```
     This will create a new empty project.
 
@@ -120,11 +120,15 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
 
 Resources to be created within the project:
 
+* AWS Key Pair to access the cluster running instances.
+
 * *(optional, if you use cluster.dev domain)* Route53 zone **<cluster-name>.cluster.dev**
 
 * *(optional, if vpc_id is not set)* VPC for EKS cluster
 
-* EKS Kubernetes cluster with addons:
+* AWS IAM Policy for managing your DNS zone by external-dns
+
+* K3s Kubernetes cluster with addons:
 
     * cert-manager
 
@@ -134,4 +138,5 @@ Resources to be created within the project:
 
     * argocd
 
-* AWS IAM roles for EKS IRSA cert-manager and external-dns
+
+
