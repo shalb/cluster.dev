@@ -35,19 +35,19 @@ Example:
       kubeconfig: {{ output "this.kubeconfig.kubeconfig_path" }}
     ```
 
-* `apply_template` - *bool*. By default is set to `true`. See [Templating usage](#templating-usage) subsection below. 
+* `apply_template` - *bool*. By default is set to `true`. See [Templating usage](#templating-usage) subsection below.
 
 * `kubeconfig` - *optional*. Specifies the path to a kubeconfig file. See [How to get kubeconfig](#how-to-get-kubeconfig) subsection below.
 
-* `kubectl_opts` - *optional*. Lists additional arguments of the `kubectl` command. 
+* `kubectl_opts` - *optional*. Lists additional arguments of the `kubectl` command.
 
 ## Templating usage
 
-As manifests are part of a stack template, they also maintain templating options. Specifying the `apply_template` option enables you to use templating in all Kubernetes manifests located with the specified `path`. 
+As manifests are part of a stack template, they also maintain [templating](https://docs.cluster.dev/templating/) options. Specifying the `apply_template` option enables you to use templating in all Kubernetes manifests located with the specified `path`.
 
 ## How to get kubeconfig
 
-There are several ways to get a kubeconfig from a cluster and pass it to the units that require it (for example, `helm`, `K8s-manifest`). The recommended way is to use the `shell` unit with the option `force_apply`. Here is an example of such unit: 
+There are several ways to get a kubeconfig from a cluster and pass it to the units that require it (for example, `helm`, `K8s-manifest`). The recommended way is to use the `shell` unit with the option `force_apply`. Here is an example of such unit:
 
 ```yaml
 - name: kubeconfig
