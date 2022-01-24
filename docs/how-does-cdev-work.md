@@ -15,43 +15,6 @@ Capabilities:
 
 ![cdev diagram](./images/cdev-base-diagram.png)
 
-## Variables
-
-Cluster.dev uses global and stack-specific variables.
-
-Global variables are defined within project. They could be common for a few stacks that are reconciled within a project, and passed across them. Example of `project.yaml`:
-
-```yaml
-name: my_project
-kind: project
-backend: aws-backend
-variables:
-  organization: shalb
-  region: eu-central-1
-  state_bucket_name: cdev-states
-exports:
-  AWS_PROFILE: cluster-dev  
-```
-
- From `project.yaml` the variable value is passed to `stack.yaml` from where it is applied to a stack template. 
- 
- Global variables could be used in all configurations of stacks and backends within a given project. To refer to a global variable, use the {{ .project.variables.KEY_NAME }} syntax, where KEY_NAME stands for the variable name defined in `project.yaml` and will be replaced by its value. Example of global variables in `stack.yaml`:
-
-```yaml
-name: eks-demo
-template: https://github.com/shalb/cdev-aws-eks?ref=v0.2.0
-kind: Stack
-backend: aws-backend
-variables:
-  region: {{ .project.variables.region }}
-  organization: {{ .project.variables.organization }}
-  domain: cluster.dev
-  instance_type: "t3.medium"
-  eks_version: "1.20"
-```
-
-Stack-specific variables are defined in `stack.yaml` and relate to a concrete infrastructure. They can be used solely in stack templates that are bound to this stack. 
-
 ## Templating
 
 Templating is one of the key features that underlie powerful capabilities of Cluster.dev. Same like with Helm, the cdev templating is based on Go template language and uses Sprig and some other extra functions to expose objects to the templates.
