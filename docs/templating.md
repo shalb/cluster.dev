@@ -4,6 +4,8 @@
 
 Cluster.dev has a two-level templating that is applied on the project's and on the stack template's levels.
 
+![templating diagram](./images/Templating.png)
+
 On the first level Cluster.dev reads a `project.yaml` and files with secrets. Then it uses [variables](#variables) from these files to populate and render files from the current project – stacks and backends.
 
 On the second level data from the stack object (an outcome of the first stage) is used to render stack template files.
