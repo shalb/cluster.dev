@@ -1,6 +1,6 @@
 # Stack
 
-Stack is a yaml file that tells Cluster.dev which template to use and what [variables](https://docs.cluster.dev/how-does-cdev-work/#variables) to apply to this template. Usually, users have multiple stacks that reflect their environments or tenants, and point to the same template with different variables.
+Stack is a yaml file that tells Cluster.dev which template to use and what [variables](https://docs.cluster.dev/templating/#variables) to apply to this template. Usually, users have multiple stacks that reflect their environments or tenants, and point to the same template with different variables.
 
 File: searching in `./*.yaml`. *Required at least one*.
 Stack object (`kind: stack`) contains reference to a stack template, variables to render the template and backend for states.
