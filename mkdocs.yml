@@ -90,9 +90,6 @@ theme:
     code: Roboto Mono
   logo: '/images/cluster-dev-logo-site.png'
   favicon: 'images/favicon.png'
-google_analytics:
-  - UA-157259461-1
-  - auto
 extra:
   social:
     - icon: fontawesome/brands/slack
@@ -101,3 +98,7 @@ extra:
       link: https://twitter.com/shalbcom
     - icon: fontawesome/brands/github
       link: https://github.com/shalb/cluster.dev
+      extra:
+  analytics:
+    provider: google
+    property: UA-157259461-1
