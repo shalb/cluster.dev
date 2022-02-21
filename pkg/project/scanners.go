@@ -56,6 +56,7 @@ func OutputsReplacer(data reflect.Value, unit Unit) (reflect.Value, error) {
 				return reflect.ValueOf(nil), fmt.Errorf("replace output internal error: unit link does not initted")
 			}
 			if link.OutputData == nil {
+				log.Warnf("The output data is unavalible. Inserting placeholder <output %s.%s>.", link.TargenStackName, link.TargetUnitName)
 				resString = strings.ReplaceAll(resString, marker, fmt.Sprintf("<output %s.%s>", link.TargenStackName, link.TargetUnitName))
 			}
 			if resString == marker {
