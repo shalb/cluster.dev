@@ -195,21 +195,21 @@ func (g *grapher) Len() int {
 }
 
 func checkUnitDependencies(p *Project) error {
-	for _, mod := range p.Units {
-		if err := checkDependenciesRecursive(mod); err != nil {
-			return fmt.Errorf("Unresolved dependency in unit %v.%v: %w", mod.Stack().Name, mod.Name(), err)
+	for _, uniit := range p.Units {
+		log.Infof("checkUnitDependencies %v", uniit.Name())
+		if err := checkDependenciesRecursive(uniit); err != nil {
+			return fmt.Errorf("Unresolved dependency in unit %v.%v: %w", uniit.Stack().Name, uniit.Name(), err)
 		}
 	}
 	return nil
 }
 
-func checkDependenciesRecursive(mod Unit, chain ...string) error {
+func checkDependenciesRecursive(unit Unit, chain ...string) error {
 	if err := checkUnitDependenciesCircle(chain); err != nil {
 		return err
 	}
-	for _, dep := range mod.Dependencies().Slice() {
-		// log.Errorf("checkDependenciesRecursive FOR %v\n %+v", dep.Unit.Name(), mod.Name())
-		chain = append(chain, mod.Key())
+	chain = append(chain, unit.Key())
+	for _, dep := range unit.Dependencies().Slice() {
 		if err := checkDependenciesRecursive(dep.Unit, chain...); err != nil {
 			return err
 		}
