@@ -80,13 +80,6 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 
 		//log.Fatalf("%v \n%v ", out.Kind(), out)
 	}
-	// if data == nil || reflect.ValueOf(data).IsNil() {
-	// 	return nil
-	// }
-	// if out.IsNil() {
-	// 	log.Fatalf("%v \n%v ", out.Kind(), out)
-	// 	return nil
-	// }
 	switch out.Kind() {
 	case reflect.Slice:
 		// log.Warnf("slice %v", out)
@@ -97,23 +90,6 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 			if sliceElem.Kind() == reflect.Interface || sliceElem.Kind() == reflect.Ptr {
 				sliceElemKind = sliceElem.Elem().Kind()
 			}
-
-			// log.Errorf("Kinds: %v %v", elem.Kind(), elem.Elem().Kind())
-			// if sliceElem.Kind() != reflect.Interface && sliceElem.Kind() != reflect.Ptr {
-			// 	if sliceElem.Kind() == reflect.String {
-			// 		val, err := procFunc(sliceElem, unit)
-			// 		if err != nil {
-			// 			return err
-			// 		}
-			// 		out.Index(i).Set(val)
-			// 		continue
-			// 	}
-			// 	err := ScanMarkers(out.Index(i).Interface(), procFunc, unit)
-			// 	if err != nil {
-			// 		return err
-			// 	}
-			// 	continue
-			// }
 			if sliceElemKind == reflect.String {
 				val, err := procFunc(sliceElem, unit)
 				if err != nil {

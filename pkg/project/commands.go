@@ -33,12 +33,6 @@ func (p *Project) Destroy() error {
 	if err != nil {
 		return fmt.Errorf("project destroy: %w", err)
 	}
-	// graphDebug := grapher{}
-	// graphDebug.Init(&fProject.Project, 1, true)
-	// for _, unit := range graphDebug.GetSequenceSet() {
-	// 	log.Warnf("Destroy: %v", unit.Name())
-	// }
-	// return nil
 	graph := grapher{}
 	if config.Global.IgnoreState {
 		graph.Init(p, 1, true)

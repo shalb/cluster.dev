@@ -24,15 +24,6 @@ const projectObjKindKey = "Project"
 // MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
 type MarkerScanner func(data reflect.Value, unit Unit) (reflect.Value, error)
 
-// TODO:
-// // ProjectConfSpec type for project.yaml config.
-// type ProjectConfSpec struct {
-// 	Name      string                 `yaml:"name"`
-// 	Kind      string                 `yaml:"kind"`
-// 	Backend   string                 `yaml:"backend,omitempty"`
-// 	Exports   map[string]interface{} `yaml:"exports"`
-// 	Variables map[string]interface{} `yaml:"variables"`
-// }
 type PrinterOutput struct {
 	Name   string `json:"name"`
 	Output string `json:"output"`
@@ -181,17 +172,6 @@ func LoadProjectFull() (*Project, error) {
 	return project, nil
 }
 
-// func (p *Project) initUnitLinks() error {
-// 	for _, link := range p.UnitLinks.List {
-// 		modKey := fmt.Sprintf("%s.%s", link.TargenStackName, link.TargetUnitName)
-// 		targetUnit, exists := p.Units[modKey]
-// 		if !exists {
-// 			log.Fatalf("Target unit does not exists: '%s'", modKey)
-// 		}
-// 		link.Unit = targetUnit
-// 	}
-// }
-
 // ObjectData simple representation of project object.
 type ObjectData struct {
 	filename string
@@ -235,16 +215,6 @@ func (p *Project) prepareObjects() error {
 	return nil
 }
 
-func (p *Project) checkGraph() error {
-	errDepth := 15
-	for _, unit := range p.Units {
-		if ok := checkDependenciesRecursive(unit, errDepth); !ok {
-			return fmt.Errorf("Unresolved dependency in unit %v.%v", unit.Stack().Name, unit.Name())
-		}
-	}
-	return nil
-}
-
 func (p *Project) readUnits() error {
 	// Read units from all stacks.
 	for stackName, stack := range p.Stacks {
@@ -275,20 +245,10 @@ func (p *Project) prepareUnits() error {
 		if err != nil {
 			return err
 		}
-		// if err = BuildUnitsDeps(un); err != nil {
-		// 	return err
-		// }
 	}
-	// for _, u := range p.Units {
-	// 	// log.Errorf("prepareUnits unit %v", u.Name())
-	// 	for _, d := range u.Dependencies().Slice() {
-	// 		log.Errorf("prepareUnits Dep:%v %v", d.TargetUnitName, d.Unit)
-	// 	}
-	// }
-	if err := p.checkGraph(); err != nil {
+	if err := checkUnitDependencies(p); err != nil {
 		return err
 	}
-	//p.printState()
 	return nil
 }
 
