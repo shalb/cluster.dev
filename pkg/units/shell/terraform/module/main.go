@@ -73,10 +73,15 @@ func (u *Unit) genOutputs() ([]byte, error) {
 	// for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).List {
 	// 	log.Errorf("     allOutputs: %v.%v --> %v", link.TargenStackName, link.TargetUnitName, link.OutputName)
 	// }
+	uniqMap := map[string]bool{}
 	for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(base.RemoteStateLinkType).Map() {
 		// log.Warnf("     output: %v --> %v", u.Name(), link.OutputName)
 		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
 		outputName := re.FindString(link.OutputName)
+		// Deduplicate outputs.
+		if uniqMap[outputName] {
+			continue
+		}
 		if len(link.OutputName) < 1 {
 			return nil, fmt.Errorf("invalid output '%v' in unit '%v'", link, u.Name())
 		}
@@ -84,6 +89,7 @@ func (u *Unit) genOutputs() ([]byte, error) {
 		dataBody := dataBlock.Body()
 		outputStr := fmt.Sprintf("module.%s.%s", u.Name(), outputName)
 		dataBody.SetAttributeRaw("value", hcltools.CreateTokensForOutput(outputStr))
+		uniqMap[outputName] = true
 	}
 	return f.Bytes(), nil
 
