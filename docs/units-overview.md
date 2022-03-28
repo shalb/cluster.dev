@@ -1,6 +1,6 @@
 # Overview
 
-![cdev unit diagram](./cdev-unit-shema4.png)
+![cdev unit diagram](./images/cdev-unit-shema4.png)
 
 ## Description
 
