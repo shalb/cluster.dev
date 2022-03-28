@@ -13,7 +13,7 @@ Capabilities:
 
 ## Basic diagram
 
-![cdev diagram](./images/cdev-base-diagram.png)
+![cdev diagram](./images/cdev-base-diagram-shema1.pdf)
 
 ## Templating
 
