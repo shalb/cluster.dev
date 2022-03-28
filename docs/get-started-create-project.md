@@ -20,4 +20,4 @@ In our example we shall use the [tmpl-development](https://github.com/shalb/clus
 
 The diagram below describes the steps of creating a new project without generators.
 
-![create new project diagram](./images/create-project-diagram.png)
+![create new project diagram](./images/create-project-diagram-shema5.png)
