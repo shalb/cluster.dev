@@ -1,4 +1,4 @@
-# Terraform Unit
+# Tfmodule Unit
 
 Describes direct invocation of Terraform modules.
 

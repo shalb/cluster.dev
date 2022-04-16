@@ -1,6 +1,6 @@
 # Overview
 
-![cdev template diagram](./images/cdev-template.png)
+![cdev template diagram](./images/cdev-template-shema2.png)
 
 ## Description
 
