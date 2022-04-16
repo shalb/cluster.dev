@@ -12,7 +12,7 @@ jobs:
     steps:
 
     - name: Install soft
-      run: | 
+      run: |
         apk add make bash jq curl git zip
         wget https://releases.hashicorp.com/terraform/0.15.1/terraform_0.15.1_linux_amd64.zip
         unzip terraform_0.15.1_linux_amd64.zip
@@ -24,7 +24,9 @@ jobs:
         fetch-depth: 2
 
     - name: Build
-      run: git fetch --prune --unshallow --tags && make && cp ./bin/linux-amd64/cdev /usr/local/bin/
+      run: |
+        git config --global --add safe.directory /__w/cluster.dev/cluster.dev
+        git fetch --prune --unshallow --tags && make && cp ./bin/linux-amd64/cdev /usr/local/bin/
 
     - name: Run tests
       run: cd tests/test-project/ && cdev plan --tf-plan -l debug && cdev apply --force -l debug && cdev destroy --force -l debug
