@@ -196,7 +196,6 @@ func (g *grapher) Len() int {
 
 func checkUnitDependencies(p *Project) error {
 	for _, uniit := range p.Units {
-		log.Infof("checkUnitDependencies %v", uniit.Name())
 		if err := checkDependenciesRecursive(uniit); err != nil {
 			return fmt.Errorf("Unresolved dependency in unit %v.%v: %w", uniit.Stack().Name, uniit.Name(), err)
 		}

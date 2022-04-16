@@ -324,10 +324,8 @@ func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, er
 		}
 	}
 	otp, errMsg, err := rn.Run(cmd)
-	if len(errMsg) > 1 {
-		if err != nil {
-			log.Errorf("%v", string(errMsg))
-		}
+	if err != nil {
+		log.Errorf("%v", string(errMsg))
 		return otp, fmt.Errorf("%w, error output:\n %v", err, string(errMsg))
 	}
 	return otp, err
