@@ -24,6 +24,10 @@ jobs:
     - name: Install make
       run: apk add make bash jq curl git
 
+    - name: Configure safe.directory
+      run: git config --global --add safe.directory /__w/cluster.dev/cluster.dev
+      timeout-minutes: 1
+
     - name: Code checkout
       uses: actions/checkout@v2
       with:
@@ -31,7 +35,7 @@ jobs:
 
     - name: Release
       run: |
-        git config --global --add safe.directory $(pwd)
+#        git config --global --add safe.directory $(pwd)
         git fetch --prune --unshallow --tags
         ./scripts/release.sh
       env:
@@ -42,6 +46,10 @@ jobs:
     name: Release docker image
     runs-on: ubuntu-latest
     steps:
+      - name: Configure safe.directory  # Workaround for actions/checkout#760
+        run: git config --global --add safe.directory /__w/cluster.dev/cluster.dev
+        timeout-minutes: 1
+
       - name: Code checkout
         uses: actions/checkout@v2
 
