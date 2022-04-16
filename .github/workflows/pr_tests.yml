@@ -25,8 +25,8 @@ jobs:
 
     - name: Build
       run: |
-      git config --global --add safe.directory /__w/cluster.dev/cluster.dev
-      git fetch --prune --unshallow --tags && make && cp ./bin/linux-amd64/cdev /usr/local/bin/
+        git config --global --add safe.directory /__w/cluster.dev/cluster.dev
+        git fetch --prune --unshallow --tags && make && cp ./bin/linux-amd64/cdev /usr/local/bin/
 
     - name: Run tests
       run: cd tests/test-project/ && cdev plan --tf-plan -l debug && cdev apply --force -l debug && cdev destroy --force -l debug
