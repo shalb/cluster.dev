@@ -41,7 +41,7 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 3. Export SPACES_ACCESS_KEY_ID and SPACES_SECRET_ACCESS_KEY environment variables, for details see [here](https://www.digitalocean.com/community/tutorials/how-to-create-a-digitalocean-space-and-api-key).
 
     ```bash
-    export SPACES_SECRET_ACCESS_KEY="dSUGdbJqa6xwJ6Fo8qV2DSksdjh..."
+    export SPACES_ACCESS_KEY_ID="dSUGdbJqa6xwJ6Fo8qV2DSksdjh..."
     export SPACES_SECRET_ACCESS_KEY="TEaKjdj8DSaJl7EnOdsa..."
     ```
 
