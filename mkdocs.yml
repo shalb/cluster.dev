@@ -33,6 +33,7 @@ nav:
       - Secrets: structure-secrets.md
       - State: cluster-state.md
     - Templating: templating.md
+      - Generators: generators-overview.md
     - Stack Templates:
       - Overview: stack-templates-overview.md
       - Functions: stack-templates-functions.md
