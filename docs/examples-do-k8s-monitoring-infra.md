@@ -9,12 +9,15 @@
    * [Install doctl](#install-doctl)
    * [Install kubectl](#install-kubectl)
    * [Create DO's space to store your project's state](#create-dos-space-to-store-your-projects-state)
-      * [Configure access to the space](#configure-access-to-the-space)
    * [Configure DO's API access via token](#configure-dos-api-access-via-token)
+   * [Configure access to the space](#configure-access-to-the-space)
 * [Create basic project](#create-basic-project)
    * [Customize project](#customize-project)
 * [Create new cluster by the cdev](#create-new-cluster-by-the-cdev)
 * [Destroy the cluster](#destroy-the-cluster)
+* [Known issues](#known-issues)
+   * [Balancer not removed after destroy](#balancer-not-removed-after-destroy)
+   * [You should add your own DNS zone to DO](#you-should-add-your-own-dns-zone-to-do)
 
 # Info
 
@@ -30,14 +33,14 @@ Create default enviroment file:
 ```bash
 echo \
 'export PROJECT="example"
-# Space access token:
-export SPACES_ACCESS_KEY_ID=
-export SPACES_SECRET_ACCESS_KEY=
 # API access token:
-export DIGITALOCEAN_TOKEN=
+export DIGITALOCEAN_TOKEN=""
+# Space access token:
+export SPACES_ACCESS_KEY_ID=""
+export SPACES_SECRET_ACCESS_KEY=""
 # Generic default settings:
 export REGION="fra1"
-export BUCKED_NAME="${PROJECT}-cdev-state"
+export BUCKET_NAME="${PROJECT}-cdev-state"
 export ORGANIZATION="${PROJECT}-organization"
 export CLUSTER_NAME="${PROJECT}-cdev"
 export NODE_TYPE="s-4vcpu-8gb-intel"
@@ -110,19 +113,19 @@ kubectl version
 Go to [spaces](https://cloud.digitalocean.com/spaces/) and create new space.  
 Use name produced by this echo command:
 ```bash
-echo ${BUCKED_NAME}
-```
-
-### Configure access to the space 
-Go to [API tokens](https://cloud.digitalocean.com/account/api/tokens)(**Spaces access keys** section) and create new token to allow the Clusterdev to use the storage as Terraform's state location  
-Add storage token to the enviroment file:
-```bash
-editor project_env
+echo ${BUCKET_NAME}
 ```
 
 ## Configure DO's API access via token
 Go to [API tokens](https://cloud.digitalocean.com/account/api/tokens)(**Personal access tokens** section) and create new token to allow the Clusterdev to manage infrastructure  
 Add API token to the enviroment file:
+```bash
+editor project_env
+```
+
+## Configure access to the space 
+Go to [API tokens](https://cloud.digitalocean.com/account/api/tokens)(**Spaces access keys** section) and create new token to allow the Clusterdev to use the storage as Terraform's state location  
+Add storage token to the enviroment file:
 ```bash
 editor project_env
 ```
@@ -143,7 +146,7 @@ kind: Project
 variables:
   organization: ${ORGANIZATION}
   region: ${REGION}
-  bucket_name: ${BUCKED_NAME}
+  bucket_name: ${BUCKET_NAME}
 " > project.yaml
 
 sed -i 's/"s-1vcpu-2gb"/{{ reqEnv "NODE_TYPE" }}/g' stack.yaml
@@ -160,3 +163,10 @@ cdev apply -l debug | tee log
 ```bash
 cdev destroy -l debug | tee log
 ```
+
+# Known issues
+## Balancer not removed after destroy
+Open [load balancers list](https://cloud.digitalocean.com/networking/load_balancers) and destroy blalancer
+
+## You should add your own DNS zone to DO
+Clusterdev + AWS allows us to use shared Clusterdev DNS zone to save your time, but with DO we have no such option
