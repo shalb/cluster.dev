@@ -1,8 +1,8 @@
 # AWS-K3s Prometheus
 
-*The code and the text prepared by [Oleksii Kurinnyi](https://github.com/gelo22), a monitoring engineer at SHALB.*  
+*The code and the text prepared by [Oleksii Kurinnyi](https://github.com/gelo22), a monitoring engineer at SHALB. Code samples are available in [this repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).*  
 
-In this article we will learn how to deploy a project that contains a test monitoring environment. The project will be deployed by Cluster.dev to AWS, managed by [K3s Kubernetes cluster](https://rancher.com/docs/k3s/latest/en/) and monitored by [Community monitoring stack](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack).
+In this article we will learn how to deploy a project that contains a test monitoring environment. The project will be deployed by Cluster.dev to AWS, managed by [K3s Kubernetes cluster](https://rancher.com/docs/k3s/latest/en/) and monitored by [Community monitoring stack](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack). 
 
 ## Requirements
 
@@ -29,6 +29,7 @@ We should install [Docker](https://docs.docker.com/engine/install/ubuntu/) to th
     ```bash
         curl https://raw.githubusercontent.com/shalb/monitoring-examples/main/cdev/monitoring-cluster-blog/env > env
     ```
+    
 * Add the programmatic access key to the environment file `env`:
 
     ```bash
