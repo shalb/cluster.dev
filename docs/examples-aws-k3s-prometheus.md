@@ -1,6 +1,8 @@
 # AWS-K3s Prometheus
 
-*The code and the text prepared by [Oleksii Kurinnyi](https://github.com/gelo22), a monitoring engineer at SHALB. Code samples are available in [this repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).*  
+*The code, the text and the screencast prepared by [Oleksii Kurinnyi](https://github.com/gelo22), a monitoring engineer at SHALB. Code samples are available in the [GitHub repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).*  
+
+[Watch the screencast](https://www.youtube.com/watch?v=-oa-nbeRZ-0) on YouTube.
 
 In this article we will learn how to deploy a project that contains a test monitoring environment. The project will be deployed by Cluster.dev to AWS, managed by [K3s Kubernetes cluster](https://rancher.com/docs/k3s/latest/en/) and monitored by [Community monitoring stack](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack). 
 
@@ -79,7 +81,7 @@ If the cluster name is available we should see the message ```OK to use cluster_
 
 #### Set SSH keys
 
-We are going to access cluster nodes via SSH. To add the existing SSH key we should replace the value of `public_key` key in config file `project.yaml`. If we have no SSH key, then we should [create it](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html).
+We should have access to cluster nodes via SSH. To add the existing SSH key we should replace the value of `public_key` key in config file `project.yaml`. If we have no SSH key, then we should [create it](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-key-pairs.html).
 
 #### Set Argo CD password
 
@@ -134,7 +136,7 @@ curl 127.0.0.1:18080
 curl 127.0.0.1:28080
 ```
 
-If we see no errors from `curl`, then the client host should access those same endpoints via any browser.
+If we see no errors from `curl`, then the client host should access these endpoints via any browser.
 
 ## Destroy the project
 
