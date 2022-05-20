@@ -2,7 +2,7 @@
 
 *The code, the text and the screencast prepared by [Oleksii Kurinnyi](https://github.com/gelo22), a monitoring engineer at SHALB. Code samples are available in the [GitHub repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).*  
 
-[Watch the screencast](https://www.youtube.com/watch?v=-oa-nbeRZ-0) on YouTube.
+<iframe width="560" height="315" src="https://www.youtube.com/embed/-oa-nbeRZ-0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 In this article we will learn how to deploy a project that contains a test monitoring environment. The project will be deployed by Cluster.dev to AWS, managed by [K3s Kubernetes cluster](https://rancher.com/docs/k3s/latest/en/) and monitored by [Community monitoring stack](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack). 
 
