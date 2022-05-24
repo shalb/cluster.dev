@@ -1,12 +1,12 @@
 # AWS-K3s Prometheus
 
-*The code, the text and the screencast prepared by [Oleksii Kurinnyi](https://github.com/gelo22), a monitoring engineer at SHALB. Code samples are available in the [GitHub repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).*  
+*The code, the text and the screencast prepared by [Oleksii Kurinnyi](https://github.com/gelo22), a monitoring engineer at SHALB.*  
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/-oa-nbeRZ-0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Goal
 
-In this article we will learn how to deploy a project that contains a test monitoring environment. The project will be deployed by Cluster.dev to AWS, managed by [K3s Kubernetes cluster](https://rancher.com/docs/k3s/latest/en/) and monitored by [Community monitoring stack](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack). 
+In this article we will use and modify the [basic AWS-K3s Cluster.dev template](https://github.com/shalb/cdev-aws-k3s) to deploy the Prometheus monitoring stack to a cluster. As a result we will have a [K3s cluster](https://rancher.com/docs/k3s/latest/en/) in AWS with a set of required controllers (Ingress, cert-manager, Argo CD) and installed [kube-prometheus](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack) stack. The code samples are available in the [GitHub repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).
 
 ## Requirements
 
@@ -151,5 +151,5 @@ cdev destroy -l debug | tee destroy.log
 
 ## Conclusion
 
-Now we are able to deploy and destroy a basic project with a monitoring stack by simple commands to save our time. This project allows us to use the current project as a test environment for monitoring-related articles and test many useful monitoring cases before applying them to production environments.
+Within this article we have learnt how to deploy the Prometheus monitoring stack with the Cluster.dev AWS-K3s template. The resulting stack allows us to monitor workloads in our cluster. We can also reuse the stack as a prepared infrastructure pattern to launch environments for testing monitoring cases, before applying them to production.   
 
