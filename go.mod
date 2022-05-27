@@ -16,13 +16,13 @@ require (
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/kylelemons/godebug v1.1.0
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/paulrademacher/climenu v0.0.0-20151110221007-a1afbb4e378b
+	github.com/paulrademacher/climenu v0.0.0-20151110221007-a1afbb4e378b // indirect
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/tj/go-spin v1.1.0
 	github.com/zclconf/go-cty v1.8.3
 	go.mozilla.org/sops/v3 v3.7.1
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
-	gopkg.in/yaml.v3 v3.0.0-20210107172259-749611fa9fcc
+	gopkg.in/yaml.v3 v3.0.1
 
 )
