@@ -16,7 +16,7 @@ require (
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/kylelemons/godebug v1.1.0
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/paulrademacher/climenu v0.0.0-20151110221007-a1afbb4e378b // indirect
+	github.com/paulrademacher/climenu v0.0.0-20151110221007-a1afbb4e378b
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/tj/go-spin v1.1.0
