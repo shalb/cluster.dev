@@ -25,14 +25,14 @@ SHELL      = /usr/bin/env bash
 
 all: clean build
 
-darwin_amd64: 
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(DARWIN_AMD64)/$(BINNAME) ./cmd/$(BINNAME)
+darwin_amd64:
+	go get ./cmd/$(BINNAME) && GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(DARWIN_AMD64)/$(BINNAME) ./cmd/$(BINNAME)
 
-linux_amd64: 
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(LINUX_AMD64)/$(BINNAME) ./cmd/$(BINNAME)
+linux_amd64:
+	go get ./cmd/$(BINNAME) && GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(LINUX_AMD64)/$(BINNAME) ./cmd/$(BINNAME)
 
-linux_arm64: 
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(LINUX_ARM64)/$(BINNAME) ./cmd/$(BINNAME)
+linux_arm64:
+	go get ./cmd/$(BINNAME) && GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" -o $(BINDIR)/$(LINUX_ARM64)/$(BINNAME) ./cmd/$(BINNAME)
 
 build: darwin_amd64 linux_amd64 linux_arm64
 	@echo version: $(VERSION)
@@ -47,7 +47,7 @@ examples:
 	done
 
 install:
-	GO111MODULE=on CGO_ENABLED=0 GOOS=$(CUR_GOOS) GOARCH=$(CUR_GOARCH) go install -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" ./cmd/$(BINNAME)
+	go get ./cmd/$(BINNAME) && GO111MODULE=on CGO_ENABLED=0 GOOS=$(CUR_GOOS) GOARCH=$(CUR_GOARCH) go install -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" ./cmd/$(BINNAME)
 
 clean:
 	rm -rf $(BINDIR)/*
