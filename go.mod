@@ -9,11 +9,8 @@ require (
 	github.com/apex/log v1.9.0
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/aws/aws-sdk-go v1.38.39
-	github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59
 	github.com/buger/goterm v1.0.0 // indirect
-	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807 // indirect
 	github.com/gookit/color v1.3.7
-	github.com/hashicorp/go-getter v1.5.2 // indirect
 	github.com/hashicorp/hcl/v2 v2.8.2
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
@@ -26,5 +23,6 @@ require (
 	github.com/zclconf/go-cty v1.8.3
 	go.mozilla.org/sops/v3 v3.7.1
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+	gopkg.in/yaml.v3 v3.0.0-20210107172259-749611fa9fcc
+
 )
