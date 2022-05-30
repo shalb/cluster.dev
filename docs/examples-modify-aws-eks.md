@@ -1,5 +1,7 @@
 # Modify AWS-EKS
 
+*The code and the text prepared by [Orest Kapko](https://github.com/AlKapkone), a DevOps engineer at SHALB.*  
+
 Let's assume you want to make changes to AWS-EKS stack template. In the example below we have customized the existing template by adding some features and removing the functionality that we don't need.
 
 ## Workflow steps
