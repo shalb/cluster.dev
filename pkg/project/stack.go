@@ -87,7 +87,7 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 	// Read backend name.
 	stack.BackendName, ok = stackSpec.data["backend"].(string)
 	if !ok {
-		return fmt.Errorf("stack object must contain field 'backend'")
+		stack.BackendName = "default"
 	}
 	bPtr, exists := p.Backends[stack.BackendName]
 	if !exists {

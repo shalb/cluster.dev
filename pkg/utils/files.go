@@ -32,12 +32,16 @@ func IsLocalPath(path string) bool {
 }
 
 func IsAbsolutePath(path string) bool {
+	if len(path) < 1 {
+		return false
+	}
 	if path[0:1] == "/" {
 		return true
 	}
 	return false
 }
 
+// CheckDir check if 'pash' exists and is directory.
 func CheckDir(path string) (bool, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {

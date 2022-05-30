@@ -123,7 +123,7 @@ func (p *Project) GetState() ([]byte, error) {
 func (p *Project) PullState() error {
 	loadedStateFile, err := p.GetState()
 	if err != nil {
-		return fmt.Errorf("backup state: %w", err)
+		return fmt.Errorf("pull state: %w", err)
 	}
 	bkFileName := filepath.Join(config.Global.WorkingDir, "cdev.state")
 	log.Infof("Pulling state file: %v", bkFileName)

@@ -2,11 +2,9 @@ package project
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"sync"
 
 	"github.com/apex/log"
@@ -21,7 +19,7 @@ import (
 const ConfigFilePattern = "^project.y[a]{0,1}ml$"
 const projectObjKindKey = "Project"
 
-// MarkerScanner type witch describe function for scaning markers in templated and unmarshaled yaml data.
+// MarkerScanner type witch describe function for scanning markers in templated and unmarshaled yaml data.
 type MarkerScanner func(data reflect.Value, unit Unit) (reflect.Value, error)
 
 type PrinterOutput struct {
@@ -85,38 +83,13 @@ func LoadProjectBase() (*Project, error) {
 		log.Fatalf("Loading project: creating working dir: '%v'.", err.Error())
 	}
 	err = project.readManifests()
-	if project.configDataFile == nil {
-		log.Fatalf("Loading project: loading project config: file does not exists or empty configuration (project.yaml).")
-	}
-
-	var prjConfParsed map[string]interface{}
-	err = yaml.Unmarshal(project.configDataFile, &prjConfParsed)
 	if err != nil {
-		log.Fatalf("Loading project: parsing project config: ", utils.ResolveYamlError(project.configDataFile, err))
+		log.Fatalf("Loading project: %v", err.Error())
 	}
-	if name, ok := prjConfParsed["name"].(string); !ok {
-		log.Fatal("Loading project: error in project config: name is required.")
-	} else {
-		project.name = name
+	err = project.parseProjectConfig()
+	if err != nil {
+		log.Fatalf("Loading project: %v", err.Error())
 	}
-
-	if kn, ok := prjConfParsed["kind"].(string); !ok || kn != projectObjKindKey {
-		log.Fatal("Loading project: error in project config: kind is required.")
-	}
-
-	if exports, ok := prjConfParsed["exports"]; ok {
-		err = project.ExportEnvs(exports)
-		if err != nil {
-			log.Fatalf("Loading project: %v", err.Error())
-		}
-	}
-
-	if stateBackend, exists := prjConfParsed["backend"].(string); exists {
-		project.StateBackendName = stateBackend
-	}
-
-	project.configData["project"] = prjConfParsed
-
 	err = project.readSecrets()
 	if err != nil {
 		log.Fatalf("Loading project: %v", err.Error())
@@ -303,31 +276,6 @@ func (p *Project) Name() string {
 	return p.name
 }
 
-// Return project conf and slice of others config files.
-func (p *Project) readManifests() (err error) {
-	var files []string
-	files, _ = filepath.Glob(config.Global.WorkingDir + "/*.yaml")
-	filesYML, _ := filepath.Glob(config.Global.WorkingDir + "/*.yml")
-	files = append(files, filesYML...)
-	objFiles := make(map[string][]byte)
-
-	for _, file := range files {
-		// log.Warnf("%v", file)
-		fileName, _ := filepath.Rel(config.Global.WorkingDir, file)
-		isProjectConfig := regexp.MustCompile(ConfigFilePattern).MatchString(fileName)
-		if isProjectConfig {
-			p.configDataFile, err = ioutil.ReadFile(file)
-		} else {
-			objFiles[file], err = ioutil.ReadFile(file)
-		}
-		if err != nil {
-			return fmt.Errorf("reading configs %v: %v", file, err)
-		}
-	}
-	p.objectsFiles = objFiles
-	return nil
-}
-
 // PrintInfo print project info.
 func (p *Project) PrintInfo() error {
 	fmt.Println("Project:")
@@ -385,19 +333,6 @@ func (p *Project) PrintInfo() error {
 		})
 	}
 	table.Render()
-	return nil
-}
-
-func (p *Project) ExportEnvs(ex interface{}) error {
-	exports, correct := ex.(map[string]interface{})
-	if !correct {
-		return fmt.Errorf("exports: malformed exports configuration")
-	}
-	for key, val := range exports {
-		log.Debugf("Exports: %v", key)
-		valStr := fmt.Sprintf("%v", val)
-		os.Setenv(key, valStr)
-	}
 	return nil
 }
 

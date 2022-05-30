@@ -33,6 +33,8 @@ tests/config.sh
 
 .mypy_cache/
 .vscode/.ropeproject/config.py
+.vscode/*.log
+go.sum
 
 # Local reconciler run artifacts
 terraform/aws/addons/auth.yaml

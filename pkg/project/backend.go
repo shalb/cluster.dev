@@ -9,6 +9,13 @@ import (
 )
 
 const backendObjKindKey = "Backend"
+const defaultLocalBackendConfig = `
+name: default
+kind: Backend
+provider: local
+spec:
+  path: ".cluster.dev/states/"
+`
 
 // Backend interface for backend provider.
 type Backend interface {
@@ -17,7 +24,6 @@ type Backend interface {
 	GetBackendHCL(string, string) (*hclwrite.File, error)
 	GetBackendBytes(string, string) ([]byte, error)
 	GetRemoteStateHCL(string, string) ([]byte, error)
-	State() map[string]interface{}
 	LockState() error
 	UnlockState() error
 	WriteState(stateData string) error
@@ -44,18 +50,15 @@ var BackendsFactories = map[string]BackendsFactory{}
 func (p *Project) readBackends() error {
 	// Read and parse backends.
 	bks, exists := p.objects[backendObjKindKey]
-	if !exists {
-		err := fmt.Errorf("reading backend: no backend found, at least one backend needed")
-		log.Debug(err.Error())
-		return err
-	}
-	for _, bk := range bks {
-		err := p.readBackendObj(bk)
-		if err != nil {
-			return fmt.Errorf("reading backend: %v", err.Error())
+	if exists {
+		for _, bk := range bks {
+			err := p.readBackendObj(bk)
+			if err != nil {
+				return fmt.Errorf("reading backend: %v", err.Error())
+			}
 		}
 	}
-	return nil
+	return addDefaultBackend(p)
 }
 
 func (p *Project) readBackendObj(obj ObjectData) error {
@@ -86,4 +89,21 @@ func (p *Project) readBackendObj(obj ObjectData) error {
 	p.Backends[name] = b
 	log.Debugf("Backend added: %v", name)
 	return nil
+}
+
+func addDefaultBackend(p *Project) error {
+	if _, exists := p.Backends["default"]; exists {
+		return fmt.Errorf("read backends: name 'default' is reserved, use another backend name")
+	}
+	defBkParsed := map[string]interface{}{}
+	err := yaml.Unmarshal([]byte(defaultLocalBackendConfig), &defBkParsed)
+	if err != nil {
+		return err
+	}
+	obj := ObjectData{
+		filename: "",
+		data:     defBkParsed,
+	}
+
+	return p.readBackendObj(obj)
 }
