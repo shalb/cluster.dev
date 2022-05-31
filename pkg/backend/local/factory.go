@@ -21,7 +21,6 @@ func (f *Factory) New(cnf []byte, name string, p *project.Project) (project.Back
 		ProjectPtr: p,
 	}
 	err := yaml.Unmarshal(cnf, &bk)
-	log.Warnf("local backend: %+v", bk)
 	if err != nil {
 		return nil, utils.ResolveYamlError(cnf, err)
 	}

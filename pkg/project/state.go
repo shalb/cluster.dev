@@ -98,7 +98,6 @@ func (p *Project) GetState() ([]byte, error) {
 	var stateStr string
 	var err error
 	var loadedStateFile []byte
-	log.Warnf("GetState StateBackendName %v", p.StateBackendName)
 	if p.StateBackendName == "" {
 		return nil, fmt.Errorf("internal error: empty project backend")
 	}
