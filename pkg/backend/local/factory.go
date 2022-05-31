@@ -1,7 +1,6 @@
 package local
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -22,7 +21,6 @@ func (f *Factory) New(cnf []byte, name string, p *project.Project) (project.Back
 		ProjectPtr: p,
 	}
 	err := yaml.Unmarshal(cnf, &bk)
-	log.Warnf("local backend: %+v", bk)
 	if err != nil {
 		return nil, utils.ResolveYamlError(cnf, err)
 	}
@@ -33,9 +31,7 @@ func (f *Factory) New(cnf []byte, name string, p *project.Project) (project.Back
 	if isDir {
 		return &bk, nil
 	}
-	if !isDir && err != nil {
-		return nil, fmt.Errorf("local backend: pash should be the dir")
-	}
+
 	log.Debugf("Creating local backend dir: %v", bk.Path)
 	err = os.MkdirAll(bk.Path, os.ModePerm)
 	return &bk, err

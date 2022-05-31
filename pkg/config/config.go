@@ -16,7 +16,7 @@ var Version string
 // BuildTimestamp - build date from compiller
 var BuildTimestamp string
 
-var Interupted bool
+var Interrupted bool
 
 type SubCmd int
 
@@ -45,8 +45,6 @@ type ConfSpec struct {
 	IgnoreState        bool
 	NotLoadState       bool
 	ShowTerraformPlan  bool
-	StateLocalFileName string
-	StateLocalLockFile string
 	StateCacheDir      string
 	TemplatesCacheDir  string
 	CacheDir           string
@@ -74,10 +72,8 @@ func InitConfig() {
 	logging.InitLogLevel(Global.LogLevel, Global.TraceLog)
 	Global.ProjectConfigsPath = curPath
 	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
-	Global.CacheDir = filepath.Join(Global.TmpDir, "cache")
-	Global.StateCacheDir = filepath.Join(Global.TmpDir, "state")
-	Global.StateLocalFileName = filepath.Join(curPath, "cdev.state")
-	Global.StateLocalLockFile = filepath.Join(curPath, "cdev.state.lock")
+	Global.CacheDir = filepath.Join(Global.TmpDir, "cache/")
+	Global.StateCacheDir = filepath.Join(Global.TmpDir, "cache/")
 	Global.TemplatesCacheDir = filepath.Join(Global.TmpDir, "templates")
 	Global.NotLoadState = false
 	usr, err := user.Current()
@@ -94,7 +90,7 @@ func InitConfig() {
 			log.Fatal(err.Error())
 		}
 	}
-	Interupted = false
+	Interrupted = false
 }
 
 // getEnv Helper for args parse.

@@ -25,18 +25,18 @@ func (d *TerraformTemplateDriver) AddTemplateFunctions(mp template.FuncMap, p *p
 		dep := project.ULinkT{
 			Unit:            nil,
 			LinkType:        RemoteStateLinkType,
-			TargenStackName: splittedPath[0],
+			TargetStackName: splittedPath[0],
 			TargetUnitName:  splittedPath[1],
 			OutputName:      splittedPath[2],
 		}
 		if len(splittedPath) != 3 {
 			dep.OutputName = strings.Join(splittedPath[2:], ".")
 		}
-		if s == nil && dep.TargenStackName == "this" {
+		if s == nil && dep.TargetStackName == "this" {
 			return "", fmt.Errorf("remoteState tmpl: using 'this' allowed only in template, use stack name instead")
 		}
-		if dep.TargenStackName == "this" {
-			dep.TargenStackName = s.Name
+		if dep.TargetStackName == "this" {
+			dep.TargetStackName = s.Name
 		}
 		return p.UnitLinks.Set(&dep)
 

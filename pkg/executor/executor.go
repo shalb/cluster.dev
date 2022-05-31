@@ -56,7 +56,7 @@ func NewExecutor(workingDir string, envVariables ...string) (*ShRunner, error) {
 
 func (b *ShRunner) commandExecCommon(outputBuff io.Writer, errBuff io.Writer, command string, args ...string) error {
 	// Prepere command, set outputs, run.
-	if config.Interupted {
+	if config.Interrupted {
 		return fmt.Errorf("interrupted")
 	}
 	var ctx context.Context
@@ -96,7 +96,7 @@ func (b *ShRunner) commandExecCommon(outputBuff io.Writer, errBuff io.Writer, co
 
 func (b *ShRunner) commandExecCommonInShell(command string, outputBuff io.Writer, errBuff io.Writer) error {
 	// Prepere command, set outputs, run.
-	if config.Interupted {
+	if config.Interrupted {
 		return fmt.Errorf("interrupted")
 	}
 	var ctx context.Context
@@ -246,7 +246,7 @@ func StartSigTrap(cmd *exec.Cmd, stop chan struct{}) SigTrap {
 		for {
 			select {
 			case s := <-sChan:
-				config.Interupted = true
+				config.Interrupted = true
 				config.Global.LogLevel = "debug"
 				logging.InitLogLevel(config.Global.LogLevel, config.Global.TraceLog)
 				log.Debugf("executor: forward signal %v", s)

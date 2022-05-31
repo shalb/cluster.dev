@@ -49,6 +49,9 @@ examples:
 install:
 	go get ./cmd/$(BINNAME) && GO111MODULE=on CGO_ENABLED=0 GOOS=$(CUR_GOOS) GOARCH=$(CUR_GOARCH) go install -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" ./cmd/$(BINNAME)
 
+quick-install:
+	GO111MODULE=on CGO_ENABLED=0 GOOS=$(CUR_GOOS) GOARCH=$(CUR_GOARCH) go install -ldflags "-w -s -X ${CONFIG_PKG}.Version=${VERSION} -X ${CONFIG_PKG}.BuildTimestamp=${BUILD}" ./cmd/$(BINNAME)
+
 clean:
 	rm -rf $(BINDIR)/*
 
