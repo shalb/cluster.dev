@@ -30,7 +30,7 @@ nav:
       - Overview: structure-overview.md
       - Project: structure-project.md
       - Stack: structure-stack.md
-      - Backend: structure-backend.md
+      - Backends: structure-backend.md
       - Secrets: structure-secrets.md
       - State: cluster-state.md
     - Templating: templating.md

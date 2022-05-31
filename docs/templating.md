@@ -30,7 +30,7 @@ The templating process could be described as follows:
 
 ### Global and stack-specific variables
 
-The variables stored and defined within a project are global. They could be common for a few stacks that are reconciled within a project, and passed across them. Example of `project.yaml`:
+The variables stored and defined within a project are global. They could be common for a few stacks that are reconciled within a project, and [passed across them](#passing-variables-across-stacks). Example of global variables in the `project.yaml`:
 
 ```yaml
 name: my_project
@@ -88,3 +88,9 @@ spec:
 ```
 
 In order to refer to the secret in stack files, we need to define it as {{ .secrets.my-aws-secret.some-key }}.
+
+### Passing variables across stacks
+
+You can use [`remoteState` function](https://docs.cluster.dev/stack-templates-functions/#remotestate) to pass variables across stacks or within the same stack template: {{ remoteState "stack_name.unit_name.output" }}
+
+Also, you can use outputs from one stack as inputs for another: {{ output "stack_name.unit_name.output" }}
