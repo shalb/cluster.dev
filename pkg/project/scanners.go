@@ -19,11 +19,11 @@ func OutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 	for marker, link := range markersList {
 		if strings.Contains(resString, marker) {
 
-			if link.TargenStackName == "this" {
-				link.TargenStackName = unit.Stack().Name
+			if link.TargetStackName == "this" {
+				link.TargetStackName = unit.Stack().Name
 
 			}
-			modKey := fmt.Sprintf("%s.%s", link.TargenStackName, link.TargetUnitName)
+			modKey := fmt.Sprintf("%s.%s", link.TargetStackName, link.TargetUnitName)
 			depUnit, exists := unit.Project().Units[modKey]
 			if !exists {
 				log.Fatalf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.Stack().Name, unit.Name(), modKey)
@@ -56,8 +56,8 @@ func OutputsReplacer(data reflect.Value, unit Unit) (reflect.Value, error) {
 				return reflect.ValueOf(nil), fmt.Errorf("replace output internal error: unit link does not initted")
 			}
 			if link.OutputData == nil {
-				log.Warnf("The output data is unavalible. Inserting placeholder <output %s.%s>.", link.TargenStackName, link.TargetUnitName)
-				resString = strings.ReplaceAll(resString, marker, fmt.Sprintf("<output %s.%s>", link.TargenStackName, link.TargetUnitName))
+				log.Warnf("The output data is unavalible. Inserting placeholder <output %s.%s>.", link.TargetStackName, link.TargetUnitName)
+				resString = strings.ReplaceAll(resString, marker, fmt.Sprintf("<output %s.%s>", link.TargetStackName, link.TargetUnitName))
 			}
 			if resString == marker {
 				return reflect.ValueOf(link.OutputData), nil
@@ -87,7 +87,7 @@ func StateOutputsReplacer(data reflect.Value, unit Unit) (reflect.Value, error) 
 	markersList := unit.Project().UnitLinks.ByLinkTypes(OutputLinkType).Map()
 	for key, marker := range markersList {
 		if strings.Contains(resString, key) {
-			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<output %v.%v.%v>", marker.TargenStackName, marker.TargetUnitName, marker.OutputName))
+			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<output %v.%v.%v>", marker.TargetStackName, marker.TargetUnitName, marker.OutputName))
 		}
 	}
 	return reflect.ValueOf(resString), nil

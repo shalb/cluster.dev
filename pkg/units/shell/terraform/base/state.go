@@ -103,7 +103,7 @@ func (u *Unit) ReplaceRemoteStatesForDiff(in, out interface{}) error {
 	for key, marker := range markersList {
 		//log.Warnf("marker replace: %v", key)
 		if strings.Contains(inJSONstr, key) {
-			remoteStateRef := fmt.Sprintf("<remoteState %s.%s.%s>", marker.TargenStackName, marker.TargetUnitName, marker.OutputName)
+			remoteStateRef := fmt.Sprintf("<remoteState %s.%s.%s>", marker.TargetStackName, marker.TargetUnitName, marker.OutputName)
 			replacer := strings.NewReplacer(key, remoteStateRef)
 			inJSONstr = replacer.Replace(inJSONstr)
 		}

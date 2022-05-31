@@ -114,7 +114,7 @@ func (g *grapher) GetNextAsync() (Unit, func(error), error) {
 	g.mux.Lock()
 	defer g.mux.Unlock()
 	for {
-		if config.Interupted {
+		if config.Interrupted {
 			g.queue.Init()
 			g.units = make(map[string]Unit)
 			g.updateQueue()
@@ -262,7 +262,7 @@ func (g *grapher) listenHupSig() {
 		for {
 			select {
 			case <-g.sigTrap:
-				config.Interupted = true
+				config.Interrupted = true
 			case <-g.stopChan:
 				// log.Warn("Stop listening")
 				signal.Stop(g.sigTrap)

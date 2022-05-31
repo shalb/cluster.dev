@@ -55,8 +55,8 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	}
 
 	for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(base.RemoteStateLinkType).Map() {
-		if marker.TargenStackName == "this" {
-			marker.TargenStackName = u.Stack().Name
+		if marker.TargetStackName == "this" {
+			marker.TargetStackName = u.Stack().Name
 		}
 		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(unitBody, hash, refStr)

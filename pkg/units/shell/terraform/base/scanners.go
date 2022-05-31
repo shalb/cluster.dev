@@ -24,10 +24,10 @@ func (u *Unit) RemoteStatesScanner(data reflect.Value, unit project.Unit) (refle
 	for marker, link := range markersList {
 		if strings.Contains(resString, marker) {
 			var stackName string
-			if link.TargenStackName == "this" {
+			if link.TargetStackName == "this" {
 				stackName = unit.Stack().Name
 			} else {
-				stackName = link.TargenStackName
+				stackName = link.TargetStackName
 			}
 
 			modKey := fmt.Sprintf("%s.%s", stackName, link.TargetUnitName)
@@ -59,7 +59,7 @@ func StringRemStScanner(data reflect.Value, unit project.Unit) (reflect.Value, e
 
 	for key, marker := range markersList {
 		if strings.Contains(resString, key) {
-			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<remoteState %v.%v.%v>", marker.TargenStackName, marker.TargetUnitName, marker.OutputName))
+			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<remoteState %v.%v.%v>", marker.TargetStackName, marker.TargetUnitName, marker.OutputName))
 		}
 	}
 	return reflect.ValueOf(resString), nil

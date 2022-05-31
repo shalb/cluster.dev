@@ -470,7 +470,7 @@ func (u *Unit) readDeps() (err error) {
 			infNm = u.StackName()
 		}
 		dp := &project.ULinkT{
-			TargenStackName: infNm,
+			TargetStackName: infNm,
 			TargetUnitName:  splDep[1],
 			LinkType:        "custom",
 		}

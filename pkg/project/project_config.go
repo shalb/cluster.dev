@@ -18,6 +18,7 @@ const defaultProjectName = "default-project"
 func (p *Project) parseProjectConfig() error {
 
 	if p.configDataFile == nil {
+		p.StateBackendName = "default"
 		p.name = defaultProjectName
 		return nil
 	}
@@ -46,6 +47,7 @@ func (p *Project) parseProjectConfig() error {
 	if stateBackend, exists := prjConfParsed["backend"].(string); exists {
 		p.StateBackendName = stateBackend
 	} else {
+		log.Warn("Set default project backend")
 		p.StateBackendName = "default"
 	}
 
