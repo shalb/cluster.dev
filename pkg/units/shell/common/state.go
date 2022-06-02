@@ -123,7 +123,7 @@ func (u *Unit) ReplaceOutputsForDiff(in, out interface{}) error {
 	inJSONstr := string(inJSON)
 	for key, marker := range u.Project().UnitLinks.ByLinkTypes(project.OutputLinkType).Map() {
 		if strings.Contains(inJSONstr, key) {
-			remoteStateRef := fmt.Sprintf("<output %s.%s.%s>", marker.TargenStackName, marker.TargetUnitName, marker.OutputName)
+			remoteStateRef := fmt.Sprintf("<output %s.%s.%s>", marker.TargetStackName, marker.TargetUnitName, marker.OutputName)
 			replacer := strings.NewReplacer(key, remoteStateRef)
 			inJSONstr = replacer.Replace(inJSONstr)
 		}

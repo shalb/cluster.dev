@@ -16,13 +16,13 @@ const (
 	fmtVerbProgram
 	fmtVerbModule
 	fmtVerbMessage
-	fmtVerbLongfile
-	fmtVerbShortfile
-	fmtVerbLongpkg
-	fmtVerbShortpkg
-	fmtVerbLongfunc
-	fmtVerbShortfunc
-	fmtVerbCallpath
+	fmtVerbLongFile
+	fmtVerbShortFile
+	fmtVerbLongPkg
+	fmtVerbShortPkg
+	fmtVerbLongFunc
+	fmtVerbShortFunc
+	fmtVerbCallPath
 	fmtVerbLevelColor
 	fmtVerbUnknown
 	fmtVerbStatic
@@ -36,23 +36,23 @@ func formatFuncName(v fmtVerb, f string) string {
 	}
 	pkg, fun := f[:i+j+1], f[i+j+2:]
 	switch v {
-	case fmtVerbLongpkg:
+	case fmtVerbLongPkg:
 		return pkg
-	case fmtVerbShortpkg:
+	case fmtVerbShortPkg:
 		return path.Base(pkg)
-	case fmtVerbLongfunc:
+	case fmtVerbLongFunc:
 		return fun
-	case fmtVerbShortfunc:
+	case fmtVerbShortFunc:
 		i = strings.LastIndex(fun, ".")
 		return fun[i+1:]
 	}
 	panic("unexpected func formatter")
 }
 
-func FormatCallpath(calldepth int, depth int) string {
+func FormatCallPath(callDepth int, depth int) string {
 	v := ""
 	callers := make([]uintptr, 64)
-	n := runtime.Callers(calldepth+2, callers)
+	n := runtime.Callers(callDepth+2, callers)
 	oldPc := callers[n-1]
 
 	start := n - 3
@@ -76,7 +76,7 @@ func FormatCallpath(calldepth int, depth int) string {
 			v += "."
 		}
 		if f := runtime.FuncForPC(pc); f != nil {
-			v += formatFuncName(fmtVerbLongfunc, f.Name())
+			v += formatFuncName(fmtVerbLongFunc, f.Name())
 		}
 	}
 	return v

@@ -20,7 +20,7 @@ func CreateMarker(link ULinkT) (string, error) {
 	if link.LinkType == "" {
 		return "", fmt.Errorf("internal error: create unit link: LinkType field is empty")
 	}
-	if link.TargenStackName == "" {
+	if link.TargetStackName == "" {
 		return "", fmt.Errorf("internal error: create unit link: StackName field is empty")
 	}
 	if link.TargetUnitName == "" {
@@ -29,9 +29,9 @@ func CreateMarker(link ULinkT) (string, error) {
 
 	var markerPath string
 	if link.OutputName == "" {
-		markerPath = fmt.Sprintf("%v.%v.%v", link.LinkType, link.TargenStackName, link.TargetUnitName)
+		markerPath = fmt.Sprintf("%v.%v.%v", link.LinkType, link.TargetStackName, link.TargetUnitName)
 	} else {
-		markerPath = fmt.Sprintf("%v.%v.%v.%v", link.LinkType, link.TargenStackName, link.TargetUnitName, link.OutputName)
+		markerPath = fmt.Sprintf("%v.%v.%v.%v", link.LinkType, link.TargetStackName, link.TargetUnitName, link.OutputName)
 	}
 	hash := utils.Md5(markerPath)
 	return fmt.Sprintf("%s.%s.%s", hash, markerPath, hash), nil

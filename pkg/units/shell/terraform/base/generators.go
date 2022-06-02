@@ -114,7 +114,7 @@ func (u *Unit) replaceRemoteStatesForBash(cmd *string) error {
 	}
 	markersList := u.ProjectPtr.UnitLinks.ByLinkTypes(RemoteStateLinkType).Map()
 	for hash, marker := range markersList {
-		if marker.TargenStackName == "this" {
+		if marker.TargetStackName == "this" {
 			log.Fatalf("Internal error, debug: %+v", marker)
 			//marker.TargenStackName = m.Stack().Name
 		}

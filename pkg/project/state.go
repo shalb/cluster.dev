@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -54,14 +53,14 @@ func (p *Project) SaveState() error {
 	if err != nil {
 		return fmt.Errorf("saving project state: %v", err.Error())
 	}
-	if p.StateBackendName != "" {
-		sBk, ok := p.Backends[p.StateBackendName]
-		if !ok {
-			return fmt.Errorf("lock state: state backend '%v' does not found", p.StateBackendName)
-		}
-		return sBk.WriteState(buffer.String())
+	if p.StateBackendName == "" {
+		return fmt.Errorf("internal error: empty project backend")
 	}
-	return ioutil.WriteFile(config.Global.StateLocalFileName, buffer.Bytes(), fs.ModePerm)
+	sBk, ok := p.Backends[p.StateBackendName]
+	if !ok {
+		return fmt.Errorf("lock state: state backend '%v' does not found", p.StateBackendName)
+	}
+	return sBk.WriteState(buffer.String())
 }
 
 type stateData struct {
@@ -71,59 +70,54 @@ type stateData struct {
 }
 
 func (p *Project) LockState() error {
-	if p.StateBackendName != "" {
-		sBk, ok := p.Backends[p.StateBackendName]
-		if !ok {
-			return fmt.Errorf("lock state: state backend '%v' does not found", p.StateBackendName)
-		}
-		return sBk.LockState()
+	if p.StateBackendName == "" {
+		return fmt.Errorf("internal error: empty project backend")
 	}
-	_, err := ioutil.ReadFile(config.Global.StateLocalLockFile)
-	if err == nil {
-		return fmt.Errorf("state is locked by another process")
+
+	sBk, ok := p.Backends[p.StateBackendName]
+	if !ok {
+		return fmt.Errorf("lock state: state backend '%v' does not found", p.StateBackendName)
 	}
-	err = ioutil.WriteFile(config.Global.StateLocalLockFile, []byte{}, os.ModePerm)
-	return err
+	return sBk.LockState()
+
 }
 
 func (p *Project) UnLockState() error {
-	if p.StateBackendName != "" {
-		sBk, ok := p.Backends[p.StateBackendName]
-		if !ok {
-			return fmt.Errorf("lock state: state backend '%v' does not found", p.StateBackendName)
-		}
-		return sBk.UnlockState()
+	if p.StateBackendName == "" {
+		return fmt.Errorf("internal error: empty project backend")
 	}
-	return os.Remove(config.Global.StateLocalLockFile)
+
+	sBk, ok := p.Backends[p.StateBackendName]
+	if !ok {
+		return fmt.Errorf("lock state: state backend '%v' does not found", p.StateBackendName)
+	}
+	return sBk.UnlockState()
 }
 
 func (p *Project) GetState() ([]byte, error) {
 	var stateStr string
 	var err error
 	var loadedStateFile []byte
-	if p.StateBackendName != "" {
-		sBk, ok := p.Backends[p.StateBackendName]
-		if !ok {
-			return nil, fmt.Errorf("get remote state data: state backend '%v' does not found", p.StateBackendName)
-		}
-		stateStr, err = sBk.ReadState()
-		if err != nil {
-			return nil, fmt.Errorf("get remote state data: %w", err)
-		}
-		loadedStateFile = []byte(stateStr)
-	} else {
-		loadedStateFile, err = ioutil.ReadFile(config.Global.StateLocalFileName)
-		if err != nil {
-			return nil, fmt.Errorf("get local state data: read file: %w", err)
-		}
+	if p.StateBackendName == "" {
+		return nil, fmt.Errorf("internal error: empty project backend")
 	}
+	sBk, ok := p.Backends[p.StateBackendName]
+	if !ok {
+		return nil, fmt.Errorf("get remote state data: state backend '%v' does not found", p.StateBackendName)
+	}
+	stateStr, err = sBk.ReadState()
+	if err != nil {
+		return nil, fmt.Errorf("get remote state data: %w", err)
+	}
+	loadedStateFile = []byte(stateStr)
+
 	return loadedStateFile, nil
 }
 
 func (p *Project) PullState() error {
 	loadedStateFile, err := p.GetState()
 	if err != nil {
-		return fmt.Errorf("backup state: %w", err)
+		return fmt.Errorf("pull state: %w", err)
 	}
 	bkFileName := filepath.Join(config.Global.WorkingDir, "cdev.state")
 	log.Infof("Pulling state file: %v", bkFileName)

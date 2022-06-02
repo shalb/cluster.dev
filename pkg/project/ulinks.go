@@ -9,7 +9,7 @@ type ULinkT struct {
 	Unit            Unit        `json:"-"`
 	LinkType        string      `json:"link_type"`
 	TargetUnitName  string      `json:"target_unit_name"`
-	TargenStackName string      `json:"target_stack_name"`
+	TargetStackName string      `json:"target_stack_name"`
 	OutputName      string      `json:"output_name"`
 	OutputData      interface{} `json:"output_data"`
 }
@@ -20,18 +20,18 @@ type UnitLinksT struct {
 }
 
 func (u *ULinkT) UnitKey() (res string) {
-	if u.TargenStackName == "" || u.TargetUnitName == "" {
+	if u.TargetStackName == "" || u.TargetUnitName == "" {
 		return
 	}
-	res = fmt.Sprintf("%v.%v", u.TargenStackName, u.TargetUnitName)
+	res = fmt.Sprintf("%v.%v", u.TargetStackName, u.TargetUnitName)
 	return
 }
 
 func (u *ULinkT) InitUnitPtr(p *Project) (err error) {
-	if u.TargenStackName == "" || u.TargetUnitName == "" {
+	if u.TargetStackName == "" || u.TargetUnitName == "" {
 		return fmt.Errorf("stack name or unit name is empty")
 	}
-	modKey := fmt.Sprintf("%s.%s", u.TargenStackName, u.TargetUnitName)
+	modKey := fmt.Sprintf("%s.%s", u.TargetStackName, u.TargetUnitName)
 	depUnit, exists := p.Units[modKey]
 	if !exists {
 		return fmt.Errorf("link unit does not exists '%s'", modKey)
@@ -41,15 +41,15 @@ func (u *ULinkT) InitUnitPtr(p *Project) (err error) {
 }
 
 func (u *ULinkT) LinkPath() (res string) {
-	if u.TargenStackName == "" || u.TargetUnitName == "" || u.LinkType == "" {
+	if u.TargetStackName == "" || u.TargetUnitName == "" || u.LinkType == "" {
 		return
 	}
-	res = fmt.Sprintf("%v.%v", u.TargenStackName, u.TargetUnitName)
+	res = fmt.Sprintf("%v.%v", u.TargetStackName, u.TargetUnitName)
 
 	if u.OutputName == "" {
-		res = fmt.Sprintf("%v.%v.%v", u.LinkType, u.TargenStackName, u.TargetUnitName)
+		res = fmt.Sprintf("%v.%v.%v", u.LinkType, u.TargetStackName, u.TargetUnitName)
 	} else {
-		res = fmt.Sprintf("%v.%v.%v.%v", u.LinkType, u.TargenStackName, u.TargetUnitName, u.OutputName)
+		res = fmt.Sprintf("%v.%v.%v.%v", u.LinkType, u.TargetStackName, u.TargetUnitName, u.OutputName)
 	}
 	return
 }
@@ -168,7 +168,7 @@ func (o *UnitLinksT) ByTargetUnit(unit Unit) (res *UnitLinksT) {
 	// res = make(map[string]*ULinkT)\
 	for key, el := range o.List {
 		// log.Warnf("ByTargetUnit: %v.%v == %v.%v", unit.Stack().Name, unit.Name(), el.TargenStackName, el.TargetUnitName)
-		if unit.Name() == el.TargetUnitName && unit.Stack().Name == el.TargenStackName {
+		if unit.Name() == el.TargetUnitName && unit.Stack().Name == el.TargetStackName {
 			res.List[key] = el
 		}
 	}

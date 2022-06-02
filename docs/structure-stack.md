@@ -5,7 +5,7 @@ Stack is a yaml file that tells Cluster.dev which template to use and what [vari
 File: searching in `./*.yaml`. *Required at least one*.
 Stack object (`kind: stack`) contains reference to a stack template, variables to render the template and backend for states.
 
-Example `stack.yaml`:
+Example of `stack.yaml`:
 
 ```yaml
 # Define stack itself
@@ -26,9 +26,9 @@ variables:
 
 * `kind`: object kind. `stack`. *Required*.
 
-* `backend`: name of the backend that will be used to store the states of this stack. *Required*.
+* `backend`: name of the backend that will be used to store the states of this stack. *Optional*.
 
-* `variables`: data set for the stack template rendering.
+* `variables`: data set for the stack template rendering. See [variables](https://docs.cluster.dev/templating/#variables).
 
 *  `template`: it's either a path to a local directory containing the stack template's configuration files, or a remote Git repository as the stack template source. For more details on stack templates please refer to [Stack Template](https://docs.cluster.dev/stack-templates-overview/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
     * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls).

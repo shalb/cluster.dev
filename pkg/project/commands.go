@@ -2,7 +2,6 @@ package project
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/apex/log"
 	"github.com/paulrademacher/climenu"
@@ -75,7 +74,6 @@ func (p *Project) Destroy() error {
 			return fmt.Errorf("project destroy: saving state: %w", err)
 		}
 	}
-	os.Remove(config.Global.StateLocalFileName)
 	return nil
 }
 
