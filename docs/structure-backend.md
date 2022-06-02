@@ -17,8 +17,10 @@ name: my-fs
 kind: backend
 provider: local
 spec: 
-  path: /home/cluster.dev/states/cdev-state.json
+  path: /home/cluster.dev/states/
 ```
+
+A path should be absolute or relative to the directory where `cdev` is running. An absolute path must begin with `/`, and a relative with `./` or `../`. 
 
 ## Remote backend
 

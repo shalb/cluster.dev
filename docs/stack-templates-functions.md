@@ -12,7 +12,7 @@ Allows for passing `yaml` block as a value of target `yaml` template.
     
 **Allowed use**: only as full `yaml` value, in unit `inputs`. Example:
 
-Source yaml:
+Source `yaml`:
 
   ```yaml
     values:
@@ -67,11 +67,12 @@ Allows for passing data across units and stacks, can be used in pre/post hooks.
 
 Calculates a subnet address within given IP network address prefix. Same as [Terraform function](https://www.terraform.io/docs/language/functions/cidrsubnet.html). Example:
 
-    Source:
-    ```bash
+  Source:
+  ```bash
     {{ cidrSubnet "172.16.0.0/12" 4 2 }}
-    ```
-    Rendered:
-    ```bash
+  ```
+  
+  Rendered:
+  ```bash
     172.18.0.0/16
-    ```
+  ```
