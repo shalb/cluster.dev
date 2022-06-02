@@ -40,7 +40,6 @@ func (b *Backend) WriteState(stateData string) error {
 
 func (b *Backend) ReadState() (string, error) {
 	stateFilePath := filepath.Join(b.Path, stateFileName)
-	log.Debugf("Reading local state. Project: '%v', bucket: '%v'", b.ProjectPtr.Name(), stateFilePath)
 	res, err := ioutil.ReadFile(stateFilePath)
 	return string(res), err
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -14,7 +15,7 @@ name: default
 kind: Backend
 provider: local
 spec:
-  path: ".cluster.dev/states/"
+    path: ""
 `
 
 // Backend interface for backend provider.
@@ -98,7 +99,7 @@ func addDefaultBackend(p *Project) error {
 	defBkParsed := map[string]interface{}{}
 	err := yaml.Unmarshal([]byte(defaultLocalBackendConfig), &defBkParsed)
 	if err != nil {
-		return err
+		return utils.ResolveYamlError([]byte(defaultLocalBackendConfig), err)
 	}
 	obj := ObjectData{
 		filename: "",

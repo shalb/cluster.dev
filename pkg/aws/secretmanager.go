@@ -53,6 +53,7 @@ func GetSecret(region string, secretName string) (interface{}, error) {
 	err = json.Unmarshal([]byte(secretData), &parsed)
 	if err != nil {
 		if errSliceCheck != nil {
+			log.Warnf("Parse secret data as JSON return an error: %v", err.Error())
 			log.Debugf("Secret '%v' is not JSON, creating raw data", secretName)
 			return secretData, nil
 		}

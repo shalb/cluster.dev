@@ -29,7 +29,7 @@ func init() {
 // projectsCmd represents the plan command
 var projectLs = &cobra.Command{
 	Use:   "info",
-	Short: "List projects",
+	Short: "Shows detailed information about the current project, such as the number of units and their types. Number of stacks, etc",
 	Run: func(cmd *cobra.Command, args []string) {
 		p, err := project.LoadProjectFull()
 		if err != nil {
@@ -39,21 +39,12 @@ var projectLs = &cobra.Command{
 		log.Info("Project info:")
 		p.PrintInfo()
 	},
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return fmt.Errorf("requires a template git URL argument")
-		}
-		if len(args) > 2 {
-			return fmt.Errorf("too many arguments")
-		}
-		return nil
-	},
 }
 
 // projectsCmd represents the plan command
 var projectCreate = &cobra.Command{
 	Use:   "create",
-	Short: "Generate new project from template in curent dir. Directory must be empty",
+	Short: "Generate new project from generator-template in current directory. Directory should not contain yaml or yml files",
 	Run: func(cmd *cobra.Command, args []string) {
 		if listAllTemplates {
 			list, err := ui.GetProjectTemplates(args[0])

@@ -53,7 +53,7 @@ var secretEdit = &cobra.Command{
 
 var secretCreate = &cobra.Command{
 	Use:   "create",
-	Short: "Generate new secret from template in curent project. Directory must contain the project",
+	Short: "Generate new secret in current directory. Directory must contain the project",
 	Run: func(cmd *cobra.Command, args []string) {
 		_, err := project.LoadProjectBase()
 		if err != nil {

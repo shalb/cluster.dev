@@ -43,20 +43,19 @@ func NewStackTemplate(data []byte) (*stackTemplate, error) {
 		}
 		log.Warnf("'InfraTemplate' kind is deprecated and will be removed in future releases. Use 'StackTemplate' instead")
 	}
-	log.Debug("check client version")
 	if iTmpl.ReqClientVersion != "" {
+		log.Debug("Checking client version...")
 		reqVerConstraints, err := semver.NewConstraint(iTmpl.ReqClientVersion)
 		if err != nil {
 			return nil, fmt.Errorf("parsing template: can't parse required client version: %v", iTmpl.ReqClientVersion)
 		}
 		ver, err := semver.NewVersion(config.Global.Version)
 		if err != nil {
-			// Invalid curent cli version. May be test revision.
+			// Invalid current cli version. May be test revision.
 			// TODO need check!!
 			return nil, fmt.Errorf("parsing template: internalcan't parse client version: %v", iTmpl.ReqClientVersion)
 		}
 		ok, messages := reqVerConstraints.Validate(ver)
-		log.Debugf("Validating version: cli: %v, req: %v", ver, iTmpl.ReqClientVersion)
 		if !ok {
 			errReasons := ""
 			for _, msg := range messages {
@@ -64,6 +63,7 @@ func NewStackTemplate(data []byte) (*stackTemplate, error) {
 			}
 			return nil, fmt.Errorf("cdev template version validation error: \n%v", errReasons)
 		}
+		log.Debugf("Version validated: cli: %v, req: %v", ver, iTmpl.ReqClientVersion)
 	}
 	// i.TemplateSrc = src
 	return &iTmpl, nil

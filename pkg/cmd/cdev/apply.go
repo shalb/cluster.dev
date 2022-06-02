@@ -10,7 +10,7 @@ import (
 // planCmd represents the plan command
 var applyCmd = &cobra.Command{
 	Use:   "apply",
-	Short: "Apply all units",
+	Short: "Deploys or updates infrastructure according to project configuration",
 	Run: func(cmd *cobra.Command, args []string) {
 		project, err := project.LoadProjectFull()
 		if err != nil {
