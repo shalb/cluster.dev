@@ -35,7 +35,7 @@ type ConfSpec struct {
 	ProjectConfig      string
 	Version            string
 	Build              string
-	TmpDir             string
+	WorkDir            string
 	WorkingDir         string
 	TraceLog           bool
 	MaxParallel        int
@@ -71,10 +71,10 @@ func InitConfig() {
 	}
 	logging.InitLogLevel(Global.LogLevel, Global.TraceLog)
 	Global.ProjectConfigsPath = curPath
-	Global.TmpDir = filepath.Join(curPath, ".cluster.dev")
-	Global.CacheDir = filepath.Join(Global.TmpDir, "cache/")
-	Global.StateCacheDir = filepath.Join(Global.TmpDir, "cache/")
-	Global.TemplatesCacheDir = filepath.Join(Global.TmpDir, "templates")
+	Global.WorkDir = filepath.Join(curPath, ".cluster.dev")
+	Global.CacheDir = filepath.Join(Global.WorkDir, "cache/")
+	Global.StateCacheDir = filepath.Join(Global.WorkDir, "cache/")
+	Global.TemplatesCacheDir = filepath.Join(Global.WorkDir, "templates")
 	Global.NotLoadState = false
 	usr, err := user.Current()
 	if err != nil {

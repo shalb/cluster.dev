@@ -152,13 +152,15 @@ func (p *Project) LoadState() (*StateProject, error) {
 	}
 
 	loadedStateFile, err := p.GetState()
-	if err == nil {
+	if err != nil {
+		return nil, err
+	}
+	if len(loadedStateFile) > 0 {
 		err = utils.JSONDecode(loadedStateFile, &stateD)
 		if err != nil {
 			return nil, fmt.Errorf("load state: %w", err)
 		}
 	}
-
 	statePrj := StateProject{
 		Project: Project{
 			name:             p.Name(),

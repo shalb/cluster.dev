@@ -2,42 +2,44 @@
 
 ## General
 
-* `apply`       Apply all units - build project (see build command), calculate dependencies, create and check graph. Deploy all units according to the graph.
+* `apply`       Deploy or update an infrastructure according to project configuration.
 
-* `build`       Build all units - read project configuration. Check it, render stack templates and generate code of all units in tmp dir: `./cluster.dev/project-name/`.
+* `build`       Build cache dirs for all units in the current project.
 
-* `destroy`     Destroy all units - build project (see build command), calculate dependencies, create and check the reverse graph. Run destroy scenario for all units according to the graph.
+* `destroy`     Destroy an infrastructure deployed by the current project.
 
-* `help`        Help about any command.
+* `cdev`        Refer to [Cluster.dev docs](https://docs.cluster.dev/) for details. 
 
-* `output`      Display the template's output.
+* `help`        Get help about any command.
 
-* `plan`        Plan all units - build project. Try to run the plan scenario for units. Units often refer to the remote states of other units. Because of this, the plan command may fail if the remote state does not already exist.
+* `output`      Display project outputs.
+
+* `plan`        Show changes that will be applied in the current project.
 
 ## Project
 
-Commands to manage projects:
+* `project`           Manage projects.
 
-* `project info`      Read project and info message.
+* `project info`      Show detailed information about the current project, such as the number of units and their types, the number of stacks, etc.
 
-* `project create`    Create new 'project' from a stack template in an interactive mode.
+* `project create`    Generate a new project from generator-template in the current directory. The directory should not contain `yaml` or `yml` files.
 
 ## Secret
 
-Commands to manage secrets:
+* `secret`           Manage secrets.
 
-* `secret ls`        List secrets in current project.
+* `secret ls`        List secrets in the current project.
 
-* `secret edit`      Edit secret by name. Usage: `cdev secret edit secret-name`.
+* `secret edit [secret_name]`     Create a new secret or edit the existing one.
 
-* `secret create`    Create new 'secret' from template in an interactive mode.
+* `secret create`    Generate a new secret in the current directory. The directory must contain the project.
 
 ## State
 
-Commands to perform state operations:
+* `state`            State operations. 
 
 * `state unlock`     Unlock state forcibly.
 
-* `state pull`       Download remote state locally in ./cdev.state file.
+* `state pull`       Download the remote state.
 
-* `state update`     Is used when after applying a project and cdev update its state becomes incompatible with the existing one.
+* `state update`     Update the state of the current project to version %v. Make sure that the state of the project is consistent (run `cdev apply` with the old version before updating).

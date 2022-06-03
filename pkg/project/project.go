@@ -228,7 +228,7 @@ func (p *Project) prepareUnits() error {
 }
 
 func (p *Project) MkBuildDir() error {
-	baseOutDir := config.Global.TmpDir
+	baseOutDir := config.Global.WorkDir
 	if _, err := os.Stat(baseOutDir); os.IsNotExist(err) {
 		err := os.Mkdir(baseOutDir, 0755)
 		if err != nil {
@@ -282,7 +282,7 @@ func (p *Project) Name() string {
 func (p *Project) PrintInfo() error {
 	fmt.Println("Project:")
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "Stacks count", "units count", "Backends count", "Secrets count"})
+	table.SetHeader([]string{"Name", "Stacks count", "Units count", "Backends count", "Secrets count"})
 	table.Append([]string{
 		p.name,
 		fmt.Sprintf("%v", len(p.Stacks)),
@@ -294,7 +294,7 @@ func (p *Project) PrintInfo() error {
 
 	fmt.Println("Stacks:")
 	table = tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Name", "units count", "Backend name", "Backend type"})
+	table.SetHeader([]string{"Name", "Units count", "Backend name", "Backend type"})
 	for name, stack := range p.Stacks {
 		mCount := 0
 		for _, unit := range p.Units {

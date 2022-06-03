@@ -13,7 +13,6 @@ var rootCmd = &cobra.Command{
 	Use:   "cdev",
 	Short: "See https://docs.cluster.dev/ for details.",
 }
-var ll string
 
 func init() {
 	cobra.OnInitialize(config.InitConfig)
@@ -23,6 +22,8 @@ func init() {
 	rootCmd.PersistentFlags().IntVar(&config.Global.MaxParallel, "parallelism", 3, "Max parallel threads for units applying")
 	rootCmd.PersistentFlags().BoolVar(&config.Global.TraceLog, "trace", false, "Print functions trace info in logs")
 	rootCmd.PersistentFlags().BoolVar(&config.Global.NoColor, "no-color", false, "Turn off colored output")
+	rootCmd.PersistentFlags().BoolP("version", "v", false, "Print client version")
+	rootCmd.PersistentFlags().BoolP("help", "h", false, "Show this help output")
 	_ = rootCmd.PersistentFlags().MarkHidden("trace")
 }
 

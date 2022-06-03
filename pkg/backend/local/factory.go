@@ -1,6 +1,7 @@
 package local
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -23,6 +24,10 @@ func (f *Factory) New(cnf []byte, name string, p *project.Project) (project.Back
 	err := yaml.Unmarshal(cnf, &bk)
 	if err != nil {
 		return nil, utils.ResolveYamlError(cnf, err)
+	}
+	defaultBackendPath := fmt.Sprintf("%s/states", config.Global.WorkDir)
+	if bk.Path == "" {
+		bk.Path = defaultBackendPath
 	}
 	if !utils.IsAbsolutePath(bk.Path) {
 		bk.Path = filepath.Join(config.Global.ProjectConfigsPath, bk.Path)

@@ -8,7 +8,7 @@ import (
 
 var buildCmd = &cobra.Command{
 	Use:   "build",
-	Short: "Build all units",
+	Short: "Builds cache dirs for all units in current project",
 	Run: func(cmd *cobra.Command, args []string) {
 		project, err := project.LoadProjectFull()
 		if err != nil {
