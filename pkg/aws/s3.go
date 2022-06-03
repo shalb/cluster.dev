@@ -44,16 +44,6 @@ func S3Get(region, bucketName, keyName string) (string, error) {
 	// Create an uploader with the session and default options
 	result, err := svc.GetObject(input)
 	if err != nil {
-		// if aerr, ok := err.(awserr.Error); ok {
-		// 	switch aerr.Code() {
-		// 	case s3.ErrCodeNoSuchKey:
-		// 		log.Debugf("%v %v", s3.ErrCodeNoSuchKey, aerr.Error())
-		// 	case s3.ErrCodeInvalidObjectState:
-		// 		log.Debugf("%v %v", s3.ErrCodeInvalidObjectState, aerr.Error())
-		// 	default:
-		// 		log.Debug(aerr.Error())
-		// 	}
-		// }
 		return "", err
 	}
 	buf := new(bytes.Buffer)

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/apex/log"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/aws"
 	"github.com/shalb/cluster.dev/pkg/project"
@@ -127,5 +129,17 @@ func (b *Backend) WriteState(stateData string) error {
 func (b *Backend) ReadState() (string, error) {
 	log.Debugf("Downloading s3 state. Project: '%v', bucket: '%v'", b.ProjectPtr.Name(), b.Bucket)
 	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
-	return aws.S3Get(b.Region, b.Bucket, stateKey)
+	state, err := aws.S3Get(b.Region, b.Bucket, stateKey)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case s3.ErrCodeNoSuchKey:
+				return "", nil
+			default:
+				return "", err
+			}
+		}
+		return "", err
+	}
+	return state, nil
 }
