@@ -14,27 +14,27 @@ func NewEmptyUnit() *Unit {
 	unit := Unit{
 		Unit:              *common.NewEmptyUnit(),
 		RequiredProviders: make(map[string]RequiredProvider),
-		Initted:           false,
+		InitDone:          false,
 	}
 	return &unit
 }
 
 func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
-	mod := NewEmptyUnit()
+	tfBase := NewEmptyUnit()
 
 	cUnit, err := common.NewUnit(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	mod.Unit = *cUnit
-	err = mod.ReadConfig(spec, stack)
+	tfBase.Unit = *cUnit
+	err = tfBase.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	mod.BackendName = stack.BackendName
-	return mod, nil
+	tfBase.BackendName = stack.BackendName
+	return tfBase, nil
 }
 
 // New creates new unit driver factory.

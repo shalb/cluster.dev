@@ -86,7 +86,6 @@ func LoadProjectBase() (*Project, error) {
 	if err != nil {
 		log.Fatalf("Loading project: %v", err.Error())
 	}
-	log.Info("parseProjectConfig")
 	err = project.parseProjectConfig()
 	if err != nil {
 		log.Fatalf("Loading project: %v", err.Error())
@@ -143,6 +142,9 @@ func LoadProjectFull() (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	// for _, un := range project.Units {
+	// 	un.PrintEnv()
+	// }
 	// log.Errorf("LoadProjectFull: %+v", project.UnitLinks)
 	return project, nil
 }
@@ -196,6 +198,8 @@ func (p *Project) readUnits() error {
 		for _, stackTmpl := range stack.Templates {
 			for _, unitData := range stackTmpl.Units {
 				mod, err := NewUnit(unitData, stack)
+				// mod.PrintEnv()
+				// log.Warn("Environments NewUnit: ")
 				if err != nil {
 					traceUnitView, errYaml := yaml.Marshal(unitData)
 					if errYaml != nil {

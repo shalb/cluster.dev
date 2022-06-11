@@ -90,11 +90,6 @@ func (u *Unit) createNamespacesIfNotExists() error {
 		log.Debug(err.Error())
 		return fmt.Errorf("create namespace: %w", err)
 	}
-	if u.Env != nil {
-		for key, val := range u.Env.(map[string]interface{}) {
-			rn.Env = append(rn.Env, fmt.Sprintf("%v=%v", key, val))
-		}
-	}
 	if len(u.createNSList) > 0 {
 		for _, ns := range u.createNSList {
 			kubeconfigOpt := ""

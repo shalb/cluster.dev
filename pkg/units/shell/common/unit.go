@@ -88,12 +88,12 @@ type Unit struct {
 	SavedState       interface{}             `yaml:"-" json:"-"`
 	DependsOn        interface{}             `yaml:"depends_on,omitempty" json:"depends_on,omitempty"`
 	FApply           bool                    `yaml:"force_apply" json:"force_apply"`
-	lockedMux        sync.Mutex              `yaml:"-" json:"-"`
+	lockedMux        *sync.Mutex             `yaml:"-" json:"-"`
 }
 
 // Mux return unit mutex to lock apply.
 func (u *Unit) Mux() *sync.Mutex {
-	return &u.lockedMux
+	return u.lockedMux
 }
 
 // ForceApply return true if unit need apply regardless of state.
@@ -297,15 +297,10 @@ func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, er
 	if err != nil {
 		return nil, err
 	}
-	rn, err := executor.NewExecutor(u.CacheDir)
+	rn, err := executor.NewExecutor(u.CacheDir, u.EnvSlice()...)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
-	}
-	if u.Env != nil {
-		for key, val := range u.Env.(map[string]interface{}) {
-			rn.Env = append(rn.Env, fmt.Sprintf("%v=%v", key, val))
-		}
 	}
 
 	rn.LogLabels = []string{
@@ -511,4 +506,19 @@ func readHook(hookData interface{}, hookType string) (*HookSpec, error) {
 	ScriptData.Command = fmt.Sprintf("#!/usr/bin/env sh\nset -e\n\n%s", cmd)
 	return &ScriptData, nil
 
+}
+
+// EnvSlice returns the list of unit environment variables as slice in a format ENV_NAME=ENV_VALUE
+func (u *Unit) EnvSlice() []string {
+
+	envMap, ok := u.Env.(map[string]interface{})
+	if !ok || len(envMap) == 0 {
+		return []string{}
+	}
+	res := make([]string, len(envMap))
+	i := 0
+	for k, v := range envMap {
+		res[i] = fmt.Sprintf("%v=\"%v\"", k, v)
+	}
+	return res
 }

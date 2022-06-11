@@ -227,9 +227,12 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 		diff, stateUnit := fProject.CheckUnitChanges(md)
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning unit '%v':", md.Key()))
 		if len(diff) > 0 || config.Global.IgnoreState {
-
 			changedUnits[md.Key()] = md
-			fmt.Printf("%v\n", diff)
+			if len(diff) > 0 {
+				fmt.Printf("%v\n", diff)
+			} else {
+				fmt.Println("<No changes>")
+			}
 			if exists {
 				modsForUpdate = append(modsForUpdate, md.Key())
 			} else {
