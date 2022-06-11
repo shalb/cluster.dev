@@ -30,7 +30,7 @@ type Unit struct {
 	// StatePtr          *Unit                       `yaml:"-" json:"-"`
 	Providers         interface{}                 `yaml:"-" json:"providers,omitempty"`
 	RequiredProviders map[string]RequiredProvider `yaml:"-" json:"required_providers,omitempty"`
-	Initted           bool                        `yaml:"-" json:"-"` // True if unit was initted in this session.
+	InitDone          bool                        `yaml:"-" json:"-"` // True if unit was initted in this session.
 	StateData         interface{}                 `yaml:"-" json:"-"`
 }
 
@@ -75,10 +75,6 @@ func (u *Unit) fillShellUnit() {
 		Type:    "terraform",
 	}
 	u.OutputParsers["terraform"] = TerraformJSONParser
-	if u.Env == nil {
-		u.Env = make(map[string]interface{})
-	}
-
 }
 
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
@@ -89,7 +85,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	}
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
 	u.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
-	u.Initted = false
+	u.InitDone = false
 	//err := utils.JSONCopy(m, m.StatePtr)
 	return nil
 }
@@ -102,13 +98,13 @@ func (u *Unit) Init() error {
 	if err != nil {
 		return err
 	}
-	u.Initted = true
+	u.InitDone = true
 	return nil
 }
 
 // Apply unit.
 func (u *Unit) Apply() error {
-	if !u.Initted {
+	if !u.InitDone {
 		if err := u.Init(); err != nil {
 			return err
 		}
@@ -118,7 +114,7 @@ func (u *Unit) Apply() error {
 
 // Plan unit.
 func (u *Unit) Plan() error {
-	if !u.Initted {
+	if !u.InitDone {
 		if err := u.Init(); err != nil {
 			return err
 		}
@@ -128,7 +124,7 @@ func (u *Unit) Plan() error {
 
 // Destroy unit.
 func (u *Unit) Destroy() error {
-	if !u.Initted {
+	if !u.InitDone {
 		if err := u.Init(); err != nil {
 			return err
 		}

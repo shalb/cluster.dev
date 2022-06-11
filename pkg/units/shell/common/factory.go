@@ -22,6 +22,7 @@ func NewEmptyUnit() *Unit {
 			List: make(map[string]*project.ULinkT),
 		},
 		FApply: false,
+		Env:    make(map[string]interface{}),
 	}
 	unit.OutputParsers = map[string]OutputParser{
 		"json":      unit.JSONOutputParser,
