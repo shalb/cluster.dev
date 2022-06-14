@@ -30,7 +30,7 @@ func (u *Unit) GetState() interface{} {
 
 type UnitDiffSpec struct {
 	base.UnitDiffSpec
-	Inputs        interface{} `json:"inputs"`
+	Outputs       interface{} `json:"outputs"`
 	OutputsConfig *string     `json:"-"`
 }
 
@@ -38,7 +38,7 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 	diff := u.Unit.GetUnitDiff()
 	st := UnitDiffSpec{
 		UnitDiffSpec:  diff,
-		Inputs:        u.Inputs,
+		Outputs:       u.Outputs,
 		OutputsConfig: nil,
 	}
 	return st
@@ -59,6 +59,10 @@ func (u *Unit) LoadState(stateData interface{}, modKey string, p *project.StateP
 		return err
 	}
 	err = utils.JSONCopy(stateData, u)
+	if u.InputsDeprecated != nil && u.Outputs == nil {
+		u.Outputs = u.InputsDeprecated
+		u.Outputs = nil
+	}
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}

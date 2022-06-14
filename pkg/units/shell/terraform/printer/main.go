@@ -13,10 +13,11 @@ import (
 
 type Unit struct {
 	base.Unit
-	OutputRaw string                 `yaml:"-" json:"output"`
-	Inputs    map[string]interface{} `yaml:"-" json:"inputs"`
-	UnitKind  string                 `yaml:"-" json:"type"`
-	StateData *Unit                  `yaml:"-" json:"-"`
+	OutputRaw        string                 `yaml:"-" json:"output"`
+	InputsDeprecated map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
+	Outputs          map[string]interface{} `yaml:"-" json:"outputs"`
+	UnitKind         string                 `yaml:"-" json:"type"`
+	StateData        *Unit                  `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -27,7 +28,7 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 
-	for key, val := range u.Inputs {
+	for key, val := range u.Outputs {
 		dataBlock := rootBody.AppendNewBlock("output", []string{key})
 		dataBody := dataBlock.Body()
 		hclVal, err := hcltools.InterfaceToCty(val)
@@ -55,17 +56,21 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if modType != u.KindKey() {
 		return fmt.Errorf("Incorrect unit type")
 	}
-	mInputs, ok := spec["inputs"].(map[string]interface{})
+	mOutputs, ok := spec["outputs"].(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("Incorrect unit inputs")
+		mOutputs, ok = spec["inputs"].(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("Incorrect unit inputs")
+		}
+		log.Warnf("Printer unit '%v' has field 'inputs', this field is deprecated and will be removed in future. Use 'outputs' instead", u.Key())
 	}
-	u.Inputs = mInputs
+	u.Outputs = mOutputs
 	return nil
 }
 
 func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 	// log.Infof("Scan inputs: %v", u.Inputs)
-	err := project.ScanMarkers(u.Inputs, scanner, u)
+	err := project.ScanMarkers(u.Outputs, scanner, u)
 	if err != nil {
 		return err
 	}
@@ -118,12 +123,16 @@ func (u *Unit) Apply() (err error) {
 	}
 	u.OutputRaw = outputs
 	u.StateData.OutputRaw = outputs
-	// log.Warnf("Printer outputs: %v", u.ProjectPtr.UnitLinks.ByTargetUnit(u))
+	// log.Warnf("Printer OutputRaw: %v", outputs)
 	return
 }
 
 // UpdateProjectRuntimeData update project runtime dataset, adds printer unit outputs.
 func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
+	if u.Name() != "outputs" {
+		// Print only if unit name is "outputs"
+		return nil
+	}
 	p.RuntimeDataset.PrintersOutputs = append(p.RuntimeDataset.PrintersOutputs, project.PrinterOutput{Name: u.Key(), Output: u.OutputRaw})
 	// log.Warnf("Printer UpdateProjectRuntimeData: %v", u.OutputRaw)
 	return u.Unit.UpdateProjectRuntimeData(p)

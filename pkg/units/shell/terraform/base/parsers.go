@@ -13,7 +13,7 @@ import (
 // and stores it in the value pointed to by out.
 func TerraformJSONParser(in string, out *project.UnitLinksT) error {
 	if out == nil || out.IsEmpty() {
-		log.Debugf("RegexOutputParser: unit has no expected outputs, ignore")
+		log.Debugf("TerraformJSONParser: unit has no expected outputs, ignore")
 		return nil
 	}
 	type tfOutputDataSpec struct {
