@@ -347,13 +347,5 @@ func (p *Project) PrintOutputs() error {
 			log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(o.Output))
 		}
 	}
-	// for _, u := range p.UnitLinks.Slice() {
-	// 	if u.Unit != nil {
-	// 		if u.Unit.KindKey() == "printer" && u.Unit.Name() == "outputs" {
-	// 			log.Infof("%v=%v", u.OutputName, u.OutputData)
-	// 			// log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(o.Output))
-	// 		}
-	// 	}
-	// }
 	return nil
 }
