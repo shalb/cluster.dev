@@ -160,7 +160,7 @@ func (p *Project) Apply() error {
 		}
 
 		go func(mod Unit, finFunc func(error), stateP *StateProject) {
-			diff, _ := stateP.CheckUnitChanges(mod)
+			diff, stateUnit := stateP.CheckUnitChanges(mod)
 			var res error
 			if len(diff) > 0 || config.Global.IgnoreState {
 				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying unit '%v':", md.Key()))
@@ -186,6 +186,9 @@ func (p *Project) Apply() error {
 				}
 				finFunc(res)
 				return
+			} else {
+				// Copy unit from state to project (to save raw output data for some units)
+				p.Units[mod.Key()] = stateUnit
 			}
 			log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Unit '%v' has not changed. Skip applying.", md.Key()))
 			finFunc(res)

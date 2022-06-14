@@ -99,7 +99,6 @@ func LoadProjectBase() (*Project, error) {
 
 // LoadProjectFull read project data in current directory, create base project, load secrets and all project's objects.
 func LoadProjectFull() (*Project, error) {
-	log.Info("LoadProjectFull")
 	project, err := LoadProjectBase()
 	if err != nil {
 		return nil, fmt.Errorf("loading project: %w", err)

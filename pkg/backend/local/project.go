@@ -41,5 +41,8 @@ func (b *Backend) WriteState(stateData string) error {
 func (b *Backend) ReadState() (string, error) {
 	stateFilePath := filepath.Join(b.Path, stateFileName)
 	res, err := ioutil.ReadFile(stateFilePath)
-	return string(res), err
+	if err != nil {
+		return "", nil
+	}
+	return string(res), nil
 }

@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -166,6 +167,11 @@ func (u *Unit) checkShellUnitConfig() error {
 	if u.ApplyConf == nil {
 		return fmt.Errorf("unit '%v': apply configuration does not exists in unit", u.Key())
 	}
+	for _, f := range *u.CreateFiles {
+		if f.FileMode == 0 {
+			f.FileMode = os.ModePerm
+		}
+	}
 	return nil
 }
 
@@ -263,15 +269,15 @@ func (u *Unit) Apply() error {
 				u.GetOutputsConf.Command,
 			},
 		}
-		u.OutputRaw, err = u.runCommands(cmdConf, "retriving outputs")
+		u.OutputRaw, err = u.runCommands(cmdConf, "retrieving outputs")
 		if err != nil {
-			return fmt.Errorf("retriving unit '%v' outputs: %w", u.Key(), err)
+			return fmt.Errorf("retrieving unit '%v' outputs: %w", u.Key(), err)
 		}
 	}
 	if u.GetOutputsConf != nil {
 		parser, exists := u.OutputParsers[u.GetOutputsConf.Type]
 		if !exists {
-			return fmt.Errorf("retriving unit '%v' outputs: parser %v doesn't exists", u.Key(), u.GetOutputsConf.Type)
+			return fmt.Errorf("retrieving unit '%v' outputs: parser %v doesn't exists", u.Key(), u.GetOutputsConf.Type)
 		}
 		err = parser(string(u.OutputRaw), u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(project.OutputLinkType))
 		if err != nil {
@@ -332,7 +338,9 @@ func (u *Unit) Plan() error {
 	if u.PreHook != nil && u.PreHook.OnPlan {
 		planCommands.Commands = append(planCommands.Commands, "./pre_hook.sh")
 	}
-	planCommands.Commands = append(planCommands.Commands, u.PlanConf.Commands...)
+	if u.PlanConf != nil {
+		planCommands.Commands = append(planCommands.Commands, u.PlanConf.Commands...)
+	}
 	if u.PostHook != nil && u.PostHook.OnPlan {
 		planCommands.Commands = append(planCommands.Commands, "./post_hook.sh")
 	}
@@ -518,7 +526,7 @@ func (u *Unit) EnvSlice() []string {
 	res := make([]string, len(envMap))
 	i := 0
 	for k, v := range envMap {
-		res[i] = fmt.Sprintf("%v=\"%v\"", k, v)
+		res[i] = fmt.Sprintf("%v=%v", k, v)
 	}
 	return res
 }
