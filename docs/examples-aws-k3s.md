@@ -1,6 +1,6 @@
 # AWS-K3s
 
-On this page you will find guidance on how to create a K3s cluster on AWS using one of the Cluster.dev prepared samples – the[AWS-K3s](https://github.com/shalb/cdev-aws-k3s) stack template. Running the example code will have the following resources created:
+On this page you will find guidance on how to create a K3s cluster on AWS using one of the Cluster.dev prepared samples – the [AWS-K3s](https://github.com/shalb/cdev-aws-k3s) stack template. Running the example code will have the following resources created:
 
 * K3s cluster with addons:
 
