@@ -1,6 +1,6 @@
 # AWS-EKS
 
-On this page you will find guidance on how to create an EKS cluster on AWS using one of the Cluster.dev prepared samples – the[AWS-EKS](https://github.com/shalb/cdev-aws-eks) stack template. Running the example code will have the following resources created:
+On this page you will find guidance on how to create an EKS cluster on AWS using one of the Cluster.dev prepared samples – the [AWS-EKS](https://github.com/shalb/cdev-aws-eks) stack template. Running the example code will have the following resources created:
 
 * EKS cluster with addons:
 
