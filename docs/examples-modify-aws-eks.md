@@ -2,13 +2,13 @@
 
 *The code and the text prepared by [Orest Kapko](https://github.com/AlKapkone), a DevOps engineer at SHALB.*  
 
-Let's assume you want to make changes to AWS-EKS stack template. In the example below we have customized the existing template by adding some features and removing the functionality that we don't need.
+In this article we shall customize the basic [AWS-EKS Cluster.dev template](https://github.com/shalb/cdev-aws-eks) in order to add some features.
 
 ## Workflow steps
 
 1. Go to the GitHub page via the [AWS-EKS link](https://github.com/shalb/cdev-aws-eks) and download the stack template.
 
-2. If you are not planning to use some preset addons, edit aws-eks.yaml to exclude them. In our case, it was cert-manager, cert-manager-issuer, ingress-nginx, argocd, and argocd_apps.
+2. If you are not planning to use some preset addons, edit `aws-eks.yaml` to exclude them. In our case, it was cert-manager, cert-manager-issuer, ingress-nginx, argocd, and argocd_apps.
 
 3. In order to dynamically retrieve the AWS account ID parameter, we have added a data block to our stack template:
 
@@ -163,6 +163,6 @@ Let's assume you want to make changes to AWS-EKS stack template. In the example 
         {{- end }}
     ```
 
-Cluster.dev enables you to create your own stack templates using ready-made samples as a key. In our example we have modified the prepared AWS-EKS stack template by adding a customized data block and excluding some addons. 
+In our example we have modified the prepared AWS-EKS stack template by adding a customized data block and excluding some addons. 
 
 We have also changed the template's structure by placing the Examples directory into a separate repository, in order to decouple the abstract template from its implementation for concrete setups. This enabled us to use the template via Git and mark the template's version with Git tags. 

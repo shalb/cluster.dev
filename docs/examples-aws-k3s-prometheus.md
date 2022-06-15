@@ -6,7 +6,7 @@
 
 ## Goal
 
-In this article we will use and modify the [basic AWS-K3s Cluster.dev template](https://github.com/shalb/cdev-aws-k3s) to deploy the Prometheus monitoring stack to a cluster. As a result we will have a [K3s cluster](https://rancher.com/docs/k3s/latest/en/) in AWS with a set of required controllers (Ingress, cert-manager, Argo CD) and installed [kube-prometheus](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack) stack. The code samples are available in the [GitHub repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).
+In this article we will use and modify the basic [AWS-K3s Cluster.dev template](https://github.com/shalb/cdev-aws-k3s) to deploy the Prometheus monitoring stack to a cluster. As a result we will have a [K3s cluster](https://rancher.com/docs/k3s/latest/en/) on AWS with a set of required controllers (Ingress, cert-manager, Argo CD) and installed [kube-prometheus](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack) stack. The code samples are available in the [GitHub repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).
 
 ## Requirements
 

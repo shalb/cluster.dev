@@ -1,6 +1,22 @@
 # AWS-EKS
 
-This section provides information on how to create a new project on AWS with [AWS-EKS](https://github.com/shalb/cdev-aws-eks) stack template.
+On this page you will find guidance on how to create an EKS cluster on AWS using one of the Cluster.dev prepared samples – the[AWS-EKS](https://github.com/shalb/cdev-aws-eks) stack template. Running the example code will have the following resources created:
+
+* EKS cluster with addons:
+
+    * cert-manager
+
+    * ingress-nginx
+
+    * external-dns
+
+    * argocd
+
+* AWS IAM roles for EKS IRSA cert-manager and external-dns
+
+* *(optional, if you use cluster.dev domain)* Route53 zone **<cluster-name>.cluster.dev**
+
+* *(optional, if vpc_id is not set)* VPC for EKS cluster
 
 ## Prerequisites
 
@@ -116,22 +132,3 @@ In AWS-EKS stack template example you need to define a Route 53 hosted zone. Opt
 
 8. Destroy the cluster and all created resources with the command `cdev destroy`
 
-## Resources
-
-Resources to be created within the project:
-
-* *(optional, if you use cluster.dev domain)* Route53 zone **<cluster-name>.cluster.dev**
-
-* *(optional, if vpc_id is not set)* VPC for EKS cluster
-
-* EKS Kubernetes cluster with addons:
-
-    * cert-manager
-
-    * ingress-nginx
-
-    * external-dns
-
-    * argocd
-
-* AWS IAM roles for EKS IRSA cert-manager and external-dns

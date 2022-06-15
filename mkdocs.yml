@@ -16,6 +16,7 @@ nav:
       - Install From Sources: get-started-install-from-sources.md
       - Create New Project: get-started-create-project.md
     - Examples:
+      - Overview: examples-overview.md
       - AWS-EKS: examples-aws-eks.md
       - AWS-K3s: examples-aws-k3s.md
       - AWS-K3s Prometheus: examples-aws-k3s-prometheus.md
@@ -33,12 +34,6 @@ nav:
       - Backends: structure-backend.md
       - Secrets: structure-secrets.md
       - State: cluster-state.md
-    - Templating: templating.md
-    - Stack Templates:
-      - Overview: stack-templates-overview.md
-      - Functions: stack-templates-functions.md
-      - Stack Templates List: stack-templates-list.md
-      - Generators: generators-overview.md
     - Units:
       - Overview: units-overview.md
       - Shell: units-shell.md
@@ -46,6 +41,12 @@ nav:
       - Helm: units-helm.md
       - K8s-manifest: units-k8s-manifest.md
       - Printer: units-printer.md
+    - Variables: variables.md
+    - Stack Templates:
+      - Overview: stack-templates-overview.md
+      - Functions: stack-templates-functions.md
+      - Templating: templating.md
+      - Generators: generators-overview.md
     - CLI Reference:
       - CLI Commands: cli-commands.md
       - CLI Options: cli-options.md

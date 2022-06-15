@@ -1,6 +1,14 @@
 # DO-K8s
 
-This section provides information on how to create a new project on DigitalOcean with [DO-k8s](https://github.com/shalb/cdev-do-k8s) stack template.
+On this page you will find guidance on how to create a Kubernetes cluster on DigitalOcean using one of the Cluster.dev prepared samples – the [DO-K8s](https://github.com/shalb/cdev-do-k8s) stack template. Running the example code will have the following resources created:
+
+* DO Kubernetes cluster with addons:
+
+    * cert-manager
+
+    * argocd
+
+* *(optional, if vpc_id is not set)* VPC for Kubernetes cluster
 
 ## Prerequisites 
 
@@ -86,12 +94,3 @@ For details on using DO spaces bucket as a backend, see [here](https://www.digit
 7. Displayed in the output will be also a command on how to get kubeconfig and connect to your Kubernetes cluster.
 
 8. Destroy the cluster and all created resources with the command `cdev destroy`
-
-## Resources
-
-Resources to be created within the project:
-
-* *(optional, if vpc_id is not set)* VPC for Kubernetes cluster
-* DO Kubernetes cluster with addons:
-    * cert-manager
-    * argocd

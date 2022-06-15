@@ -1,6 +1,6 @@
 # Printer Unit
 
-This unit is mainly used to see the outputs of other units in the console logs.
+This unit exposes outputs from one stack so that they could be used in other stacks. The unit also displays outputs of other units in the console logs. 
 
 Example:
 

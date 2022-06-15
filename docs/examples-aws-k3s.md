@@ -1,6 +1,24 @@
 # AWS-K3s
 
-This section provides information on how to create a new project on AWS with [AWS-K3s](https://github.com/shalb/cdev-aws-k3s) stack template.
+On this page you will find guidance on how to create a K3s cluster on AWS using one of the Cluster.dev prepared samples – the[AWS-K3s](https://github.com/shalb/cdev-aws-k3s) stack template. Running the example code will have the following resources created:
+
+* K3s cluster with addons:
+
+    * cert-manager
+
+    * ingress-nginx
+
+    * external-dns
+
+    * argocd
+
+* AWS Key Pair to access the cluster running instances
+
+* AWS IAM Policy for managing your DNS zone by external-dns
+
+* *(optional, if you use cluster.dev domain)* Route53 zone **<cluster-name>.cluster.dev**
+
+* *(optional, if vpc_id is not set)* VPC for EKS cluster
 
 ## Prerequisites
 
@@ -116,27 +134,6 @@ In AWS-K3s stack template example you need to define a Route 53 hosted zone. Opt
 
 8. Destroy the cluster and all created resources with the command `cdev destroy`
 
-## Resources
-
-Resources to be created within the project:
-
-* AWS Key Pair to access the cluster running instances.
-
-* *(optional, if you use cluster.dev domain)* Route53 zone **<cluster-name>.cluster.dev**
-
-* *(optional, if vpc_id is not set)* VPC for EKS cluster
-
-* AWS IAM Policy for managing your DNS zone by external-dns
-
-* K3s Kubernetes cluster with addons:
-
-    * cert-manager
-
-    * ingress-nginx
-
-    * external-dns
-
-    * argocd
 
 
 

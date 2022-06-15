@@ -2,7 +2,7 @@
 
 !!! tip
 
-    This is the easiest way to have the Cluster.dev client installed. For other options, please refer to [Install From Sources](https://docs.cluster.dev/get-started-install-from-sources/) section.
+    This is the easiest way to have the Cluster.dev client installed. For other options refer to [Install From Sources](https://docs.cluster.dev/get-started-install-from-sources/).
 
 Cluster.dev has an installer script that takes the latest version of Cluster.dev client and installs it for you locally.<br> 
 

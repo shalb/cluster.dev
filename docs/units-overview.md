@@ -6,6 +6,10 @@
 
 Units are building blocks that stack templates are made of. It could be anything — a Terraform module, Helm you want to install or a Bash script that you want to run. Units can be remote or stored in the same repo with other Cluster.dev code. Units may contain reference to other files that are required for work. These files should be located inside the current directory (within the stack template's context). As some of the files will also be rendered with the project's data, you can use Go templates in them.
 
+!!! tip
+
+    Units can be used for passing outputs to other units and across stacks. For details refer to [Passing variables across units and stacks](https://docs.cluster.dev/variables/#passing-variables-across-units-and-stacks).
+
 All units described below have a common format and common fields. Base example:
 
 ```yaml
