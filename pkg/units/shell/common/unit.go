@@ -94,6 +94,9 @@ type Unit struct {
 
 // Mux return unit mutex to lock apply.
 func (u *Unit) Mux() *sync.Mutex {
+	if u.lockedMux == nil {
+		u.lockedMux = &sync.Mutex{}
+	}
 	return u.lockedMux
 }
 
