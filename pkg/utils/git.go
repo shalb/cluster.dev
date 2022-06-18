@@ -10,9 +10,10 @@ import (
 )
 
 type GitRepo struct {
-	URL     string
-	Subdir  string
-	Version string
+	URL        string
+	RepoString string // Repo url without the protocol and the subdirectory e.g. github.com/org/repo?ref=tag .
+	SubDir     string
+	Version    string
 }
 
 func GetTemplate(gitURL, targetDir, templateName string) (string, error) {
@@ -21,19 +22,19 @@ func GetTemplate(gitURL, targetDir, templateName string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("get template: %v", err.Error())
 	}
-	pulledTempplatePath := filepath.Join(targetDir, templateName)
-	if IsDir(pulledTempplatePath) {
+	pulledTemplatePath := filepath.Join(targetDir, templateName)
+	if IsDir(pulledTemplatePath) {
 		log.Debugf("Template is already exists, updating...")
-		shell, err := executor.NewExecutor(pulledTempplatePath)
+		shell, err := executor.NewExecutor(pulledTemplatePath)
 		if err != nil {
 			return "", fmt.Errorf("get template: %v", err.Error())
 		}
 		command := fmt.Sprintf("git pull")
 		_, errOutput, err := shell.RunMutely(command)
 		if err != nil {
-			return pulledTempplatePath, fmt.Errorf("get template: %v\n%v", err.Error(), errOutput)
+			return pulledTemplatePath, fmt.Errorf("get template: %v\n%v", err.Error(), errOutput)
 		}
-		return pulledTempplatePath, nil
+		return filepath.Join(pulledTemplatePath, parsedGitURL.SubDir), nil
 	}
 	shell, err := executor.NewExecutor(targetDir)
 	if err != nil {
@@ -48,7 +49,7 @@ func GetTemplate(gitURL, targetDir, templateName string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("get template: %v\n %v", err.Error(), errOutput)
 	}
-	return filepath.Join(pulledTempplatePath, parsedGitURL.Subdir), nil
+	return filepath.Join(pulledTemplatePath, parsedGitURL.SubDir), nil
 }
 
 func ParseGitUrl(gitURL string) (repo GitRepo, err error) {
@@ -61,17 +62,20 @@ func ParseGitUrl(gitURL string) (repo GitRepo, err error) {
 	splittedSubdir := strings.Split(url, "//")
 	if strings.HasPrefix(url, "https://") {
 		if len(splittedSubdir) > 2 {
-			repo.Subdir = splittedSubdir[2]
+			repo.SubDir = splittedSubdir[2]
 		}
 		repo.URL = splittedSubdir[0] + "//" + splittedSubdir[1]
+		repo.RepoString = splittedSubdir[1] + "?ref=" + repo.Version
 	} else if strings.HasPrefix(url, "git@") {
 		if len(splittedSubdir) > 1 {
-			repo.Subdir = splittedSubdir[1]
+			repo.SubDir = splittedSubdir[1]
 		}
 		repo.URL = splittedSubdir[0]
+		repo.RepoString = splittedSubdir[0] + "?ref=" + repo.Version
 	} else {
 		err = fmt.Errorf("parse git url: bad url '%v'", gitURL)
 		return
 	}
+	// log.Warnf("ParseGitUrl %+v", repo)
 	return
 }
