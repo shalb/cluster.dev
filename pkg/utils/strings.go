@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"math/rand"
+	"regexp"
 	"time"
 )
 
@@ -31,4 +32,14 @@ func RandString(n int) string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+// URLToFolderName convert URL to string which can be used as a directory name.
+func URLToFolderName(URL string) (string, error) {
+	reg, err := regexp.Compile("[^A-Za-z0-9_\\-=\\?\\.]+")
+	if err != nil {
+		return "", err
+	}
+	newStr := reg.ReplaceAllString(URL, "_")
+	return newStr, nil
 }

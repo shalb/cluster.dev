@@ -123,9 +123,17 @@ func (s *Stack) ReadTemplate(src string) (err error) {
 		}
 	} else {
 		os.Mkdir(config.Global.TemplatesCacheDir, os.ModePerm)
-		dr, err := utils.GetTemplate(src, config.Global.TemplatesCacheDir, s.Name)
+		parsedRepoURL, err := utils.ParseGitUrl(src)
 		if err != nil {
-			return fmt.Errorf("download template: %v\n   See details about stack template reference: https://github.com/shalb/cluster.dev#stack_options_template", err.Error())
+			return fmt.Errorf("download template: %w", err)
+		}
+		folderName, err := utils.URLToFolderName(parsedRepoURL.RepoString)
+		if err != nil {
+			return fmt.Errorf("download template: %w", err)
+		}
+		dr, err := utils.GetTemplate(src, config.Global.TemplatesCacheDir, folderName)
+		if err != nil {
+			return fmt.Errorf("download template: %w\n   See details about stack template reference: https://docs.cluster.dev/structure-stack/", err)
 		}
 		log.Debugf("Template dir: %v", dr)
 		s.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, dr)
