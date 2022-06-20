@@ -8,7 +8,7 @@ Units are building blocks that stack templates are made of. It could be anything
 
 !!! tip
 
-    Units can be used for passing outputs to other units and across stacks. For details refer to [Passing variables across units and stacks](https://docs.cluster.dev/variables/#passing-variables-across-units-and-stacks).
+    You can pass variables across units within the stack template by using [outputs](https://docs.cluster.dev/variables/#passing-variables-across-stacks-and-units) or [`remoteState`](https://docs.cluster.dev/stack-templates-functions/#remotestate).
 
 All units described below have a common format and common fields. Base example:
 

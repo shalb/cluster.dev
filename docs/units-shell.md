@@ -2,7 +2,23 @@
 
 Executes Shell commands and scripts. 
 
-Example:
+Example of a `shell` unit that creates an index.html file with a greeting message and downloads the file into an S3 bucket. The bucket name is passed as a variable:
+
+```yaml
+units:
+  - name: upload-web
+    type: shell
+    apply:
+      commands:
+        - aws s3 cp ./index.html s3://{{ .variables.name }}/index.html
+    create_files:
+    - file: ./index.html
+      content: |
+        <h1> Hello from {{ .variables.organization }} </h1>
+        This page was created automatically by cdev tool.
+```
+
+Complete reference example:
 
 ```yaml
 units:

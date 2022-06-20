@@ -2,7 +2,7 @@
 
 Describes [Terraform Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs) invocation.
 
-Example:
+In the example below we use `helm` unit to deploy Argo CD to a Kubernetes cluster:
 
 ```yaml
 units:
@@ -15,8 +15,7 @@ units:
     pre_hook:
       command: *getKubeconfig
       on_destroy: true
-    kubeconfig: ./kubeconfig_{{ .name }}
-    depends_on: this.cert-manager-issuer
+    kubeconfig: /home/john/kubeconfig
     additional_options:
       namespace: "argocd"
       create_namespace: true

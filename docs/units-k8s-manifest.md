@@ -23,9 +23,9 @@ Example:
 
 * `create_namespaces` - *bool*, *optional*. By default is false. If set to true, cdev will create namespaces required for the unit (i.e. the namespaces listed in manifests and the one specified within the `namespace` option), in case they don't exist.
 
-* `path` - *required*, *string*. Depending on the variable value, the unit will apply all manifests recursively (if the path points out to a directory) or a file (if points out to the file).
+* `path` - *required*, *string*. Indicates the resources that are to be applied: a file (in case of a file path), a directory recursively (in case of a directory path) or URL. In case of URL path the unit will download the resources by the link and then apply them.  
 
-    The `path` value can also be a URL:
+    Example of URL `path`:
 
     ```yaml
     - name: kubectl-test2
@@ -35,7 +35,7 @@ Example:
       kubeconfig: {{ output "this.kubeconfig.kubeconfig_path" }}
     ```
 
-* `apply_template` - *bool*. By default is set to `true`. See [Templating usage](#templating-usage) subsection below.
+* `apply_template` - *bool*. By default is set to `true`. See [Templating usage](#templating-usage) below.
 
 * `kubeconfig` - *optional*. Specifies the path to a kubeconfig file. See [How to get kubeconfig](#how-to-get-kubeconfig) subsection below.
 
