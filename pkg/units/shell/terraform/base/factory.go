@@ -2,6 +2,7 @@ package base
 
 import (
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 )
@@ -34,6 +35,7 @@ func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 		return nil, err
 	}
 	tfBase.BackendName = stack.BackendName
+	tfBase.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
 	return tfBase, nil
 }
 
@@ -44,13 +46,15 @@ func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (projec
 
 // NewFromState creates new unit from state data.
 func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Unit, error) {
-	mod := NewEmptyUnit()
-	err := mod.LoadState(spec, modKey, p)
+	unit := NewEmptyUnit()
+	err := unit.LoadState(spec, modKey, p)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
+	unit.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
 	// modjs, _ := utils.JSONEncodeString(mod)
 	// log.Warnf("Mod from state: %v", modjs)
-	return mod, nil
+
+	return unit, nil
 }

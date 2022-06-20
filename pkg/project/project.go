@@ -197,8 +197,6 @@ func (p *Project) readUnits() error {
 		for _, stackTmpl := range stack.Templates {
 			for _, unitData := range stackTmpl.Units {
 				mod, err := NewUnit(unitData, stack)
-				// mod.PrintEnv()
-				// log.Warn("Environments NewUnit: ")
 				if err != nil {
 					traceUnitView, errYaml := yaml.Marshal(unitData)
 					if errYaml != nil {

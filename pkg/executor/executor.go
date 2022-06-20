@@ -120,10 +120,6 @@ func (b *ShRunner) commandExecCommonInShell(command string, outputBuff io.Writer
 	// Add environments of curent innstance.
 	cmd.Env = append(envTmp, b.Env...)
 	// Run command.
-	log.Debug("Environments: ")
-	for _, env := range b.Env {
-		log.Debug(env)
-	}
 	stopChan := make(chan struct{})
 	sigChan := StartSigTrap(cmd, stopChan)
 	defer sigChan.Close()

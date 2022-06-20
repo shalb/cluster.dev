@@ -84,8 +84,8 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		u.Providers = providers
 	}
 	u.CacheDir = filepath.Join(u.Project().CodeCacheDir, u.Key())
-	u.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
 	u.InitDone = false
+	u.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
 	//err := utils.JSONCopy(m, m.StatePtr)
 	return nil
 }
