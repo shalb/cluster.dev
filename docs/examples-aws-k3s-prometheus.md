@@ -47,9 +47,10 @@ We should install [Docker](https://docs.docker.com/engine/install/ubuntu/) to th
 ```bash
 mkdir -p cdev && mv env cdev/ && cd cdev && chmod 777 ./
 alias cdev='docker run -it -v $(pwd):/workspace/cluster-dev --env-file=env clusterdev/cluster.dev:v0.6.3'
-cdev project create https://github.com/shalb/cdev-aws-k3s-test
+cdev project create https://github.com/shalb/cdev-aws-k3s?ref=v0.3.0
 curl https://raw.githubusercontent.com/shalb/monitoring-examples/main/cdev/monitoring-cluster-blog/stack.yaml > stack.yaml
 curl https://raw.githubusercontent.com/shalb/monitoring-examples/main/cdev/monitoring-cluster-blog/project.yaml > project.yaml
+curl https://raw.githubusercontent.com/shalb/monitoring-examples/main/cdev/monitoring-cluster-blog/monitoring.yaml > monitoring.yaml
 ```
 
 ### Create S3 bucket to store the project state
