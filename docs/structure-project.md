@@ -1,6 +1,6 @@
 # Project
 
-Project is a storage for global [variables](https://docs.cluster.dev/templating/#variables) related to all stacks. It is a high-level abstraction to store and reconcile different stacks, and pass values across them.
+Project is a storage for variables related to all stacks. It is a high-level abstraction to store and reconcile different stacks, and pass values across them.
 
 File: `project.yaml`. *Optional*.
 Represents a set of configuration options for the whole project. Contains global project variables that can be used in other configuration objects, such as backend or stack (except of `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it.

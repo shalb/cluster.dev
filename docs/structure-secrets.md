@@ -6,11 +6,6 @@ Cluster.dev allows for two ways of working with secrets.
 
 ## SOPS secrets
 
-Cluster.dev uses SOPS binary to **create** and **edit** SOPS secrets. However, the SOPS binary is **not required** to use and decrypt SOPS secrets.
-
-!!! note
-     Since none of Cluster.dev reconciliation processes (build, plan, apply) requires SOPS, you don't have to install it for the pipelines.
-
 See [SOPS installation instructions](https://github.com/mozilla/sops#download) in official repo.
 
 Secrets are encoded/decoded with [SOPS](https://github.com/mozilla/sops) utility that supports AWS KMS, GCP KMS, Azure Key Vault and PGP keys. How to use:
