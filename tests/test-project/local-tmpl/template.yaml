@@ -5,23 +5,31 @@ _p: &provider_aws
 name: l
 kind: StackTemplate
 units:
-  - 
+  -
     name: create-bucket
-    type: terraform
+    type: tfmodule
     providers: *provider_aws
     source: ./empty-inputs/
-  - 
+  -
     name: create-s3-object
-    type: terraform
+    type: tfmodule
     providers: *provider_aws
     source: ./s3-file/
     depends_on: this.create-bucket
     inputs:
       bucket_name: {{ remoteState "this.create-bucket.id" }}
       data: {{ .variables.data }}
-  - 
-    name: print_outputs
+  -
+    name: test-complex-output-data
+    type: tfmodule
+    providers: *provider_aws
+    source: ./complex-output/
+  -
+    name: outputs
     type: printer
     depends_on: this.create-s3-object
-    inputs:
+    outputs:
       bucket_name: Bucket name is {{ remoteState "this.create-bucket.id" }}
+      test_insert_yaml: {{ insertYAML .variables.list_one }}
+      test_map_output: {{ remoteState "this.test-complex-output-data.map[\"key\"]" }}
+      test_map_output_direct: {{ remoteState `this.test-complex-output-data.map.key` }}

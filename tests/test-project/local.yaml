@@ -5,4 +5,7 @@ backend: aws-backend
 variables:
   data: {{ remoteState "cdev-tests.create-bucket.test" }}
   region: {{ .project.variables.region }}
-  
+  list_one:
+    - one
+    - two
+    - three

@@ -14,7 +14,6 @@ func (u *Unit) RemoteStatesScanner(data reflect.Value, unit project.Unit) (refle
 	var subVal = data
 	if data.Kind() != reflect.String {
 		subVal = reflect.ValueOf(data.Interface())
-
 	}
 
 	resString := subVal.String()
