@@ -34,7 +34,18 @@ func CreateMarker(link ULinkT) (string, error) {
 		markerPath = fmt.Sprintf("%v.%v.%v.%v", link.LinkType, link.TargetStackName, link.TargetUnitName, link.OutputName)
 	}
 	hash := utils.Md5(markerPath)
-	return fmt.Sprintf("%s.%s.%s", hash, markerPath, hash), nil
+
+	return EscapeForMarkerStr(fmt.Sprintf("%s.%s.%s", hash, markerPath, hash))
+}
+
+// EscapeForMarkerStr convert URL to string which can be used as marker.
+func EscapeForMarkerStr(in string) (string, error) {
+	reg, err := regexp.Compile("[^A-Za-z0-9_\\-\\.]+")
+	if err != nil {
+		return "", err
+	}
+	newStr := reg.ReplaceAllString(in, "_")
+	return newStr, nil
 }
 
 func printVersion() string {
