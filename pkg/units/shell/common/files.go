@@ -70,7 +70,7 @@ func (l *FilesListT) Add(fileName string, content string, mode fs.FileMode) erro
 func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error) {
 	_, err = filepath.Rel(baseDir, path)
 	if err != nil {
-		return
+		return fmt.Errorf("shell unit: ReadDir: %w", err)
 	}
 	err = filepath.Walk(path,
 		func(path string, info os.FileInfo, err error) error {
@@ -80,7 +80,7 @@ func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error
 			if !info.IsDir() {
 				relPath, err := filepath.Rel(baseDir, path)
 				if err != nil {
-					return err
+					return fmt.Errorf("shell unit: ReadDir: %w", err)
 				}
 				matchPattern := true
 				for _, p := range pattern {
@@ -108,19 +108,15 @@ func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error
 
 // ReadFile reads file to list.
 func (l *FilesListT) ReadFile(path, baseDir string) (err error) {
-	_, err = filepath.Rel(baseDir, path)
+	relPath, err := filepath.Rel(baseDir, path)
 	if err != nil {
-		return
+		return fmt.Errorf("shell unit: ReadFile: %w", err)
 	}
 	fileInfo, err := os.Stat(path)
 	if err != nil {
 		return
 	}
 	content, err := ioutil.ReadFile(path)
-	if err != nil {
-		return
-	}
-	relPath, err := filepath.Rel(baseDir, path)
 	if err != nil {
 		return
 	}

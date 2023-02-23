@@ -54,7 +54,7 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	if u.LocalModule != nil {
 		relPath, err := filepath.Rel(u.CacheDir, u.LocalModuleCachePath)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("tfModule unit: genMainCodeBlock: %w", err)
 		}
 		unitBody.SetAttributeValue("source", cty.StringVal(relPath))
 	} else {
@@ -107,7 +107,6 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if utils.IsLocalPath(source) {
 		u.LocalModule = &common.FilesListT{}
 		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, u.Stack().TemplateDir, source)
-		u.LocalModuleCachePath = filepath.Join(u.ProjectPtr.CodeCacheDir, "../", "terraform", u.Key())
 		err := u.LocalModule.ReadDir(tfModuleLocalDir, tfModuleLocalDir)
 		if err != nil {
 			return fmt.Errorf("%v, reading local unit: %v", u.Key(), err.Error())

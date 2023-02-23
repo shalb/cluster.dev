@@ -1,6 +1,8 @@
 package tfmodule
 
 import (
+	"path/filepath"
+
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
@@ -33,6 +35,7 @@ func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 		log.Debug(err.Error())
 		return nil, err
 	}
+  unit.LocalModuleCachePath = filepath.Join(stack.ProjectPtr.CodeCacheDir, "../", "terraform", unit.Key())
 	return &unit, nil
 }
 
@@ -42,14 +45,15 @@ func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (projec
 }
 
 // NewFromState creates new unit from state data.
-func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Unit, error) {
-	mod := NewEmptyUnit()
-	err := mod.LoadState(spec, modKey, p)
+func (f *Factory) NewFromState(spec map[string]interface{}, unitKey string, p *project.StateProject) (project.Unit, error) {
+	unit := NewEmptyUnit()
+	err := unit.LoadState(spec, unitKey, p)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	return &mod, nil
+  unit.LocalModuleCachePath = filepath.Join(p.CodeCacheDir, "../", "terraform", unit.Key())
+	return &unit, nil
 }
 
 func init() {
