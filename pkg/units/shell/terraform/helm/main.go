@@ -184,7 +184,6 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 	if err != nil {
 		return err
 	}
-	log.Errorf("Kubeconfig: %v", *u.Kubeconfig)
 	return nil
 }
 
