@@ -42,6 +42,8 @@ func IsAbsolutePath(path string) bool {
 }
 
 // CheckDir check if 'pash' exists and is directory.
+// error means os.Stat error.
+// true - dir
 func CheckDir(path string) (bool, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {

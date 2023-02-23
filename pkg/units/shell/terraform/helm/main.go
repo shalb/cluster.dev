@@ -22,7 +22,7 @@ type Unit struct {
 	Source          string                   `yaml:"-" json:"source"`
 	HelmOpts        map[string]interface{}   `yaml:"-" json:"helm_opts,omitempty"`
 	Sets            map[string]interface{}   `yaml:"-" json:"sets,omitempty"`
-	Kubeconfig      string                   `yaml:"-" json:"kubeconfig"`
+	Kubeconfig      *string                  `yaml:"-" json:"kubeconfig"`
 	ValuesFilesList []string                 `yaml:"-" json:"values,omitempty"`
 	ValuesYAML      []map[string]interface{} `yaml:"-" json:"-"`
 	UnitKind        string                   `yaml:"-" json:"type"`
@@ -43,7 +43,7 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	providerBlock := rootBody.AppendNewBlock("provider", []string{"helm"})
 	providerBody := providerBlock.Body()
 	provederKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
-	provederKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(u.Kubeconfig))
+	provederKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(*u.Kubeconfig))
 
 	helmBlock := rootBody.AppendNewBlock("resource", []string{"helm_release", project.ConvertToTfVarName(u.Name())})
 	helmBody := helmBlock.Body()
@@ -77,6 +77,7 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 		}
 		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(helmBody, hash, refStr)
+		hcltools.ReplaceStingMarkerInBody(providerBody, hash, refStr)
 	}
 	return f.Bytes(), nil
 }
@@ -94,7 +95,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if !ok {
 		return fmt.Errorf("Incorrect kubeconfig")
 	}
-	u.Kubeconfig = kubeconfig
+	u.Kubeconfig = &kubeconfig
 	addOp, ok := spec["additional_options"].(map[string]interface{})
 	if ok {
 		for key, val := range addOp {
@@ -149,7 +150,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			vYAML := make(map[string]interface{})
 			err = yaml.Unmarshal(values, &vYAML)
 			if err != nil {
-				return fmt.Errorf("read unit config: unmarshal values file: ", utils.ResolveYamlError(values, err))
+				return fmt.Errorf("read unit config: unmarshal values file: %v", utils.ResolveYamlError(values, err))
 			}
 			u.ValuesYAML = append(u.ValuesYAML, vYAML)
 			u.ValuesFilesList = append(u.ValuesFilesList, string(values))
@@ -179,10 +180,11 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 	if err != nil {
 		return err
 	}
-	err = project.ScanMarkers(&u.Kubeconfig, scanner, u)
+	err = project.ScanMarkers(u.Kubeconfig, scanner, u)
 	if err != nil {
 		return err
 	}
+	log.Errorf("Kubeconfig: %v", *u.Kubeconfig)
 	return nil
 }
 

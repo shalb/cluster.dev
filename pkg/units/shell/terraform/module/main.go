@@ -3,6 +3,7 @@ package tfmodule
 import (
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"regexp"
 
@@ -19,12 +20,13 @@ import (
 
 type Unit struct {
 	base.Unit
-	Source      string                 `yaml:"-" json:"source"`
-	Version     string                 `yaml:"-" json:"version,omitempty"`
-	Inputs      map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
-	LocalModule *common.FilesListT     `yaml:"-" json:"local_module"`
-	UnitKind    string                 `yaml:"-" json:"type"`
-	StateData   interface{}            `yaml:"-" json:"-"`
+	Source               string                 `yaml:"-" json:"source"`
+	Version              string                 `yaml:"-" json:"version,omitempty"`
+	Inputs               map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
+	LocalModule          *common.FilesListT     `yaml:"-" json:"local_module"`
+	UnitKind             string                 `yaml:"-" json:"type"`
+	StateData            interface{}            `yaml:"-" json:"-"`
+	LocalModuleCachePath string                 `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -38,7 +40,6 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 
 	unitBlock := rootBody.AppendNewBlock("module", []string{u.Name()})
 	unitBody := unitBlock.Body()
-	unitBody.SetAttributeValue("source", cty.StringVal(u.Source))
 	if u.Version != "" {
 		unitBody.SetAttributeValue("version", cty.StringVal(u.Version))
 	}
@@ -50,7 +51,13 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 		}
 		unitBody.SetAttributeValue(key, ctyVal)
 	}
-	if utils.IsLocalPath(u.Source) {
+	if u.LocalModule != nil {
+		relPath, err := filepath.Rel(u.CacheDir, u.LocalModuleCachePath)
+		if err != nil {
+			return nil, err
+		}
+		unitBody.SetAttributeValue("source", cty.StringVal(relPath))
+	} else {
 		unitBody.SetAttributeValue("source", cty.StringVal(u.Source))
 	}
 
@@ -69,10 +76,6 @@ func (u *Unit) genOutputs() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
-	// log.Errorf("genOutputs: %v, %v", u.StackPtr.Name, u.Name())
-	// for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).List {
-	// 	log.Errorf("     allOutputs: %v.%v --> %v", link.TargenStackName, link.TargetUnitName, link.OutputName)
-	// }
 	uniqMap := map[string]bool{}
 	for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(base.RemoteStateLinkType).Map() {
 		// log.Warnf("     output: %v --> %v", u.Name(), link.OutputName)
@@ -104,11 +107,8 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if utils.IsLocalPath(source) {
 		u.LocalModule = &common.FilesListT{}
 		tfModuleLocalDir := filepath.Join(config.Global.WorkingDir, u.Stack().TemplateDir, source)
-		tfModuleBasePath := filepath.Join(config.Global.WorkingDir, u.Stack().TemplateDir)
-
-		log.Debugf("Reading local tf unit files %v %v ", tfModuleLocalDir, tfModuleBasePath)
-
-		err := u.LocalModule.ReadDir(tfModuleLocalDir, tfModuleBasePath)
+		u.LocalModuleCachePath = filepath.Join(u.ProjectPtr.CodeCacheDir, "../", "terraform", u.Key())
+		err := u.LocalModule.ReadDir(tfModuleLocalDir, tfModuleLocalDir)
 		if err != nil {
 			return fmt.Errorf("%v, reading local unit: %v", u.Key(), err.Error())
 		}
@@ -184,7 +184,11 @@ func (u *Unit) Build() error {
 		return err
 	}
 	if u.LocalModule != nil {
-		err = u.LocalModule.WriteFiles(u.CacheDir)
+		err := os.MkdirAll(u.LocalModuleCachePath, 0755)
+		if err != nil {
+			log.Debugf("save local tf module to cache: mkdir '%v': '%v'", u.LocalModuleCachePath, err.Error())
+		}
+		err = u.LocalModule.WriteFiles(u.LocalModuleCachePath)
 		if err != nil {
 			return err
 		}
@@ -192,7 +196,7 @@ func (u *Unit) Build() error {
 	return nil
 }
 
-// UpdateProjectRuntimeData update project runtime dataset, adds module outputs.
+// UpdateProjectRuntimeData update project runtime, dataset, adds module outputs.
 func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 	return u.Unit.UpdateProjectRuntimeData(p)
 }
