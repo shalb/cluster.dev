@@ -42,6 +42,8 @@ func IsAbsolutePath(path string) bool {
 }
 
 // CheckDir check if 'pash' exists and is directory.
+// error means os.Stat error.
+// true - dir
 func CheckDir(path string) (bool, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
@@ -73,7 +75,7 @@ func ReadFilesToList(filesPath, baseDir string) (filesList map[string][]byte, er
 func ReadFilesToExistentsList(filesPath, baseDir string, filesList map[string][]byte) (err error) {
 	_, err = filepath.Rel(baseDir, filesPath)
 	if err != nil {
-		return
+		return fmt.Errorf("ReadFilesToExistentsList: %w", err)
 	}
 	err = filepath.Walk(filesPath,
 		func(path string, info os.FileInfo, err error) error {
@@ -87,7 +89,7 @@ func ReadFilesToExistentsList(filesPath, baseDir string, filesList map[string][]
 				}
 				relPath, err := filepath.Rel(baseDir, path)
 				if err != nil {
-					return err
+					return fmt.Errorf("ReadFilesToExistentsList: %w", err)
 				}
 				filesList[relPath], err = ioutil.ReadFile(path)
 				if err != nil {

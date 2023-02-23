@@ -138,7 +138,7 @@ func (s *Stack) ReadTemplate(src string) (err error) {
 		log.Debugf("Template dir: %v", dr)
 		s.TemplateDir, err = filepath.Rel(config.Global.WorkingDir, dr)
 		if err != nil {
-			return fmt.Errorf("reading templates: error parsing tmpl dir")
+			return fmt.Errorf("reading templates: error parsing tmpl dir: %w", err)
 		}
 	}
 
