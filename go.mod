@@ -22,7 +22,7 @@ require (
 	github.com/tj/go-spin v1.1.0
 	github.com/zclconf/go-cty v1.8.3
 	go.mozilla.org/sops/v3 v3.7.1
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/crypto v0.1.0
 	gopkg.in/yaml.v3 v3.0.1
 
 )
