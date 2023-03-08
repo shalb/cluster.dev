@@ -27,7 +27,7 @@ type KubectlCliT struct {
 type Unit struct {
 	common.Unit
 	Namespace          string             `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Kubeconfig         string             `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
+	Kubeconfig         *string             `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
 	KubectlOpts        string             `yaml:"kubectl_opts,omitempty" json:"kubectl_opts,omitempty"`
 	KubectlCliConf     *KubectlCliT       `yaml:"kubectl,omitempty" json:"kubectl,omitempty"`
 	Path               string             `yaml:"path" json:"path"`
@@ -58,8 +58,8 @@ func (u *Unit) fillShellUnit() {
 	if u.KubectlOpts != "" {
 		commandOpts = fmt.Sprintf("%s %s", commandOpts, u.KubectlOpts)
 	}
-	if u.Kubeconfig != "" {
-		commandOpts = fmt.Sprintf("%s --kubeconfig='%s'", commandOpts, u.Kubeconfig)
+	if *u.Kubeconfig != "" {
+		commandOpts = fmt.Sprintf("%s --kubeconfig='%s'", commandOpts, *u.Kubeconfig)
 	}
 	if u.manifestsForDelete != nil {
 		u.ApplyConf = &common.OperationConfig{
@@ -93,8 +93,8 @@ func (u *Unit) createNamespacesIfNotExists() error {
 	if len(u.createNSList) > 0 {
 		for _, ns := range u.createNSList {
 			kubeconfigOpt := ""
-			if u.Kubeconfig != "" {
-				kubeconfigOpt = fmt.Sprintf("--kubeconfig='%s'", u.Kubeconfig)
+			if *u.Kubeconfig != "" {
+				kubeconfigOpt = fmt.Sprintf("--kubeconfig='%s'", *u.Kubeconfig)
 			}
 			cmd := fmt.Sprintf("%s %s create ns %s", kubectlBin, kubeconfigOpt, ns)
 			_, errMsg, err := rn.Run(cmd)
@@ -280,8 +280,11 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 		}
 		file.Content = string(scannedFile)
 	}
-	err := project.ScanMarkers(&u.Kubeconfig, scanner, u)
-	if err != nil {
+  // log.Errorf("Before ScanMarkers %v", *u.Kubeconfig)
+	err := project.ScanMarkers(u.Kubeconfig, scanner, u)
+  // log.Errorf("After ScanMarkers %v", *u.Kubeconfig)
+
+  if err != nil {
 		return err
 	}
 	return nil

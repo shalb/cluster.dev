@@ -463,8 +463,12 @@ func (u *Unit) readDeps() (err error) {
 	switch u.DependsOn.(type) {
 	case string:
 		rawDepsList = append(rawDepsList, u.DependsOn.(string))
-	case []string:
-		rawDepsList = append(rawDepsList, u.DependsOn.([]string)...)
+	case []interface{}:
+    for _, depName := range u.DependsOn.([]interface{}) {
+      rawDepsList = append(rawDepsList, depName.(string))
+    }
+  default:
+    return fmt.Errorf("unknown dependencies type: %T",  u.DependsOn)
 	}
 	for _, dep := range rawDepsList {
 		splDep := strings.Split(dep, ".")
@@ -482,7 +486,6 @@ func (u *Unit) readDeps() (err error) {
 		}
 		u.ProjectPtr.UnitLinks.Set(dp)
 		u.DependenciesList.Set(dp)
-		// log.Debugf("Dependency added: %v --> %v.%v", u.Key(), infNm, splDep[1])
 	}
 	return
 }
