@@ -16,7 +16,7 @@ import (
 
 // CheckContainsMarkers - check if string contains any template markers.
 func (p *Project) CheckContainsMarkers(data string, kinds ...string) bool {
-	for marker, _ := range p.UnitLinks.Map() {
+	for marker := range p.UnitLinks.Map() {
 		if strings.Contains(data, marker) {
 			return true
 		}
