@@ -77,7 +77,7 @@ func (u *Unit) genOutputs() ([]byte, error) {
 
 	rootBody := f.Body()
 	uniqMap := map[string]bool{}
-	for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(base.RemoteStateLinkType).Map() {
+	for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(base.RemoteStateLinkType, project.OutputLinkType).Map() {
 		// log.Warnf("     output: %v --> %v", u.Name(), link.OutputName)
 		re := regexp.MustCompile(`^[A-Za-z][a-zA-Z0-9_\-]{0,}`)
 		outputName := re.FindString(link.OutputName)
