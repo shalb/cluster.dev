@@ -339,10 +339,19 @@ func (p *Project) PrintInfo() error {
 	return nil
 }
 
-func (p *Project) PrintOutputs() error {
+func (p *Project) PrintOutputs() (err error) {
 	for _, o := range p.RuntimeDataset.PrintersOutputs {
 		if len(o.Output) > 0 {
-			log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(o.Output))
+      var output string
+      if config.Global.OutputJSON {
+        output = o.Output
+      } else {
+        _, output, err = utils.TerraformJSONOutputParse(o.Output)
+        if err != nil {
+          return err
+        }
+      }
+      log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(output))
 		}
 	}
 	return nil

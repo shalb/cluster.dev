@@ -92,6 +92,7 @@ func (u *Unit) genOutputs() ([]byte, error) {
 		dataBody := dataBlock.Body()
 		outputStr := fmt.Sprintf("module.%s.%s", u.Name(), outputName)
 		dataBody.SetAttributeRaw("value", hcltools.CreateTokensForOutput(outputStr))
+    dataBody.SetAttributeValue("sensitive", cty.BoolVal(true))
 		uniqMap[outputName] = true
 	}
 	return f.Bytes(), nil

@@ -2,6 +2,7 @@ package cdev
 
 import (
 	"github.com/apex/log"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/spf13/cobra"
 )
@@ -33,5 +34,6 @@ var outputCmd = &cobra.Command{
 }
 
 func init() {
+  outputCmd.Flags().BoolVar(&config.Global.OutputJSON, "json", false, "Show outputs in JSON format.")
 	rootCmd.AddCommand(outputCmd)
 }

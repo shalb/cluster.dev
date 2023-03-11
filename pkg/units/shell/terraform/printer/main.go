@@ -9,6 +9,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
+	"github.com/zclconf/go-cty/cty"
 )
 
 type Unit struct {
@@ -36,6 +37,7 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 			return nil, err
 		}
 		dataBody.SetAttributeValue("value", hclVal)
+    dataBody.SetAttributeValue("sensitive", cty.BoolVal(true))
 
 		for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(base.RemoteStateLinkType).Map() {
 

@@ -146,7 +146,7 @@ func (u *Unit) Output() (string, error) {
 		"plan",
 	}
 	var cmd = ""
-	cmd += fmt.Sprintf("%s output", terraformBin)
+	cmd += fmt.Sprintf("%s output -json", terraformBin)
 
 	var errMsg []byte
 	res, errMsg, err := rn.Run(cmd)
