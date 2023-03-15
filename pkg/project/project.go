@@ -348,7 +348,8 @@ func (p *Project) PrintOutputs() (err error) {
       } else {
         _, output, err = utils.TerraformJSONOutputParse(o.Output)
         if err != nil {
-          return err
+          log.Warnf("State contain outputs in a old format. For full update use cdev apply --ignore-state. Printing RAW data...")
+          output = o.Output
         }
       }
       log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(output))
