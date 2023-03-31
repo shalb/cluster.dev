@@ -227,7 +227,6 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 
 	for _, md := range curModsSeq {
 		_, exists := fProject.Units[md.Key()]
-
 		diff, stateUnit := fProject.CheckUnitChanges(md)
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning unit '%v':", md.Key()))
 		if len(diff) > 0 || config.Global.IgnoreState {
@@ -275,17 +274,12 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 				stateUnit.UpdateProjectRuntimeData(p)
 			}
 			modsUnchanged = append(modsUnchanged, md.Key())
-			// log.Warnf("Plan before: %+v", p.UnitLinks.List)
 			// Unit was not changed. Copy unit outputs from state.
 			p.UnitLinks.JoinWithDataReplace(fProject.UnitLinks.ByTargetUnit(md))
 			// log.Warnf("Plan after: %+v", p.UnitLinks.List)
 			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
 		}
 	}
-	// for k, l := range p.UnitLinks.Map() {
-	// 	log.Warnf("Link: %v\n    %v - %v", k, l.OutputName, l.OutputData)
-	// }
-	// Check "force_apply" units.
 	for _, un := range changedUnits {
 		for _, dep := range un.Dependencies().List {
 			if dep.Unit.ForceApply() {

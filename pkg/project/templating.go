@@ -12,6 +12,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/yaml.v3"
 )
 
 // CheckContainsMarkers - check if string contains any template markers.
@@ -35,12 +36,18 @@ func workDir() string {
 	return config.Global.WorkingDir
 }
 
+func toYaml(in interface{}) (string,error) {
+  res, err := yaml.Marshal(in)
+  return string(res), err
+}
+
 var templateFunctionsMap = template.FuncMap{
 	"ReconcilerVersionTag": printVersion,
 	"reqEnv":               getEnv,
 	"workDir":              workDir,
 	"bcrypt":               BcryptString,
 	"cidrSubnet":           utils.CidrSubnet,
+  "toYaml":               toYaml,
 }
 
 func init() {

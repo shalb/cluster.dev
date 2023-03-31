@@ -206,15 +206,14 @@ func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
 	if !exists {
 		return utils.Diff(nil, unit.GetDiffData(), true), nil
 	}
-
 	diffData := unit.GetDiffData()
 	stateDiffData := unitInState.GetDiffData()
 	df := utils.Diff(stateDiffData, diffData, true)
 	if len(df) > 0 {
 		return df, unitInState
 	}
-	for _, dep := range unit.Dependencies().List {
-		if sp.checkUnitChangesRecursive(dep.Unit) {
+	for _, dep := range unit.Dependencies().UniqUnits() {
+		if sp.checkUnitChangesRecursive(dep) {
 			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), unitInState
 		}
 	}
@@ -235,11 +234,12 @@ func (sp *StateProject) checkUnitChangesRecursive(unit Unit) bool {
 	if len(df) > 0 {
 		return true
 	}
-	for _, dep := range unit.Dependencies().List {
-		if _, exists := sp.ChangedUnits[dep.Unit.Key()]; exists {
+	for dep, depUnit := range unit.Dependencies().UniqUnits() {
+    _, exists := sp.ChangedUnits[dep];
+		if exists {
 			return true
 		}
-		if sp.checkUnitChangesRecursive(dep.Unit) {
+		if sp.checkUnitChangesRecursive(depUnit) {
 			return true
 		}
 	}
