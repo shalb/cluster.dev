@@ -9,6 +9,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
@@ -44,6 +45,9 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	providerBody := providerBlock.Body()
 	provederKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
 	provederKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(*u.Kubeconfig))
+  if config.Global.LogLevel == "debug" {
+    providerBody.SetAttributeValue("debug", cty.BoolVal(true))
+  }
 
 	helmBlock := rootBody.AppendNewBlock("resource", []string{"helm_release", project.ConvertToTfVarName(u.Name())})
 	helmBody := helmBlock.Body()
@@ -91,9 +95,19 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	for key, val := range source {
 		u.HelmOpts[key] = val
 	}
+  helmChartOpt, exists := u.HelmOpts["chart"].(string)
+  if !exists {
+    return fmt.Errorf("read helm chart configuration: option 'chart' is required and should be a string")
+  }
+  if utils.IsLocalPath(helmChartOpt) {
+    if !utils.IsAbsolutePath(helmChartOpt) {
+      absoluteChartPath := filepath.Join(config.Global.ProjectConfigsPath, u.StackPtr.TemplateDir, helmChartOpt)
+      u.HelmOpts["chart"] = absoluteChartPath
+    }
+  }
 	kubeconfig, ok := spec["kubeconfig"].(string)
 	if !ok {
-		return fmt.Errorf("Incorrect kubeconfig")
+		return fmt.Errorf("incorrect kubeconfig")
 	}
 	u.Kubeconfig = &kubeconfig
 	addOp, ok := spec["additional_options"].(map[string]interface{})

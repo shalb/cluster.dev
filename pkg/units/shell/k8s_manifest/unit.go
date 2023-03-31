@@ -58,7 +58,7 @@ func (u *Unit) fillShellUnit() {
 	if u.KubectlOpts != "" {
 		commandOpts = fmt.Sprintf("%s %s", commandOpts, u.KubectlOpts)
 	}
-	if *u.Kubeconfig != "" {
+	if u.Kubeconfig != nil && *u.Kubeconfig != "" {
 		commandOpts = fmt.Sprintf("%s --kubeconfig='%s'", commandOpts, *u.Kubeconfig)
 	}
 	if u.manifestsForDelete != nil {
@@ -93,7 +93,7 @@ func (u *Unit) createNamespacesIfNotExists() error {
 	if len(u.createNSList) > 0 {
 		for _, ns := range u.createNSList {
 			kubeconfigOpt := ""
-			if *u.Kubeconfig != "" {
+			if u.Kubeconfig != nil && *u.Kubeconfig != "" {
 				kubeconfigOpt = fmt.Sprintf("--kubeconfig='%s'", *u.Kubeconfig)
 			}
 			cmd := fmt.Sprintf("%s %s create ns %s", kubectlBin, kubeconfigOpt, ns)
