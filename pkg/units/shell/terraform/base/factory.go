@@ -36,6 +36,7 @@ func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 	}
 	tfBase.BackendName = stack.BackendName
 	tfBase.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
+  tfBase.Env.(map[string]interface{})["TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE"] = "true"
 	return tfBase, nil
 }
 
