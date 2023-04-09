@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -48,6 +49,7 @@ var templateFunctionsMap = template.FuncMap{
 	"bcrypt":               BcryptString,
 	"cidrSubnet":           utils.CidrSubnet,
   "toYaml":               toYaml,
+  "readFile":             readFile,
 }
 
 func init() {
@@ -58,6 +60,15 @@ func init() {
 			log.Fatalf("Template functions name conflict '%v'", key)
 		}
 	}
+}
+// readFile template function to read files in project folder.
+func readFile(path string) (string, error) {
+  fullPath := path
+  if ! utils.IsAbsolutePath(path) {
+    fullPath = filepath.Join(config.Global.ProjectConfigsPath, path)
+  }
+  res, err := os.ReadFile(fullPath)
+  return string(res), err
 }
 
 // RegisterTemplateDriver register unit template driver.

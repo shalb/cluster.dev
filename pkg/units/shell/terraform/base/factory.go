@@ -2,7 +2,6 @@ package base
 
 import (
 	"github.com/apex/log"
-	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 )
@@ -35,8 +34,6 @@ func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 		return nil, err
 	}
 	tfBase.BackendName = stack.BackendName
-	tfBase.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
-  tfBase.Env.(map[string]interface{})["TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE"] = "true"
 	return tfBase, nil
 }
 
@@ -53,9 +50,5 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 		log.Debug(err.Error())
 		return nil, err
 	}
-	unit.Env.(map[string]interface{})["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
-	// modjs, _ := utils.JSONEncodeString(mod)
-	// log.Warnf("Mod from state: %v", modjs)
-
 	return unit, nil
 }
