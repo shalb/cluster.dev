@@ -72,7 +72,7 @@ type Unit struct {
 	CacheDir         string                  `yaml:"-" json:"-"`
 	MyName           string                  `yaml:"name" json:"name"`
 	WorkDir          string                  `yaml:"work_dir,omitempty" json:"work_dir,omitempty"`
-	Env              interface{}             `yaml:"env,omitempty" json:"env,omitempty"`
+	Env              map[string]string       `yaml:"env,omitempty" json:"env,omitempty"`
 	CreateFiles      *FilesListT             `yaml:"create_files,omitempty" json:"create_files,omitempty"`
 	InitConf         *OperationConfig        `yaml:"init,omitempty" json:"init,omitempty"`
 	ApplyConf        *OperationConfig        `yaml:"apply,omitempty" json:"apply,omitempty"`
@@ -525,14 +525,14 @@ func readHook(hookData interface{}, hookType string) (*HookSpec, error) {
 // EnvSlice returns the list of unit environment variables as slice in a format ENV_NAME=ENV_VALUE
 func (u *Unit) EnvSlice() []string {
 
-	envMap, ok := u.Env.(map[string]interface{})
-	if !ok || len(envMap) == 0 {
+	if len(u.Env) == 0 {
 		return []string{}
 	}
-	res := make([]string, len(envMap))
+	res := make([]string, len(u.Env))
 	i := 0
-	for k, v := range envMap {
+	for k, v := range u.Env {
 		res[i] = fmt.Sprintf("%v=%v", k, v)
+    i++
 	}
 	return res
 }

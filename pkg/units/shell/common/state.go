@@ -47,7 +47,7 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 		OutputsConfig: u.GetOutputsConf,
 	}
 	if u.Env != nil {
-		for key, val := range u.Env.(map[string]interface{}) {
+		for key, val := range u.Env {
 			st.Env[key] = val
 		}
 	}
