@@ -133,17 +133,17 @@ func (u *Unit) Destroy() error {
 }
 
 // Output unit.
+// TODO check this method, should be removed
 func (u *Unit) Output() (string, error) {
-	rn, err := executor.NewExecutor(u.CacheDir)
+	rn, err := executor.NewExecutor(u.CacheDir, u.EnvSlice()...)
 	if err != nil {
 		log.Debug(err.Error())
 		return "", err
 	}
-	rn.Env = append(rn.Env, fmt.Sprintf("TF_PLUGIN_CACHE_DIR=%v", config.Global.PluginsCacheDir))
 	rn.LogLabels = []string{
 		u.StackName(),
 		u.Name(),
-		"plan",
+		"output",
 	}
 	var cmd = ""
 	cmd += fmt.Sprintf("%s output -json", terraformBin)
