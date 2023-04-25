@@ -51,9 +51,8 @@ func NewStackTemplate(data []byte) (*stackTemplate, error) {
 		}
 		ver, err := semver.NewVersion(config.Global.Version)
 		if err != nil {
-			// Invalid current cli version. May be test revision.
-			// TODO need check!!
-			return nil, fmt.Errorf("parsing template: internalcan't parse client version: %v", iTmpl.ReqClientVersion)
+			// Invalid current cli version. Maybe test revision.
+			return nil, fmt.Errorf("parsing template: can't parse client version: %v", iTmpl.ReqClientVersion)
 		}
 		ok, messages := reqVerConstraints.Validate(ver)
 		if !ok {

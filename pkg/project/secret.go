@@ -24,6 +24,7 @@ type Secret struct {
 
 func (p *Project) readSecrets() error {
 	for filename, data := range p.objectsFiles {
+    // log.Warnf("readSecrets: file: %v", filename)
 		templatedData, isWarn, tmplErr := p.TemplateTry(data)
 		if tmplErr != nil && !isWarn {
 			log.Debug(tmplErr.Error())
@@ -31,7 +32,9 @@ func (p *Project) readSecrets() error {
 		}
 		secretDriver, err := getRwaSecretInfo(templatedData)
 		if err != nil {
-			return fmt.Errorf("searching for secrets in %v: %v", filename, err.Error())
+      log.Debugf("Checking for secret file %v fail. Skip...", filename)
+      continue
+			// return fmt.Errorf("searching for secrets in %v: %v", filename, err.Error())
 		}
 		if secretDriver == nil {
 			continue
