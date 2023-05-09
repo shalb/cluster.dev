@@ -64,13 +64,14 @@ func (p *Project) readManifests() (err error) {
 	objFiles := make(map[string][]byte)
 
 	for _, file := range files {
-		// log.Warnf("%v", file)
+		// log.Warnf("Read Files: %v", file)
 		fileName, _ := filepath.Rel(config.Global.WorkingDir, file)
 		isProjectConfig := regexp.MustCompile(ConfigFilePattern).MatchString(fileName)
 		if isProjectConfig {
 			p.configDataFile, err = ioutil.ReadFile(file)
 		} else {
 			objFiles[file], err = ioutil.ReadFile(file)
+      //log.Warnf("Object added: %v", file)
 		}
 		if err != nil {
 			return fmt.Errorf("reading configs %v: %v", file, err)

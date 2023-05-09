@@ -29,7 +29,7 @@ func NewYamlError(data []byte, lines []int) string {
 		return ""
 	}
 	errString := []string{", Details:"}
-	num := lines[0] // TODO: Need to check if multiple lines can be returned in the error
+	num := lines[0]
 	iterator := 0
 	startPosition := 0
 	startFilecorrection := 0
