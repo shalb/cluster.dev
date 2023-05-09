@@ -24,7 +24,6 @@ type Secret struct {
 
 func (p *Project) readSecrets() error {
 	for filename, data := range p.objectsFiles {
-		// log.Warnf("readSecrets: file: %v", filename)
 		templatedData, isWarn, tmplErr := p.TemplateTry(data, filename)
 		if tmplErr != nil && !isWarn {
 			log.Debug(tmplErr.Error())
