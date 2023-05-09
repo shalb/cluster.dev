@@ -27,7 +27,7 @@ type KubectlCliT struct {
 type Unit struct {
 	common.Unit
 	Namespace          string             `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-	Kubeconfig         *string             `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
+	Kubeconfig         *string            `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
 	KubectlOpts        string             `yaml:"kubectl_opts,omitempty" json:"kubectl_opts,omitempty"`
 	KubectlCliConf     *KubectlCliT       `yaml:"kubectl,omitempty" json:"kubectl,omitempty"`
 	Path               string             `yaml:"path" json:"path"`
@@ -163,7 +163,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 
 	for i, f := range *u.ManifestsFiles {
 		if u.ApplyTemplate {
-			templattedFile, errIsWarn, err := u.Stack().TemplateTry([]byte(f.Content))
+			templattedFile, errIsWarn, err := u.Stack().TemplateTry([]byte(f.Content), f.FileName)
 			if err != nil {
 				if !errIsWarn {
 					return fmt.Errorf("read unit '%v': template manifest file: %w", f.FileName, err)
@@ -280,11 +280,11 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 		}
 		file.Content = string(scannedFile)
 	}
-  // log.Errorf("Before ScanMarkers %v", *u.Kubeconfig)
+	// log.Errorf("Before ScanMarkers %v", *u.Kubeconfig)
 	err := project.ScanMarkers(u.Kubeconfig, scanner, u)
-  // log.Errorf("After ScanMarkers %v", *u.Kubeconfig)
+	// log.Errorf("After ScanMarkers %v", *u.Kubeconfig)
 
-  if err != nil {
+	if err != nil {
 		return err
 	}
 	return nil

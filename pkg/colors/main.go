@@ -75,7 +75,7 @@ func SetColored(isColored bool) {
 // Fmt return colored formater.
 func Fmt(c Color) ColoredFmt {
 	if !colored {
-    color.Enable = false
+		color.Enable = false
 		return colorsMap[Default]
 	}
 	return colorsMap[c]

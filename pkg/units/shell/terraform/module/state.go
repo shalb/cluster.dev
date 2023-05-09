@@ -2,21 +2,22 @@ package tfmodule
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/apex/log"
 
 	"github.com/shalb/cluster.dev/pkg/project"
-	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
 type UnitDiffSpec struct {
 	base.UnitDiffSpec
-	Source      string             `json:"source"`
-	Version     string             `json:"version,omitempty"`
-	Inputs      interface{}        `json:"inputs,omitempty"`
-	LocalModule *common.FilesListT `json:"local_module,omitempty"`
+	Source       string              `json:"source"`
+	Version      string              `json:"version,omitempty"`
+	Inputs       interface{}         `json:"inputs,omitempty"`
+	ModulesFiles map[string][]string `json:"module_files,omitempty"`
+	// LocalModule  *common.FilesListT  `json:"local_module,omitempty"`
 }
 
 func (u *Unit) GetStateUnit() *Unit {
@@ -43,11 +44,29 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 		Source:       u.Source,
 		Version:      u.Version,
 		Inputs:       u.Inputs,
-		LocalModule:  u.LocalModule,
 	}
 	//stt := m.GetState()
 	//sttjson, _ := utils.JSONEncodeString(stt)
 	// log.Warnf("Module State: %v", sttjson)
+	filesListDiff := map[string][]string{}
+	if u.LocalModule != nil {
+		for _, file := range *u.LocalModule {
+			fileLines := strings.Split(file.Content, "\n")
+			if len(fileLines) < 2 {
+				filesListDiff[file.FileName] = []string{file.Content}
+			} else {
+				for _, line := range fileLines {
+					//log.Warnf("filesListDiff %v", line)
+					if line == "" {
+						continue // Ignore empty lines
+					}
+					filesListDiff[file.FileName] = append(filesListDiff[file.FileName], line)
+				}
+			}
+		}
+	}
+	st.ModulesFiles = filesListDiff
+	// log.Warnf("%v", st.ModulesFiles)
 	return st
 }
 

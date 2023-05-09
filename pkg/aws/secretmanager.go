@@ -18,7 +18,7 @@ import (
 )
 
 func GetSecret(region string, secretName string) (interface{}, error) {
-  log.Debugf("Downloading secret %s (%s)", secretName, region)
+	log.Debugf("Downloading secret %s (%s)", secretName, region)
 	svc := secretsmanager.New(session.New(),
 		aws.NewConfig().WithRegion(region))
 	input := &secretsmanager.GetSecretValueInput{

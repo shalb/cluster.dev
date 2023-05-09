@@ -164,7 +164,7 @@ func (p *Project) Apply() error {
 			var res error
 			if len(diff) > 0 || config.Global.IgnoreState {
 				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying unit '%v':", md.Key()))
-        log.Debugf("Unit %v diff: \n%v", md.Key(), diff)
+				log.Debugf("Unit %v diff: \n%v", md.Key(), diff)
 				err = mod.Build()
 				if err != nil {
 					log.Errorf("project apply: unit build error: %v", err.Error())

@@ -34,6 +34,6 @@ var outputCmd = &cobra.Command{
 }
 
 func init() {
-  outputCmd.Flags().BoolVar(&config.Global.OutputJSON, "json", false, "Show outputs in JSON format.")
+	outputCmd.Flags().BoolVar(&config.Global.OutputJSON, "json", false, "Show outputs in JSON format.")
 	rootCmd.AddCommand(outputCmd)
 }

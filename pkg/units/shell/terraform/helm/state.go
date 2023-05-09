@@ -30,10 +30,10 @@ func (u *Unit) GetState() interface{} {
 
 type UnitDiffSpec struct {
 	base.UnitDiffSpec
-	Source   string      `json:"source"`
-	HelmOpts interface{} `json:"helm_opts,omitempty"`
-	Sets     interface{} `json:"sets,omitempty"`
-	Values   []interface{}    `json:"values,omitempty"`
+	Source   string        `json:"source"`
+	HelmOpts interface{}   `json:"helm_opts,omitempty"`
+	Sets     interface{}   `json:"sets,omitempty"`
+	Values   []interface{} `json:"values,omitempty"`
 }
 
 func (u *Unit) GetUnitDiff() UnitDiffSpec {
@@ -43,24 +43,24 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 		Source:       u.Source,
 		HelmOpts:     u.HelmOpts,
 		Sets:         u.Sets,
-//		Values:       u.ValuesFilesList,
+		//		Values:       u.ValuesFilesList,
 	}
-  filesListDiff := make([]interface{}, len(u.ValuesFilesList))
-  for i, str := range u.ValuesFilesList {
-    fileLines := strings.Split(str, "\n")
-    if len(fileLines) < 2 {
-      filesListDiff[i] = str
-    } else {
-      for _, line := range fileLines {
-        //log.Warnf("filesListDiff %v", line)
-        if line == "" {
-          continue // Ignore empty lines
-        }
-        filesListDiff = append(filesListDiff, line)
-      }
-    }
-  }
-  st.Values = filesListDiff
+	filesListDiff := make([]interface{}, len(u.ValuesFilesList))
+	for i, str := range u.ValuesFilesList {
+		fileLines := strings.Split(str, "\n")
+		if len(fileLines) < 2 {
+			filesListDiff[i] = str
+		} else {
+			for _, line := range fileLines {
+				//log.Warnf("filesListDiff %v", line)
+				if line == "" {
+					continue // Ignore empty lines
+				}
+				filesListDiff = append(filesListDiff, line)
+			}
+		}
+	}
+	st.Values = filesListDiff
 	return st
 }
 

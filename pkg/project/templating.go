@@ -37,22 +37,27 @@ func workDir() string {
 	return config.Global.WorkingDir
 }
 
-func toYaml(in interface{}) (string,error) {
-  res, err := yaml.Marshal(in)
-  return string(res), err
+func toYaml(in interface{}) (string, error) {
+	res, err := yaml.Marshal(in)
+	return string(res), err
 }
 
-var templateFunctionsMap = template.FuncMap{
-	"ReconcilerVersionTag": printVersion,
-	"reqEnv":               getEnv,
-	"workDir":              workDir,
-	"bcrypt":               BcryptString,
-	"cidrSubnet":           utils.CidrSubnet,
-  "toYaml":               toYaml,
-  "readFile":             readFile,
-}
+// Type for tmpl functions list with additional options, like set path to templated file.
+type ExtendedFuncMap template.FuncMap
 
-func init() {
+func (f *ExtendedFuncMap) Get(path string) template.FuncMap {
+	readFileEx := func(f string) (string, error) {
+		return readFile(f, path)
+	}
+	var templateFunctionsMap = template.FuncMap{
+		"ReconcilerVersionTag": printVersion,
+		"reqEnv":               getEnv,
+		"workDir":              workDir,
+		"bcrypt":               BcryptString,
+		"cidrSubnet":           utils.CidrSubnet,
+		"toYaml":               toYaml,
+		"readFile":             readFileEx,
+	}
 	for key, val := range sprig.FuncMap() {
 		if _, ok := templateFunctionsMap[key]; !ok {
 			templateFunctionsMap[key] = val
@@ -60,15 +65,14 @@ func init() {
 			log.Fatalf("Template functions name conflict '%v'", key)
 		}
 	}
+	return templateFunctionsMap
 }
+
 // readFile template function to read files in project folder.
-func readFile(path string) (string, error) {
-  fullPath := path
-  if ! utils.IsAbsolutePath(path) {
-    fullPath = filepath.Join(config.Global.ProjectConfigsPath, path)
-  }
-  res, err := os.ReadFile(fullPath)
-  return string(res), err
+func readFile(relativePath string, dir string) (string, error) {
+	fullPath := filepath.Join(dir, relativePath)
+	res, err := os.ReadFile(fullPath)
+	return string(res), err
 }
 
 // RegisterTemplateDriver register unit template driver.
@@ -84,40 +88,59 @@ type TemplateDriver interface {
 var TemplateDriversMap map[string]TemplateDriver = map[string]TemplateDriver{}
 
 // TemplateMust do template
-func (p *Project) TemplateMust(data []byte) (res []byte, err error) {
-	return p.tmplWithMissingKey(data, "error")
+func (p *Project) TemplateMust(data []byte, fileName string) (res []byte, err error) {
+	return templateMust(data, p.configData, p, nil, fileName)
 }
 
 // TemplateTry do template
-func (p *Project) TemplateTry(data []byte) (res []byte, warn bool, err error) {
-	res, err = p.tmplWithMissingKey(data, "default")
+func (p *Project) TemplateTry(data []byte, fileName string) (res []byte, warn bool, err error) {
+	return templateTry(data, p.configData, p, nil, fileName)
+}
+
+// templateMust apply values to template data, considering template file path (if empty will be used project path).
+// If template has unresolved variables - function will return an error.
+func templateMust(data []byte, values interface{}, p *Project, s *Stack, fileName string) (res []byte, err error) {
+	return tmplWithMissingKey(data, values, "error", p, s, fileName)
+}
+
+// templateMust apply values to template data, considering template file path (if empty will be used project path).
+// If template has unresolved variables - warn will be set to true.
+func templateTry(data []byte, values interface{}, p *Project, s *Stack, fileName string) (res []byte, warn bool, err error) {
+	res, err = tmplWithMissingKey(data, values, "default", p, s, fileName)
 	if err != nil {
 		return res, false, err
 	}
-	_, missingKeysErr := p.tmplWithMissingKey(data, "error")
+	_, missingKeysErr := tmplWithMissingKey(data, values, "error", p, s, fileName)
 	return res, missingKeysErr != nil, missingKeysErr
 }
-
-func (p *Project) tmplWithMissingKey(data []byte, missingKey string) (res []byte, err error) {
+// templateMust apply values to template data, considering template file path (if empty will be used project path).
+// If use stack pointer for units functions integration.
+func tmplWithMissingKey(data []byte, values interface{}, missingKey string, p *Project, s *Stack, fileName string) (res []byte, err error) {
 	tmplFuncMap := template.FuncMap{}
+
+	// If file path is relative - convert to absolute using project dir as base.
+	if !utils.IsAbsolutePath(fileName) {
+		fileName = filepath.Join(config.Global.ProjectConfigsPath, fileName)
+	}
 	// Copy common template functions.
-	for k, v := range templateFunctionsMap {
+	funcs := ExtendedFuncMap{}
+	for k, v := range funcs.Get(filepath.Dir(fileName)) {
 		tmplFuncMap[k] = v
 	}
 	for _, drv := range TemplateDriversMap {
-		drv.AddTemplateFunctions(tmplFuncMap, p, nil)
+		drv.AddTemplateFunctions(tmplFuncMap, p, s)
 	}
 	tmpl, err := template.New("main").Funcs(tmplFuncMap).Option("missingkey=" + missingKey).Parse(string(data))
 	if err != nil {
 		return
 	}
 	templatedConf := bytes.Buffer{}
-	err = tmpl.Execute(&templatedConf, p.configData)
+	err = tmpl.Execute(&templatedConf, values)
+	// log.Warnf("tmplWithMissingKey file: %v", fileName)
 	return templatedConf.Bytes(), err
 }
 
 func BcryptString(pwd []byte) (string, error) {
-
 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.DefaultCost)
 	if err != nil {
 		return "", err

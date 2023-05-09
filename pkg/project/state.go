@@ -202,6 +202,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 }
 
 func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
+	unitStateCache := map[string]bool{}
 	unitInState, exists := sp.Units[unit.Key()]
 	if !exists {
 		return utils.Diff(nil, unit.GetDiffData(), true), nil
@@ -213,14 +214,14 @@ func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
 		return df, unitInState
 	}
 	for _, dep := range unit.Dependencies().UniqUnits() {
-		if sp.checkUnitChangesRecursive(dep) {
+		if sp.checkUnitChangesRecursive(dep, unitStateCache) {
 			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), unitInState
 		}
 	}
 	return "", unitInState
 }
 
-func (sp *StateProject) checkUnitChangesRecursive(unit Unit) bool {
+func (sp *StateProject) checkUnitChangesRecursive(unit Unit, cacheUnitChanges map[string]bool) bool {
 	if unit.WasApplied() {
 		return true
 	}
@@ -228,20 +229,28 @@ func (sp *StateProject) checkUnitChangesRecursive(unit Unit) bool {
 	if !exists {
 		return true
 	}
+	unitInCache, exists := cacheUnitChanges[unit.Key()]
+	if exists {
+		return unitInCache
+	}
 	diffData := unit.GetDiffData()
 
 	df := utils.Diff(unitInState.GetDiffData(), diffData, true)
 	if len(df) > 0 {
+		cacheUnitChanges[unit.Key()] = true
 		return true
 	}
 	for dep, depUnit := range unit.Dependencies().UniqUnits() {
-    _, exists := sp.ChangedUnits[dep];
+		_, exists := sp.ChangedUnits[dep]
 		if exists {
+			cacheUnitChanges[unit.Key()] = true
 			return true
 		}
-		if sp.checkUnitChangesRecursive(depUnit) {
+		if sp.checkUnitChangesRecursive(depUnit, cacheUnitChanges) {
+			cacheUnitChanges[unit.Key()] = true
 			return true
 		}
 	}
+	cacheUnitChanges[unit.Key()] = false
 	return false
 }

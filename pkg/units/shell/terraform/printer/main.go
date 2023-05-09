@@ -37,7 +37,7 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 			return nil, err
 		}
 		dataBody.SetAttributeValue("value", hclVal)
-    dataBody.SetAttributeValue("sensitive", cty.BoolVal(true))
+		dataBody.SetAttributeValue("sensitive", cty.BoolVal(true))
 
 		for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(base.RemoteStateLinkType).Map() {
 

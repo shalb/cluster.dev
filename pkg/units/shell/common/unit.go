@@ -464,11 +464,11 @@ func (u *Unit) readDeps() (err error) {
 	case string:
 		rawDepsList = append(rawDepsList, u.DependsOn.(string))
 	case []interface{}:
-    for _, depName := range u.DependsOn.([]interface{}) {
-      rawDepsList = append(rawDepsList, depName.(string))
-    }
-  default:
-    return fmt.Errorf("unknown dependencies type: %T",  u.DependsOn)
+		for _, depName := range u.DependsOn.([]interface{}) {
+			rawDepsList = append(rawDepsList, depName.(string))
+		}
+	default:
+		return fmt.Errorf("unknown dependencies type: %T", u.DependsOn)
 	}
 	for _, dep := range rawDepsList {
 		splDep := strings.Split(dep, ".")
@@ -532,7 +532,7 @@ func (u *Unit) EnvSlice() []string {
 	i := 0
 	for k, v := range u.Env {
 		res[i] = fmt.Sprintf("%v=%v", k, v)
-    i++
+		i++
 	}
 	return res
 }

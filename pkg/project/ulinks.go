@@ -159,27 +159,28 @@ func (o *UnitLinksT) ByLinkTypes(outputType ...string) (res *UnitLinksT) {
 	}
 	return
 }
+
 // UniqUnits return list of uniq links units.
-func (o *UnitLinksT) UniqUnits() (map[string]Unit) {
-  res := make(map[string]Unit)
-  if o.List == nil {
+func (o *UnitLinksT) UniqUnits() map[string]Unit {
+	res := make(map[string]Unit)
+	if o.List == nil {
 		return nil
 	}
 	for _, el := range o.List {
-    unit, exists := res[el.UnitKey()]
-    if !exists {
-      res[el.UnitKey()] = el.Unit
-      continue
-    }
-    if unit != nil {
-      continue
-    }
-    if el.Unit == nil {
-      log.Warnf("Dev debug. Nil unit pointer %v. Pls check.", el.UnitKey())
-    }
-    res[el.UnitKey()] = el.Unit
+		unit, exists := res[el.UnitKey()]
+		if !exists {
+			res[el.UnitKey()] = el.Unit
+			continue
+		}
+		if unit != nil {
+			continue
+		}
+		if el.Unit == nil {
+			log.Warnf("Dev debug. Nil unit pointer %v. Pls check.", el.UnitKey())
+		}
+		res[el.UnitKey()] = el.Unit
 	}
-  return res
+	return res
 }
 
 func (o *UnitLinksT) ByTargetUnit(unit Unit) (res *UnitLinksT) {

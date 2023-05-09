@@ -51,7 +51,7 @@ type ConfSpec struct {
 	NoColor            bool
 	Force              bool
 	Interactive        bool
-  OutputJSON         bool
+	OutputJSON         bool
 }
 
 // Global config for executor.

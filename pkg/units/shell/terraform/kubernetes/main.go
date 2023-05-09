@@ -127,7 +127,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		if err != nil {
 			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
 		}
-		manifest, errIsWarn, err := u.Stack().TemplateTry(file)
+		manifest, errIsWarn, err := u.Stack().TemplateTry(file, fileName)
 		if err != nil {
 			if errIsWarn {
 				log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
