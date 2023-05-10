@@ -104,7 +104,7 @@ func LoadProjectFull() (*Project, error) {
 		return nil, fmt.Errorf("loading project: %w", err)
 	}
 	for filename, cnf := range project.objectsFiles {
-		templatedConf, isWarn, err := project.TemplateTry(cnf)
+		templatedConf, isWarn, err := project.TemplateTry(cnf, filename)
 		if project.fileIsSecret(filename) {
 			// Skip secrets, which loaded in LoadProjectBase().
 			continue
@@ -342,17 +342,17 @@ func (p *Project) PrintInfo() error {
 func (p *Project) PrintOutputs() (err error) {
 	for _, o := range p.RuntimeDataset.PrintersOutputs {
 		if len(o.Output) > 0 {
-      var output string
-      if config.Global.OutputJSON {
-        output = o.Output
-      } else {
-        _, output, err = utils.TerraformJSONOutputParse(o.Output)
-        if err != nil {
-          log.Warnf("State contain outputs in a old format. For full update use cdev apply --ignore-state. Printing RAW data...")
-          output = o.Output
-        }
-      }
-      log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(output))
+			var output string
+			if config.Global.OutputJSON {
+				output = o.Output
+			} else {
+				_, output, err = utils.TerraformJSONOutputParse(o.Output)
+				if err != nil {
+					log.Warnf("State contain outputs in a old format. For full update use cdev apply --ignore-state. Printing RAW data...")
+					output = o.Output
+				}
+			}
+			log.Infof("Printer: '%v', Output:\n%v", o.Name, color.Style{color.FgGreen, color.OpBold}.Sprintf(output))
 		}
 	}
 	return nil

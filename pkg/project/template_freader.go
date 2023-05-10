@@ -28,7 +28,7 @@ func (t tmplFileReader) TemplateFile(path string) (string, error) {
 		log.Debugf(err.Error())
 		return "", err
 	}
-	templatedFile, errIsWarn, err := t.stackPtr.TemplateTry(rawFile)
+	templatedFile, errIsWarn, err := t.stackPtr.TemplateTry(rawFile, vfPath)
 	if err != nil {
 		if !errIsWarn {
 			log.Fatal(err.Error())

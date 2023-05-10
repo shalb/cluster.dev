@@ -1,12 +1,10 @@
 package project
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"text/template"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
@@ -153,7 +151,7 @@ func (s *Stack) ReadTemplate(src string) (err error) {
 			return err
 		}
 		var errIsWarn bool
-		template, errIsWarn, err := s.TemplateTry(tmplData)
+		template, errIsWarn, err := s.TemplateTry(tmplData, fn)
 		if err != nil {
 			if !errIsWarn {
 				log.Fatal(err.Error())
@@ -175,35 +173,12 @@ func (s *Stack) ReadTemplate(src string) (err error) {
 
 // TemplateMust apply stack variables to template data.
 // If template has unresolved variables - function will return an error.
-func (i *Stack) TemplateMust(data []byte) (res []byte, err error) {
-	return i.tmplWithMissingKey(data, "error")
+func (i *Stack) TemplateMust(data []byte, fileName string) (res []byte, err error) {
+	return templateMust(data, i.ConfigData, i.ProjectPtr, i, fileName)
 }
 
-// TemplateTry apply stack variables to template data.
+// TemplateTry apply values to template data.
 // If template has unresolved variables - warn will be set to true.
-func (i *Stack) TemplateTry(data []byte) (res []byte, warn bool, err error) {
-	res, err = i.tmplWithMissingKey(data, "default")
-	if err != nil {
-		return res, false, err
-	}
-	_, missingKeysErr := i.tmplWithMissingKey(data, "error")
-	return res, missingKeysErr != nil, missingKeysErr
-}
-
-func (s *Stack) tmplWithMissingKey(data []byte, missingKey string) (res []byte, err error) {
-	tmplFuncMap := template.FuncMap{}
-	// Copy common template functions.
-	for k, v := range templateFunctionsMap {
-		tmplFuncMap[k] = v
-	}
-	for _, drv := range TemplateDriversMap {
-		drv.AddTemplateFunctions(tmplFuncMap, s.ProjectPtr, s)
-	}
-	tmpl, err := template.New("main").Funcs(tmplFuncMap).Option("missingkey=" + missingKey).Parse(string(data))
-	if err != nil {
-		return
-	}
-	templatedConf := bytes.Buffer{}
-	err = tmpl.Execute(&templatedConf, s.ConfigData)
-	return templatedConf.Bytes(), err
+func (i *Stack) TemplateTry(data []byte, fileName string) (res []byte, warn bool, err error) {
+	return templateTry(data, i.ConfigData, i.ProjectPtr, i, fileName)
 }

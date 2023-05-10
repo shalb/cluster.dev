@@ -45,9 +45,9 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	providerBody := providerBlock.Body()
 	provederKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
 	provederKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(*u.Kubeconfig))
-  if config.Global.LogLevel == "debug" {
-    providerBody.SetAttributeValue("debug", cty.BoolVal(true))
-  }
+	if config.Global.LogLevel == "debug" {
+		providerBody.SetAttributeValue("debug", cty.BoolVal(true))
+	}
 
 	helmBlock := rootBody.AppendNewBlock("resource", []string{"helm_release", project.ConvertToTfVarName(u.Name())})
 	helmBody := helmBlock.Body()
@@ -95,16 +95,16 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	for key, val := range source {
 		u.HelmOpts[key] = val
 	}
-  helmChartOpt, exists := u.HelmOpts["chart"].(string)
-  if !exists {
-    return fmt.Errorf("read helm chart configuration: option 'chart' is required and should be a string")
-  }
-  if utils.IsLocalPath(helmChartOpt) {
-    if !utils.IsAbsolutePath(helmChartOpt) {
-      absoluteChartPath := filepath.Join(config.Global.ProjectConfigsPath, u.StackPtr.TemplateDir, helmChartOpt)
-      u.HelmOpts["chart"] = absoluteChartPath
-    }
-  }
+	helmChartOpt, exists := u.HelmOpts["chart"].(string)
+	if !exists {
+		return fmt.Errorf("read helm chart configuration: option 'chart' is required and should be a string")
+	}
+	if utils.IsLocalPath(helmChartOpt) {
+		if !utils.IsAbsolutePath(helmChartOpt) {
+			absoluteChartPath := filepath.Join(config.Global.ProjectConfigsPath, u.StackPtr.TemplateDir, helmChartOpt)
+			u.HelmOpts["chart"] = absoluteChartPath
+		}
+	}
 	kubeconfig, ok := spec["kubeconfig"].(string)
 	if !ok {
 		return fmt.Errorf("incorrect kubeconfig")
@@ -153,7 +153,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			}
 			values := valuesFileContent
 			if applyTemplate {
-				renderedValues, errIsWarn, err := u.Stack().TemplateTry(valuesFileContent)
+				renderedValues, errIsWarn, err := u.Stack().TemplateTry(valuesFileContent, vfPath)
 				if err != nil {
 					if !errIsWarn {
 						log.Fatal(err.Error())

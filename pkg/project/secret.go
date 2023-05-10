@@ -24,16 +24,15 @@ type Secret struct {
 
 func (p *Project) readSecrets() error {
 	for filename, data := range p.objectsFiles {
-    // log.Warnf("readSecrets: file: %v", filename)
-		templatedData, isWarn, tmplErr := p.TemplateTry(data)
+		templatedData, isWarn, tmplErr := p.TemplateTry(data, filename)
 		if tmplErr != nil && !isWarn {
 			log.Debug(tmplErr.Error())
 			return fmt.Errorf("searching for secrets in %v: %v", filename, tmplErr.Error())
 		}
 		secretDriver, err := getRwaSecretInfo(templatedData)
 		if err != nil {
-      log.Debugf("Checking for secret file %v fail. Skip...", filename)
-      continue
+			log.Debugf("Checking for secret file %v fail. Skip...", filename)
+			continue
 			// return fmt.Errorf("searching for secrets in %v: %v", filename, err.Error())
 		}
 		if secretDriver == nil {

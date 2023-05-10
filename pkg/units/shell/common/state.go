@@ -10,15 +10,16 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-// UnitDiffSpec describe the pieces of StateSpec data, that will be comered in "plan" diff and should affect the unit redeployment.
+// UnitDiffSpec describe the pieces of StateSpec data, that will be compered in "plan" diff and should affect the unit redeployment.
 type UnitDiffSpec struct {
-	Outputs       map[string]string      `json:"outputs,omitempty"`
-	CreateFiles   *FilesListT            `json:"create_files,omitempty"`
-	ApplyConf     *OperationConfig       `json:"apply,omitempty"`
-	Env           map[string]interface{} `json:"env,omitempty"`
-	OutputsConfig *OutputsConfigSpec     `json:"outputs_config,omitempty"`
-	PreHook       *HookSpec              `json:"pre_hook,omitempty"`
-	PostHook      *HookSpec              `json:"post_hook,omitempty"`
+	Outputs map[string]string `json:"outputs,omitempty"`
+	// CreateFiles     *FilesListT            `json:"create_files,omitempty"`
+	CreateFilesDiff map[string][]string    `json:"-"`
+	ApplyConf       *OperationConfig       `json:"apply,omitempty"`
+	Env             map[string]interface{} `json:"env,omitempty"`
+	OutputsConfig   *OutputsConfigSpec     `json:"outputs_config,omitempty"`
+	PreHook         *HookSpec              `json:"pre_hook,omitempty"`
+	PostHook        *HookSpec              `json:"post_hook,omitempty"`
 }
 
 func (u *Unit) GetStateUnit() *Unit {
@@ -40,9 +41,9 @@ func (u *Unit) GetState() interface{} {
 }
 func (u *Unit) GetUnitDiff() UnitDiffSpec {
 	st := UnitDiffSpec{
-		Outputs:       make(map[string]string),
-		ApplyConf:     u.ApplyConf,
-		CreateFiles:   u.CreateFiles,
+		Outputs:   make(map[string]string),
+		ApplyConf: u.ApplyConf,
+		// CreateFiles:   u.CreateFiles,
 		Env:           make(map[string]interface{}),
 		OutputsConfig: u.GetOutputsConf,
 	}
@@ -51,6 +52,22 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 			st.Env[key] = val
 		}
 	}
+	filesListDiff := map[string][]string{}
+	for _, file := range *u.CreateFiles {
+		fileLines := strings.Split(file.Content, "\n")
+		if len(fileLines) < 2 {
+			filesListDiff[file.FileName][0] = file.Content
+		} else {
+			for _, line := range fileLines {
+				//log.Warnf("filesListDiff %v", line)
+				if line == "" {
+					continue // Ignore empty lines
+				}
+				filesListDiff[file.FileName] = append(filesListDiff[file.FileName], line)
+			}
+		}
+	}
+	st.CreateFilesDiff = filesListDiff
 	for _, link := range u.ProjectPtr.UnitLinks.ByTargetUnit(u).Map() {
 		st.Outputs[link.OutputName] = "<output>"
 	}

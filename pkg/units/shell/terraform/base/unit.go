@@ -75,8 +75,8 @@ func (u *Unit) fillShellUnit() {
 		Type:    "terraform",
 	}
 	u.OutputParsers["terraform"] = TerraformJSONParser
-  u.Env["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
-  u.Env["TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE"] = "true"
+	u.Env["TF_PLUGIN_CACHE_DIR"] = config.Global.PluginsCacheDir
+	u.Env["TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE"] = "true"
 }
 
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {

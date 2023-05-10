@@ -78,6 +78,7 @@ func MergeMaps(mOne, mTwo map[string]interface{}) (res map[string]interface{}) {
 	}
 	return
 }
+
 // TerraformJSONOutputParse parse data from terraform output --json command to map and line-to-line string
 func TerraformJSONOutputParse(in string) (out map[string]string, stringOut string, err error) {
 	type tfOutputDataSpec struct {
@@ -90,20 +91,20 @@ func TerraformJSONOutputParse(in string) (out map[string]string, stringOut strin
 	if err != nil {
 		return
 	}
-  out = make(map[string]string)
+	out = make(map[string]string)
 	for key, val := range tfOutputData {
-    tp := reflect.ValueOf(val.Type)
-    var strValue string
-    if tp.Kind() != reflect.String || val.Type.(string) != "string" {
+		tp := reflect.ValueOf(val.Type)
+		var strValue string
+		if tp.Kind() != reflect.String || val.Type.(string) != "string" {
 			strValue, err = JSONEncodeString(val.Value)
-      if err != nil {
-        return nil, "", fmt.Errorf("JSON encode output value: %w", err)
-      }
+			if err != nil {
+				return nil, "", fmt.Errorf("JSON encode output value: %w", err)
+			}
 		} else {
-      strValue = fmt.Sprintf("%v", val.Value)
-    }
+			strValue = fmt.Sprintf("%v", val.Value)
+		}
 		out[key] = strValue
-    stringOut += fmt.Sprintf("%s = %s\n", key, strValue)
+		stringOut += fmt.Sprintf("%s = %s\n", key, strValue)
 	}
 	return
 }

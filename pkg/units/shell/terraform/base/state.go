@@ -55,7 +55,7 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 	st.UnitDiffSpec.ApplyConf = nil
 	st.UnitDiffSpec.ApplyConf = nil
 	st.UnitDiffSpec.Env = nil
-	st.UnitDiffSpec.CreateFiles = nil
+	// st.UnitDiffSpec.CreateFiles = nil
 	st.UnitDiffSpec.OutputsConfig = nil
 	return st
 }

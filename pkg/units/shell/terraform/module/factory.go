@@ -35,7 +35,7 @@ func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 		log.Debug(err.Error())
 		return nil, err
 	}
-  unit.LocalModuleCachePath = filepath.Join(stack.ProjectPtr.CodeCacheDir, "../", "terraform", unit.Key())
+	unit.LocalModuleCachePath = filepath.Join(stack.ProjectPtr.CodeCacheDir, "../", "terraform", unit.Key())
 	return &unit, nil
 }
 
@@ -52,7 +52,7 @@ func (f *Factory) NewFromState(spec map[string]interface{}, unitKey string, p *p
 		log.Debug(err.Error())
 		return nil, err
 	}
-  unit.LocalModuleCachePath = filepath.Join(p.CodeCacheDir, "../", "terraform", unit.Key())
+	unit.LocalModuleCachePath = filepath.Join(p.CodeCacheDir, "../", "terraform", unit.Key())
 	return &unit, nil
 }
 

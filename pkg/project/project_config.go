@@ -71,7 +71,6 @@ func (p *Project) readManifests() (err error) {
 			p.configDataFile, err = ioutil.ReadFile(file)
 		} else {
 			objFiles[file], err = ioutil.ReadFile(file)
-      //log.Warnf("Object added: %v", file)
 		}
 		if err != nil {
 			return fmt.Errorf("reading configs %v: %v", file, err)
