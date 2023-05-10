@@ -58,7 +58,7 @@ func NewStackTemplate(data []byte) (*stackTemplate, error) {
 		if !ok {
 			errReasons := ""
 			for _, msg := range messages {
-				errReasons += fmt.Sprintf("%v\n", msg)
+				errReasons += fmt.Sprintf("cdev client version: %v\n", msg)
 			}
 			return nil, fmt.Errorf("cdev template version validation error: \n%v", errReasons)
 		}
