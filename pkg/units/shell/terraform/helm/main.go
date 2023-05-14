@@ -40,15 +40,17 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	// 	m.FilesList()["values.yaml"] = m.valuesFileContent
 	// }
 	f := hclwrite.NewEmptyFile()
+	providerBody := &hclwrite.Body{}
 	rootBody := f.Body()
-	providerBlock := rootBody.AppendNewBlock("provider", []string{"helm"})
-	providerBody := providerBlock.Body()
-	provederKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
-	provederKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(*u.Kubeconfig))
-	if config.Global.LogLevel == "debug" {
-		providerBody.SetAttributeValue("debug", cty.BoolVal(true))
+	if u.Kubeconfig != nil {
+		providerBlock := rootBody.AppendNewBlock("provider", []string{"helm"})
+		providerBody = providerBlock.Body()
+		provederKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
+		provederKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(*u.Kubeconfig))
+		if config.Global.LogLevel == "debug" {
+			providerBody.SetAttributeValue("debug", cty.BoolVal(true))
+		}
 	}
-
 	helmBlock := rootBody.AppendNewBlock("resource", []string{"helm_release", project.ConvertToTfVarName(u.Name())})
 	helmBody := helmBlock.Body()
 	for key, val := range u.HelmOpts {
@@ -106,10 +108,12 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		}
 	}
 	kubeconfig, ok := spec["kubeconfig"].(string)
-	if !ok {
-		return fmt.Errorf("incorrect kubeconfig")
+	// if !ok {
+	// 	return fmt.Errorf("incorrect kubeconfig")
+	// }
+	if ok {
+		u.Kubeconfig = &kubeconfig
 	}
-	u.Kubeconfig = &kubeconfig
 	addOp, ok := spec["additional_options"].(map[string]interface{})
 	if ok {
 		for key, val := range addOp {
@@ -187,6 +191,11 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 		return err
 	}
 	err = project.ScanMarkers(u.Sets, scanner, u)
+	if err != nil {
+		return err
+	}
+	err = project.ScanMarkers(u.Providers, scanner, u)
+	log.Warnf("ScanData %v", u.Providers)
 	if err != nil {
 		return err
 	}

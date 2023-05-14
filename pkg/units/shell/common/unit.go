@@ -164,16 +164,16 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 }
 
 func (u *Unit) checkShellUnitConfig() error {
+	for _, f := range *u.CreateFiles {
+		if f.FileMode == 0 {
+			f.FileMode = os.ModePerm
+		}
+	}
 	if u.UnitKind != "shell" {
 		return nil
 	}
 	if u.ApplyConf == nil {
 		return fmt.Errorf("unit '%v': apply configuration does not exists in unit", u.Key())
-	}
-	for _, f := range *u.CreateFiles {
-		if f.FileMode == 0 {
-			f.FileMode = os.ModePerm
-		}
 	}
 	return nil
 }

@@ -85,7 +85,7 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 	// Read backend name.
 	stack.BackendName, ok = stackSpec.data["backend"].(string)
 	if !ok {
-		stack.BackendName = "default"
+		return fmt.Errorf("backend is not defined. To use default local backend, set 'backend: default' option")
 	}
 	bPtr, exists := p.Backends[stack.BackendName]
 	if !exists {

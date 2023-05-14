@@ -47,8 +47,7 @@ func (p *Project) parseProjectConfig() error {
 	if stateBackend, exists := prjConfParsed["backend"].(string); exists {
 		p.StateBackendName = stateBackend
 	} else {
-		log.Warn("Set default project backend")
-		p.StateBackendName = "default"
+		return fmt.Errorf("error in project config: backend is not defined. To use default local backend, set 'backend: default' option")
 	}
 
 	p.configData["project"] = prjConfParsed
