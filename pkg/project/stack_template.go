@@ -55,14 +55,18 @@ func NewStackTemplate(data []byte) (*stackTemplate, error) {
 			return nil, fmt.Errorf("parsing template: can't parse client version: %v", iTmpl.ReqClientVersion)
 		}
 		ok, messages := reqVerConstraints.Validate(ver)
+		errReasons := ""
 		if !ok {
-			errReasons := ""
-			for _, msg := range messages {
-				errReasons += fmt.Sprintf("cdev client version: %v\n", msg)
+			if len(messages) > 1 {
+				for _, msg := range messages {
+					errReasons += fmt.Sprintf("cdev version: %v\n", msg)
+				}
+			} else {
+				errReasons = messages[0].Error()
 			}
-			return nil, fmt.Errorf("cdev template version validation error: \n%v", errReasons)
+			return nil, fmt.Errorf("cdev template version validation error: template: '%v', cli: '%v', req: '%v', message: '%v'", iTmpl.Name, ver, iTmpl.ReqClientVersion, errReasons)
 		}
-		log.Debugf("Version validated: cli: %v, req: %v", ver, iTmpl.ReqClientVersion)
+		log.Debugf("Version validated: stack: %v cli: %v, req: %v", iTmpl.Name, ver, iTmpl.ReqClientVersion)
 	}
 	// i.TemplateSrc = src
 	return &iTmpl, nil

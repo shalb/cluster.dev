@@ -5,6 +5,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
 )
 
@@ -35,6 +36,12 @@ func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 		log.Debug(err.Error())
 		return nil, err
 	}
+	if unit.CreateFiles != nil {
+		unit.CustomFiles = &common.FilesListT{}
+		for _, f := range *unit.CreateFiles {
+			*unit.CustomFiles = append(*unit.CustomFiles, f)
+		}
+	}
 	unit.LocalModuleCachePath = filepath.Join(stack.ProjectPtr.CodeCacheDir, "../", "terraform", unit.Key())
 	return &unit, nil
 }
@@ -51,6 +58,12 @@ func (f *Factory) NewFromState(spec map[string]interface{}, unitKey string, p *p
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
+	}
+	if unit.CreateFiles != nil {
+		unit.CustomFiles = &common.FilesListT{}
+		for _, f := range *unit.CreateFiles {
+			*unit.CustomFiles = append(*unit.CustomFiles, f)
+		}
 	}
 	unit.LocalModuleCachePath = filepath.Join(p.CodeCacheDir, "../", "terraform", unit.Key())
 	return &unit, nil

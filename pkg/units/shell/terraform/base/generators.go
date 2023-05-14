@@ -73,6 +73,14 @@ func (u *Unit) Build() error {
 			log.Debug(err.Error())
 			return err
 		}
+		for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(RemoteStateLinkType).Map() {
+			if marker.TargetStackName == "this" {
+				marker.TargetStackName = u.Stack().Name
+			}
+			refStr := DependencyToRemoteStateRef(marker)
+			log.Warnf("DependencyToRemoteStateRef %v", refStr)
+			hcltools.ReplaceStingMarkerInBody(providers.Body(), hash, refStr)
+		}
 		init = append(init, providers.Bytes()...)
 	}
 
