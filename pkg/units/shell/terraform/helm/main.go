@@ -195,7 +195,6 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 		return err
 	}
 	err = project.ScanMarkers(u.Providers, scanner, u)
-	log.Warnf("ScanData %v", u.Providers)
 	if err != nil {
 		return err
 	}
