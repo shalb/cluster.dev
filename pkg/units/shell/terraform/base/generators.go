@@ -78,7 +78,6 @@ func (u *Unit) Build() error {
 				marker.TargetStackName = u.Stack().Name
 			}
 			refStr := DependencyToRemoteStateRef(marker)
-			log.Warnf("DependencyToRemoteStateRef %v", refStr)
 			hcltools.ReplaceStingMarkerInBody(providers.Body(), hash, refStr)
 		}
 		init = append(init, providers.Bytes()...)
