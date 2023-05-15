@@ -3,6 +3,7 @@ package helm
 import (
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
 )
 
@@ -23,19 +24,25 @@ func NewEmptyUnit() Unit {
 }
 
 func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
-	mod := NewEmptyUnit()
+	unit := NewEmptyUnit()
 	cUnit, err := base.NewUnit(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	mod.Unit = *cUnit
-	err = mod.ReadConfig(spec, stack)
+	unit.Unit = *cUnit
+	err = unit.ReadConfig(spec, stack)
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	return &mod, nil
+	if unit.CreateFiles != nil {
+		unit.CustomFiles = &common.FilesListT{}
+		for _, f := range *unit.CreateFiles {
+			*unit.CustomFiles = append(*unit.CustomFiles, f)
+		}
+	}
+	return &unit, nil
 }
 
 // New creates new unit driver factory.
@@ -50,6 +57,12 @@ func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *pr
 	if err != nil {
 		log.Debug(err.Error())
 		return nil, err
+	}
+	if unit.CreateFiles != nil {
+		unit.CustomFiles = &common.FilesListT{}
+		for _, f := range *unit.CreateFiles {
+			*unit.CustomFiles = append(*unit.CustomFiles, f)
+		}
 	}
 	return &unit, nil
 }
