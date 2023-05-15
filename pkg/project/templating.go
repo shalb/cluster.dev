@@ -113,6 +113,7 @@ func templateTry(data []byte, values interface{}, p *Project, s *Stack, fileName
 	_, missingKeysErr := tmplWithMissingKey(data, values, "error", p, s, fileName)
 	return res, missingKeysErr != nil, missingKeysErr
 }
+
 // templateMust apply values to template data, considering template file path (if empty will be used project path).
 // If use stack pointer for units functions integration.
 func tmplWithMissingKey(data []byte, values interface{}, missingKey string, p *Project, s *Stack, fileName string) (res []byte, err error) {

@@ -12,6 +12,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
@@ -28,6 +29,7 @@ type Unit struct {
 	ValuesYAML      []map[string]interface{} `yaml:"-" json:"-"`
 	UnitKind        string                   `yaml:"-" json:"type"`
 	StateData       interface{}              `yaml:"-" json:"-"`
+	CustomFiles     *common.FilesListT       `yaml:"create_files,omitempty" json:"create_files,omitempty"`
 }
 
 func (u *Unit) KindKey() string {
