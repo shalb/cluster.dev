@@ -18,7 +18,9 @@ func (u *Unit) GetStateUnit() *Unit {
 	}
 	unitState.OutputRaw = u.OutputRaw
 	unitState.Unit = *u.Unit.GetStateUnit()
+	log.Debug("test")
 	return &unitState
+
 }
 
 func (u *Unit) GetState() interface{} {
