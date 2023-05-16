@@ -2,7 +2,6 @@ package project
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -67,9 +66,9 @@ func (p *Project) readManifests() (err error) {
 		fileName, _ := filepath.Rel(config.Global.WorkingDir, file)
 		isProjectConfig := regexp.MustCompile(ConfigFilePattern).MatchString(fileName)
 		if isProjectConfig {
-			p.configDataFile, err = ioutil.ReadFile(file)
+			p.configDataFile, err = os.ReadFile(file)
 		} else {
-			objFiles[file], err = ioutil.ReadFile(file)
+			objFiles[file], err = os.ReadFile(file)
 		}
 		if err != nil {
 			return fmt.Errorf("reading configs %v: %v", file, err)

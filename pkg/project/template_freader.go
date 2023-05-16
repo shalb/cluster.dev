@@ -1,7 +1,7 @@
 package project
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/apex/log"
@@ -13,7 +13,7 @@ type tmplFileReader struct {
 
 func (t tmplFileReader) ReadFile(path string) (string, error) {
 	vfPath := filepath.Join(t.stackPtr.TemplateDir, path)
-	valuesFileContent, err := ioutil.ReadFile(vfPath)
+	valuesFileContent, err := os.ReadFile(vfPath)
 	if err != nil {
 		log.Debugf(err.Error())
 		return "", err
@@ -23,7 +23,7 @@ func (t tmplFileReader) ReadFile(path string) (string, error) {
 
 func (t tmplFileReader) TemplateFile(path string) (string, error) {
 	vfPath := filepath.Join(t.stackPtr.TemplateDir, path)
-	rawFile, err := ioutil.ReadFile(vfPath)
+	rawFile, err := os.ReadFile(vfPath)
 	if err != nil {
 		log.Debugf(err.Error())
 		return "", err

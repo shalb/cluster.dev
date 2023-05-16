@@ -2,7 +2,6 @@ package project
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -146,7 +145,7 @@ func (s *Stack) ReadTemplate(src string) (err error) {
 	}
 	s.Templates = []stackTemplate{}
 	for _, fn := range templatesFilesList {
-		tmplData, err := ioutil.ReadFile(fn)
+		tmplData, err := os.ReadFile(fn)
 		if err != nil {
 			return err
 		}

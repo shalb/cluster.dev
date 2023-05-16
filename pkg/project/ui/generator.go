@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -258,7 +257,7 @@ func (g *Generator) WriteFiles(path string) (err error) {
 		if err != nil {
 			return
 		}
-		ioutil.WriteFile(filename, fileData, fs.ModePerm)
+		os.WriteFile(filename, fileData, fs.ModePerm)
 		if err != nil {
 			return
 		}

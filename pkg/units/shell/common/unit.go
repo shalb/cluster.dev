@@ -498,7 +498,7 @@ func readHook(hookData interface{}, hookType string) (*HookSpec, error) {
 	cmd, cmdExists := hook["command"].(string)
 
 	if !cmdExists {
-		return nil, fmt.Errorf("Error in %s config, use 'script' option", hookType)
+		return nil, fmt.Errorf("error in %s config, use 'script' option", hookType)
 	}
 
 	ScriptData := HookSpec{

@@ -3,7 +3,7 @@ package helm
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 
@@ -152,7 +152,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 				return fmt.Errorf("read unit config: 'values.file' is required field")
 			}
 			vfPath := filepath.Join(u.Stack().TemplateDir, valuesFileName)
-			valuesFileContent, err := ioutil.ReadFile(vfPath)
+			valuesFileContent, err := os.ReadFile(vfPath)
 			if err != nil {
 				log.Debugf(err.Error())
 				return fmt.Errorf("read unit config: can't load values file: %v", err)

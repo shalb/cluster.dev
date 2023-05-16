@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -121,7 +120,7 @@ func (p *Project) PullState() error {
 	}
 	bkFileName := filepath.Join(config.Global.WorkingDir, "cdev.state")
 	log.Infof("Pulling state file: %v", bkFileName)
-	return ioutil.WriteFile(bkFileName, loadedStateFile, 0660)
+	return os.WriteFile(bkFileName, loadedStateFile, 0660)
 }
 
 func (p *Project) BackupState() error {
@@ -132,7 +131,7 @@ func (p *Project) BackupState() error {
 	const layout = "20060102150405"
 	bkFileName := filepath.Join(config.Global.WorkingDir, fmt.Sprintf("cdev.state.backup.%v", time.Now().Format(layout)))
 	log.Infof("Backuping state file: %v", bkFileName)
-	return ioutil.WriteFile(bkFileName, loadedStateFile, 0660)
+	return os.WriteFile(bkFileName, loadedStateFile, 0660)
 }
 
 func (p *Project) LoadState() (*StateProject, error) {

@@ -3,7 +3,6 @@ package kubernetes
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,13 +19,13 @@ import (
 
 type Unit struct {
 	base.Unit
-	Source          string                 `yaml:"-" json:"source"`
-	Kubeconfig      string                 `yaml:"-" json:"kubeconfig"`
-	Inputs          map[string]interface{} `yaml:"-" json:"inputs"`
-	providerVersion string                 `yaml:"-" json:"-"`
-	ProviderConf    ProviderConfigSpec     `yaml:"-" json:"provider_conf"`
-	UnitKind        string                 `yaml:"-" json:"type"`
-	StateData       interface{}            `yaml:"-" json:"-"`
+	Source     string                 `yaml:"-" json:"source"`
+	Kubeconfig string                 `yaml:"-" json:"kubeconfig"`
+	Inputs     map[string]interface{} `yaml:"-" json:"inputs"`
+	// providerVersion string                 `yaml:"-" json:"-"`
+	ProviderConf ProviderConfigSpec `yaml:"-" json:"provider_conf"`
+	UnitKind     string             `yaml:"-" json:"type"`
+	StateData    interface{}        `yaml:"-" json:"-"`
 }
 
 type ExecNestedSchema struct {
@@ -123,7 +122,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		filesList = append(filesList, absSource)
 	}
 	for _, fileName := range filesList {
-		file, err := ioutil.ReadFile(fileName)
+		file, err := os.ReadFile(fileName)
 		if err != nil {
 			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
 		}

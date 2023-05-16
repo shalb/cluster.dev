@@ -3,7 +3,7 @@ package common
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
+
 	"os"
 	"path/filepath"
 	"regexp"
@@ -92,7 +92,7 @@ func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error
 				if !matchPattern {
 					return nil
 				}
-				content, err := ioutil.ReadFile(path)
+				content, err := os.ReadFile(path)
 				if err != nil {
 					return err
 				}
@@ -116,7 +116,7 @@ func (l *FilesListT) ReadFile(path, baseDir string) (err error) {
 	if err != nil {
 		return
 	}
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return
 	}
@@ -146,7 +146,7 @@ func (l *FilesListT) WriteFiles(path string) (err error) {
 
 		fileFullName = filepath.Join(fileDir, fileName)
 		log.Debugf("Writing file: %v", fileFullName)
-		err = ioutil.WriteFile(fileFullName, []byte(file.Content), file.FileMode)
+		err = os.WriteFile(fileFullName, []byte(file.Content), file.FileMode)
 		if err != nil {
 			return err
 		}

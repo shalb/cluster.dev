@@ -3,7 +3,6 @@ package sops
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -103,13 +102,13 @@ func (s *sopsDriver) Create(files map[string][]byte) error {
 func saveTmplToFile(name string, data []byte) (string, error) {
 	filenameCheck := filepath.Join(config.Global.WorkingDir, name)
 	if _, err := os.Stat(filenameCheck); os.IsNotExist(err) {
-		err = ioutil.WriteFile(filenameCheck, data, fs.ModePerm)
+		err = os.WriteFile(filenameCheck, data, fs.ModePerm)
 		if err != nil {
 			return "", err
 		}
 		return filenameCheck, nil
 	}
-	f, err := ioutil.TempFile(config.Global.WorkingDir, "*_"+name)
+	f, err := os.CreateTemp(config.Global.WorkingDir, "*_"+name)
 	if err != nil {
 		return "", err
 	}

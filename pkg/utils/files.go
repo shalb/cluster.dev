@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -91,7 +90,7 @@ func ReadFilesToExistentsList(filesPath, baseDir string, filesList map[string][]
 				if err != nil {
 					return fmt.Errorf("ReadFilesToExistentsList: %w", err)
 				}
-				filesList[relPath], err = ioutil.ReadFile(path)
+				filesList[relPath], err = os.ReadFile(path)
 				if err != nil {
 					return err
 				}
@@ -119,7 +118,7 @@ func WriteFilesFromList(path string, filesList map[string]string) (err error) {
 
 		fileFullName = filepath.Join(fileDir, fileName)
 		log.Debugf("Writing file: %v", fileFullName)
-		err = ioutil.WriteFile(fileFullName, []byte(fData), os.ModePerm)
+		err = os.WriteFile(fileFullName, []byte(fData), os.ModePerm)
 		if err != nil {
 			return err
 		}
@@ -128,7 +127,7 @@ func WriteFilesFromList(path string, filesList map[string]string) (err error) {
 }
 
 func CopyDirectory(scrDir, dest string) error {
-	entries, err := ioutil.ReadDir(scrDir)
+	entries, err := os.ReadDir(scrDir)
 	if err != nil {
 		return err
 	}
@@ -168,9 +167,9 @@ func CopyDirectory(scrDir, dest string) error {
 			return err
 		}
 
-		isSymlink := entry.Mode()&os.ModeSymlink != 0
+		isSymlink := fileInfo.Mode()&os.ModeSymlink != 0
 		if !isSymlink {
-			if err := os.Chmod(destPath, entry.Mode()); err != nil {
+			if err := os.Chmod(destPath, fileInfo.Mode()); err != nil {
 				return err
 			}
 		}
