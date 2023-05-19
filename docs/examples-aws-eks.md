@@ -20,7 +20,7 @@ On this page you will find guidance on how to create an EKS cluster on AWS using
 
 ## Prerequisites
 
-1. Terraform version 13+.
+1. Terraform version 1.4+.
 
 2. AWS account.
 

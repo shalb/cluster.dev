@@ -12,7 +12,7 @@ On this page you will find guidance on how to create a Kubernetes cluster on Dig
 
 ## Prerequisites 
 
-1. Terraform version 13+.
+1. Terraform version 1.4+.
 
 2. DigitalOcean account.
 
