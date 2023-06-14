@@ -33,3 +33,4 @@ units:
       test_insert_yaml: {{ insertYAML .variables.list_one }}
       test_map_output: {{ remoteState "this.test-complex-output-data.map[\"key\"]" }}
       test_map_output_direct: {{ remoteState `this.test-complex-output-data.map.key` }}
+      test: {{ templatePath }}

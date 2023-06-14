@@ -45,10 +45,21 @@ func toYaml(in interface{}) (string, error) {
 // Type for tmpl functions list with additional options, like set path to templated file.
 type ExtendedFuncMap template.FuncMap
 
-func (f *ExtendedFuncMap) Get(path string) template.FuncMap {
+func (f *ExtendedFuncMap) Get(path string, s *Stack) template.FuncMap {
 	readFileEx := func(f string) (string, error) {
 		return readFile(f, path)
 	}
+  var p, pathFuncName string
+  if s == nil {
+    pathFuncName = "projectPath"
+    p = config.Global.ProjectConfigsPath
+  } else {
+    pathFuncName = "templatePath"
+    p = filepath.Join(s.TemplateDir)
+  }
+  getPath := func () string  {
+    return p
+  }
 	var templateFunctionsMap = template.FuncMap{
 		"ReconcilerVersionTag": printVersion,
 		"reqEnv":               getEnv,
@@ -57,6 +68,7 @@ func (f *ExtendedFuncMap) Get(path string) template.FuncMap {
 		"cidrSubnet":           utils.CidrSubnet,
 		"toYaml":               toYaml,
 		"readFile":             readFileEx,
+    pathFuncName:           getPath,
 	}
 	for key, val := range sprig.FuncMap() {
 		if _, ok := templateFunctionsMap[key]; !ok {
@@ -125,7 +137,7 @@ func tmplWithMissingKey(data []byte, values interface{}, missingKey string, p *P
 	}
 	// Copy common template functions.
 	funcs := ExtendedFuncMap{}
-	for k, v := range funcs.Get(filepath.Dir(fileName)) {
+	for k, v := range funcs.Get(filepath.Dir(fileName), s) {
 		tmplFuncMap[k] = v
 	}
 	for _, drv := range TemplateDriversMap {
