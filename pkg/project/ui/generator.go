@@ -237,7 +237,15 @@ func (g *Generator) RunTemplate() (err error) {
 			continue
 		}
 		for {
-			respond := climenu.GetText(opt.Description, "")
+      message := opt.Description
+      if opt.Default != "" {
+        message = fmt.Sprintf("%s (%s)", opt.Description, opt.Default)
+      }
+			respond := climenu.GetText(message, "")
+      if respond == "" && opt.Default != "" {
+        respond = opt.Default
+      }
+      fmt.Println(respond)
 			if verifyRegex(respond, opt.Regex) {
 				g.dataForTmpl[opt.Name] = respond
 				break

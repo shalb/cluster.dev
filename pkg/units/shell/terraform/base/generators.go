@@ -50,6 +50,10 @@ func (u *Unit) genDepsRemoteStates() ([]byte, error) {
 		// De-duplication.
 		DeDuplication[dep.Unit] = true
 		modBackend := dep.Unit.Stack().Backend
+    if dep.Unit.Stack() == nil {
+      continue
+    }
+    // log.Warnf("%v", modBackend)
 		rs, err := modBackend.GetRemoteStateHCL(dep.Unit.Stack().Name, dep.Unit.Name())
 		if err != nil {
 			log.Debug(err.Error())
