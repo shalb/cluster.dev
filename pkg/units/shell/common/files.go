@@ -92,7 +92,6 @@ func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error
 				for _, p := range pattern {
 					matchPattern = regexp.MustCompile(p).MatchString(relPath)
 					if !matchPattern {
-            // log.Warnf("ReadDir !matchPattern %v - %v", p, relPath)
 						break
 					}
 				}
@@ -100,10 +99,8 @@ func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error
 					return nil
 				}
         for _, p := range ignorePatterns {
-          log.Warnf("ReadDir check %v - %v", p, relPath)
           matchPattern = regexp.MustCompile(p).MatchString(relPath)
 					if matchPattern {
-            // log.Warnf("ReadDir matchPattern %v - %v", p, relPath)
 						return nil
 					}
         }
@@ -112,10 +109,9 @@ func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error
           return err
         }
         if stat.Size() > fileSizeLimit {
-          log.Warnf("file size limit exceeded, ignore: %v", path)
+          log.Warnf("File size limit exceeded, ignore: %v", path)
           return nil
         }
-        // log.Warnf("ReadDir ReadFile %v ",  relPath)
 				content, err := os.ReadFile(path)
 				if err != nil {
 					return err

@@ -106,7 +106,6 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if !ok {
 		return fmt.Errorf("incorrect unit source")
 	}
-  log.Warnf("Unit local path: %v", source)
 	if utils.IsLocalPath(source) {
 		u.LocalModule = &common.FilesListT{}
     var tfModuleLocalDir string
