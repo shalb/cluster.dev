@@ -3,14 +3,20 @@ package common
 import (
 	"fmt"
 	"io/fs"
+	"regexp"
 
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/apex/log"
 )
+
+var fileSizeLimit int64 = 102400
+var ignorePatterns []string = []string{
+  ".*\\.terraform/.*",
+  ".*\\.git/.*",
+}
 
 // CreateFileRepresentation describes the unit's file that will be saved in the unit's working directory when building.
 type CreateFileRepresentation struct {
@@ -85,13 +91,31 @@ func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error
 				matchPattern := true
 				for _, p := range pattern {
 					matchPattern = regexp.MustCompile(p).MatchString(relPath)
-					if matchPattern != true {
+					if !matchPattern {
+            // log.Warnf("ReadDir !matchPattern %v - %v", p, relPath)
 						break
 					}
 				}
 				if !matchPattern {
 					return nil
 				}
+        for _, p := range ignorePatterns {
+          log.Warnf("ReadDir check %v - %v", p, relPath)
+          matchPattern = regexp.MustCompile(p).MatchString(relPath)
+					if matchPattern {
+            // log.Warnf("ReadDir matchPattern %v - %v", p, relPath)
+						return nil
+					}
+        }
+        stat, err := os.Stat(path)
+        if err != nil {
+          return err
+        }
+        if stat.Size() > fileSizeLimit {
+          log.Warnf("file size limit exceeded, ignore: %v", path)
+          return nil
+        }
+        // log.Warnf("ReadDir ReadFile %v ",  relPath)
 				content, err := os.ReadFile(path)
 				if err != nil {
 					return err
