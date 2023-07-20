@@ -103,5 +103,4 @@ extra:
       link: https://github.com/shalb/cluster.dev
       extra:
   analytics:
-    provider: google
-    property: G-KK8Z11MM4P
+    provider: gtm
