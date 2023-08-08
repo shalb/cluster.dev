@@ -1,5 +1,5 @@
 ARG CDEV_VERSION
-ARG DEBIAN_VERSION=10.9-slim
+ARG DEBIAN_VERSION=12.1-slim
 
 FROM clusterdev/cluster.dev:${CDEV_VERSION} as clusterdev
 
