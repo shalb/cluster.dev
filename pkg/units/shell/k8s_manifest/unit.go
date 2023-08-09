@@ -275,6 +275,9 @@ func (u *Unit) ScanData(scanner project.MarkerScanner) error {
 				return err
 			}
 			fmn, err := yaml.Marshal(mn)
+      if err != nil {
+        return err
+      }
 			scannedFile = append(scannedFile, fmn...)
 			// log.Debugf("Scanned file: %v", string(scannedFile))
 		}
