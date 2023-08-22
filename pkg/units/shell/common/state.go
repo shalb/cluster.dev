@@ -117,7 +117,7 @@ func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProjec
 	if !exists {
 		return fmt.Errorf("load unit from state: backend '%v' does not exists in curent project", u.BackendName)
 	}
-  stack.Backend = backend
+	stack.Backend = backend
 	u.MyName = modName
 	u.StackPtr = stack
 	u.ProjectPtr = &p.Project

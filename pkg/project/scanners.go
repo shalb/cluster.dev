@@ -70,7 +70,7 @@ func OutputsReplacer(data reflect.Value, unit Unit) (reflect.Value, error) {
 				} else {
 					dataStr = link.OutputData.(string)
 				}
-        log.Warnf("OutputsReplacer: replace dataStr %v", dataStr)
+				log.Warnf("OutputsReplacer: replace dataStr %v", dataStr)
 				resString = strings.ReplaceAll(resString, marker, dataStr)
 			}
 		}

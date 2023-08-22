@@ -108,12 +108,12 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	}
 	if utils.IsLocalPath(source) {
 		u.LocalModule = &common.FilesListT{}
-    var tfModuleLocalDir string
-    if utils.IsAbsolutePath(source) {
-      tfModuleLocalDir = source
-    } else {
-      tfModuleLocalDir = filepath.Join(config.Global.WorkingDir, u.Stack().TemplateDir, source)
-    }
+		var tfModuleLocalDir string
+		if utils.IsAbsolutePath(source) {
+			tfModuleLocalDir = source
+		} else {
+			tfModuleLocalDir = filepath.Join(config.Global.WorkingDir, u.Stack().TemplateDir, source)
+		}
 		err := u.LocalModule.ReadDir(tfModuleLocalDir, tfModuleLocalDir)
 		if err != nil {
 			return fmt.Errorf("%v, reading local unit: %v", u.Key(), err.Error())
