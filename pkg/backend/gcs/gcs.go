@@ -14,15 +14,15 @@ import (
 
 // Backend - describe s3 backend for interface package.backend.
 type Backend struct {
-	name                      string
-	Bucket                    string `yaml:"bucket"`
-	Credentials               string `yaml:"credentials,omitempty"`
-	ImpersonateServiceAccount string `yaml:"impersonate_service_account,omitempty"`
-	AccessToken               string `yaml:"access_token,omitempty"`
-	EncryptionKey             string `yaml:"encryption_key,omitempty"`
-	Prefix                    string `yaml:"prefix"`
-	state                     map[string]interface{}
-	ProjectPtr                *project.Project
+	name                      string                 `yaml:"-"`
+	Bucket                    string                 `yaml:"bucket"`
+	Credentials               string                 `yaml:"credentials,omitempty"`
+	ImpersonateServiceAccount string                 `yaml:"impersonate_service_account,omitempty"`
+	AccessToken               string                 `yaml:"access_token,omitempty"`
+	EncryptionKey             string                 `yaml:"encryption_key,omitempty"`
+	Prefix                    string                 `yaml:"prefix"`
+	state                     map[string]interface{} `yaml:"-"`
+	ProjectPtr                *project.Project       `yaml:"-"`
 }
 
 func (b *Backend) State() map[string]interface{} {

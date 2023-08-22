@@ -14,8 +14,8 @@ import (
 
 var fileSizeLimit int64 = 102400
 var ignorePatterns []string = []string{
-  ".*\\.terraform/.*",
-  ".*\\.git/.*",
+	".*\\.terraform/.*",
+	".*\\.git/.*",
 }
 
 // CreateFileRepresentation describes the unit's file that will be saved in the unit's working directory when building.
@@ -98,20 +98,20 @@ func (l *FilesListT) ReadDir(path, baseDir string, pattern ...string) (err error
 				if !matchPattern {
 					return nil
 				}
-        for _, p := range ignorePatterns {
-          matchPattern = regexp.MustCompile(p).MatchString(relPath)
+				for _, p := range ignorePatterns {
+					matchPattern = regexp.MustCompile(p).MatchString(relPath)
 					if matchPattern {
 						return nil
 					}
-        }
-        stat, err := os.Stat(path)
-        if err != nil {
-          return err
-        }
-        if stat.Size() > fileSizeLimit {
-          log.Warnf("File size limit exceeded, ignore: %v", path)
-          return nil
-        }
+				}
+				stat, err := os.Stat(path)
+				if err != nil {
+					return err
+				}
+				if stat.Size() > fileSizeLimit {
+					log.Warnf("File size limit exceeded, ignore: %v", path)
+					return nil
+				}
 				content, err := os.ReadFile(path)
 				if err != nil {
 					return err
