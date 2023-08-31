@@ -95,10 +95,12 @@ theme:
   favicon: 'images/favicon.png'
 extra:
   social:
+    - icon: fontawesome/brands/medium
+      link: https://medium.com/@cluster.dev
     - icon: fontawesome/brands/slack
       link: https://join.slack.com/t/cluster-dev/shared_invite/zt-eg4q6jae-v0~zgrBLYTTXt~CjnjmprA
     - icon: fontawesome/brands/twitter
-      link: https://twitter.com/shalbcom
+      link: https://twitter.com/cluster__dev
     - icon: fontawesome/brands/github
       link: https://github.com/shalb/cluster.dev
       extra:

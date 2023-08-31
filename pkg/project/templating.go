@@ -49,17 +49,17 @@ func (f *ExtendedFuncMap) Get(path string, s *Stack) template.FuncMap {
 	readFileEx := func(f string) (string, error) {
 		return readFile(f, path)
 	}
-  var p, pathFuncName string
-  if s == nil {
-    pathFuncName = "projectPath"
-    p = config.Global.ProjectConfigsPath
-  } else {
-    pathFuncName = "templatePath"
-    p = filepath.Join(s.TemplateDir)
-  }
-  getPath := func () string  {
-    return p
-  }
+	var p, pathFuncName string
+	if s == nil {
+		pathFuncName = "projectPath"
+		p = config.Global.ProjectConfigsPath
+	} else {
+		pathFuncName = "templatePath"
+		p = filepath.Join(s.TemplateDir)
+	}
+	getPath := func() string {
+		return p
+	}
 	var templateFunctionsMap = template.FuncMap{
 		"ReconcilerVersionTag": printVersion,
 		"reqEnv":               getEnv,
@@ -68,7 +68,7 @@ func (f *ExtendedFuncMap) Get(path string, s *Stack) template.FuncMap {
 		"cidrSubnet":           utils.CidrSubnet,
 		"toYaml":               toYaml,
 		"readFile":             readFileEx,
-    pathFuncName:           getPath,
+		pathFuncName:           getPath,
 	}
 	for key, val := range sprig.FuncMap() {
 		if _, ok := templateFunctionsMap[key]; !ok {
