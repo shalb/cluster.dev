@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/apex/log"
 )
@@ -18,7 +19,8 @@ type ULinkT struct {
 
 // UnitLinksT describe a set of links (dependencies) betwen units inside project.
 type UnitLinksT struct {
-	List map[string]*ULinkT `json:"unit_links_list,omitempty"`
+	LinksList map[string]*ULinkT `json:"unit_links_list,omitempty"`
+	MapMutex  sync.RWMutex
 }
 
 func (u *ULinkT) UnitKey() (res string) {
@@ -46,8 +48,6 @@ func (u *ULinkT) LinkPath() (res string) {
 	if u.TargetStackName == "" || u.TargetUnitName == "" || u.LinkType == "" {
 		return
 	}
-	res = fmt.Sprintf("%v.%v", u.TargetStackName, u.TargetUnitName)
-
 	if u.OutputName == "" {
 		res = fmt.Sprintf("%v.%v.%v", u.LinkType, u.TargetStackName, u.TargetUnitName)
 	} else {
@@ -57,23 +57,50 @@ func (u *ULinkT) LinkPath() (res string) {
 }
 
 func (o *UnitLinksT) Set(l *ULinkT) (string, error) {
-	if o.List == nil {
-		o.List = make(map[string]*ULinkT)
+	o.MapMutex.Lock()
+	defer o.MapMutex.Unlock()
+	if o.LinksList == nil {
+		o.LinksList = make(map[string]*ULinkT)
 	}
 	key, err := CreateMarker(*l)
 	if err != nil {
 		return "", err
 	}
-	o.List[key] = l
+	o.LinksList[key] = l
 	return key, err
+}
+
+// Insert insert element to map, override if exists
+func (o *UnitLinksT) Insert(key string, l *ULinkT) {
+	o.MapMutex.Lock()
+	defer o.MapMutex.Unlock()
+	if o.LinksList == nil {
+		o.LinksList = make(map[string]*ULinkT)
+	}
+	o.LinksList[key] = l
+}
+
+// Insert insert element to map, return error if exists
+func (o *UnitLinksT) InsertTry(key string, l *ULinkT) error {
+	o.MapMutex.Lock()
+	defer o.MapMutex.Unlock()
+	if o.LinksList == nil {
+		o.LinksList = make(map[string]*ULinkT)
+	}
+	_, exists := o.LinksList[key]
+	if exists {
+		return fmt.Errorf("add unit link to map: key '%s' already exists", key)
+	}
+	o.LinksList[key] = l
+	return nil
 }
 
 func (o *UnitLinksT) Join(l *UnitLinksT) error {
 	if l.IsEmpty() {
 		return nil
 	}
-	for _, linkl := range l.Map() {
-		_, err := o.Set(linkl)
+	for _, link := range l.Map() {
+		_, err := o.Set(link)
 		if err != nil {
 			return err
 		}
@@ -86,14 +113,14 @@ func (o *UnitLinksT) JoinWithDataReplace(source *UnitLinksT) error {
 	if source.IsEmpty() {
 		return nil
 	}
-	for key, linkl := range source.Map() {
+	for key, link := range source.Map() {
 		targetLink := o.Get(key)
 		if targetLink != nil {
 			if targetLink.OutputData == nil {
-				targetLink.OutputData = linkl.OutputData
+				targetLink.OutputData = link.OutputData
 			}
 		} else {
-			_, err := o.Set(linkl)
+			_, err := o.Set(link)
 			if err != nil {
 				return err
 			}
@@ -102,31 +129,37 @@ func (o *UnitLinksT) JoinWithDataReplace(source *UnitLinksT) error {
 	return nil
 }
 func (o *UnitLinksT) Get(key string) (res *ULinkT) {
-	if o.List == nil {
+	o.MapMutex.RLock()
+	defer o.MapMutex.RUnlock()
+	if o.LinksList == nil {
 		return nil
 	}
-	res, _ = o.List[key]
+	res = o.LinksList[key]
 	return
 }
 
 func (o *UnitLinksT) Delete(marker string) (err error) {
-	if o.List == nil {
+	o.MapMutex.Lock()
+	defer o.MapMutex.Unlock()
+	if o.LinksList == nil {
 		return nil
 	}
-	_, exists := o.List[marker]
+	_, exists := o.LinksList[marker]
 	if exists {
-		delete(o.List, marker)
+		delete(o.LinksList, marker)
 	}
 	return
 }
 
 func (o *UnitLinksT) Slice() (res []*ULinkT) {
-	if o.List == nil {
+	o.MapMutex.RLock()
+	defer o.MapMutex.RUnlock()
+	if o.LinksList == nil {
 		return nil
 	}
-	res = make([]*ULinkT, len(o.List))
+	res = make([]*ULinkT, len(o.LinksList))
 	i := 0
-	for _, el := range o.List {
+	for _, el := range o.LinksList {
 		res[i] = el
 		i++
 	}
@@ -134,25 +167,31 @@ func (o *UnitLinksT) Slice() (res []*ULinkT) {
 }
 
 func (o *UnitLinksT) Map() (res map[string]*ULinkT) {
-	return o.List
+	o.MapMutex.RLock()
+	defer o.MapMutex.RUnlock()
+	res = make(map[string]*ULinkT)
+	for k, v := range o.LinksList {
+		res[k] = v
+	}
+	return res
 }
 
 // ByLinkTypes returns sublist with unit link types == any of outputType slice. Returns full list if outputType is empty.
 func (o *UnitLinksT) ByLinkTypes(outputType ...string) (res *UnitLinksT) {
 	res = &UnitLinksT{
-		List: make(map[string]*ULinkT),
+		LinksList: make(map[string]*ULinkT),
 	}
-	if o.List == nil {
+	if o.IsEmpty() {
 		return
 	}
-	for key, el := range o.List {
+	for key, link := range o.Map() {
 		if len(outputType) == 0 {
-			res.List[key] = el
+			res.Insert(key, link)
 			continue
 		}
 		for _, tp := range outputType {
-			if tp == el.LinkType {
-				res.List[key] = el
+			if tp == link.LinkType {
+				res.Insert(key, link)
 				break
 			}
 		}
@@ -163,10 +202,10 @@ func (o *UnitLinksT) ByLinkTypes(outputType ...string) (res *UnitLinksT) {
 // UniqUnits return list of uniq links units.
 func (o *UnitLinksT) UniqUnits() map[string]Unit {
 	res := make(map[string]Unit)
-	if o.List == nil {
+	if o.IsEmpty() {
 		return nil
 	}
-	for _, el := range o.List {
+	for _, el := range o.Map() {
 		unit, exists := res[el.UnitKey()]
 		if !exists {
 			res[el.UnitKey()] = el.Unit
@@ -185,25 +224,35 @@ func (o *UnitLinksT) UniqUnits() map[string]Unit {
 
 func (o *UnitLinksT) ByTargetUnit(unit Unit) (res *UnitLinksT) {
 	res = &UnitLinksT{
-		List: make(map[string]*ULinkT),
+		LinksList: make(map[string]*ULinkT),
 	}
-	if o.List == nil {
+	if o.LinksList == nil {
 		return
 	}
-	// res = make(map[string]*ULinkT)\
-	for key, el := range o.List {
-		// log.Warnf("ByTargetUnit: %v.%v == %v.%v", unit.Stack().Name, unit.Name(), el.TargenStackName, el.TargetUnitName)
+	for key, el := range o.Map() {
 		if unit.Name() == el.TargetUnitName && unit.Stack().Name == el.TargetStackName {
-			res.List[key] = el
+			res.LinksList[key] = el
+			res.Insert(key, el)
 		}
 	}
 	return
 }
 
 func (o *UnitLinksT) IsEmpty() bool {
-	return o.List == nil || len(o.List) == 0
+	o.MapMutex.RLock()
+	defer o.MapMutex.RUnlock()
+	return o.LinksList == nil || len(o.LinksList) == 0
 }
 
 func (o *UnitLinksT) Size() int {
-	return len(o.List)
+	o.MapMutex.RLock()
+	defer o.MapMutex.RUnlock()
+	return len(o.LinksList)
+}
+
+func NewUnitLinksT() *UnitLinksT {
+	res := &UnitLinksT{
+		LinksList: make(map[string]*ULinkT),
+	}
+	return res
 }

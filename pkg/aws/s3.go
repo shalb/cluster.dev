@@ -10,11 +10,15 @@ import (
 )
 
 func S3Put(region, bucketName, keyName, data string) error {
-	svc := s3.New(session.New(
+	sess, err := session.NewSession(
 		&aws.Config{
 			Region: aws.String(region),
 		},
-	))
+	)
+	if err != nil {
+		return err
+	}
+	svc := s3.New(sess)
 	input := &s3.PutObjectInput{
 		Body:   strings.NewReader(data),
 		Bucket: aws.String(bucketName),
@@ -22,7 +26,7 @@ func S3Put(region, bucketName, keyName, data string) error {
 	}
 	// log.Debugf("S3 uploading object. Bucket '%v', key: '%v', region: '%v'", bucketName, keyName, region)
 	// Create an uploader with the session and default options
-	_, err := svc.PutObject(input)
+	_, err = svc.PutObject(input)
 	if err != nil {
 		return err
 	}

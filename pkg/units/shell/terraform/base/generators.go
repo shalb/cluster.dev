@@ -50,7 +50,7 @@ func (u *Unit) genDepsRemoteStates() ([]byte, error) {
 		// De-duplication.
 		DeDuplication[dep.Unit] = true
 		modBackend := dep.Unit.Stack().Backend
-		if dep.Unit.Stack() == nil {
+		if dep.Unit == nil || dep.Unit.Stack() == nil {
 			continue
 		}
 		// log.Warnf("%v", modBackend)

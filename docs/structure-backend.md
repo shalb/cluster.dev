@@ -70,13 +70,16 @@ spec:
 
 ### `do` 
 
-Stores the cluster state in DigitalOcean spaces. 
+See how to use terraform s3 backend for digitalocean spaces: [Terraform remote state backup with Digital Ocean Spaces](https://anichakraborty.medium.com/terraform-remote-state-backup-with-digital-ocean-spaces-697e35128a6a)
 
 ```yaml
 name: do-backend
 kind: backend
 provider: do
 spec:
+  endpoint: "sgp1.digitaloceanspaces.com"
+  skip_credentials_validation: true
+  skip_metadata_api_check: true
   bucket: cdev-states
   region: {{ .project.variables.region }}
   access_key: {{ env "SPACES_ACCESS_KEY_ID" }}

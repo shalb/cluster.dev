@@ -62,7 +62,6 @@ func (s *smDriver) Read(rawData []byte) (name string, data interface{}, err erro
 		return "", nil, err
 	}
 
-	log.Debugf("%+v", data)
 	return
 }
 

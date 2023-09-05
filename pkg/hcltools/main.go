@@ -23,11 +23,16 @@ helm:
     exec: true
 aws:
   assume_role: true
+  assume_role_with_web_identity: true
   ignore_tags: true
+  endpoints: true
+  default_tags: true
 google:
   batching: true
 google-beta:
   batching: true
+opennebula:
+  default_tags: true
 `
 
 // InterfaceToCty convert go type to cty.Value(for hlc lib), using hack with JSON marshal/unmarshal.

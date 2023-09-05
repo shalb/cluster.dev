@@ -223,7 +223,7 @@ func (u *Unit) Init() error {
 }
 
 func (u *Unit) forceApplyDependencies() (err error) {
-	for _, dep := range u.DependenciesList.List {
+	for _, dep := range u.DependenciesList.Map() {
 		if dep.Unit.ForceApply() {
 			dep.Unit.Mux().Lock()
 			if dep.Unit.WasApplied() {

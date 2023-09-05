@@ -36,7 +36,7 @@ func TerraformJSONParser(in string, out *project.UnitLinksT) error {
 		strValue := fmt.Sprintf("%v", val.Value)
 		outTmp[key] = strValue
 	}
-	for _, expOutput := range out.List {
+	for _, expOutput := range out.Map() {
 		data, exists := outTmp[expOutput.OutputName]
 		if !exists {
 			return fmt.Errorf("parse outputs: unit has no output named '%v', expected by another unit", expOutput.OutputName)
