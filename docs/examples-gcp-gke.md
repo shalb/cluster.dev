@@ -59,7 +59,7 @@ The resources to be created:
       state_bucket_name: gke-demo-state
       state_bucket_prefix: demo
     ```
-3. Create GCO bucket for terraform backend
+3. Create GCP bucket for terraform backend
     ```
     gcloud projects create cdev-demo
     gcloud config set project cdev-demo
