@@ -69,7 +69,7 @@ The resources to be created:
 5. Run `cdev plan`
 6. Run `cdev apply`
 7. Setup DNS delegation for subdomain by creating
-   NS records for subdomain in parent domain
+   NS records for subdomain in parent domain.
    Run `cdev output`
    ```
    cdev output
