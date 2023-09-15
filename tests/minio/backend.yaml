@@ -1,4 +1,4 @@
-name: aws-backend
+name: minio-backend
 kind: Backend
 provider: s3
 spec:
