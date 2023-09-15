@@ -1,0 +1,14 @@
+name: aws-backend
+kind: Backend
+provider: s3
+spec:
+  bucket: {{ .project.variables.state_bucket_name }}
+  region: main
+  access_key: "minioadmin"
+  secret_key: "minioadmin"
+  endpoint: http://127.0.0.1:9000
+  skip_credentials_validation: true
+  skip_region_validation: true
+  skip_metadata_api_check: true
+  force_path_style: true
+
