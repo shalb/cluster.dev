@@ -214,7 +214,6 @@ func (b *Backend) GetRemoteStateHCL(stackName, unitName string) ([]byte, error) 
 }
 
 func (b *Backend) ReadState() (string, error) {
-	log.Warnf("ReadState 1")
 	result, err := b.s3Client.GetObject(
 		context.TODO(),
 		&s3.GetObjectInput{
