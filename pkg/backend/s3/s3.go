@@ -165,10 +165,7 @@ func (b *Backend) GetBackendHCL(stackName, unitName string) (*hclwrite.File, err
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
 	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"s3"})
 	backendBody := backendBlock.Body()
-	// backendBody.SetAttributeValue("bucket", cty.StringVal(b.Bucket))
 	backendBody.SetAttributeValue("key", cty.StringVal(fmt.Sprintf("%s/%s.state", stackName, unitName)))
-	// backendBody.SetAttributeValue("region", cty.StringVal(b.Region))
-	terraformBlock.Body().SetAttributeValue("required_version", cty.StringVal("~> 0.13"))
 	bkMap, err := getBackendMap(*b)
 	if err != nil {
 		return nil, err
