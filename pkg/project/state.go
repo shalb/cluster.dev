@@ -155,6 +155,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 		return nil, err
 	}
 	if len(loadedStateFile) > 0 {
+		// log.Warnf("LoadState():\n%s", string(loadedStateFile))
 		err = utils.JSONDecode(loadedStateFile, &stateD)
 		if err != nil {
 			return nil, fmt.Errorf("load state: %w", err)

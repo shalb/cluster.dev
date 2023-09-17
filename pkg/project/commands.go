@@ -281,7 +281,7 @@ func (p *Project) Plan() (hasChanges bool, err error) {
 		}
 	}
 	for _, un := range changedUnits {
-		for _, dep := range un.Dependencies().List {
+		for _, dep := range un.Dependencies().Map() {
 			if dep.Unit.ForceApply() {
 				if _, exists := changedUnits[dep.Unit.Key()]; !exists {
 					modsForUpdate = append(modsForUpdate, dep.Unit.Key())

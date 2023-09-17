@@ -26,7 +26,7 @@ func (f *Factory) New(config []byte, name string, p *project.Project) (project.B
 		return nil, utils.ResolveYamlError(config, err)
 	}
 	bk.state = state
-	return &bk, nil
+	return &bk, bk.Configure()
 }
 
 func init() {

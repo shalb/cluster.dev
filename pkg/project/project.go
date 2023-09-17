@@ -35,6 +35,7 @@ type RuntimeData struct {
 // Project describes main config with user-defined variables.
 type Project struct {
 	name             string
+	SessionId        string
 	Units            map[string]Unit
 	Stacks           map[string]*Stack
 	Backends         map[string]Backend
@@ -55,6 +56,7 @@ type Project struct {
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
 func NewEmptyProject() *Project {
 	project := &Project{
+		SessionId:  utils.Md5(utils.RandString(64)),
 		Stacks:     make(map[string]*Stack),
 		Units:      make(map[string]Unit),
 		Backends:   make(map[string]Backend),

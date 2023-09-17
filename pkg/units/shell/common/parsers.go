@@ -23,7 +23,7 @@ func (u *Unit) JSONOutputParser(in string, out *project.UnitLinksT) error {
 	if err != nil {
 		return err
 	}
-	for _, expOutput := range out.List {
+	for _, expOutput := range out.Map() {
 		data, exists := outTmp[expOutput.OutputName]
 		if !exists {
 			return fmt.Errorf("unit has no output named '%v', expected by another unit", expOutput.OutputName)
@@ -63,7 +63,7 @@ func (u *Unit) RegexOutputParser(in string, out *project.UnitLinksT) error {
 		// Use first occurrence as key and value.
 		outTmp[parsed[1]] = parsed[2]
 	}
-	for _, expOutput := range out.List {
+	for _, expOutput := range out.Map() {
 		data, exists := outTmp[expOutput.OutputName]
 		if !exists {
 			return fmt.Errorf("unit has no output named '%v', expected by another unit", expOutput.OutputName)
@@ -100,7 +100,7 @@ func (u *Unit) SeparatorOutputParser(in string, out *project.UnitLinksT) error {
 		key := strings.Trim(kv[0], " ")
 		outTmp[key] = kv[1]
 	}
-	for _, expOutput := range out.List {
+	for _, expOutput := range out.Map() {
 		data, exists := outTmp[expOutput.OutputName]
 		if !exists {
 			return fmt.Errorf("unit has no output named '%v', expected by another unit", expOutput.OutputName)

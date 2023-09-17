@@ -16,7 +16,7 @@ Example configuration:
 name: my-fs
 kind: backend
 provider: local
-spec: 
+spec:
   path: /home/cluster.dev/states/
 ```
 
@@ -24,13 +24,13 @@ A path should be absolute or relative to the directory where `cdev` is running. 
 
 ## Remote backend
 
-Remote backend uses remote cloud services to store the cluster state, making it accessible for team work. 
+Remote backend uses remote cloud services to store the cluster state, making it accessible for team work.
 
 Currently you can use only S3 bucket as a remote backend. In the future we plan to add other remote backend options that are listed below. 
 
-### `s3` 
+### `s3`
 
-Stores the cluster state in AWS S3 bucket. 
+Stores the cluster state in AWS S3 bucket.
 
 ```yaml
 name: aws-backend
@@ -41,7 +41,7 @@ spec:
   region: {{ .project.variables.region }}
 ```
 
-### `azurerm` 
+### `azurerm`
 
 Stores the cluster state in Microsoft Azure cloud. You can also use any options of [Terraform azurerm](https://www.terraform.io/language/settings/backends/azurerm) backend.
 
@@ -55,7 +55,7 @@ spec:
   container_name: "cdev-states"
 ```
 
-### `gcs` 
+### `gcs`
 
 Stores the cluster state in Google Cloud service. You can also use any options of [Terraform gcs](https://www.terraform.io/language/settings/backends/gcs) backend. 
 
@@ -68,17 +68,45 @@ spec:
   prefix: pref
 ```
 
-### `do` 
+### Digital Ocean Spaces and minio.
 
-Stores the cluster state in DigitalOcean spaces. 
+To use DO spaces or minio object storage as a backend, use `s3` backend provider with additional options. See details: 
+
+- [DO Spaces](https://anichakraborty.medium.com/terraform-remote-state-backup-with-digital-ocean-spaces-697e35128a6a)
+- [minio](https://ruben-rodriguez.github.io/posts/minio-s3-terraform-backend/)
+
+DO Spaces example:
 
 ```yaml
 name: do-backend
-kind: backend
-provider: do
+kind: Backend
+provider: s3
 spec:
-  bucket: cdev-states
-  region: {{ .project.variables.region }}
-  access_key: {{ env "SPACES_ACCESS_KEY_ID" }}
-  secret_key: {{ env "SPACES_SECRET_ACCESS_KEY" }}
+  bucket: cdev-state
+  region: main
+  access_key: "<SPACES_SECRET_KEY>" # Optional, it's better to use environment variable 'export SPACES_SECRET_KEY="key"'
+  secret_key: "<SPACES_ACCESS_TOKEN>" # Optional, it's better to use environment variable 'export SPACES_ACCESS_TOKEN="token"'
+  endpoint: "sgp1.digitaloceanspaces.com"
+  skip_credentials_validation: true
+  skip_region_validation: true
+  skip_metadata_api_check: true
 ```
+
+Minio example:
+
+```yaml
+name: minio-backend
+kind: Backend
+provider: s3
+spec:
+  bucket: cdev-state
+  region: main
+  access_key: "minioadmin"
+  secret_key: "minioadmin"
+  endpoint: http://127.0.0.1:9000
+  skip_credentials_validation: true
+  skip_region_validation: true
+  skip_metadata_api_check: true
+  force_path_style: true
+```
+
