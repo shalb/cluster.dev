@@ -9,6 +9,8 @@ require (
 	github.com/apex/log v1.9.0
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/aws/aws-sdk-go v1.44.216
+	github.com/aws/aws-sdk-go-v2 v1.21.0
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.8
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.5
 	github.com/gookit/color v1.5.2
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.34
@@ -31,7 +33,6 @@ require (
 	cloud.google.com/go/compute v1.18.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.12.0 // indirect
-	cloud.google.com/go/storage v1.28.1 // indirect
 	filippo.io/age v1.1.1 // indirect
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
@@ -52,11 +53,9 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/apparentlymart/go-versions v1.0.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.21.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.13 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.33 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.32 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.41 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.35 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.39 // indirect
