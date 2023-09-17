@@ -15,14 +15,12 @@ const unitKind string = "shell"
 func NewEmptyUnit() *Unit {
 	unit := Unit{
 		//UnitMarkers: make(map[string]interface{}),
-		Applied:     false,
-		UnitKind:    unitKind,
-		CreateFiles: &FilesListT{},
-		DependenciesList: &project.UnitLinksT{
-			List: make(map[string]*project.ULinkT),
-		},
-		FApply: false,
-		Env:    make(map[string]string),
+		Applied:          false,
+		UnitKind:         unitKind,
+		CreateFiles:      &FilesListT{},
+		DependenciesList: project.NewUnitLinksT(),
+		FApply:           false,
+		Env:              make(map[string]string),
 	}
 	unit.OutputParsers = map[string]OutputParser{
 		"json":      unit.JSONOutputParser,

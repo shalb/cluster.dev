@@ -42,8 +42,6 @@ func (b *Backend) GetBackendHCL(stackName, unitName string) (*hclwrite.File, err
 	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"local"})
 	backendBody := backendBlock.Body()
 	backendBody.SetAttributeValue("path", cty.StringVal(fmt.Sprintf("%s/%s.%s.tfstate", b.Path, stackName, unitName)))
-
-	// terraformBlock.Body().SetAttributeValue("required_version", cty.StringVal("~> 0.13"))
 	return f, nil
 
 }
