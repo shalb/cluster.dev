@@ -2,10 +2,7 @@
 
 Cluster.dev uses [stack templates](https://docs.cluster.dev/stack-templates-overview/) to generate users' projects in a desired cloud. GCP-GKE is a stack template that creates and provisions Kubernetes clusters in GCP cloud by means of Google Kubernetes Engine (GKE).
 
-In this repository you will find all information and samples necessary to start an GKE cluster on GPC with Cluster.dev. 
-
-The resources to be created:
-
+On this page you will find guidance on how to create an GKE cluster on GCP using one of the Cluster.dev prepared samples – the [GCP-GKE](https://github.com/shalb/cdev-gcp-gke) stack template. Running the example code will have the following resources created:
 * VPC
 * GKE Kubernetes cluster with addons:
   * cert-manager
@@ -98,4 +95,4 @@ The resources to be created:
    install argocd cli 
     ```
     kubectl -n argocd get secret argocd-initial-admin-secret  -o jsonpath="{.data.password}" | base64 -d; echo
-   ```
+    ```
