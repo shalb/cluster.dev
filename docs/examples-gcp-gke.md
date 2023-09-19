@@ -8,15 +8,15 @@ On this page you will find guidance on how to create a GKE cluster on GCP using 
 
 * GKE Kubernetes cluster with addons:
 
-  * cert-manager
+    * cert-manager
 
-  * ingress-nginx
+    * ingress-nginx
 
-  * external-secrets (with GCP Secret Manager backend)
+    * external-secrets (with GCP Secret Manager backend)
 
-  * external-dns
+    * external-dns
 
-  * argocd
+    * argocd
 
 ## Prerequisites
 
@@ -100,7 +100,7 @@ On this page you will find guidance on how to create a GKE cluster on GCP using 
     gcloud container clusters get-credentials demo-cluster --zone us-west1-a --project cdev-demo
     ```
 10. Retrieve ArgoCD admin password,
-   install argocd cli:
+   install the ArgoCD CLI:
     ```
     kubectl -n argocd get secret argocd-initial-admin-secret  -o jsonpath="{.data.password}" | base64 -d; echo
     ```
