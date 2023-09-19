@@ -1,26 +1,47 @@
 package gcs
 
 import (
-	"cloud.google.com/go/storage"
 	"context"
 	"fmt"
+	"io/ioutil"
+
+	"cloud.google.com/go/storage"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 )
 
 // Backend - describe GCS backend for interface package.backend.
 type Backend struct {
-	name        string                 `yaml:"-"`
-	Bucket      string                 `yaml:"bucket"`
-	Credentials string                 `yaml:"credentials,omitempty"`
-	Prefix      string                 `yaml:"prefix"`
-	state       map[string]interface{} `yaml:"-"`
-	ProjectPtr  *project.Project       `yaml:"-"`
+	storageClient         *storage.Client        `yaml:"-"`
+	name                  string                 `yaml:"-"`
+	Bucket                string                 `yaml:"bucket"`
+	Credentials           string                 `yaml:"credentials,omitempty"`
+	ImpersonateSA         string                 `yaml:"impersonate_service_account,omitempty"`
+	AccessToken           string                 `yaml:"access_token,omitempty"`
+	Prefix                string                 `yaml:"prefix"`
+	encryptionKey         []byte                 `yaml:"encryption_key,omitempty"`
+	kmsKeyName            string                 `yaml:"kms_encryption_key,omitempty"`
+	StorageCustomEndpoint string                 `yaml:"storage_custom_endpoint,omitempty"`
+	state                 map[string]interface{} `yaml:"-"`
+	ProjectPtr            *project.Project       `yaml:"-"`
+}
+
+func (b *Backend) Configure() error {
+	// Create a GCS client.
+	ctx := context.Background()
+
+	// Create the GCS client with the specified options.
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	b.storageClient = client
+	return nil
 }
 
 func (b *Backend) State() map[string]interface{} {
@@ -99,15 +120,11 @@ func getStateMap(in Backend) (res map[string]interface{}, err error) {
 func (b *Backend) LockState() error {
 	lockKey := fmt.Sprintf("cdev.%s.lock", b.ProjectPtr.Name())
 
-	// Create a GCS client.
+	// Create a context.
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return err
-	}
 
 	// Check if the lock object exists.
-	_, err = client.Bucket(b.Bucket).Object(lockKey).Attrs(ctx)
+	_, err := b.storageClient.Bucket(b.Bucket).Object(lockKey).Attrs(ctx)
 	if err == nil {
 		return fmt.Errorf("lock state file found, the state is locked")
 	}
@@ -115,7 +132,7 @@ func (b *Backend) LockState() error {
 	sessionID := utils.RandString(10)
 
 	// Create the lock object with the sessionID.
-	lockObject := client.Bucket(b.Bucket).Object(lockKey)
+	lockObject := b.storageClient.Bucket(b.Bucket).Object(lockKey)
 	w := lockObject.NewWriter(ctx)
 	defer w.Close()
 
@@ -131,29 +148,21 @@ func (b *Backend) LockState() error {
 func (b *Backend) UnlockState() error {
 	lockKey := fmt.Sprintf("cdev.%s.lock", b.ProjectPtr.Name())
 
-	// Create a GCS client.
+	// Create a context.
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return err
-	}
 
 	// Delete the lock object.
-	return client.Bucket(b.Bucket).Object(lockKey).Delete(ctx)
+	return b.storageClient.Bucket(b.Bucket).Object(lockKey).Delete(ctx)
 }
 
 func (b *Backend) WriteState(stateData string) error {
 	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
 
-	// Create a GCS client.
+	// Create a context.
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return err
-	}
 
 	// Create or overwrite the state object with stateData.
-	stateObject := client.Bucket(b.Bucket).Object(stateKey)
+	stateObject := b.storageClient.Bucket(b.Bucket).Object(stateKey)
 	w := stateObject.NewWriter(ctx)
 	defer w.Close()
 
@@ -166,15 +175,11 @@ func (b *Backend) WriteState(stateData string) error {
 func (b *Backend) ReadState() (string, error) {
 	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
 
-	// Create a GCS client.
+	// Create a context.
 	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		return "", err
-	}
 
 	// Check if the object exists.
-	_, err = client.Bucket(b.Bucket).Object(stateKey).Attrs(ctx)
+	_, err := b.storageClient.Bucket(b.Bucket).Object(stateKey).Attrs(ctx)
 	if err != nil {
 		if err == storage.ErrObjectNotExist {
 			// fmt.Printf("Object '%s' does not exist in bucket '%s'\n", stateKey, b.Bucket)
@@ -185,7 +190,7 @@ func (b *Backend) ReadState() (string, error) {
 	}
 
 	// Read the state object.
-	stateObject := client.Bucket(b.Bucket).Object(stateKey)
+	stateObject := b.storageClient.Bucket(b.Bucket).Object(stateKey)
 	r, err := stateObject.NewReader(ctx)
 	if err != nil {
 		return "", err
