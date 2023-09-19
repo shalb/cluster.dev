@@ -1,5 +1,7 @@
 # DO-K8s
 
+Cluster.dev uses [stack templates](https://docs.cluster.dev/stack-templates-overview/) to generate users' projects in a desired cloud. DO-K8s is a stack template that creates and provisions Kubernetes clusters in the DigitalOcean cloud.
+
 On this page you will find guidance on how to create a Kubernetes cluster on DigitalOcean using one of the Cluster.dev prepared samples – the [DO-K8s](https://github.com/shalb/cdev-do-k8s) stack template. Running the example code will have the following resources created:
 
 * DO Kubernetes cluster with addons:
@@ -12,13 +14,13 @@ On this page you will find guidance on how to create a Kubernetes cluster on Dig
 
 ## Prerequisites 
 
-1. Terraform version 1.4+.
+1. Terraform version 1.4+
 
-2. DigitalOcean account.
+2. DigitalOcean account
 
-3. [doctl installed](https://docs.digitalocean.com/reference/doctl/how-to/install/).
+3. [doctl installed](https://docs.digitalocean.com/reference/doctl/how-to/install/)
 
-4. [Cluster.dev client installed](https://docs.cluster.dev/get-started-install/).
+4. [Cluster.dev client installed](https://docs.cluster.dev/get-started-install/)
 
 ### Authentication
 

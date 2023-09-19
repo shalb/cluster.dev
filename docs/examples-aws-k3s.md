@@ -1,5 +1,7 @@
 # AWS-K3s
 
+Cluster.dev uses [stack templates](https://docs.cluster.dev/stack-templates-overview/) to generate users' projects in a desired cloud. AWS-K3s is a stack template that creates and provisions Kubernetes clusters in AWS cloud by means of k3s utility. 
+
 On this page you will find guidance on how to create a K3s cluster on AWS using one of the Cluster.dev prepared samples – the [AWS-K3s](https://github.com/shalb/cdev-aws-k3s) stack template. Running the example code will have the following resources created:
 
 * K3s cluster with addons:
@@ -22,15 +24,15 @@ On this page you will find guidance on how to create a K3s cluster on AWS using 
 
 ## Prerequisites
 
-1. Terraform version 1.4+.
+1. Terraform version 1.4+
 
-2. AWS account.
+2. AWS account
 
-3. [AWS CLI](#install-aws-client) installed.
+3. [AWS CLI](#install-aws-client) installed
 
-4. kubectl installed.
+4. kubectl installed
 
-5. [Cluster.dev client installed](https://docs.cluster.dev/get-started-install/).
+5. [Cluster.dev client installed](https://docs.cluster.dev/get-started-install/)
 
 ### Authentication
 
