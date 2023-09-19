@@ -2,8 +2,12 @@ package gcs
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
 
 	"cloud.google.com/go/storage"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -11,36 +15,135 @@ import (
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
+	"golang.org/x/oauth2"
+	"google.golang.org/api/impersonate"
+	"google.golang.org/api/option"
 	"gopkg.in/yaml.v3"
 )
 
 // Backend - describe GCS backend for interface package.backend.
 type Backend struct {
-	storageClient         *storage.Client        `yaml:"-"`
-	name                  string                 `yaml:"-"`
-	Bucket                string                 `yaml:"bucket"`
-	Credentials           string                 `yaml:"credentials,omitempty"`
-	ImpersonateSA         string                 `yaml:"impersonate_service_account,omitempty"`
-	AccessToken           string                 `yaml:"access_token,omitempty"`
-	Prefix                string                 `yaml:"prefix"`
-	encryptionKey         []byte                 `yaml:"encryption_key,omitempty"`
-	kmsKeyName            string                 `yaml:"kms_encryption_key,omitempty"`
-	StorageCustomEndpoint string                 `yaml:"storage_custom_endpoint,omitempty"`
-	state                 map[string]interface{} `yaml:"-"`
-	ProjectPtr            *project.Project       `yaml:"-"`
+	storageClient          *storage.Client `yaml:"-"`
+	storageContext         context.Context
+	name                   string                 `yaml:"-"`
+	Bucket                 string                 `yaml:"bucket"`
+	Credentials            string                 `yaml:"credentials,omitempty"`
+	ImpersonateSA          string                 `yaml:"impersonate_service_account,omitempty"`
+	ImpersonateSADelegates []string               `yaml:"-",omitempty"`
+	AccessToken            string                 `yaml:"access_token,omitempty"`
+	Prefix                 string                 `yaml:"prefix"`
+	encryptionKey          []byte                 `yaml:"encryption_key,omitempty"`
+	kmsKeyName             string                 `yaml:"kms_encryption_key,omitempty"`
+	StorageCustomEndpoint  string                 `yaml:"storage_custom_endpoint,omitempty"`
+	state                  map[string]interface{} `yaml:"-"`
+	ProjectPtr             *project.Project       `yaml:"-"`
 }
 
-func (b *Backend) Configure() error {
-	// Create a GCS client.
-	ctx := context.Background()
+func (b *Backend) Configure(ctx context.Context) error {
+	if b.storageClient != nil {
+		return nil
+	}
 
-	// Create the GCS client with the specified options.
-	client, err := storage.NewClient(ctx)
+	b.storageContext = ctx
+
+	b.name = b.Bucket
+	b.Prefix = strings.TrimLeft(b.Prefix, "/")
+	if b.Prefix != "" && !strings.HasSuffix(b.Prefix, "/") {
+		b.Prefix = b.Prefix + "/"
+	}
+
+	var opts []option.ClientOption
+	var credOptions []option.ClientOption
+
+	// Add credential source
+	var creds string
+	var tokenSource oauth2.TokenSource
+
+	if b.AccessToken != "" {
+		tokenSource = oauth2.StaticTokenSource(&oauth2.Token{
+			AccessToken: b.AccessToken,
+		})
+	} else if b.Credentials != "" {
+		creds = b.Credentials
+	} else if v := os.Getenv("GOOGLE_BACKEND_CREDENTIALS"); v != "" {
+		creds = v
+	} else {
+		creds = os.Getenv("GOOGLE_CREDENTIALS")
+	}
+
+	if tokenSource != nil {
+		credOptions = append(credOptions, option.WithTokenSource(tokenSource))
+	} else if creds != "" {
+		contents, err := ReadPathOrContents(creds)
+		if err != nil {
+			return fmt.Errorf("Error loading credentials: %s", err)
+		}
+
+		if !json.Valid([]byte(contents)) {
+			return fmt.Errorf("the string provided in credentials is neither valid json nor a valid file path")
+		}
+
+		credOptions = append(credOptions, option.WithCredentialsJSON([]byte(contents)))
+	}
+
+	if b.ImpersonateSA != "" {
+		ServiceAccount := b.ImpersonateSA
+		var delegates []string
+
+		if len(b.ImpersonateSADelegates) > 0 {
+			delegates = make([]string, 0, len(b.ImpersonateSADelegates))
+			for _, delegate := range b.ImpersonateSADelegates {
+				delegates = append(delegates, delegate)
+			}
+		}
+
+		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+			TargetPrincipal: ServiceAccount,
+			Scopes:          []string{storage.ScopeReadWrite},
+			Delegates:       delegates,
+		}, credOptions...)
+
+		if err != nil {
+			return err
+		}
+
+		opts = append(opts, option.WithTokenSource(ts))
+
+	} else {
+		opts = append(opts, credOptions...)
+	}
+
+	if b.StorageCustomEndpoint != "" {
+		endpoint := option.WithEndpoint(b.StorageCustomEndpoint)
+		opts = append(opts, endpoint)
+	}
+	client, err := storage.NewClient(b.storageContext, opts...)
 	if err != nil {
-		return err
+		return fmt.Errorf("storage.NewClient() failed: %v", err)
 	}
 
 	b.storageClient = client
+
+	key := b.encryptionKey
+
+	if len(key) > 0 {
+		kc, err := ReadPathOrContents(string(key))
+		if err != nil {
+			return fmt.Errorf("Error loading encryption key: %s", err)
+		}
+
+		k, err := base64.StdEncoding.DecodeString(kc)
+		if err != nil {
+			return fmt.Errorf("Error decoding encryption key: %s", err)
+		}
+		b.encryptionKey = k
+	}
+
+	kmsName := b.kmsKeyName
+	if kmsName != "" {
+		b.kmsKeyName = kmsName
+	}
+
 	return nil
 }
 
@@ -203,4 +306,31 @@ func (b *Backend) ReadState() (string, error) {
 	}
 
 	return string(stateData), nil
+}
+
+// ReadPathOrContents reads the contents of a file if the input is a file path,
+// or returns the input as is if it's not a file path.
+func ReadPathOrContents(input string) (string, error) {
+	// Check if the input contains a path separator (e.g., '/').
+	if strings.Contains(input, "/") {
+		// Treat input as a file path and read its contents.
+		contents, err := readFileContents(input)
+		if err != nil {
+			return "", err
+		}
+		return contents, nil
+	}
+
+	// Input is not a file path, return it as is.
+	return input, nil
+}
+
+// readFileContents reads the contents of a file given its path.
+func readFileContents(filePath string) (string, error) {
+	// Read the file contents.
+	contents, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return "", err
+	}
+	return string(contents), nil
 }

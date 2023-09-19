@@ -1,6 +1,8 @@
 package gcs
 
 import (
+	"context"
+
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -25,7 +27,8 @@ func (f *Factory) New(config []byte, name string, p *project.Project) (project.B
 		bk.Prefix += "/"
 	}
 	bk.state = state
-	return &bk, bk.Configure()
+	ctx := context.Background()
+	return &bk, bk.Configure(ctx)
 }
 
 func init() {

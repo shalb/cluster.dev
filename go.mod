@@ -12,6 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.8
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.5
+	github.com/bozd4g/go-http-client v1.0.2
 	github.com/gookit/color v1.5.2
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.34
 	github.com/hashicorp/hcl/v2 v2.16.2
