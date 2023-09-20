@@ -87,28 +87,15 @@ func (b *Backend) Configure() error {
 	}
 
 	if b.ImpersonateSA != "" {
-		ServiceAccount := b.ImpersonateSA
-		var delegates []string
-
-		if len(b.ImpersonateSADelegates) > 0 {
-			delegates = make([]string, 0, len(b.ImpersonateSADelegates))
-			for i, delegate := range b.ImpersonateSADelegates {
-				delegates[i] = delegate
-			}
-		}
-
 		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
-			TargetPrincipal: ServiceAccount,
+			TargetPrincipal: b.ImpersonateSA,
 			Scopes:          []string{storage.ScopeReadWrite},
-			Delegates:       delegates,
+			Delegates:       b.ImpersonateSADelegates,
 		}, credOptions...)
-
 		if err != nil {
 			return err
 		}
-
 		opts = append(opts, option.WithTokenSource(ts))
-
 	} else {
 		opts = append(opts, credOptions...)
 	}
