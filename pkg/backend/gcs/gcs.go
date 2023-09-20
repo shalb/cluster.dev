@@ -39,11 +39,12 @@ type Backend struct {
 	ProjectPtr             *project.Project       `yaml:"-"`
 }
 
-func (b *Backend) Configure(ctx context.Context) error {
+func (b *Backend) Configure() error {
 	if b.storageClient != nil {
 		return nil
 	}
 
+        ctx := context.Background()
 	b.storageContext = ctx
 
 	b.name = b.Bucket
