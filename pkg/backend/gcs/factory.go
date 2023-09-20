@@ -16,6 +16,7 @@ func (f *Factory) New(config []byte, name string, p *project.Project) (project.B
 		name:       name,
 		ProjectPtr: p,
 	}
+	state := map[string]interface{}{}
 	err := yaml.Unmarshal(config, &bk)
 	if err != nil {
 		return nil, utils.ResolveYamlError(config, err)
@@ -23,8 +24,8 @@ func (f *Factory) New(config []byte, name string, p *project.Project) (project.B
 	if bk.Prefix != "" {
 		bk.Prefix += "/"
 	}
-	bk.state, err = getStateMap(bk)
-	return &bk, nil
+	bk.state = state
+	return &bk, bk.Configure()
 }
 
 func init() {
