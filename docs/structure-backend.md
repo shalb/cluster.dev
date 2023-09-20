@@ -26,11 +26,9 @@ A path should be absolute or relative to the directory where `cdev` is running. 
 
 Remote backend uses remote cloud services to store the cluster state, making it accessible for team work.
 
-Currently you can use only S3 bucket as a remote backend. In the future we plan to add other remote backend options that are listed below. 
-
 ### `s3`
 
-Stores the cluster state in AWS S3 bucket.
+Stores the cluster state in AWS S3 bucket. The S3 backend supports all options of [Terraform S3](https://developer.hashicorp.com/terraform/language/settings/backends/s3) backend.
 
 ```yaml
 name: aws-backend
@@ -43,7 +41,7 @@ spec:
 
 ### `azurerm`
 
-Stores the cluster state in Microsoft Azure cloud. You can also use any options of [Terraform azurerm](https://www.terraform.io/language/settings/backends/azurerm) backend.
+Stores the cluster state in Microsoft Azure cloud. The `azurerm` backend supports all options of [Terraform azurerm](https://www.terraform.io/language/settings/backends/azurerm) backend.
 
 ```yaml
 name: azurerm-b
@@ -57,7 +55,7 @@ spec:
 
 ### `gcs`
 
-Stores the cluster state in Google Cloud service. You can also use any options of [Terraform gcs](https://www.terraform.io/language/settings/backends/gcs) backend. 
+Stores the cluster state in Google Cloud service. The `gcs` backend supports all options of [Terraform gcs](https://www.terraform.io/language/settings/backends/gcs) backend. 
 
 ```yaml
 name: gcs-b
@@ -68,12 +66,12 @@ spec:
   prefix: pref
 ```
 
-### Digital Ocean Spaces and minio.
+### Digital Ocean Spaces and MinIO
 
-To use DO spaces or minio object storage as a backend, use `s3` backend provider with additional options. See details: 
+To use DO spaces or MinIO object storage as a backend, use `s3` backend provider with additional options. See details: 
 
 - [DO Spaces](https://anichakraborty.medium.com/terraform-remote-state-backup-with-digital-ocean-spaces-697e35128a6a)
-- [minio](https://ruben-rodriguez.github.io/posts/minio-s3-terraform-backend/)
+- [MinIO](https://ruben-rodriguez.github.io/posts/minio-s3-terraform-backend/)
 
 DO Spaces example:
 
@@ -92,7 +90,7 @@ spec:
   skip_metadata_api_check: true
 ```
 
-Minio example:
+MinIO example:
 
 ```yaml
 name: minio-backend
