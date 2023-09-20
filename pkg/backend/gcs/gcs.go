@@ -44,10 +44,9 @@ func (b *Backend) Configure() error {
 		return nil
 	}
 
-        ctx := context.Background()
+	ctx := context.Background()
 	b.storageContext = ctx
 
-	b.name = b.Bucket
 	b.Prefix = strings.TrimLeft(b.Prefix, "/")
 	if b.Prefix != "" && !strings.HasSuffix(b.Prefix, "/") {
 		b.Prefix = b.Prefix + "/"
