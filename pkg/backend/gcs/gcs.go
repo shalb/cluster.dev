@@ -29,7 +29,7 @@ type Backend struct {
 	Bucket                 string                 `yaml:"bucket"`
 	Credentials            string                 `yaml:"credentials,omitempty"`
 	ImpersonateSA          string                 `yaml:"impersonate_service_account,omitempty"`
-	ImpersonateSADelegates []string               `yaml:"-",omitempty"`
+	ImpersonateSADelegates []string               `yaml:"impersonate_service_account_delegates",omitempty"`
 	AccessToken            string                 `yaml:"access_token,omitempty"`
 	Prefix                 string                 `yaml:"prefix"`
 	encryptionKey          []byte                 `yaml:"encryption_key,omitempty"`
@@ -92,8 +92,8 @@ func (b *Backend) Configure() error {
 
 		if len(b.ImpersonateSADelegates) > 0 {
 			delegates = make([]string, 0, len(b.ImpersonateSADelegates))
-			for _, delegate := range b.ImpersonateSADelegates {
-				delegates = append(delegates, delegate)
+			for i, delegate := range b.ImpersonateSADelegates {
+				delegates[i] = delegate
 			}
 		}
 
