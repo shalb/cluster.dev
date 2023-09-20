@@ -21,6 +21,7 @@ nav:
       - AWS-K3s: examples-aws-k3s.md
       - AWS-K3s Prometheus: examples-aws-k3s-prometheus.md
       - DO-K8s: examples-do-k8s.md
+      - GCP-GKE: examples-gcp-gke.md
       - Modify AWS-EKS: examples-modify-aws-eks.md
       - Develop Stack Template: examples-develop-stack-template.md
     - Cluster.dev vs. Others:
