@@ -29,11 +29,10 @@ type Backend struct {
 	Bucket                 string                 `yaml:"bucket"`
 	Credentials            string                 `yaml:"credentials,omitempty"`
 	ImpersonateSA          string                 `yaml:"impersonate_service_account,omitempty"`
-	ImpersonateSADelegates []string               `yaml:"impersonate_service_account_delegates",omitempty"`
+	ImpersonateSADelegates []string               `yaml:"impersonate_service_account_delegates,omitempty"`
 	AccessToken            string                 `yaml:"access_token,omitempty"`
 	Prefix                 string                 `yaml:"prefix"`
 	encryptionKey          []byte                 `yaml:"encryption_key,omitempty"`
-	kmsKeyName             string                 `yaml:"kms_encryption_key,omitempty"`
 	StorageCustomEndpoint  string                 `yaml:"storage_custom_endpoint,omitempty"`
 	state                  map[string]interface{} `yaml:"-"`
 	ProjectPtr             *project.Project       `yaml:"-"`
@@ -76,7 +75,7 @@ func (b *Backend) Configure() error {
 	} else if creds != "" {
 		contents, err := ReadPathOrContents(creds)
 		if err != nil {
-			return fmt.Errorf("Error loading credentials: %s", err)
+			return fmt.Errorf("error loading credentials: %s", err.Error())
 		}
 
 		if !json.Valid([]byte(contents)) {
@@ -106,7 +105,7 @@ func (b *Backend) Configure() error {
 	}
 	client, err := storage.NewClient(b.storageContext, opts...)
 	if err != nil {
-		return fmt.Errorf("storage.NewClient() failed: %v", err)
+		return fmt.Errorf("storage.NewClient() failed: %v", err.Error())
 	}
 
 	b.storageClient = client
@@ -116,19 +115,14 @@ func (b *Backend) Configure() error {
 	if len(key) > 0 {
 		kc, err := ReadPathOrContents(string(key))
 		if err != nil {
-			return fmt.Errorf("Error loading encryption key: %s", err)
+			return fmt.Errorf("error loading encryption key: %s", err.Error())
 		}
 
 		k, err := base64.StdEncoding.DecodeString(kc)
 		if err != nil {
-			return fmt.Errorf("Error decoding encryption key: %s", err)
+			return fmt.Errorf("error decoding encryption key: %s", err.Error())
 		}
 		b.encryptionKey = k
-	}
-
-	kmsName := b.kmsKeyName
-	if kmsName != "" {
-		b.kmsKeyName = kmsName
 	}
 
 	return nil
