@@ -11,19 +11,16 @@ nav:
       - What Is Cluster.dev?: index.md
       - How Does It Work?: how-does-cdev-work.md
     - Getting Started:
-      - Prerequisites: get-started-prerequisites.md
-      - Install: get-started-install.md
-      - Install From Sources: get-started-install-from-sources.md
-      - Create New Project: get-started-create-project.md
+      - Quick Start with Cluster.dev on AWS: get-started-cdev-aws.md
     - Examples:
       - Overview: examples-overview.md
       - AWS-EKS: examples-aws-eks.md
       - AWS-K3s: examples-aws-k3s.md
+      - GCP-GKE: examples-gcp-gke.md
       - AWS-K3s Prometheus: examples-aws-k3s-prometheus.md
       - DO-K8s: examples-do-k8s.md
-      - GCP-GKE: examples-gcp-gke.md
       - Modify AWS-EKS: examples-modify-aws-eks.md
-      - Develop Stack Template: examples-develop-stack-template.md
+    - Installation and Upgrade: installation-upgrade.md
     - Cluster.dev vs. Others:
       - Cluster.dev vs. Terraform: cdev-vs-terraform.md
       - Cluster.dev vs. Pulumi & Crossplane: cdev-vs-pulumi.md
