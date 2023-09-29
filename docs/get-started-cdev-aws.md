@@ -38,23 +38,26 @@ Choose one of the two methods below:
 
 2. **Shared Credentials File** (recommended):
 
-   - Populate `~/.aws/credentials`:
-     ```bash
-     [cluster-dev]
-     aws_access_key_id = YOUR_AWS_ACCESS_KEY
-     aws_secret_access_key = YOUR_AWS_SECRET_KEY
-     ```
+    - Populate `~/.aws/credentials`:
 
-   - Configure `~/.aws/config`:
-     ```bash
-     [profile cluster-dev]
-     region = eu-central-1
-     ```
+        ```bash
+        [cluster-dev]
+        aws_access_key_id = YOUR_AWS_ACCESS_KEY
+        aws_secret_access_key = YOUR_AWS_SECRET_KEY
+        ```
 
-   - Set the AWS profile:
-     ```bash
-     export AWS_PROFILE=cluster-dev
-     ```
+    - Configure `~/.aws/config`:
+
+        ```bash
+        [profile cluster-dev]
+        region = eu-central-1
+        ```
+
+    - Set the AWS profile:
+
+        ```bash
+        export AWS_PROFILE=cluster-dev
+        ```
 
 ## Creating an S3 Bucket for Storing State
 
@@ -176,7 +179,7 @@ EOF
 <details>
   <summary>Click to expand explanation of the Stack Template</summary>
 
-#### 1. **Provider Definition (`_p`)**
+#### 1. **Provider Definition** (`_p`) <br>
 
 This section employs a YAML anchor, pre-setting the cloud provider and region for the resources in the stack. For this example, AWS is the designated provider, and the region is dynamically passed from the variables:
 
@@ -186,11 +189,11 @@ _p: &provider_aws
     region: {{ .variables.region }}
 ```
 
-#### 2. Units
+#### 2. **Units** <br>
 
-The units section is where the real action is. Each unit is a self-contained "piece" of infrastructure, typically associated with a particular Terraform module or a direct cloud resource.
+The units section is where the real action is. Each unit is a self-contained "piece" of infrastructure, typically associated with a particular Terraform module or a direct cloud resource. <br>
 
-##### Bucket Unit
+##### Bucket Unit <br>
 
 This unit is utilizing the terraform-aws-modules/s3-bucket/aws module to provision an S3 bucket. Inputs for the module, such as the bucket name, are populated using variables passed into the Stack.
 
@@ -204,7 +207,7 @@ inputs:
   ...
 ```
 
-##### Web-page Object Unit
+##### Web-page Object Unit <br>
 
 After the bucket is created, this unit takes on the responsibility of creating a web-page object inside it. This is done using a sub-module from the S3 bucket module specifically designed for object creation. A notable feature is the [`remoteState`](https://docs.cluster.dev/stack-templates-functions/#remotestate) function, which dynamically pulls the ID of the S3 bucket created by the previous unit:
 
@@ -218,7 +221,7 @@ inputs:
   ...
 ```
 
-##### Outputs Unit
+##### Outputs Unit <br>
 
 Lastly, this unit is designed to provide outputs, allowing users to view certain results of the Stack execution. For this template, it provides the website URL of the hosted S3 website.
 
@@ -230,10 +233,9 @@ outputs:
   websiteUrl: http://{{ .variables.bucket_name }}.s3-website.{{ .variables.region }}.amazonaws.com/
 ```
 
-#### 3. Variables and Data Flow
+#### 3. Variables and Data Flow <br>
 
 The Stack Template is adept at harnessing variables, not just from the Stack (e.g., `stack.yaml`), but also from other resources via the [`remoteState`](https://docs.cluster.dev/stack-templates-functions/#remotestate) function. This facilitates a seamless flow of data between resources and units, enabling dynamic infrastructure creation based on real-time cloud resource states and user-defined variables.
-
 </details>
 
 ### Sample Website File (`files/index.html`)
@@ -271,5 +273,5 @@ EOF
 3. Clean up:
 
     ```bash
-    cdev destroy
-    ``````
+   cdev destroy
+   ```
