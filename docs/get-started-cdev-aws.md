@@ -179,7 +179,7 @@ EOF
 <details>
   <summary>Click to expand explanation of the Stack Template</summary>
 
-#### 1. **Provider Definition** (`_p`) <br>
+ 1. Provider Definition (`_p`) <br>
 
 This section employs a YAML anchor, pre-setting the cloud provider and region for the resources in the stack. For this example, AWS is the designated provider, and the region is dynamically passed from the variables:
 
@@ -189,11 +189,12 @@ _p: &provider_aws
     region: {{ .variables.region }}
 ```
 
-#### 2. **Units** <br>
+2. Units <br>
 
 The units section is where the real action is. Each unit is a self-contained "piece" of infrastructure, typically associated with a particular Terraform module or a direct cloud resource. <br>
 
-##### Bucket Unit <br>
+
+Bucket Unit <br>
 
 This unit is utilizing the terraform-aws-modules/s3-bucket/aws module to provision an S3 bucket. Inputs for the module, such as the bucket name, are populated using variables passed into the Stack.
 
@@ -207,9 +208,9 @@ inputs:
   ...
 ```
 
-##### Web-page Object Unit <br>
+Web-page Object Unit <br>
 
-After the bucket is created, this unit takes on the responsibility of creating a web-page object inside it. This is done using a sub-module from the S3 bucket module specifically designed for object creation. A notable feature is the [`remoteState`](https://docs.cluster.dev/stack-templates-functions/#remotestate) function, which dynamically pulls the ID of the S3 bucket created by the previous unit:
+After the bucket is created, this unit takes on the responsibility of creating a web-page object inside it. This is done using a sub-module from the S3 bucket module specifically designed for object creation. A notable feature is the remoteState function, which dynamically pulls the ID of the S3 bucket created by the previous unit:
 
 ```yaml
 name: web-page-object
@@ -221,7 +222,7 @@ inputs:
   ...
 ```
 
-##### Outputs Unit <br>
+Outputs Unit <br>
 
 Lastly, this unit is designed to provide outputs, allowing users to view certain results of the Stack execution. For this template, it provides the website URL of the hosted S3 website.
 
@@ -233,9 +234,9 @@ outputs:
   websiteUrl: http://{{ .variables.bucket_name }}.s3-website.{{ .variables.region }}.amazonaws.com/
 ```
 
-#### 3. Variables and Data Flow <br>
+3. Variables and Data Flow <br>
 
-The Stack Template is adept at harnessing variables, not just from the Stack (e.g., `stack.yaml`), but also from other resources via the [`remoteState`](https://docs.cluster.dev/stack-templates-functions/#remotestate) function. This facilitates a seamless flow of data between resources and units, enabling dynamic infrastructure creation based on real-time cloud resource states and user-defined variables.
+The Stack Template is adept at harnessing variables, not just from the Stack (e.g., `stack.yaml`), but also from other resources via the remoteState function. This facilitates a seamless flow of data between resources and units, enabling dynamic infrastructure creation based on real-time cloud resource states and user-defined variables.
 </details>
 
 ### Sample Website File (`files/index.html`)
@@ -258,20 +259,21 @@ EOF
 
 ## Deploying with Cluster.dev
 
-1. Plan the deployment:
+- Plan the deployment:
 
    ```bash
    cdev plan
    ```
 
-2. Apply the changes:
+- Apply the changes:
 
    ```bash
    cdev apply
    ```
-
-3. Clean up:
+- Clean up:
 
     ```bash
-   cdev destroy
-   ```
+    cdev destroy
+    ```
+
+
