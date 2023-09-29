@@ -69,7 +69,7 @@ aws s3 mb s3://cdev-states
 ### Project Configuration (`project.yaml`)
 
 *   Defines the overarching project settings. All subsequent stack configurations will inherit and can override these settings.
-*   It points to aws-backend as the backend, meaning all Terraform state for resources defined in this project will be stored in the S3 bucket specified in `backend.yaml`.
+*   It points to aws-backend as the backend, meaning that the Cluster.dev state for resources defined in this project will be stored in the S3 bucket specified in `backend.yaml`.
 *   Project-level variables are defined here and can be referenced in other configurations.
 
 ```bash
@@ -179,7 +179,7 @@ EOF
 <details>
   <summary>Click to expand explanation of the Stack Template</summary>
 
- 1. Provider Definition (`_p`) <br>
+ <h4>1. Provider Definition (`_p`)</h4> <br>
 
 This section employs a YAML anchor, pre-setting the cloud provider and region for the resources in the stack. For this example, AWS is the designated provider, and the region is dynamically passed from the variables:
 
@@ -189,12 +189,13 @@ _p: &provider_aws
     region: {{ .variables.region }}
 ```
 
-2. Units <br>
+<h4>2. Units</h4> <br>
 
 The units section is where the real action is. Each unit is a self-contained "piece" of infrastructure, typically associated with a particular Terraform module or a direct cloud resource. <br>
 
+&nbsp;  
 
-Bucket Unit <br>
+<h5>Bucket Unit</h5> <br>
 
 This unit is utilizing the terraform-aws-modules/s3-bucket/aws module to provision an S3 bucket. Inputs for the module, such as the bucket name, are populated using variables passed into the Stack.
 
@@ -208,7 +209,7 @@ inputs:
   ...
 ```
 
-Web-page Object Unit <br>
+<h5>Web-page Object Unit</h5> <br>
 
 After the bucket is created, this unit takes on the responsibility of creating a web-page object inside it. This is done using a sub-module from the S3 bucket module specifically designed for object creation. A notable feature is the remoteState function, which dynamically pulls the ID of the S3 bucket created by the previous unit:
 
@@ -222,7 +223,7 @@ inputs:
   ...
 ```
 
-Outputs Unit <br>
+<h5>Outputs Unit</h5> <br>
 
 Lastly, this unit is designed to provide outputs, allowing users to view certain results of the Stack execution. For this template, it provides the website URL of the hosted S3 website.
 
@@ -234,7 +235,7 @@ outputs:
   websiteUrl: http://{{ .variables.bucket_name }}.s3-website.{{ .variables.region }}.amazonaws.com/
 ```
 
-3. Variables and Data Flow <br>
+<h4>3. Variables and Data Flow</h4> <br>
 
 The Stack Template is adept at harnessing variables, not just from the Stack (e.g., `stack.yaml`), but also from other resources via the remoteState function. This facilitates a seamless flow of data between resources and units, enabling dynamic infrastructure creation based on real-time cloud resource states and user-defined variables.
 </details>
@@ -270,10 +271,15 @@ EOF
    ```bash
    cdev apply
    ```
-- Clean up:
 
-    ```bash
-    cdev destroy
-    ```
+## Clean up
+
+To remove the cluster with created resources run the command:
+
+```bash
+cdev destroy
+```
+
+
 
 
