@@ -271,6 +271,9 @@ EOF
     cdev apply
     ```
 
+### Example Screen Cast
+
+[![asciicast](https://asciinema.org/a/xcYuwdGdFBYcTd26yEvx2HMKn.svg)](https://asciinema.org/a/xcYuwdGdFBYcTd26yEvx2HMKn)
 ## Clean up
 
 To remove the cluster with created resources run the command:
