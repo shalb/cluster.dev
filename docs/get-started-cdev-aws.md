@@ -278,7 +278,3 @@ To remove the cluster with created resources run the command:
 ```bash
 cdev destroy
 ```
-
-
-
-
