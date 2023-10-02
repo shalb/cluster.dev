@@ -79,6 +79,8 @@ theme:
   language: en
   features:
     - navigation.tabs
+    - content.code.copy
+    - content.code.select
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default

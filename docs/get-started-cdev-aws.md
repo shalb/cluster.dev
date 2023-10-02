@@ -6,7 +6,7 @@ This guide will walk you through the steps to deploy your first project with Clu
 
 Ensure the following are installed and set up:
 
-- **Terraform**: Version 1.4 or above.
+- **Terraform**: Version 1.4 or above. [Install Terraform.](https://developer.hashicorp.com/terraform/downloads)
   ```bash
   terraform --version
   ```
@@ -29,14 +29,7 @@ Ensure the following are installed and set up:
 
 Choose one of the two methods below:
 
-1. **Environment Variables**:
-   ```bash
-   export AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY"
-   export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_KEY"
-   export AWS_DEFAULT_REGION="eu-central-1"
-   ```
-
-2. **Shared Credentials File** (recommended):
+1. **Shared Credentials File** (recommended):
 
     - Populate `~/.aws/credentials`:
 
@@ -59,6 +52,12 @@ Choose one of the two methods below:
         export AWS_PROFILE=cluster-dev
         ```
 
+2. **Environment Variables**:
+   ```bash
+   export AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY"
+   export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_KEY"
+   export AWS_DEFAULT_REGION="eu-central-1"
+   ```
 ## Creating an S3 Bucket for Storing State
 
 ```bash
@@ -131,7 +130,7 @@ _p: &provider_aws
 - aws:
     region: {{ .variables.region }}
 
-name: l
+name: s3-website
 kind: StackTemplate
 units:
   -
