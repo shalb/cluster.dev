@@ -178,7 +178,7 @@ EOF
 <details>
   <summary>Click to expand explanation of the Stack Template</summary>
 
- <h4>1. Provider Definition (`_p`)</h4> <br>
+ <h4>1. Provider Definition (_p)</h4> <br>
 
 This section employs a YAML anchor, pre-setting the cloud provider and region for the resources in the stack. For this example, AWS is the designated provider, and the region is dynamically passed from the variables:
 
@@ -196,7 +196,7 @@ The units section is where the real action is. Each unit is a self-contained "pi
 
 <h5>Bucket Unit</h5> <br>
 
-This unit is utilizing the terraform-aws-modules/s3-bucket/aws module to provision an S3 bucket. Inputs for the module, such as the bucket name, are populated using variables passed into the Stack.
+This unit is utilizing the `terraform-aws-modules/s3-bucket/aws` module to provision an S3 bucket. Inputs for the module, such as the bucket name, are populated using variables passed into the Stack.
 
 ```yaml
 name: bucket
@@ -261,15 +261,15 @@ EOF
 
 - Plan the deployment:
 
-   ```bash
-   cdev plan
-   ```
+    ```bash
+    cdev plan
+    ```
 
 - Apply the changes:
 
-   ```bash
-   cdev apply
-   ```
+    ```bash
+    cdev apply
+    ```
 
 ## Clean up
 
