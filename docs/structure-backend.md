@@ -84,7 +84,7 @@ spec:
   region: main
   access_key: "<SPACES_SECRET_KEY>" # Optional, it's better to use environment variable 'export SPACES_SECRET_KEY="key"'
   secret_key: "<SPACES_ACCESS_TOKEN>" # Optional, it's better to use environment variable 'export SPACES_ACCESS_TOKEN="token"'
-  endpoint: "sgp1.digitaloceanspaces.com"
+  endpoint: "https://sgp1.digitaloceanspaces.com"
   skip_credentials_validation: true
   skip_region_validation: true
   skip_metadata_api_check: true
