@@ -113,10 +113,3 @@ extra:
       extra:
   analytics:
     provider: gtm
-extra_css:
-  - stylesheets/asciinema-player.css
-extra_javascript:
-  - javascripts/asciinema-player.min.js
-plugins:
-  - search
-  - mkdocs-asciinema

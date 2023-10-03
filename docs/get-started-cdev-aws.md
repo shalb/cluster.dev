@@ -273,7 +273,7 @@ EOF
 
 ### Example Screen Cast
 
-![asciicast](images/611594.cast)
+<a href="https://asciinema.org/a/xcYuwdGdFBYcTd26yEvx2HMKn" target="_blank"><img src="https://asciinema.org/a/xcYuwdGdFBYcTd26yEvx2HMKn.svg" /></a>
 ## Clean up
 
 To remove the cluster with created resources run the command:
