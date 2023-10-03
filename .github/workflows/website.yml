@@ -16,5 +16,6 @@ jobs:
         with:
           python-version: 3.x
       - run: pip install --upgrade mkdocs-material
+      - run: pip install --upgrade mkdocs-asciinema
       - run: mkdocs gh-deploy --force
-      
+
