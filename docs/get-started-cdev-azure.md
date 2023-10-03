@@ -12,13 +12,11 @@ Ensure the following are installed and set up:
   terraform --version
   ```
 
-- **AWS CLI**:
+- **Azure CLI**:
 
   ```bash
-  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  unzip awscliv2.zip
-  sudo ./aws/install
-  aws --version
+  curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  az --version
   ```
 
 - **Cluster.dev client**:
@@ -30,44 +28,27 @@ Ensure the following are installed and set up:
 
 ## Authentication
 
-Choose one of the two methods below:
+Before using the Azure CLI, you'll need to authenticate:
 
-1. **Shared Credentials File** (recommended):
+  ```bash
+   az login --use-device-code
+  ```
 
-    - Populate `~/.aws/credentials`:
+Follow the prompt to sign in.
 
-        ```bash
-        [cluster-dev]
-        aws_access_key_id = YOUR_AWS_ACCESS_KEY
-        aws_secret_access_key = YOUR_AWS_SECRET_KEY
-        ```
+## Creating an Azure Blob Storage for Storing State
 
-    - Configure `~/.aws/config`:
+First, create a resource group:
 
-        ```bash
-        [profile cluster-dev]
-        region = eu-central-1
-        ```
+  ```bash
+  az group create --name cdevResourceGroup --location EastUS
+  ```
 
-    - Set the AWS profile:
+Then, create a storage account:
 
-        ```bash
-        export AWS_PROFILE=cluster-dev
-        ```
-
-2. **Environment Variables**:
-
-   ```bash
-   export AWS_ACCESS_KEY_ID="YOUR_AWS_ACCESS_KEY"
-   export AWS_SECRET_ACCESS_KEY="YOUR_AWS_SECRET_KEY"
-   export AWS_DEFAULT_REGION="eu-central-1"
-   ```
-
-## Creating an S3 Bucket for Storing State
-
-```bash
-aws s3 mb s3://cdev-states
-```
+  ```bash
+  az storage account create --name cdevstates --resource-group cdevResourceGroup --location EastUS --sku Standard_LRS
+  ```
 
 ## Setting Up Your Project
 
@@ -81,11 +62,11 @@ aws s3 mb s3://cdev-states
 cat <<EOF > project.yaml
 name: dev
 kind: Project
-backend: aws-backend
+backend: azure-backend
 variables:
   organization: cluster.dev
-  region: eu-central-1
-  state_bucket_name: cdev-states
+  location: EastUS
+  state_storage_account_name: cdevstates
 EOF
 ```
 
@@ -95,12 +76,13 @@ This specifies where Cluster.dev will store its own state and the Terraform stat
 
 ```bash
 cat <<EOF > backend.yaml
-name: aws-backend
+name: azure-backend
 kind: Backend
-provider: s3
+provider: azurerm
 spec:
-  bucket: {{ .project.variables.state_bucket_name }}
-  region: {{ .project.variables.region }}
+  resource_group_name: cdevResourceGroup
+  storage_account_name: {{ .project.variables.state_storage_account_name }}
+  container_name: tfstate
 EOF
 ```
 
@@ -113,13 +95,13 @@ EOF
 
 ```bash
 cat <<EOF > stack.yaml
-name: s3-website
+name: az-blob-website
 template: ./template/
 kind: Stack
-backend: aws-backend
+backend: azure-backend
 variables:
-  bucket_name: "tmpl-dev-test"
-  region: {{ .project.variables.region }}
+  storage_account_name: "tmpldevtest"
+  location: {{ .project.variables.location }}
   content: |
     {{- readFile "./files/index.html" | nindent 4 }}
 EOF
@@ -132,52 +114,40 @@ The `StackTemplate` serves as a pivotal object within Cluster.dev. It lays out t
 ```bash
 mkdir template
 cat <<EOF > template/template.yaml
-_p: &provider_aws
-- aws:
-    region: {{ .variables.region }}
+_p: &provider_azurerm
+- azurerm:
+    location: {{ .variables.location }}
 
-name: s3-website
+name: az-blob-website
 kind: StackTemplate
 units:
   -
-    name: bucket
+    name: storage-account
     type: tfmodule
-    providers: *provider_aws
-    source: terraform-aws-modules/s3-bucket/aws
+    providers: *provider_azurerm
+    source: terraform-azurerm-modules/storage-account/azurerm
     inputs:
-      bucket: {{ .variables.bucket_name }}
-      force_destroy: true
-      acl: "public-read"
-      control_object_ownership: true
-      object_ownership: "BucketOwnerPreferred"
-      attach_public_policy: true
-      block_public_acls: false
-      block_public_policy: false
-      ignore_public_acls: false
-      restrict_public_buckets: false
-      website:
-        index_document: "index.html"
-        error_document: "error.html"
+      name: {{ .variables.storage_account_name }}
+      resource_group_name: cdevResourceGroup
+      enable_https_traffic_only: true
+      account_kind: "StorageV2"
+      account_tier: "Standard"
   -
     name: web-page-object
     type: tfmodule
-    providers: *provider_aws
-    source: "terraform-aws-modules/s3-bucket/aws//modules/object"
-    version: "3.15.1"
+    providers: *provider_azurerm
+    source: terraform-azurerm-modules/storage-account/azurerm//modules/blob
     inputs:
-      bucket: {{ remoteState "this.bucket.s3_bucket_id" }}
-      key: "index.html"
-      acl: "public-read"
-      content_type: "text/html"
-      content: |
-        {{- .variables.content | nindent 8 }}
-
+      storage_account_name: {{ remoteState "this.storage-account.azurerm_storage_account_name" }}
+      container_name: "web-content"
+      type: "block"
+      source: "./files/index.html"
   -
     name: outputs
     type: printer
     depends_on: this.web-page-object
     outputs:
-      websiteUrl: http://{{ .variables.bucket_name }}.s3-website.{{ .variables.region }}.amazonaws.com/
+      websiteUrl: https://{{ .variables.storage_account_name }}.blob.core.windows.net/web-content/index.html
 EOF
 ```
 
@@ -186,12 +156,12 @@ EOF
 
  <h4>1. Provider Definition (_p)</h4> <br>
 
-This section employs a YAML anchor, pre-setting the cloud provider and region for the resources in the stack. For this example, AWS is the designated provider, and the region is dynamically passed from the variables:
+This section uses a YAML anchor, defining the cloud provider and location for the resources in the stack. For this case, Azure is the chosen provider, and the location is dynamically retrieved from the variables:
 
 ```yaml
-_p: &provider_aws
-- aws:
-    region: {{ .variables.region }}
+_p: &provider_azurerm
+- azurerm:
+    location: {{ .variables.location }}
 ```
 
 <h4>2. Units</h4> <br>
@@ -200,31 +170,31 @@ The units section is where the real action is. Each unit is a self-contained "pi
 
 &nbsp;  
 
-<h5>Bucket Unit</h5> <br>
+<h5>Storage Account Unit</h5> <br>
 
-This unit is utilizing the `terraform-aws-modules/s3-bucket/aws` module to provision an S3 bucket. Inputs for the module, such as the bucket name, are populated using variables passed into the Stack.
+This unit leverages the `terraform-azurerm-modules/storage-account/azurerm` module to provision an Azure Blob Storage account. Inputs for the module, such as the storage account name, are filled using variables passed into the Stack.
 
 ```yaml
-name: bucket
+name: storage-account
 type: tfmodule
-providers: *provider_aws
-source: terraform-aws-modules/s3-bucket/aws
+providers: *provider_azurerm
+source: terraform-azurerm-modules/storage-account/azurerm
 inputs:
-  bucket: {{ .variables.bucket_name }}
+  name: {{ .variables.storage_account_name }}
   ...
 ```
 
 <h5>Web-page Object Unit</h5> <br>
 
-After the bucket is created, this unit takes on the responsibility of creating a web-page object inside it. This is done using a sub-module from the S3 bucket module specifically designed for object creation. A notable feature is the remoteState function, which dynamically pulls the ID of the S3 bucket created by the previous unit:
+Upon creating the storage account, this unit takes the role of establishing a web-page object inside it. This action is carried out using a sub-module from the storage account module specifically designed for blob creation. A standout feature is the remoteState function, which dynamically extracts the name of the Azure Storage account produced by the preceding unit:
 
 ```yaml
 name: web-page-object
 type: tfmodule
-providers: *provider_aws
-source: "terraform-aws-modules/s3-bucket/aws//modules/object"
+providers: *provider_azurerm
+source: terraform-azurerm-modules/storage-account/azurerm//modules/blob
 inputs:
-  bucket: {{ remoteState "this.bucket.s3_bucket_id" }}
+  storage_account_name: {{ remoteState "this.storage-account.azurerm_storage_account_name" }}
   ...
 ```
 
@@ -237,7 +207,7 @@ name: outputs
 type: printer
 depends_on: this.web-page-object
 outputs:
-  websiteUrl: http://{{ .variables.bucket_name }}.s3-website.{{ .variables.region }}.amazonaws.com/
+  websiteUrl: https://{{ .variables.storage_account_name }}.blob.core.windows.net/web-content/index.html
 ```
 
 <h4>3. Variables and Data Flow</h4> <br>
@@ -256,7 +226,7 @@ cat <<EOF > files/index.html
 </head>
 <body>
   <h1>Welcome to my website</h1>
-  <p>Now hosted on Amazon S3!</p>
+  <p>Now hosted on Azure!</p>
   <h2>See you!</h2>
 </body>
 </html>
@@ -280,7 +250,6 @@ EOF
 ### Example Screen Cast
 
 <a href="https://asciinema.org/a/xcYuwdGdFBYcTd26yEvx2HMKn" target="_blank"><img src="https://asciinema.org/a/xcYuwdGdFBYcTd26yEvx2HMKn.svg" /></a>
-
 ## Clean up
 
 To remove the cluster with created resources run the command:
