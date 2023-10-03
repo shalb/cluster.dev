@@ -33,6 +33,20 @@ google-beta:
   batching: true
 opennebula:
   default_tags: true
+azurerm:
+  features:
+    api_management: true
+    app_configuration: true
+    application_insights: true
+    cognitive_account: true
+    key_vault: true
+    log_analytics_workspace: true
+    managed_disk: true
+    resource_group: true
+    subscription: true
+    template_deployment: true
+    virtual_machine: true
+    virtual_machine_scale_set: true
 `
 
 // InterfaceToCty convert go type to cty.Value(for hlc lib), using hack with JSON marshal/unmarshal.
