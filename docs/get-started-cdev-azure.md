@@ -65,7 +65,7 @@ kind: Project
 backend: azure-backend
 variables:
   organization: cluster.dev
-  location: francecentral
+  location: eastus
   state_storage_account_name: cdevstates
 EOF
 ```
