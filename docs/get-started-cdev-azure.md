@@ -65,7 +65,7 @@ kind: Project
 backend: azure-backend
 variables:
   organization: cluster.dev
-  location: EastUS
+  location: francecentral
   state_storage_account_name: cdevstates
 EOF
 ```
@@ -78,7 +78,7 @@ This specifies where Cluster.dev will store its own state and the Terraform stat
 cat <<EOF > backend.yaml
 name: azure-backend
 kind: Backend
-provider: azurerm
+provider: local ## to be changed to azurerm
 spec:
   resource_group_name: cdevResourceGroup
   storage_account_name: {{ .project.variables.state_storage_account_name }}
@@ -101,8 +101,9 @@ kind: Stack
 backend: azure-backend
 variables:
   storage_account_name: "tmpldevtest"
+  resource_group_name: "demo-resource-group"
   location: {{ .project.variables.location }}
-  content: |
+  file_content: |
     {{- readFile "./files/index.html" | nindent 4 }}
 EOF
 ```
@@ -116,38 +117,79 @@ mkdir template
 cat <<EOF > template/template.yaml
 _p: &provider_azurerm
 - azurerm:
-    location: {{ .variables.location }}
+    features:
+      resource_group:
+        prevent_deletion_if_contains_resources: false
 
-name: az-blob-website
+_globals: &global_settings
+  default_region: "region1"
+  regions:
+    region1: {{ .variables.location }}
+  prefixes: ["dev"]
+  random_length: 4
+  passthrough: false
+  use_slug: false
+  inherit_tags: false
+
+_version: &module_version 5.7.5
+
+name: azure-static-website
 kind: StackTemplate
 units:
+  -
+    name: resource-group
+    type: tfmodule
+    providers: *provider_azurerm
+    source: aztfmod/caf/azurerm//modules/resource_group
+    version: *module_version
+    inputs:
+      global_settings: *global_settings
+      resource_group_name: {{ .variables.resource_group_name }}
+      settings:
+        region: "region1"
   -
     name: storage-account
     type: tfmodule
     providers: *provider_azurerm
-    source: terraform-azurerm-modules/storage-account/azurerm
+    source: aztfmod/caf/azurerm//modules/storage_account
+    version: *module_version
     inputs:
-      name: {{ .variables.storage_account_name }}
-      resource_group_name: cdevResourceGroup
-      enable_https_traffic_only: true
-      account_kind: "StorageV2"
-      account_tier: "Standard"
+      base_tags: false
+      global_settings: *global_settings
+      client_config:
+        key: demo
+      resource_group:
+        name: {{ remoteState "this.resource-group.name" }}
+        location: {{ remoteState "this.resource-group.location" }}
+      storage_account:
+        name: {{ .variables.storage_account_name }}
+        account_kind: "StorageV2"
+        account_tier: "Standard"
+        static_website:
+          index_document: "index.html"
+          error_404_document: "error.html"
+      var_folder_path: "./"
   -
-    name: web-page-object
+    name: web-page-blob
     type: tfmodule
     providers: *provider_azurerm
-    source: terraform-azurerm-modules/storage-account/azurerm//modules/blob
+    source: aztfmod/caf/azurerm//modules/storage_account/blob
+    version: *module_version
     inputs:
-      storage_account_name: {{ remoteState "this.storage-account.azurerm_storage_account_name" }}
-      container_name: "web-content"
-      type: "block"
-      source: "./files/index.html"
+      settings:
+        name: "index.html"
+        content_type: "text/html"
+        source_content: |
+          {{- .variables.file_content | nindent 12 }}
+      storage_account_name: {{ remoteState "this.storage-account.name" }}
+      storage_container_name: "$web"
+      var_folder_path: "./"
   -
     name: outputs
     type: printer
-    depends_on: this.web-page-object
+    depends_on: this.web-page-blob
     outputs:
-      websiteUrl: https://{{ .variables.storage_account_name }}.blob.core.windows.net/web-content/index.html
+      websiteUrl: https://{{ remoteState "this.storage-account.primary_web_host" }}
 EOF
 ```
 
@@ -161,7 +203,9 @@ This section uses a YAML anchor, defining the cloud provider and location for th
 ```yaml
 _p: &provider_azurerm
 - azurerm:
-    location: {{ .variables.location }}
+    features:
+      resource_group:
+        prevent_deletion_if_contains_resources: false
 ```
 
 <h4>2. Units</h4> <br>
@@ -172,13 +216,13 @@ The units section is where the real action is. Each unit is a self-contained "pi
 
 <h5>Storage Account Unit</h5> <br>
 
-This unit leverages the `terraform-azurerm-modules/storage-account/azurerm` module to provision an Azure Blob Storage account. Inputs for the module, such as the storage account name, are filled using variables passed into the Stack.
+This unit leverages the `aztfmod/caf/azurerm//modules/storage_account` module to provision an Azure Blob Storage account. Inputs for the module, such as the storage account name, are filled using variables passed into the Stack.
 
 ```yaml
 name: storage-account
 type: tfmodule
 providers: *provider_azurerm
-source: terraform-azurerm-modules/storage-account/azurerm
+source: aztfmod/caf/azurerm//modules/storage_account
 inputs:
   name: {{ .variables.storage_account_name }}
   ...
@@ -189,12 +233,12 @@ inputs:
 Upon creating the storage account, this unit takes the role of establishing a web-page object inside it. This action is carried out using a sub-module from the storage account module specifically designed for blob creation. A standout feature is the remoteState function, which dynamically extracts the name of the Azure Storage account produced by the preceding unit:
 
 ```yaml
-name: web-page-object
+name: web-page-blob
 type: tfmodule
 providers: *provider_azurerm
-source: terraform-azurerm-modules/storage-account/azurerm//modules/blob
+source: aztfmod/caf/azurerm//modules/storage_account/blob
 inputs:
-  storage_account_name: {{ remoteState "this.storage-account.azurerm_storage_account_name" }}
+  storage_account_name: {{ remoteState "this.storage-account.name" }}
   ...
 ```
 
@@ -205,9 +249,9 @@ Lastly, this unit is designed to provide outputs, allowing users to view certain
 ```yaml
 name: outputs
 type: printer
-depends_on: this.web-page-object
+depends_on: this.web-page-blob
 outputs:
-  websiteUrl: https://{{ .variables.storage_account_name }}.blob.core.windows.net/web-content/index.html
+  websiteUrl: https://{{ remoteState "this.storage-account.primary_web_host" }}
 ```
 
 <h4>3. Variables and Data Flow</h4> <br>
@@ -247,9 +291,6 @@ EOF
     cdev apply
     ```
 
-### Example Screen Cast
-
-<a href="https://asciinema.org/a/xcYuwdGdFBYcTd26yEvx2HMKn" target="_blank"><img src="https://asciinema.org/a/xcYuwdGdFBYcTd26yEvx2HMKn.svg" /></a>
 ## Clean up
 
 To remove the cluster with created resources run the command:

@@ -12,6 +12,7 @@ nav:
       - How Does It Work?: how-does-cdev-work.md
     - Getting Started:
       - Quick Start on AWS: get-started-cdev-aws.md
+      - Quick Start on Azure: get-started-cdev-azure.md
     - Examples:
       - Overview: examples-overview.md
       - AWS-EKS: examples-aws-eks.md
