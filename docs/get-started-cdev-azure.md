@@ -2,6 +2,38 @@
 
 This guide will walk you through the steps to deploy your first project with Cluster.dev on AWS.
 
+```text
+                                         +------------------------+
+                                         | Project.yaml           |
+                                         |  - location            |
+                                         +------------+-----------+
+                                                      |
+                                                      |
+                                         +------------v-----------+
+                                         | Stack.yaml             |
+                                         |  - storage_account_name|
+                                         |  - location            |
+                                         |  - file_content        |
+                                         +------------+-----------+
+                                                      |
+                                                      |
+               +--------------------------------------v------------------------------------+
+               | StackTemplate: azure-static-website                                       |
+               |                                                                           |
+               |  +-------------------+     +------------------+     +-----------------+   |
+               |  | resource-group    |     | storage-account  |     | web-page-blob   |   |
+               |  | type: tfmodule    |     | type: tfmodule   |     | type: tfmodule  |   |
+               |  |                   |     |                  |     |                 |   |
+               |  +-------------------+     +--------^---------+     +--------^--------+   |
+               |        |                     | resource-group       | storage-account     |
+               |        |                     | name & location      | name                |
+               |        |                     | via remoteState      | via remoteState     |
+               +--------|---------------------|----------------------|---------------------+
+                        |                     |                      |
+                        v                     v                      v
+               Azure Resource Group    Azure Storage Account   Azure Blob (in $web container)
+```
+
 ## Prerequisites
 
 Ensure the following are installed and set up:
