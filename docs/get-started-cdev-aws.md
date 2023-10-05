@@ -108,9 +108,9 @@ aws s3 mb s3://cdev-states
 
 ### Project Configuration (`project.yaml`)
 
-*   Defines the overarching project settings. All subsequent stack configurations will inherit and can override these settings.
-*   It points to aws-backend as the backend, meaning that the Cluster.dev state for resources defined in this project will be stored in the S3 bucket specified in `backend.yaml`.
-*   Project-level variables are defined here and can be referenced in other configurations.
+- Defines the overarching project settings. All subsequent stack configurations will inherit and can override these settings.
+- It points to aws-backend as the backend, meaning that the Cluster.dev state for resources defined in this project will be stored in the S3 bucket specified in `backend.yaml`.
+- Project-level variables are defined here and can be referenced in other configurations.
 
 ```bash
 cat <<EOF > project.yaml
@@ -141,10 +141,10 @@ EOF
 
 ### Stack Configuration (`stack.yaml`)
 
-*   This represents a distinct set of infrastructure resources to be provisioned.
-*   It references a local template (in this case, the previously provided stack template) to know what resources to create.
-*   Variables specified in this file will be passed to the Terraform modules called in the template.
-*   The content variable here is especially useful; it dynamically populates the content of an S3 bucket object (a webpage in this case) using the local `index.html` file.
+- This represents a distinct set of infrastructure resources to be provisioned.
+- It references a local template (in this case, the previously provided stack template) to know what resources to create.
+- Variables specified in this file will be passed to the Terraform modules called in the template.
+- The content variable here is especially useful; it dynamically populates the content of an S3 bucket object (a webpage in this case) using the local `index.html` file.
 
 ```bash
 cat <<EOF > stack.yaml
@@ -323,3 +323,12 @@ To remove the cluster with created resources run the command:
 ```bash
 cdev destroy
 ```
+
+## More Examples
+
+In the Examples section you will find ready-to-use advanced Cluster.dev samples that will help you bootstrap more complex cloud infrastructures with Helm and Terraform compositions:
+
+- [EKS cluster in AWS](https://docs.cluster.dev/-examples-aws-eks/)
+- [Modify AWS-EKS](https://docs.cluster.dev/examples-modify-aws-eks/)
+- [K3s cluster in AWS](https://docs.cluster.dev/examples-aws-k3s/)
+- [AWS-K3s Prometheus](https://docs.cluster.dev/examples-aws-k3s-prometheus/)
