@@ -4,7 +4,7 @@
 
 Cluster.dev has a two-level templating that is applied on the project's and on the stack template's levels.
 
-![templating diagram](./images/templating-shema6.png)
+<a href="https://docs.cluster.dev/images/templating.png" target="_blank"><img src="https://docs.cluster.dev/images/templating.png" /></a>
 
 On the first level Cluster.dev reads a `project.yaml` and files with secrets. Then it uses variables from these files to populate and render files from the current project – stacks and backends.
 
