@@ -328,6 +328,10 @@ EOF
     cdev apply
     ```
 
+### Example Screen Cast
+
+<a href="https://asciinema.org/a/8j5WthKY9exW74ldotwCqWPcE" target="_blank"><img src="https://asciinema.org/a/8j5WthKY9exW74ldotwCqWPcE.svg" /></a>
+
 ## Clean up
 
 To remove the cluster with created resources run the command:
