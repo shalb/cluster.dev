@@ -120,6 +120,7 @@
     "submodules",
     "sysctl",
     "testrepo",
+    "tfmodule",
     "tfplan",
     "tfstate",
     "tolerations",
