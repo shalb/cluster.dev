@@ -2,6 +2,41 @@
 
 This guide will walk you through the steps to deploy your first project with Cluster.dev on AWS.
 
+```text
+                          +-------------------------+
+                          | Project.yaml            |
+                          |  - region               |
+                          +------------+------------+
+                                       |
+                                       |
+                          +------------v------------+
+                          | Stack.yaml              |
+                          |  - bucket_name          |
+                          |  - region               |
+                          |  - content              |
+                          +------------+------------+
+                                       |
+                                       |
++--------------------------------------v-----------------------------------------+
+| StackTemplate: s3-website                                                      |
+|                                                                                |
+|  +---------------------+     +-------------------------+     +--------------+  |
+|  | bucket              |     | web-page-object         |     | outputs      |  |
+|  | type: tfmodule      |     | type: tfmodule          |     | type: printer|  |
+|  | inputs:             |     | inputs:                 |     | outputs:     |  |
+|  |  bucket_name        |     | bucket (from bucket ID) |     | websiteUrl   |  |
+|  |  region             |     | content                 |     +--------------+  |
+|  |  website settings   |     |                         |             |         |
+|  +---------------------+     +-----------^-------------+             |         |
+|        |                          | bucket ID                        |         |
+|        |                          | via remoteState                  |         |
++--------|--------------------------|----------------------------------|---------+
+         |                          |                                  |
+         v                          v                                  v
+   AWS S3 Bucket              AWS S3 Object (index.html)       WebsiteUrl Output
+
+```
+
 ## Prerequisites
 
 Ensure the following are installed and set up:
