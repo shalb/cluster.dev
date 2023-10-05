@@ -1,6 +1,6 @@
-# Getting Started with Cluster.dev on AWS
+# Getting Started with Cluster.dev on Azure Cloud
 
-This guide will walk you through the steps to deploy your first project with Cluster.dev on AWS.
+This guide will walk you through the steps to deploy your first project with Cluster.dev on Azure Cloud.
 
 ```text
                           +-------------------------+
@@ -17,7 +17,7 @@ This guide will walk you through the steps to deploy your first project with Clu
                           +------------+------------+
                                        |
                                        |
-+--------------------------------------v------------------------------------=---+
++--------------------------------------v----------------------------------------+
 | StackTemplate: azure-static-website                                           |
 |                                                                               |
 |  +---------------------+     +---------------------+     +-----------------+  |
