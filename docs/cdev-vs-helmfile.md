@@ -4,14 +4,16 @@ Kubernetes, with its dynamic and versatile nature, requires efficient tools to m
 
 ## 1. Introduction
 
-- Cluster.dev:
-  - A versatile tool designed for managing cloud-native infrastructures with declarative manifests, known as stack templates.
-  - Integrates with various technologies, including Terraform modules, Kubernetes manifests, Helm charts, and more.
-  - Promotes a unified approach to deploying, testing, and distributing infrastructure components.
+Cluster.dev:
 
-- Helmfile:
-  - A declarative specification for deploying and synchronizing Helm charts.
-  - Provides automation and workflow tooling around the Helm tool, making it easier to deploy and manage Helm charts across several clusters or environments.
+- A versatile tool designed for managing cloud-native infrastructures with declarative manifests, known as stack templates.
+- Integrates with various technologies, including Terraform modules, Kubernetes manifests, Helm charts, and more.
+- Promotes a unified approach to deploying, testing, and distributing infrastructure components.
+
+Helmfile:
+
+- A declarative specification for deploying and synchronizing Helm charts.
+- Provides automation and workflow tooling around the Helm tool, making it easier to deploy and manage Helm charts across several clusters or environments.
 
 ## 2. Core Features & Abilities
 
