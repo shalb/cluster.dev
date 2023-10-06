@@ -1,4 +1,4 @@
-# Getting Started with Cluster.dev on Azure Cloud
+# **Getting Started with Cluster.dev on Azure Cloud**
 
 This guide will walk you through the steps to deploy your first project with Cluster.dev on Azure Cloud.
 

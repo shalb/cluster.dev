@@ -1,4 +1,4 @@
-# Getting Started with Cluster.dev on AWS
+# **Getting Started with Cluster.dev on AWS**
 
 This guide will walk you through the steps to deploy your first project with Cluster.dev on AWS.
 
