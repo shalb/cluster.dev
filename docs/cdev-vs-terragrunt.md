@@ -4,15 +4,17 @@ Both Cluster.dev and Terragrunt have been increasingly popular tools within the 
 
 ### 1. Introduction
 
-- Cluster.dev
-  - A comprehensive tool designed for managing cloud-native infrastructures using declarative manifests called stack templates.
-  - Integrates with various components such as Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Argo CD/Flux applications, and OPA policies.
-  - Provides a unified approach to deploy, test, and distribute components.
+Cluster.dev
 
-- Terragrunt
-  - An extension for Terraform designed to provide additional utilities to manage Terraform modules.
-  - Helps in keeping Terraform configurations DRY (Don’t Repeat Yourself), ensuring modularity and reuse across multiple environments.
-  - Offers a layered approach to configuration, simplifying the management of Terraform deployments.
+- A comprehensive tool designed for managing cloud-native infrastructures using declarative manifests called stack templates.
+- Integrates with various components such as Terraform modules, Kubernetes manifests, Shell scripts, Helm charts, Argo CD/Flux applications, and OPA policies.
+- Provides a unified approach to deploy, test, and distribute components.
+
+Terragrunt
+
+- An extension for Terraform designed to provide additional utilities to manage Terraform modules.
+- Helps in keeping Terraform configurations DRY (Don’t Repeat Yourself), ensuring modularity and reuse across multiple environments.
+- Offers a layered approach to configuration, simplifying the management of Terraform deployments.
 
 ### 2. Core Features & Abilities
 
