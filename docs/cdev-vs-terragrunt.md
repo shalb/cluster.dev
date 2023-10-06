@@ -18,42 +18,44 @@ Terragrunt
 
 ### 2. Core Features & Abilities
 
-- Configuration Management
+#### Configuration Management
 
   - Cluster.dev: Uses stack templates for configuration. Templates can integrate with various technologies like Terraform, Kubernetes, and Helm. A single template can describe and deploy an entire infrastructure.
   - Terragrunt: Primarily deals with Terraform configurations. Enables reuse and modularity of configurations by linking to Terraform modules and managing inputs/outputs between them.
 
-- Flexibility & Integration
+#### Flexibility & Integration
 
   - Cluster.dev: Highly flexible, supporting a multitude of components from Terraform modules to Kubernetes manifests. Its design promotes integrating diverse cloud-native technologies.
   - Terragrunt: Primarily focuses on Terraform. While it offers great utility functions for Terraform, its integration capabilities are confined to Terraform's ecosystem.
 
-- Workflow Management
+#### Workflow Management
 
   - Cluster.dev: Aims for a consistent GitOps Development experience across multiple technologies.
   - Terragrunt: Facilitates workflows within Terraform, such as ensuring consistent remote state management and modular Terraform deployments.
 
-- Versioning & Source Management
+####  Versioning & Source Management
 
   - Cluster.dev: Allows pinning versions for components and supports specifying module versions directly within the stack templates.
   - Terragrunt: Uses a version reference for Terraform modules, making it easier to manage and switch between different versions of modules.
 
-- Special Features
+#### Special Features
 
   - Cluster.dev: Provides templating for different technologies, can be used in any cloud or on-premises scenarios, and promotes technology best practices.
   - Terragrunt: Provides utilities like automatic retries, locking, and helper scripts for advanced scenarios in Terraform.
 
 ### 3. When to Use Which?
 
-- Cluster.dev is ideal for:
-  - Managing infrastructures that integrate multiple cloud-native technologies.
-  - Projects that need unified deployment, testing, and distribution.
-  - Environments that require a consistent GitOps development experience across technologies.
+Cluster.dev is ideal for:
 
-- Terragrunt shines when:
-  - You're working exclusively or primarily with Terraform.
-  - Needing to maintain configurations DRY and modular across multiple environments.
-  - Complex Terraform projects that require additional utilities like locking, retries, and advanced configuration management.
+- Managing infrastructures that integrate multiple cloud-native technologies.
+- Projects that need unified deployment, testing, and distribution.
+- Environments that require a consistent GitOps development experience across technologies.
+
+Terragrunt shines when:
+
+- You're working exclusively or primarily with Terraform.
+- Needing to maintain configurations DRY and modular across multiple environments.
+- Complex Terraform projects that require additional utilities like locking, retries, and advanced configuration management.
 
 ### 4. Conclusion
 
