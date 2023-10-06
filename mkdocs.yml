@@ -24,6 +24,8 @@ nav:
       - Modify AWS-EKS: examples-modify-aws-eks.md
     - Installation and Upgrade: installation-upgrade.md
     - Cluster.dev vs. Others:
+      - Cluster.dev vs. Terragrunt: cdev-vs-terragrunt.md
+      - Cluster.dev vs. Helmfile: cdev-vs-helmfile.md
       - Cluster.dev vs. Terraform: cdev-vs-terraform.md
       - Cluster.dev vs. Pulumi & Crossplane: cdev-vs-pulumi.md
   - Reference:
