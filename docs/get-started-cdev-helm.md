@@ -49,13 +49,13 @@ This guide will walk you through the steps to deploy a WordPress application alo
 
 ```
 
-## **Prerequisites**
+## Prerequisites
 
 1. A running Kubernetes cluster.
 2. Your domain name (for this tutorial, we'll use `example.com` as a placeholder).
 3. The `kubeconfig` file for your Kubernetes cluster.
 
-## Setting Up Your Project
+## **Setting Up Your Project**
 
 !!! tip
 You can clone example files from repo:
