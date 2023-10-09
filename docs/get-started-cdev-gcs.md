@@ -258,44 +258,107 @@ The units section is where the real action is. Each unit is a self-contained "pi
 
 &nbsp;  
 
-<h5>Storage Account Unit</h5> <br>
+<h5>Cloud Storage Unit</h5> <br>
 
-This unit leverages the `aztfmod/caf/azurerm//modules/storage_account` module to provision an Azure Blob Storage account. Inputs for the module, such as the storage account name, are filled using variables passed into the Stack.
+This unit leverages the `github.com/terraform-google-modules/terraform-google-cloud-storage` module to provision an Google Storage Bucket. Inputs for the module, such as the bucket name and project, are filled using variables passed into the Stack.
 
 ```yaml
-name: storage-account
+name: cloud-storage
 type: tfmodule
-providers: *provider_azurerm
-source: aztfmod/caf/azurerm//modules/storage_account
-inputs:
-  name: {{ .variables.storage_account_name }}
-  ...
+providers: *provider_gcp
+source: "github.com/terraform-google-modules/terraform-google-cloud-storage.git?ref=v4.0.1"
+  inputs:
+    names:
+      - {{ .variables.name }}
+    randomize_suffix: true
+    project_id: {{ .variables.project }}
+    location: "EU"
+    set_viewer_roles: true
+    viewers:
+      - allUsers
+    website:
+      main_page_suffix: "index.html"
+      not_found_page: "index.html"
 ```
 
-<h5>Web-page Object Unit</h5> <br>
+<h5>Cloud Bucket Object Unit</h5> <br>
 
-Upon creating the storage account, this unit takes the role of establishing a web-page object inside it. This action is carried out using a sub-module from the storage account module specifically designed for blob creation. A standout feature is the remoteState function, which dynamically extracts the name of the Azure Storage account produced by the preceding unit:
+Upon creating the storage bucket, this unit takes the role of establishing a web-page object inside it. This action is carried out using a module storage bucket object module specifically designed for blob creation. A standout feature is the remoteState function, which dynamically extracts the name of the Storage Bucket name produced by the preceding unit:
 
 ```yaml
-name: web-page-blob
+name: cloud-bucket-object
 type: tfmodule
-providers: *provider_azurerm
-source: aztfmod/caf/azurerm//modules/storage_account/blob
+providers: *provider_gcp
+depends_on: this.cloud-storage
+source: "bootlabstech/cloud-storage-bucket-object/google"
+version: "1.0.1"
 inputs:
-  storage_account_name: {{ remoteState "this.storage-account.name" }}
-  ...
+  bucket_name: {{ remoteState "this.cloud-storage.name" }}
+  object_name: "index.html"
+  object_content: |
+    {{- .variables.content | nindent 8 }}
+```
+
+<h5>Cloud URL Map Unit</h5> <br>
+
+This unit create google_compute_url_map and google_compute_backend_bucket in order to supply it to cloud-lb unit. A standout feature is the remoteState function, which dynamically extracts the name of the Storage Bucket name produced by Cloud Storage unit:
+
+```yaml
+name: cloud-url-map
+type: tfmodule
+providers: *provider_gcp
+depends_on: this.cloud-storage
+source: "github.com/shalb/terraform-gcs-bucket-backend.git?ref=0.0.1"
+inputs:
+  name: {{ .variables.name }}
+  bucket_name: {{ remoteState "this.cloud-storage.name" }}
+```
+
+<h5>Cloud Load Balancer Unit</h5> <br>
+
+This unit create google load balancer. A standout feature is the remoteState function, which dynamically extracts the name of the URL Map URI produced by Cloud URL Map unit:
+
+```yaml
+name: cloud-lb
+type: tfmodule
+providers: *provider_gcp
+depends_on: this.cloud-url-map
+source: "GoogleCloudPlatform/lb-http/google"
+version: "9.2.0"
+inputs:
+  name: {{ .variables.name }}
+  project: {{ .variables.project }}
+  url_map: {{ remoteState "this.cloud-url-map.url_map_self_link" }}
+  create_url_map: false
+  ssl: false
+  backends:
+    default:
+      protocol: "HTTP"
+      port: 80
+      port_name: "http"
+      timeout_sec: 10
+      enable_cdn: false
+      groups: [] 
+      health_check:
+        request_path: "/"
+        port: 80
+      log_config:
+        enable: true
+        sample_rate: 1.0
+      iap_config:
+        enable: false
 ```
 
 <h5>Outputs Unit</h5> <br>
 
-Lastly, this unit is designed to provide outputs, allowing users to view certain results of the Stack execution. For this template, it provides the website URL of the hosted S3 website.
+Lastly, this unit is designed to provide outputs, allowing users to view certain results of the Stack execution. For this template, it provides the website URL of the hosted website exposed by load balancer.
 
 ```yaml
 name: outputs
 type: printer
-depends_on: this.web-page-blob
+depends_on: this.cloud-storage
 outputs:
-  websiteUrl: https://{{ remoteState "this.storage-account.primary_web_host" }}
+  websiteUrl: http://{{ remoteState "this.cloud-lb.external_ip" }}
 ```
 
 <h4>3. Variables and Data Flow</h4> <br>
@@ -314,7 +377,7 @@ cat <<EOF > files/index.html
 </head>
 <body>
   <h1>Welcome to my website</h1>
-  <p>Now hosted on Azure!</p>
+  <p>Now hosted on GCS!</p>
   <h2>See you!</h2>
 </body>
 </html>
@@ -335,9 +398,6 @@ EOF
     cdev apply
     ```
 
-### Example Screen Cast
-
-<a href="https://asciinema.org/a/8j5WthKY9exW74ldotwCqWPcE" target="_blank"><img src="https://asciinema.org/a/8j5WthKY9exW74ldotwCqWPcE.svg" /></a>
 
 ## Clean up
 
