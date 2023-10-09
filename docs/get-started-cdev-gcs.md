@@ -8,13 +8,13 @@ This guide will walk you through the steps to deploy your first project with Clu
                           |  - project              |
                           |  - name                 |
                           |  - region               |
+                          |  - location             |
                           +------------+------------+
                                        |
                                        |
                           +------------v------------+
                           | Stack.yaml              |
                           |  - object content       |
-                          |  - bucket location      |
                           +------------+------------+
                                        |
                                        |
@@ -100,9 +100,9 @@ name: dev
 kind: Project
 backend: gcs-backend
 variables:
-  organization: cluster.dev
   project: cdev-demo
   region: us-west1
+  location: EU
   name: dev-test
   state_bucket_name: cdevstates
   state_bucket_prefix: dev
@@ -140,6 +140,7 @@ backend: gcs-backend
 variables:
   name: {{ .project.variables.name }}
   region: {{ .project.variables.region }}
+  location: {{ .project.variables.location }}
   project: {{ .project.variables.project }}
   organization: {{ .project.variables.organization }}
   content: |
