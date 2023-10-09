@@ -13,6 +13,7 @@ nav:
     - Getting Started:
       - Quick Start on AWS: get-started-cdev-aws.md
       - Quick Start on Azure: get-started-cdev-azure.md
+      - Quick Start on GCS: get-started-cdev-gcs.md
       - Quick Start with Kubernetes: get-started-cdev-helm.md
     - Examples:
       - Overview: examples-overview.md
