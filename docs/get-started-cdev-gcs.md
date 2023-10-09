@@ -3,18 +3,18 @@
 This guide will walk you through the steps to deploy your first project with Cluster.dev on Google Cloud.
 
 ```text
-                          +-------------------------+
-                          | Project.yaml            |
-                          |  - project              |
-                          |  - name                 |
-                          |  - region               |
-                          |  - location             |
-                          +------------+------------+
+                          +---------------------------------+
+                          | Project.yaml                    |
+                          |  - project_name                 |
+                          |  - google_project_id            |
+                          |  - google_cloud_region          |
+                          |  - google_cloud_bucket_location |
+                          +------------+--------------------+
                                        |
                                        |
                           +------------v------------+
                           | Stack.yaml              |
-                          |  - object content       |
+                          |  - web_page_content     |
                           +------------+------------+
                                        |
                                        |
@@ -100,12 +100,13 @@ name: dev
 kind: Project
 backend: gcs-backend
 variables:
-  project: cdev-demo
-  region: us-west1
-  location: EU
-  name: dev-test
-  state_bucket_name: cdevstates
-  state_bucket_prefix: dev
+  project_name: dev-test
+  google_project_id: cdev-demo
+  google_cloud_region: us-west1
+  google_cloud_bucket_location: EU
+  google_bucket_name: cdevstates
+  google_bucket_prefix: dev
+EOF
 ```
 
 ### Backend Configuration (`backend.yaml`)
@@ -113,14 +114,13 @@ variables:
 This specifies where Cluster.dev will store its own state and the Terraform states for any infrastructure it provisions or manages. Given the backend type as GCS.
 
 ```bash
-cat <<EOF > backend.yaml
 name: gcs-backend
 kind: Backend
 provider: gcs
 spec:
-  project: {{ .project.variables.project }}
-  bucket: {{ .project.variables.state_bucket_name }}
-  prefix: {{ .project.variables.state_bucket_prefix }}
+  project: {{ .project.variables.google_project_id }}
+  bucket: {{ .project.variables.google_bucket_name }}
+  prefix: {{ .project.variables.google_bucket_prefix }}
 EOF
 ```
 
@@ -138,12 +138,11 @@ template: ./template/
 kind: Stack
 backend: gcs-backend
 variables:
-  name: {{ .project.variables.name }}
-  region: {{ .project.variables.region }}
-  location: {{ .project.variables.location }}
-  project: {{ .project.variables.project }}
-  organization: {{ .project.variables.organization }}
-  content: |
+  project_name: {{ .project.variables.project_name }}
+  google_cloud_region: {{ .project.variables.google_cloud_region }}
+  google_cloud_bucket_location: {{ .project.variables.google_cloud_bucket_location }}
+  google_project_id: {{ .project.variables.google_project_id }}
+  web_page_content: |
     {{- readFile "./files/index.html" | nindent 4 }}
 EOF
 ```
@@ -157,8 +156,8 @@ mkdir template
 cat <<EOF > template/template.yaml
 _p: &provider_gcp
 - google:
-    project: {{ .variables.project }}
-    region: {{ .variables.region }}
+    project: {{ .variables.google_project_id }}
+    region: {{ .variables.google_cloud_region }}
 
 name: gcs-static-website
 kind: StackTemplate
@@ -170,10 +169,10 @@ units:
     source: "github.com/terraform-google-modules/terraform-google-cloud-storage.git?ref=v4.0.1"
     inputs:
       names:
-        - {{ .variables.name }}
+        - {{ .variables.project_name }}
       randomize_suffix: true
-      project_id: {{ .variables.project }}
-      location: "EU"
+      project_id: {{ .variables.google_project_id }}
+      location: {{ .variables.google_cloud_bucket_location }}
       set_viewer_roles: true
       viewers:
         - allUsers
@@ -191,7 +190,7 @@ units:
       bucket_name: {{ remoteState "this.cloud-storage.name" }}
       object_name: "index.html"
       object_content: |
-        {{- .variables.content | nindent 8 }}
+        {{- .variables.web_page_content | nindent 8 }}
   -
     name: cloud-url-map
     type: tfmodule
@@ -199,7 +198,7 @@ units:
     depends_on: this.cloud-storage
     source: "github.com/shalb/terraform-gcs-bucket-backend.git?ref=0.0.1"
     inputs:
-      name: {{ .variables.name }}
+      name: {{ .variables.project_name }}
       bucket_name: {{ remoteState "this.cloud-storage.name" }}
   -
     name: cloud-lb
@@ -209,8 +208,8 @@ units:
     source: "GoogleCloudPlatform/lb-http/google"
     version: "9.2.0"
     inputs:
-      name: {{ .variables.name }}
-      project: {{ .variables.project }}
+      name: {{ .variables.project_name }}
+      project: {{ .variables.google_project_id }}
       url_map: {{ remoteState "this.cloud-url-map.url_map_self_link" }}
       create_url_map: false
       ssl: false
@@ -244,13 +243,13 @@ EOF
 
  <h4>1. Provider Definition (_p)</h4> <br>
 
-This section uses a YAML anchor, defining the cloud provider and location for the resources in the stack. For this case, Azure is the chosen provider, and the location is dynamically retrieved from the variables:
+This section uses a YAML anchor, defining the cloud provider and location for the resources in the stack. For this case, GCS is the chosen provider, and the location is dynamically retrieved from the variables:
 
 ```yaml
 _p: &provider_gcp
 - google:
-    project: {{ .variables.project }}
-    region: {{ .variables.region }}
+    project: {{ .variables.google_project_id }}
+    region: {{ .variables.google_cloud_region }}
 ```
 
 <h4>2. Units</h4> <br>
@@ -272,8 +271,8 @@ source: "github.com/terraform-google-modules/terraform-google-cloud-storage.git?
     names:
       - {{ .variables.name }}
     randomize_suffix: true
-    project_id: {{ .variables.project }}
-    location: "EU"
+    project_id: {{ .variables.google_project_id }}
+    location: {{ .variables.google_cloud_bucket_location }}
     set_viewer_roles: true
     viewers:
       - allUsers
@@ -297,7 +296,7 @@ inputs:
   bucket_name: {{ remoteState "this.cloud-storage.name" }}
   object_name: "index.html"
   object_content: |
-    {{- .variables.content | nindent 8 }}
+    {{- .variables.web_page_content | nindent 8 }}
 ```
 
 <h5>Cloud URL Map Unit</h5> <br>
@@ -311,7 +310,7 @@ providers: *provider_gcp
 depends_on: this.cloud-storage
 source: "github.com/shalb/terraform-gcs-bucket-backend.git?ref=0.0.1"
 inputs:
-  name: {{ .variables.name }}
+  name: {{ .variables.project_name }}
   bucket_name: {{ remoteState "this.cloud-storage.name" }}
 ```
 
@@ -327,8 +326,8 @@ depends_on: this.cloud-url-map
 source: "GoogleCloudPlatform/lb-http/google"
 version: "9.2.0"
 inputs:
-  name: {{ .variables.name }}
-  project: {{ .variables.project }}
+  name: {{ .variables.project_name }}
+  project: {{ .variables.google_project_id }}
   url_map: {{ remoteState "this.cloud-url-map.url_map_self_link" }}
   create_url_map: false
   ssl: false
