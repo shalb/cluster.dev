@@ -81,12 +81,19 @@ Authorize cdev/terraform to interact with GCP via SD
 
 ## Creating an Storage Bucket for Storing State
 
-
   ```bash
   gsutil mb gs://cdevstates
   ```
 
-## Setting Up Your Project
+## **Setting Up Your Project**
+
+!!! tip
+You can clone example files from repo:
+
+```bash
+git clone https://github.com/shalb/cdev-examples
+cd cdev-examples/gcp/gcs-website/
+```
 
 ### Project Configuration (`project.yaml`)
 
