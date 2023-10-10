@@ -70,14 +70,14 @@ Ensure the following are installed and set up:
 Before using the Google Cloud  CLI, you'll need to authenticate:
 
   ```bash
-   gcloud auth login
+  gcloud auth login
   ```
 
 Authorize cdev/terraform to interact with GCP via SD
 
-    ```
-    gcloud auth application-default login
-    ```
+  ```bash
+  gcloud auth application-default login
+  ```
 
 ## Creating an Storage Bucket for Storing State
 
@@ -90,9 +90,9 @@ Authorize cdev/terraform to interact with GCP via SD
 
 ### Project Configuration (`project.yaml`)
 
-*   Defines the overarching project settings. All subsequent stack configurations will inherit and can override these settings.
-*   It points to aws-backend as the backend, meaning that the Cluster.dev state for resources defined in this project will be stored in the Google Storage bucket specified in `backend.yaml`.
-*   Project-level variables are defined here and can be referenced in other configurations.
+- Defines the overarching project settings. All subsequent stack configurations will inherit and can override these settings.
+- It points to aws-backend as the backend, meaning that the Cluster.dev state for resources defined in this project will be stored in the Google Storage bucket specified in `backend.yaml`.
+- Project-level variables are defined here and can be referenced in other configurations.
 
 ```bash
 cat <<EOF > project.yaml
@@ -256,7 +256,7 @@ _p: &provider_gcp
 
 The units section is where the real action is. Each unit is a self-contained "piece" of infrastructure, typically associated with a particular Terraform module or a direct cloud resource. <br>
 
-&nbsp;  
+&nbsp;
 
 <h5>Cloud Storage Unit</h5> <br>
 
@@ -398,7 +398,6 @@ EOF
     cdev apply
     ```
 
-
 ## Clean up
 
 To remove the cluster with created resources run the command:
@@ -406,3 +405,9 @@ To remove the cluster with created resources run the command:
 ```bash
 cdev destroy
 ```
+
+## More Examples
+
+In the [Examples](https://docs.cluster.dev/examples-overview/) section you will find ready-to-use advanced Cluster.dev samples that will help you bootstrap more complex cloud infrastructures with Helm and Terraform compositions:
+
+- [More Advanced example with GKE](https://docs.cluster.dev/examples-gcp-gke/)
