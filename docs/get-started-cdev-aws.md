@@ -37,29 +37,6 @@ This guide will walk you through the steps to deploy your first project with Clu
 
 ```
 
-``` mermaid
-graph TD
-
-    ProjectYaml["Project.yaml - region"] --> StackYaml
-
-    StackYaml["Stack.yaml - bucket_name - region - content"] --> StackTemplate
-    subgraph StackTemplate["StackTemplate: s3-website"]
-        Bucket["bucket type: tfmodule inputs: - bucket_name - region - website settings"] --> WebPage
-        WebPage["web-page-object type: tfmodule inputs: - bucket (from bucket ID) - content"] --> Outputs
-        Outputs["outputs type: printer outputs: - websiteUrl"] --> WebsiteUrlOutput["WebsiteUrl Output"]
-    end
-
-    Bucket --> AWS_S3_Bucket["AWS S3 Bucket"]
-    WebPage --> AWS_S3_Object["AWS S3 Object (index.html)"]
-
-    style ProjectYaml fill:#ffdddd
-    style StackYaml fill:#ffdddd
-    style StackTemplate fill:#ddffdd
-    style Bucket fill:#ddddff
-    style WebPage fill:#ddddff
-    style Outputs fill:#ddddff
-```
-
 ## Prerequisites
 
 Ensure the following are installed and set up:
