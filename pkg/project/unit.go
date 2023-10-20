@@ -60,6 +60,9 @@ func NewUnit(spec map[string]interface{}, stack *Stack) (Unit, error) {
 		return nil, fmt.Errorf("incorrect unit type")
 	}
 	uName, ok := spec["name"].(string)
+	if !ok {
+		return nil, fmt.Errorf("incorrect unit name")
+	}
 	modDrv, exists := UnitFactoriesMap[mType]
 	// TODO remove deprecated unit type 'kubernetes'
 	// if mType == "kubernetes" {
