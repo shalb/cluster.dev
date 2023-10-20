@@ -69,7 +69,7 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	for key, manifest := range u.Inputs {
 		unitBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
 		unitBody := unitBlock.Body()
-		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(" kubernete"), SpacesBefore: 1}}
+		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(" kubernetes"), SpacesBefore: 1}}
 		unitBody.SetAttributeRaw("provider", tokens)
 		ctyVal, err := hcltools.InterfaceToCty(manifest)
 		if err != nil {
