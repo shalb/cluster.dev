@@ -56,7 +56,7 @@ On this page you will find guidance on how to create a GKE cluster on GCP using 
     ```
     name: demo-project
     kind: Project
-    backend: default
+    backend: gcs-backend
     variables:
       organization: my-organization
       project: cdev-demo
