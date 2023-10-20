@@ -87,19 +87,25 @@ Then, create a storage account:
   az storage account create --name cdevstates --resource-group cdevResourceGroup --location EastUS --sku Standard_LRS
   ```
 
+Then, create a storage container:
+
+  ```bash
+  az storage container create --name tfstate --account-name cdevstates
+  ```
+
 ## Setting Up Your Project
 
 ### Project Configuration (`project.yaml`)
 
 *   Defines the overarching project settings. All subsequent stack configurations will inherit and can override these settings.
-*   It points to aws-backend as the backend, meaning that the Cluster.dev state for resources defined in this project will be stored in the S3 bucket specified in `backend.yaml`.
+*   It points to default as the backend, meaning that the Cluster.dev state for resources defined in this project will be stored locally.
 *   Project-level variables are defined here and can be referenced in other configurations.
 
 ```bash
 cat <<EOF > project.yaml
 name: dev
 kind: Project
-backend: azure-backend
+backend: default
 variables:
   organization: cluster.dev
   location: eastus
@@ -115,7 +121,7 @@ This specifies where Cluster.dev will store its own state and the Terraform stat
 cat <<EOF > backend.yaml
 name: azure-backend
 kind: Backend
-provider: local ## to be changed to azurerm
+provider: azurerm
 spec:
   resource_group_name: cdevResourceGroup
   storage_account_name: {{ .project.variables.state_storage_account_name }}
@@ -281,7 +287,7 @@ inputs:
 
 <h5>Outputs Unit</h5> <br>
 
-Lastly, this unit is designed to provide outputs, allowing users to view certain results of the Stack execution. For this template, it provides the website URL of the hosted S3 website.
+Lastly, this unit is designed to provide outputs, allowing users to view certain results of the Stack execution. For this template, it provides the website URL of the hosted Azure website.
 
 ```yaml
 name: outputs
