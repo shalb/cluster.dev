@@ -60,11 +60,14 @@ func NewUnit(spec map[string]interface{}, stack *Stack) (Unit, error) {
 		return nil, fmt.Errorf("incorrect unit type")
 	}
 	uName, ok := spec["name"].(string)
+	if !ok {
+		return nil, fmt.Errorf("incorrect unit name")
+	}
 	modDrv, exists := UnitFactoriesMap[mType]
 	// TODO remove deprecated unit type 'kubernetes'
-	if mType == "kubernetes" {
-		log.Warnf("Unit: '%v'. Unit type 'kubernetes' is deprecated and will be removed in future releases. Use 'k8s-manifest' instead", fmt.Sprintf("%v.%v", stack.Name, uName))
-	}
+	// if mType == "kubernetes" {
+	// 	log.Warnf("Unit: '%v'. Unit type 'kubernetes' is deprecated and will be removed in future releases. Use 'k8s-manifest' instead", fmt.Sprintf("%v.%v", stack.Name, uName))
+	// }
 	if !exists {
 		// TODO remove deprecated unit type 'terraform'
 		if mType == "terraform" {
