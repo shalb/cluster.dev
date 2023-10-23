@@ -444,7 +444,7 @@ func (w *ObjectWalker) Slice(v reflect.Value) error {
 			// Slice of primitives
 			valTy, err := gocty.ImpliedType(v.Interface())
 			if err != nil {
-				return fmt.Errorf("cannot encode %T as HCL expression: %w", err)
+				return fmt.Errorf("cannot encode %T as HCL expression: %w", valTy, err)
 			}
 
 			val, err := gocty.ToCtyValue(v.Interface(), valTy)

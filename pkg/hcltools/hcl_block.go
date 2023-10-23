@@ -109,10 +109,6 @@ func (b *hclBlock) FullSchemaName() string {
 	return strings.TrimLeft(parentName+"."+b.name, ".")
 }
 
-func (b *hclBlock) isSupportedAttribute() bool {
-	return tfkschema.IsAttributeSupported(b.FullSchemaName())
-}
-
 func (b *hclBlock) isRequired() bool {
 	if b.parent == nil {
 		// top level resource block is always required.
