@@ -104,6 +104,10 @@ func (u *Unit) Init() error {
 
 // Apply unit.
 func (u *Unit) Apply() error {
+	if u.Applied {
+		log.Debugf("Unit '%v.%v' is already applied, skipping")
+		return nil
+	}
 	if !u.InitDone {
 		if err := u.Init(); err != nil {
 			return err
@@ -124,6 +128,10 @@ func (u *Unit) Plan() error {
 
 // Destroy unit.
 func (u *Unit) Destroy() error {
+	if u.Applied {
+		log.Debugf("Unit '%v.%v' is already applied, skipping")
+		return nil
+	}
 	if !u.InitDone {
 		if err := u.Init(); err != nil {
 			return err

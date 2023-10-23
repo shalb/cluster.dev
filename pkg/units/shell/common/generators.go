@@ -41,10 +41,10 @@ func (u *Unit) Build() error {
 		return err
 	}
 	if u.PreHook != nil {
-		u.CreateFiles.Add("pre_hook.sh", u.PreHook.Command, fs.ModePerm)
+		u.CreateFiles.AddOverride("pre_hook.sh", u.PreHook.Command, fs.ModePerm)
 	}
 	if u.PostHook != nil {
-		u.CreateFiles.Add("post_hook.sh", u.PostHook.Command, fs.ModePerm)
+		u.CreateFiles.AddOverride("post_hook.sh", u.PostHook.Command, fs.ModePerm)
 	}
 
 	return u.createCodeDir()

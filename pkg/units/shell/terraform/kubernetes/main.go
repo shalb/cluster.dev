@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/apex/log"
-	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/units/shell/terraform/base"
@@ -67,22 +66,12 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 		providerBody.SetAttributeValue(key, val)
 	}
 	for key, manifest := range u.Inputs {
-		unitBlock := rootBody.AppendNewBlock("resource", []string{"kubernetes_manifest", key})
-		unitBody := unitBlock.Body()
-		tokens := hclwrite.Tokens{&hclwrite.Token{Type: hclsyntax.TokenQuotedLit, Bytes: []byte(" kubernetes"), SpacesBefore: 1}}
-		unitBody.SetAttributeRaw("provider", tokens)
-		ctyVal, err := hcltools.InterfaceToCty(manifest)
+		err = hcltools.Kubernetes2HCL(manifest, rootBody)
 		if err != nil {
-			return nil, err
-		}
-
-		unitBody.SetAttributeValue("manifest", ctyVal)
-		for hash, marker := range u.ProjectPtr.UnitLinks.ByLinkTypes(base.RemoteStateLinkType).Map() {
-			if marker.TargetStackName == "this" {
-				marker.TargetStackName = u.Stack().Name
+			err = hcltools.Kubernetes2HCLCustom(manifest, key, rootBody)
+			if err != nil {
+				return nil, err
 			}
-			refStr := base.DependencyToRemoteStateRef(marker)
-			hcltools.ReplaceStingMarkerInBody(unitBody, hash, refStr)
 		}
 	}
 
@@ -92,6 +81,7 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 		}
 		refStr := base.DependencyToRemoteStateRef(marker)
 		hcltools.ReplaceStingMarkerInBody(providerBody, hash, refStr)
+		hcltools.ReplaceStingMarkerInBody(rootBody, hash, refStr)
 	}
 	return f.Bytes(), nil
 }
@@ -138,7 +128,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		if err != nil {
 			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
 		}
-
+		// hcltools.Kubernetes2HCL(string(manifest))
 		for i, manifest := range manifests {
 			key := project.ConvertToTfVarName(strings.TrimSuffix(filepath.Base(fileName), ".yaml"))
 			key = fmt.Sprintf("%s_%v", key, i)
@@ -204,7 +194,7 @@ func (u *Unit) Build() error {
 		log.Debug(err.Error())
 		return err
 	}
-	if err = u.CreateFiles.Add("main.tf", string(mainBlock), fs.ModePerm); err != nil {
+	if err = u.CreateFiles.AddOverride("main.tf", string(mainBlock), fs.ModePerm); err != nil {
 		return err
 	}
 	return u.Unit.Build()

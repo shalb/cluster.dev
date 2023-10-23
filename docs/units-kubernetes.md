@@ -3,7 +3,7 @@
 !!! Info
     This unit is deprecated and will be removed soon. Please use the k8s-manifest unit instead.
 
-Describes [Terraform kubernetes-alpha provider](https://github.com/hashicorp/terraform-provider-kubernetes-alpha) invocation.
+Describes [Terraform kubernetes provider](https://github.com/hashicorp/terraform-provider-kubernetes-alpha) invocation.
 
 Example:
 

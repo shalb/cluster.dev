@@ -169,7 +169,8 @@ func (u *Unit) Build() error {
 		log.Debug(err.Error())
 		return err
 	}
-	err = u.CreateFiles.Add("main.tf", string(mainFile), fs.ModePerm)
+
+	err = u.CreateFiles.AddOverride("main.tf", string(mainFile), fs.ModePerm)
 	if err != nil {
 		log.Debug(err.Error())
 		return err
@@ -180,7 +181,7 @@ func (u *Unit) Build() error {
 			log.Debug(err.Error())
 			return err
 		}
-		err = u.CreateFiles.Add("outputs.tf", string(outputsFile), fs.ModePerm)
+		err = u.CreateFiles.AddOverride("outputs.tf", string(outputsFile), fs.ModePerm)
 		if err != nil {
 			log.Debug(err.Error())
 			return err

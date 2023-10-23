@@ -142,7 +142,7 @@ func (u *Unit) ReadManifestsPath(src string) error {
 		if err != nil {
 			return fmt.Errorf("get remote file: %w", err)
 		}
-		err = u.ManifestsFiles.Add("./main.yaml", manifest, fs.ModePerm)
+		err = u.ManifestsFiles.AddOverride("./main.yaml", manifest, fs.ModePerm)
 		if err != nil {
 			return fmt.Errorf("add remote file: %w", err)
 		}
@@ -342,7 +342,7 @@ func (u *Unit) Build() error {
 		}
 		if deleteYAML != "" {
 			u.manifestsForDelete = &common.FilesListT{}
-			u.manifestsForDelete.Add("./delete/main.yaml", deleteYAML, fs.ModePerm)
+			u.manifestsForDelete.AddOverride("./delete/main.yaml", deleteYAML, fs.ModePerm)
 			err := u.manifestsForDelete.WriteFiles(u.CacheDir)
 			if err != nil {
 				return err

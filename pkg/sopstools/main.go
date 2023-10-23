@@ -1,8 +1,8 @@
 package sopstools
 
 import (
-	"go.mozilla.org/sops/v3/cmd/sops/formats"
-	"go.mozilla.org/sops/v3/decrypt"
+	"github.com/getsops/sops/v3/cmd/sops/formats"
+	"github.com/getsops/sops/v3/decrypt"
 )
 
 func DecryptYaml(data []byte) ([]byte, error) {
