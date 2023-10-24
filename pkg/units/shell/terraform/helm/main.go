@@ -240,7 +240,7 @@ func (u *Unit) Build() error {
 		log.Debug(err.Error())
 		return err
 	}
-	if err = u.CreateFiles.Add("main.tf", string(mainBlock), fs.ModePerm); err != nil {
+	if err = u.CreateFiles.AddOverride("main.tf", string(mainBlock), fs.ModePerm); err != nil {
 		return err
 	}
 	return u.Unit.Build()

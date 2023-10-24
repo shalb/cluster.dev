@@ -51,6 +51,7 @@
     "grafana",
     "GREEDYDATA",
     "gsub",
+    "hclwrite",
     "HTTPDATE",
     "id",
     "inittf",

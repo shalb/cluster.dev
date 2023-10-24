@@ -46,10 +46,6 @@ func (l *FilesListT) Find(fileName string) int {
 	return -1
 }
 
-func remove(slice []int, s int) []int {
-	return append(slice[:s], slice[s+1:]...)
-}
-
 func (l *FilesListT) SPrintLs() string {
 	var res string
 	for _, f := range *l {
@@ -60,9 +56,22 @@ func (l *FilesListT) SPrintLs() string {
 
 // Add insert the new file with name fileName, returns error if file with this name already exists.
 func (l *FilesListT) Add(fileName string, content string, mode fs.FileMode) error {
+	l.Delete(fileName)
 	if l.Find(fileName) >= 0 {
 		return fmt.Errorf("add file: file '%v' already exists", fileName)
 	}
+	*l = append(*l,
+		&CreateFileRepresentation{
+			FileName: fileName,
+			Content:  content,
+			FileMode: mode,
+		})
+	return nil
+}
+
+// AddOverride insert the new file with name fileName, override file if already exists.
+func (l *FilesListT) AddOverride(fileName string, content string, mode fs.FileMode) error {
+	l.Delete(fileName)
 	*l = append(*l,
 		&CreateFileRepresentation{
 			FileName: fileName,
@@ -179,5 +188,4 @@ func (l *FilesListT) Delete(fileName string) {
 	if i := l.Find(fileName); i >= 0 {
 		*l = append((*l)[:i], (*l)[i+1:]...)
 	}
-	return
 }

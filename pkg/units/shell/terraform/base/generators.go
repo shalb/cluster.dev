@@ -86,8 +86,7 @@ func (u *Unit) Build() error {
 		}
 		init = append(init, providers.Bytes()...)
 	}
-
-	err = u.CreateFiles.Add("init.tf", string(init), fs.ModePerm)
+	err = u.CreateFiles.AddOverride("init.tf", string(init), fs.ModePerm)
 	if err != nil {
 		return fmt.Errorf("build unit %v: %w\n%v", u.Key(), err, u.CreateFiles.SPrintLs())
 	}
@@ -99,7 +98,7 @@ func (u *Unit) Build() error {
 	}
 	// log.Errorf("Remote states: %v\nUnit name: %v", len(remoteStates), m.Key())
 	if len(remoteStates) > 0 {
-		err = u.CreateFiles.Add("remote_states.tf", string(remoteStates), fs.ModePerm)
+		err = u.CreateFiles.AddOverride("remote_states.tf", string(remoteStates), fs.ModePerm)
 		if err != nil {
 			return fmt.Errorf("build unit %v: %w", u.Key(), err)
 		}
