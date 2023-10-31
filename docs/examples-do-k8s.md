@@ -20,7 +20,7 @@ On this page you will find guidance on how to create a Kubernetes cluster on Dig
 
 3. [doctl installed](https://docs.digitalocean.com/reference/doctl/how-to/install/)
 
-4. [Cluster.dev client installed](https://docs.cluster.dev/get-started-install/)
+4. [Cluster.dev client installed](https://docs.cluster.dev/installation-upgrade/)
 
 ### Authentication
 

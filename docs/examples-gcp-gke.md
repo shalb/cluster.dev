@@ -24,7 +24,7 @@ On this page you will find guidance on how to create a GKE cluster on GCP using 
 2. GCP account and project
 3. GCloud CLI installed and configured with your GCP account
 4. kubectl installed
-5. [Cluster.dev client installed](https://docs.cluster.dev/get-started-install/)
+5. [Cluster.dev client installed](https://docs.cluster.dev/installation-upgrade/)
 6. Parent Domain
 
 ## Before you begin

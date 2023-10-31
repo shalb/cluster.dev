@@ -30,7 +30,7 @@ On this page you will find guidance on how to create an EKS cluster on AWS using
 
 4. kubectl installed
 
-5. [Cluster.dev client installed](https://docs.cluster.dev/get-started-install/)
+5. [Cluster.dev client installed](https://docs.cluster.dev/installation-upgrade/)
 
 ### Authentication
 
