@@ -2,31 +2,31 @@
 
 ## Working with Terraform Modules
 
-Example of how to create static website hosting on different clouds.
+Example of how to create a static website hosting on different clouds:
 
 | Cloud Provider | Sample Link                               | Technology Image |
 |----------------|-------------------------------------------|------------------|
-| AWS            | [Quick Start on AWS](#)                   | ![AWS Logo](aws-logo.png) ![Terraform Logo](terraform-logo.png) |
-| Azure          | [Quick Start on Azure](#)                 | ![Azure Logo](azure-logo.png) ![Terraform Logo](terraform-logo.png) |
-| GCP            | [Quick Start on GCP](#)                   | ![GCP Logo](gcp-logo.png) ![Terraform Logo](terraform-logo.png) |
+| AWS            | [Quick Start on AWS](https://docs.cluster.dev/get-started-cdev-aws/)                   | <img src="./images/AWS.png" width="50" height="50"> <img src="./images/terraform.png" width="50" height="50"> |
+| Azure          | [Quick Start on Azure](https://docs.cluster.dev/get-started-cdev-azure/)                 | <img src="./images/AZURE.png" width="50" height="50"> <img src="./images/terraform.png" width="50" height="50"> |
+| GCP            | [Quick Start on GCP](https://docs.cluster.dev/get-started-cdev-gcp/)                   | <img src="./images/Google Cloud Platform.png" width="50" height="50"> <img src="./images/terraform.png" width="50" height="50"> |
 
 ## Kubernetes Deployment with Helm Charts
 
-Example of how to deploy application with Helm and Terraform to Kubernetes.
+Example of how to deploy application with Helm and Terraform to Kubernetes:
 
 | Description                 | Sample Link                           | Technology Image |
 |-----------------------------|---------------------------------------|------------------|
-| Terraform Kubernetes Helm | [Quick Start with Kubernetes](#)    | ![Kubernetes Logo](kubernetes-logo.png) ![Helm Logo](helm-logo.png) |
+| Kubernetes Terraform Helm | [Quick Start with Kubernetes](https://docs.cluster.dev/get-started-cdev-helm/)    | <img src="./images/Kubernetes.png" width="50" height="50"> <img src="./images/terraform.png" width="50" height="50"> <img src="./images/HELM.png" width="50" height="50"> |
 
 ## Bootstrapping Kubernetes in Different Clouds
 
-Create fully featured Kubernetes clusters with required addons.
+Create fully featured Kubernetes clusters with required addons:
 
 | Cloud Provider | Kubernetes Type | Sample Link             | Technology Image |
 |----------------|-----------------|-------------------------|------------------|
-| AWS            | EKS             | [AWS-EKS](#)            | ![AWS Logo](aws-logo.png) ![Kubernetes Logo](kubernetes-logo.png) |
-| AWS            | K3s             | [AWS-K3s](#)            | ![AWS Logo](aws-logo.png) ![K3s Logo](k3s-logo.png) |
-| GCP            | GKE             | [GCP-GKE](#)            | ![GCP Logo](gcp-logo.png) ![Kubernetes Logo](kubernetes-logo.png) |
-| AWS            | K3s + Prometheus| [AWS-K3s Prometheus](#) | ![AWS Logo](aws-logo.png) ![K3s Logo](k3s-logo.png) ![Prometheus Logo](prometheus-logo.png) |
-| DO             | K8s             | [DO-K8s](#)             | ![DO Logo](do-logo.png) ![Kubernetes Logo](kubernetes-logo.png) |
+| AWS            | EKS             | [AWS-EKS](https://docs.cluster.dev/examples-aws-eks/)            | <img src="./images/AWS.png" width="50" height="50"> <img src="./images/Kubernetes.png" width="50" height="50"> |
+| AWS            | K3s             | [AWS-K3s](https://docs.cluster.dev/examples-aws-k3s/)            | <img src="./images/AWS.png" width="50" height="50"> <img src="./images/K3s.png" width="50" height="50"> |
+| GCP            | GKE             | [GCP-GKE](https://docs.cluster.dev/examples-gcp-gke/)            | <img src="./images/Google Cloud Platform.png" width="50" height="50"> <img src="./images/Kubernetes.png" width="50" height="50"> |
+| AWS            | K3s + Prometheus| [AWS-K3s Prometheus](https://docs.cluster.dev/examples-aws-k3s-prometheus/) | <img src="./images/AWS.png" width="50" height="50"> <img src="./images/K3s.png" width="50" height="50"> <img src="./images/Prometheus.png" width="50" height="50"> |
+| DO             | K8s             | [DO-K8s](https://docs.cluster.dev/examples-do-k8s/)             | <img src="./images/Digital Ocean.png" width="50" height="50"> <img src="./images/Kubernetes.png" width="50" height="50"> |
 
