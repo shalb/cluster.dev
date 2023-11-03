@@ -16,10 +16,13 @@ func (f *Factory) New(config []byte, name string, p *project.Project) (project.B
 		name:       name,
 		ProjectPtr: p,
 	}
-	err := yaml.Unmarshal(config, &bk.state)
+	state := map[string]interface{}{}
+	err := yaml.Unmarshal(config, &bk)
 	if err != nil {
 		return nil, utils.ResolveYamlError(config, err)
 	}
+
+	bk.state = state
 	return &bk, nil
 }
 
