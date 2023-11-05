@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
@@ -168,6 +169,17 @@ func (b *Backend) ReadState() (string, error) {
 
 	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
 	ctx := context.Background()
+
+	// Check if the object exists.
+	_, err := b.client.DownloadStream(ctx, b.ContainerName, stateKey, nil)
+	if err != nil {
+		// Check if the error message contains "BlobNotFound" to identify the error.
+		if strings.Contains(err.Error(), "BlobNotFound") {
+			fmt.Println("The blob does not exist.")
+			return "", nil
+		}
+		return "", err
+	}
 
 	// Download the blob
 	get, err := b.client.DownloadStream(ctx, b.ContainerName, stateKey, nil)
