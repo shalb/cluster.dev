@@ -13,16 +13,17 @@ import (
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
+	"gopkg.in/yaml.v3"
 )
 
 // Backend - describe azure backend for interface package.backend.
 type Backend struct {
-	name               string
-	state              map[string]interface{}
-	ProjectPtr         *project.Project `yaml:"-"`
-	ContainerName      string           `yaml:"container_name,omitempty"`
-	StorageAccountName string           `yaml:"storage_account_name,omitempty"`
-	ResourceGroupName  string           `yaml:"resource_group_name,omitempty"`
+	name               string                 `yaml:"-"`
+	state              map[string]interface{} `yaml:"-"`
+	ProjectPtr         *project.Project       `yaml:"-"`
+	ContainerName      string                 `yaml:"container_name,omitempty"`
+	StorageAccountName string                 `yaml:"storage_account_name,omitempty"`
+	ResourceGroupName  string                 `yaml:"resource_group_name,omitempty"`
 	client             *azblob.Client
 }
 
@@ -40,6 +41,17 @@ func (b *Backend) Provider() string {
 	return "azurerm"
 }
 
+func getStateMap(in Backend) (res map[string]interface{}, err error) {
+	tmpData, err := yaml.Marshal(in)
+	if err != nil {
+		return
+	}
+	res = map[string]interface{}{}
+	err = yaml.Unmarshal(tmpData, &res)
+	err = utils.ResolveYamlError(tmpData, err)
+	return
+}
+
 // GetBackendBytes generate terraform backend config.
 func (b *Backend) GetBackendBytes(stackName, unitName string) ([]byte, error) {
 	f, err := b.GetBackendHCL(stackName, unitName)
@@ -51,14 +63,17 @@ func (b *Backend) GetBackendBytes(stackName, unitName string) ([]byte, error) {
 
 // GetBackendHCL generate terraform backend config.
 func (b *Backend) GetBackendHCL(stackName, unitName string) (*hclwrite.File, error) {
-	b.state["key"] = fmt.Sprintf("%s-%s.state", stackName, unitName)
-
+	bConfigTmpl, err := getStateMap(*b)
+	if err != nil {
+		return nil, err
+	}
+	bConfigTmpl["key"] = fmt.Sprintf("%s-%s.state", stackName, unitName)
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()
 	terraformBlock := rootBody.AppendNewBlock("terraform", []string{})
 	backendBlock := terraformBlock.Body().AppendNewBlock("backend", []string{"azurerm"})
 	backendBody := backendBlock.Body()
-	for key, value := range b.state {
+	for key, value := range bConfigTmpl {
 		backendBody.SetAttributeValue(key, cty.StringVal(value.(string)))
 	}
 	return f, nil
@@ -66,15 +81,18 @@ func (b *Backend) GetBackendHCL(stackName, unitName string) (*hclwrite.File, err
 
 // GetRemoteStateHCL generate terraform remote state for this backend.
 func (b *Backend) GetRemoteStateHCL(stackName, unitName string) ([]byte, error) {
-	b.state["key"] = fmt.Sprintf("%s-%s.state", stackName, unitName)
-
+	bConfigTmpl, err := getStateMap(*b)
+	if err != nil {
+		return nil, err
+	}
+	bConfigTmpl["key"] = fmt.Sprintf("%s-%s.state", stackName, unitName)
 	f := hclwrite.NewEmptyFile()
 
 	rootBody := f.Body()
 	dataBlock := rootBody.AppendNewBlock("data", []string{"terraform_remote_state", fmt.Sprintf("%s-%s", stackName, unitName)})
 	dataBody := dataBlock.Body()
 	dataBody.SetAttributeValue("backend", cty.StringVal("azurerm"))
-	config, err := hcltools.InterfaceToCty(b.state)
+	config, err := hcltools.InterfaceToCty(bConfigTmpl)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +178,6 @@ func (b *Backend) WriteState(stateData string) error {
 }
 
 func (b *Backend) ReadState() (string, error) {
-	fmt.Printf("Does not exist in container '%s'\n", b.ContainerName)
 	if b.client == nil {
 		if err := b.createAzureBlobClient(); err != nil {
 			return "", err
