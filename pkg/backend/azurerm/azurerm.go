@@ -27,6 +27,25 @@ type Backend struct {
 	client             *azblob.Client
 }
 
+func (b *Backend) Configure() error {
+	if b.client != nil {
+		return nil
+	}
+
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		return err
+	}
+
+	client, err := azblob.NewClient("https://"+b.StorageAccountName+".blob.core.windows.net/", cred, nil)
+	if err != nil {
+		return err
+	}
+
+	b.client = client
+	return nil
+}
+
 func (b *Backend) State() map[string]interface{} {
 	return b.state
 }
@@ -100,27 +119,7 @@ func (b *Backend) GetRemoteStateHCL(stackName, unitName string) ([]byte, error) 
 	return f.Bytes(), nil
 }
 
-func (b *Backend) createAzureBlobClient() error {
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
-	if err != nil {
-		return err
-	}
-
-	client, err := azblob.NewClient("https://"+b.StorageAccountName+".blob.core.windows.net/", cred, nil)
-	if err != nil {
-		return err
-	}
-
-	b.client = client
-	return nil
-}
-
 func (b *Backend) LockState() error {
-	if b.client == nil {
-		if err := b.createAzureBlobClient(); err != nil {
-			return err
-		}
-	}
 	lockKey := fmt.Sprintf("cdev.%s.lock", b.ProjectPtr.Name())
 	ctx := context.Background()
 
@@ -143,12 +142,6 @@ func (b *Backend) LockState() error {
 }
 
 func (b *Backend) UnlockState() error {
-	if b.client == nil {
-		if err := b.createAzureBlobClient(); err != nil {
-			return err
-		}
-	}
-
 	lockKey := fmt.Sprintf("cdev.%s.lock", b.ProjectPtr.Name())
 	ctx := context.Background()
 	_, err := b.client.DeleteBlob(ctx, b.ContainerName, lockKey, nil)
@@ -160,12 +153,6 @@ func (b *Backend) UnlockState() error {
 }
 
 func (b *Backend) WriteState(stateData string) error {
-	if b.client == nil {
-		if err := b.createAzureBlobClient(); err != nil {
-			return err
-		}
-	}
-
 	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
 	ctx := context.Background()
 	buf := []byte(stateData)
@@ -178,12 +165,6 @@ func (b *Backend) WriteState(stateData string) error {
 }
 
 func (b *Backend) ReadState() (string, error) {
-	if b.client == nil {
-		if err := b.createAzureBlobClient(); err != nil {
-			return "", err
-		}
-	}
-
 	stateKey := fmt.Sprintf("cdev.%s.state", b.ProjectPtr.Name())
 	ctx := context.Background()
 

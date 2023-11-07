@@ -23,7 +23,7 @@ func (f *Factory) New(config []byte, name string, p *project.Project) (project.B
 	}
 
 	bk.state = state
-	return &bk, nil
+	return &bk, bk.Configure()
 }
 
 func init() {
