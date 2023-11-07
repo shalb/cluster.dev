@@ -18,13 +18,32 @@ import (
 
 // Backend - describe azure backend for interface package.backend.
 type Backend struct {
-	name               string                 `yaml:"-"`
-	state              map[string]interface{} `yaml:"-"`
-	ProjectPtr         *project.Project       `yaml:"-"`
-	ContainerName      string                 `yaml:"container_name,omitempty"`
-	StorageAccountName string                 `yaml:"storage_account_name,omitempty"`
-	ResourceGroupName  string                 `yaml:"resource_group_name,omitempty"`
-	client             *azblob.Client
+	client                        *azblob.Client
+	name                          string                 `yaml:"-"`
+	state                         map[string]interface{} `yaml:"-"`
+	ProjectPtr                    *project.Project       `yaml:"-"`
+	ContainerName                 string                 `yaml:"container_name,omitempty"`
+	StorageAccountName            string                 `yaml:"storage_account_name,omitempty"`
+	ResourceGroupName             string                 `yaml:"resource_group_name,omitempty"`
+	AccessKey                     string                 `yaml:"access_key,omitempty"`
+	ClientID                      string                 `yaml:"client_id,omitempty"`
+	ClientCertificatePassword     string                 `yaml:"client_certificate_password,omitempty"`
+	ClientCertificatePath         string                 `yaml:"client_certificate_path,omitempty"`
+	ClientSecret                  string                 `yaml:"client_secret,omitempty"`
+	CustomResourceManagerEndpoint string                 `yaml:"endpoint,omitempty"`
+	MetadataHost                  string                 `yaml:"metadata_host,omitempty"`
+	Environment                   string                 `yaml:"environment,omitempty"`
+	MsiEndpoint                   string                 `yaml:"msi_endpoint,omitempty"`
+	OIDCToken                     string                 `yaml:"oidc_token,omitempty"`
+	OIDCTokenFilePath             string                 `yaml:"oidc_token_file_path,omitempty"`
+	OIDCRequestURL                string                 `yaml:"oidc_request_url,omitempty"`
+	OIDCRequestToken              string                 `yaml:"oidc_request_token,omitempty"`
+	SasToken                      string                 `yaml:"sas_token,omitempty"`
+	SubscriptionID                string                 `yaml:"subscription_id,omitempty"`
+	TenantID                      string                 `yaml:"tenant_id,omitempty"`
+	UseMsi                        bool                   `yaml:"use_msi,omitempty"`
+	UseOIDC                       bool                   `yaml:"use_oidc,omitempty"`
+	UseAzureADAuthentication      bool                   `yaml:"use_azuread_auth,omitempty"`
 }
 
 func (b *Backend) Configure() error {
