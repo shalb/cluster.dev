@@ -4,7 +4,7 @@
 
 Example of how to create a static website hosting on different clouds:
 
-| Cloud Provider | Sample Link                               | Technology |
+| Cloud Provider | Sample Link                               | Technology       |
 |----------------|-------------------------------------------|------------------|
 | AWS            | [Quick Start on AWS](https://docs.cluster.dev/get-started-cdev-aws/)                   | <img src="https://docs.cluster.dev/images/AWS.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/terraform.png" width="50" height="50"> |
 | Azure          | [Quick Start on Azure](https://docs.cluster.dev/get-started-cdev-azure/)                 | <img src="https://docs.cluster.dev/images/AZURE.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/terraform.png" width="50" height="50"> |
@@ -14,7 +14,7 @@ Example of how to create a static website hosting on different clouds:
 
 Example of how to deploy application with Helm and Terraform to Kubernetes:
 
-| Description                 | Sample Link                           | Technology |
+| Description                 | Sample Link                           | Technology       |
 |-----------------------------|---------------------------------------|------------------|
 | Kubernetes Terraform Helm | [Quick Start with Kubernetes](https://docs.cluster.dev/get-started-cdev-helm/)    | <img src="https://docs.cluster.dev/images/Kubernetes.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/terraform.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/HELM.png" width="50" height="50"> |
 
@@ -22,7 +22,7 @@ Example of how to deploy application with Helm and Terraform to Kubernetes:
 
 Create fully featured Kubernetes clusters with required addons:
 
-| Cloud Provider | Kubernetes Type | Sample Link             | Technology |
+| Cloud Provider | Kubernetes Type | Sample Link             | Technology       |
 |----------------|-----------------|-------------------------|------------------|
 | AWS            | EKS             | [AWS-EKS](https://docs.cluster.dev/examples-aws-eks/)            | <img src="https://docs.cluster.dev/images/AWS.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/Kubernetes.png" width="50" height="50"> |
 | AWS            | K3s             | [AWS-K3s](https://docs.cluster.dev/examples-aws-k3s/)            | <img src="https://docs.cluster.dev/images/AWS.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/K3s.png" width="50" height="50"> |
