@@ -43,6 +43,7 @@ nav:
       - Shell: units-shell.md
       - Tfmodule: units-terraform.md
       - Helm: units-helm.md
+      - Kubernetes: units-kubernetes.md
       - K8s-manifest: units-k8s-manifest.md
       - Printer: units-printer.md
     - Variables: variables.md
