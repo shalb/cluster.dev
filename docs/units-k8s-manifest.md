@@ -1,5 +1,9 @@
 # K8s-manifest Unit
 
+!!! Info
+
+    This unit is deprecated. We suggest using the Kubernetes unit instead.
+
 Applies Kubernetes resources from manifests. 
 
 Example:
