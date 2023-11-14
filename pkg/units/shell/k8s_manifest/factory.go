@@ -48,7 +48,6 @@ func (f *Factory) New(spec map[string]interface{}, stack *project.Stack) (projec
 // NewFromState creates new unit from state data.
 func (f *Factory) NewFromState(spec map[string]interface{}, modKey string, p *project.StateProject) (project.Unit, error) {
 	mod := NewEmptyUnit()
-	// log.Fatal("FOOO")
 	err := mod.LoadState(spec, modKey, p)
 	if err != nil {
 		log.Debug(err.Error())

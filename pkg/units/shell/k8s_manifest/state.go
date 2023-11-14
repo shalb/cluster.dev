@@ -65,7 +65,6 @@ func (u *Unit) GetStateDiffData() interface{} {
 }
 
 func (u *Unit) LoadState(spec interface{}, modKey string, p *project.StateProject) error {
-	// log.Fatal("BOOO")
 	err := u.Unit.LoadState(spec, modKey, p)
 	if err != nil {
 		return err

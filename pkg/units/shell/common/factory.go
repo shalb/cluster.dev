@@ -41,7 +41,6 @@ func NewUnit(spec map[string]interface{}, stack *project.Stack) (*Unit, error) {
 		log.Debug(err.Error())
 		return nil, err
 	}
-	// log.Fatalf("%v", unit.BackendName)
 	return unit, nil
 }
 

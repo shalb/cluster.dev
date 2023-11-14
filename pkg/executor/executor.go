@@ -25,6 +25,7 @@ type ShRunner struct {
 	Timeout           time.Duration
 	LogLabels         []string
 	ShowResultMessage bool
+	Interrupted       bool
 }
 
 // Env - global list of environment variables.
@@ -35,8 +36,6 @@ var DefaultLogWriter io.Writer
 
 // NewExecutor - create new sh runner.
 func NewExecutor(workingDir string, envVariables ...string) (*ShRunner, error) {
-	// Create runner.
-	runner := ShRunner{}
 	fi, err := os.Stat(workingDir)
 	if workingDir != "" {
 		if os.IsNotExist(err) {
@@ -46,11 +45,15 @@ func NewExecutor(workingDir string, envVariables ...string) (*ShRunner, error) {
 			return nil, fmt.Errorf("executor: %s is not dir", workingDir)
 		}
 	}
+	// Create runner.
+	runner := ShRunner{
+		Interrupted:       false,
+		workingDir:        workingDir,
+		Timeout:           0,
+		Env:               envVariables,
+		ShowResultMessage: true,
+	}
 
-	runner.workingDir = workingDir
-	runner.Env = envVariables
-	runner.Timeout = 0
-	runner.ShowResultMessage = true
 	return &runner, nil
 }
 
@@ -134,9 +137,7 @@ func (b *ShRunner) commandExecCommonInShell(command string, outputBuff io.Writer
 }
 
 func (b *ShRunner) RunWithTty(command string) error {
-	var ctx context.Context
-	ctx = context.Background()
-
+	ctx := context.Background()
 	cmd := exec.CommandContext(ctx, "sh", "-c", command)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

@@ -28,6 +28,18 @@ const (
 	Clear
 )
 
+type CdevUsage struct {
+	Operation           string `json:"operation"`
+	OperationResult     string `json:"operationResult"`
+	AbsoluteTime        string `json:"absoluteTime"`
+	RealTime            string `json:"reaLTime"`
+	ProjectID           string `json:"projectID"`
+	BackendType         string `json:"backendType"`
+	CdevVersion         string `json:"cdevVersion"`
+	OsVersion           string `json:"osVersion"`
+	ProcessedUnitsCount uint   `json:"processedUnitsCount"`
+}
+
 // ConfSpec type for global config.
 type ConfSpec struct {
 	ProjectConfigsPath string
@@ -76,7 +88,6 @@ func InitConfig() {
 	Global.CacheDir = filepath.Join(Global.WorkDir, "cache/")
 	Global.StateCacheDir = filepath.Join(Global.WorkDir, "cache/")
 	Global.TemplatesCacheDir = filepath.Join(Global.WorkDir, "templates")
-	Global.NotLoadState = false
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err.Error())

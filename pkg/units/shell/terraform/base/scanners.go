@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/project"
 )
 
@@ -32,7 +31,7 @@ func (u *Unit) RemoteStatesScanner(data reflect.Value, unit project.Unit) (refle
 			modKey := fmt.Sprintf("%s.%s", stackName, link.TargetUnitName)
 			depUnit, exists := unit.Project().Units[modKey]
 			if !exists {
-				log.Fatalf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.Stack().Name, unit.Name(), modKey)
+				return reflect.ValueOf(nil), fmt.Errorf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.Stack().Name, unit.Name(), modKey)
 			}
 			if link.Unit == nil {
 				link.Unit = depUnit

@@ -320,7 +320,7 @@ func (u *Unit) Build() error {
 		if exists {
 			stateUnit, ok := stateUnit.(*Unit)
 			if !ok {
-				log.Fatalf("internal error")
+				log.Trace("internal error")
 			}
 			stateManifests, _ := stateUnit.GetManifestsMap()
 			manifests, createNSList := u.GetManifestsMap()

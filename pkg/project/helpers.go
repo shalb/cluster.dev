@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/apex/log"
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/config"
@@ -71,15 +70,6 @@ func removeDirContent(dir string) error {
 	return nil
 }
 
-func findUnit(unit Unit, modsList map[string]Unit) *Unit {
-	mod, exists := modsList[fmt.Sprintf("%s.%s", unit.Stack().Name, unit.Name())]
-	// log.Printf("Check Mod: %s, exists: %v, list %v", name, exists, modsList)
-	if !exists {
-		return nil
-	}
-	return &mod
-}
-
 // ScanMarkers use marker scanner function to replace templated markers.
 func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 	if data == nil {
@@ -126,7 +116,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 					return err
 				}
 				if val.Kind() != elem.Kind() {
-					log.Fatal("ScanMarkers: type conversion error")
+					return fmt.Errorf("ScanMarkers: type conversion error")
 				}
 				out.SetMapIndex(key, val)
 				continue
@@ -164,7 +154,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 		// log.Warn("interface")
 		if reflect.TypeOf(out.Interface()).Kind() == reflect.String {
 			if !out.CanSet() {
-				log.Fatal("Internal error: can't set interface field.")
+				return fmt.Errorf("Internal error: can't set interface field.")
 			}
 			val, err := procFunc(out, unit)
 			if err != nil {
@@ -184,7 +174,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 			return err
 		}
 		if !out.CanSet() {
-			log.Fatalf("Internal error: can't set string field. %v", out)
+			return fmt.Errorf("internal error: can't set string field. %v", out)
 		}
 		out.Set(val)
 	default:
@@ -194,10 +184,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 }
 
 func ConvertToTfVarName(name string) string {
-	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	reg, _ := regexp.Compile("[^a-zA-Z0-9]+")
 	processedString := reg.ReplaceAllString(name, "_")
 	return strings.ToLower(processedString)
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/apex/log"
+	"github.com/google/uuid"
 	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -38,6 +39,7 @@ func (p *Project) SaveState() error {
 	st := stateData{
 		CdevVersion: config.Global.Version,
 		UnitLinks:   p.UnitLinks,
+		ProjectUUID: p.UUID,
 		Units:       map[string]interface{}{},
 	}
 	// log.Errorf("units links: %+v\n Project: %+v", st.UnitLinks, p.UnitLinks)
@@ -64,7 +66,8 @@ func (p *Project) SaveState() error {
 
 type stateData struct {
 	CdevVersion string                 `json:"version"`
-	UnitLinks   UnitLinksT             `json:"unit_links"`
+	ProjectUUID string                 `json:"project_uuid,omitempty"`
+	UnitLinks   *UnitLinksT            `json:"unit_links"`
 	Units       map[string]interface{} `json:"units"`
 }
 
@@ -134,6 +137,11 @@ func (p *Project) BackupState() error {
 	return os.WriteFile(bkFileName, loadedStateFile, 0660)
 }
 
+func createProjectUUID() string {
+	id := uuid.New()
+	return id.String()
+}
+
 func (p *Project) LoadState() (*StateProject, error) {
 	if _, err := os.Stat(config.Global.StateCacheDir); os.IsNotExist(err) {
 		err := os.Mkdir(config.Global.StateCacheDir, 0755)
@@ -147,7 +155,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 	}
 
 	stateD := stateData{
-		UnitLinks: UnitLinksT{},
+		UnitLinks: &UnitLinksT{},
 	}
 
 	loadedStateFile, err := p.GetState()
@@ -160,6 +168,13 @@ func (p *Project) LoadState() (*StateProject, error) {
 		if err != nil {
 			return nil, fmt.Errorf("load state: %w", err)
 		}
+	}
+	p.UUID = stateD.ProjectUUID
+	if p.UUID == "" {
+		p.UUID = createProjectUUID()
+		log.Debugf("Project UUID created: %v", p.UUID)
+	} else {
+		log.Debugf("Project UUID loaded from state: %v", p.UUID)
 	}
 	statePrj := StateProject{
 		Project: Project{
@@ -174,6 +189,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			Backends:         p.Backends,
 			CodeCacheDir:     config.Global.StateCacheDir,
 			StateBackendName: p.StateBackendName,
+			UUID:             p.UUID,
 		},
 		LoaderProjectPtr: p,
 		ChangedUnits:     make(map[string]Unit),
