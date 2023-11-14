@@ -177,7 +177,7 @@ func (g *Generator) RunMainMenu(subCategory ...string) (escaped bool, err error)
 	for _, tmplName := range categoryTmplList {
 		sp, err := getTemplateSpec(g.categoryDir, tmplName, g.templateFs)
 		if err != nil {
-			log.Fatal(err.Error())
+			return false, err
 		}
 		menu.AddMenuItem(sp.Description, tmplName)
 		generatorSpecs[tmplName] = sp

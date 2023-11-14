@@ -25,9 +25,6 @@ type Stack struct {
 	ConfigData  map[string]interface{}
 }
 
-type stackState struct {
-}
-
 func (p *Project) readStacks() error {
 	// Read and parse stacks.
 	stacks, exists := p.objects[stackObjKindKey]
@@ -66,7 +63,7 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 	}
 
 	// Copy secrets from project for templating.
-	stack.ConfigData["secret"], _ = p.configData["secret"]
+	stack.ConfigData["secret"] = p.configData["secret"]
 
 	tmplSource, ok := stackSpec.data["template"].(string)
 	if !ok {
@@ -153,7 +150,7 @@ func (s *Stack) ReadTemplate(src string) (err error) {
 		template, errIsWarn, err := s.TemplateTry(tmplData, fn)
 		if err != nil {
 			if !errIsWarn {
-				log.Fatal(err.Error())
+				return err
 			}
 		}
 		stackTemplate, err := NewStackTemplate(template)

@@ -34,36 +34,39 @@ type RuntimeData struct {
 
 // Project describes main config with user-defined variables.
 type Project struct {
-	name             string
-	SessionId        string
-	Units            map[string]Unit
-	Stacks           map[string]*Stack
-	Backends         map[string]Backend
-	UnitLinks        UnitLinksT
-	secrets          map[string]Secret
-	configData       map[string]interface{}
-	configDataFile   []byte
-	objects          map[string][]ObjectData
-	objectsFiles     map[string][]byte
-	CodeCacheDir     string
-	StateMutex       sync.Mutex
-	InitLock         sync.Mutex
-	RuntimeDataset   RuntimeData
-	StateBackendName string
-	OwnState         *StateProject
+	name                string
+	SessionId           string
+	Units               map[string]Unit
+	Stacks              map[string]*Stack
+	Backends            map[string]Backend
+	UnitLinks           *UnitLinksT
+	secrets             map[string]Secret
+	configData          map[string]interface{}
+	configDataFile      []byte
+	objects             map[string][]ObjectData
+	objectsFiles        map[string][]byte
+	CodeCacheDir        string
+	StateMutex          sync.Mutex
+	InitLock            sync.Mutex
+	RuntimeDataset      RuntimeData
+	StateBackendName    string
+	OwnState            *StateProject
+	UUID                string
+	ProcessedUnitsCount uint
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
 func NewEmptyProject() *Project {
 	project := &Project{
-		SessionId:  utils.Md5(utils.RandString(64)),
-		Stacks:     make(map[string]*Stack),
-		Units:      make(map[string]Unit),
-		Backends:   make(map[string]Backend),
-		objects:    make(map[string][]ObjectData),
-		configData: make(map[string]interface{}),
-		secrets:    make(map[string]Secret),
-		UnitLinks:  UnitLinksT{},
+		SessionId:           utils.Md5(utils.RandString(64)),
+		Stacks:              make(map[string]*Stack),
+		Units:               make(map[string]Unit),
+		Backends:            make(map[string]Backend),
+		objects:             make(map[string][]ObjectData),
+		configData:          make(map[string]interface{}),
+		secrets:             make(map[string]Secret),
+		ProcessedUnitsCount: 0,
+		UnitLinks:           &UnitLinksT{},
 		RuntimeDataset: RuntimeData{
 			UnitsOutputs:    make(map[string]interface{}),
 			PrintersOutputs: make([]PrinterOutput, 0),
@@ -82,19 +85,19 @@ func LoadProjectBase() (*Project, error) {
 	project := NewEmptyProject()
 	err := project.MkBuildDir()
 	if err != nil {
-		log.Fatalf("Loading project: creating working dir: '%v'.", err.Error())
+		return nil, fmt.Errorf("loading project: creating working dir: '%w'", err)
 	}
 	err = project.readManifests()
 	if err != nil {
-		log.Fatalf("Loading project: %v", err.Error())
+		return nil, fmt.Errorf("loading project: %w", err)
 	}
 	err = project.parseProjectConfig()
 	if err != nil {
-		log.Fatalf("Loading project: %v", err.Error())
+		return nil, fmt.Errorf("loading project: %w", err)
 	}
 	err = project.readSecrets()
 	if err != nil {
-		log.Fatalf("Loading project: %v", err.Error())
+		return nil, fmt.Errorf("loading project: %w", err)
 	}
 	return project, nil
 }
@@ -103,7 +106,7 @@ func LoadProjectBase() (*Project, error) {
 func LoadProjectFull() (*Project, error) {
 	project, err := LoadProjectBase()
 	if err != nil {
-		return nil, fmt.Errorf("loading project: %w", err)
+		return nil, err
 	}
 	for filename, cnf := range project.objectsFiles {
 		templatedConf, isWarn, err := project.TemplateTry(cnf, filename)
@@ -116,12 +119,12 @@ func LoadProjectFull() (*Project, error) {
 				rel, _ := filepath.Rel(config.Global.WorkingDir, filename)
 				log.Warnf("File %v has unresolved template key: \n%v", rel, err.Error())
 			} else {
-				log.Fatal(err.Error())
+				return nil, err
 			}
 		}
 		err = project.readObjects(templatedConf, filename)
 		if err != nil {
-			log.Fatalf("load project: %v", err.Error())
+			return nil, fmt.Errorf("load project: %w", err)
 		}
 	}
 
@@ -132,7 +135,7 @@ func LoadProjectFull() (*Project, error) {
 	if !config.Global.NotLoadState {
 		project.OwnState, err = project.LoadState()
 		if err != nil {
-			return nil, fmt.Errorf("loading project: %w", err)
+			return nil, err
 		}
 	}
 	err = project.readUnits()
@@ -168,7 +171,7 @@ func (p *Project) readObjects(objData []byte, filename string) error {
 	for _, obj := range objs {
 		objKind, ok := obj["kind"].(string)
 		if !ok {
-			log.Fatal("object must contain field 'kind'")
+			return fmt.Errorf("object must contain field 'kind'")
 		}
 		if _, exists := p.objects[objKind]; !exists {
 			p.objects[objKind] = []ObjectData{}

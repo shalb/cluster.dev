@@ -12,8 +12,6 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-type secretDriver int
-
 const secretObjKindKey = "Secret"
 
 type Secret struct {

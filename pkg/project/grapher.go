@@ -158,7 +158,7 @@ func (g *grapher) GetSequenceSet() []Unit {
 	for i := 0; i < mCount; i++ {
 		md := g.GetNextSync()
 		if md == nil {
-			log.Fatal("Building apply units set: geting nil unit, undefined behavior")
+			log.Fatal("Building apply units set: getting nil unit, undefined behavior")
 		}
 		res[i] = md
 	}
@@ -197,7 +197,7 @@ func (g *grapher) Len() int {
 func checkUnitDependencies(p *Project) error {
 	for _, uniit := range p.Units {
 		if err := checkDependenciesRecursive(uniit); err != nil {
-			return fmt.Errorf("Unresolved dependency in unit %v.%v: %w", uniit.Stack().Name, uniit.Name(), err)
+			return fmt.Errorf("unresolved dependency in unit %v.%v: %w", uniit.Stack().Name, uniit.Name(), err)
 		}
 	}
 	return nil
@@ -272,7 +272,6 @@ func (g *grapher) listenHupSig() {
 			}
 		}
 	}()
-	return
 }
 
 func (g *grapher) Close() error {

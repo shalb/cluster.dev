@@ -121,7 +121,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			if errIsWarn {
 				log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
 			} else {
-				log.Fatal(err.Error())
+				return err
 			}
 		}
 		manifests, err := utils.ReadYAMLObjects(manifest)

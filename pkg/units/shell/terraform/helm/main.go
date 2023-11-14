@@ -162,7 +162,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 				renderedValues, errIsWarn, err := u.Stack().TemplateTry(valuesFileContent, vfPath)
 				if err != nil {
 					if !errIsWarn {
-						log.Fatal(err.Error())
+						return err
 					}
 				}
 				values = renderedValues
