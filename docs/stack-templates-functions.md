@@ -1,16 +1,16 @@
 # Functions
 
-You can use [basic Go template language](https://golang.org/pkg/text/template/#hdr-Functions) and [Sprig](https://masterminds.github.io/sprig/) functions to modify the text of a stack template.
+You can use [basic Go template language](https://golang.org/pkg/text/template/#hdr-Functions) and [Sprig functions](https://masterminds.github.io/sprig/) to modify a stack template.
 
-Additionally, you can use some enhanced functions that are listed below. These functions are integrated with the `yaml` syntax and can't be used everywhere.   
+Additionally, you can use some enhanced functions that are listed below. 
 
 ## `insertYAML` 
 
-Allows for passing `yaml` block as a value of target `yaml` template. 
+Pass `yaml` block as a value of target `yaml` template. 
 
 **Argument**: data to pass, any value or reference to a block. 
-    
-**Allowed use**: only as full `yaml` value, in unit `inputs`. Example:
+
+The `insertYAML` function is integrated with the `yaml` syntax and can be used only as a full `yaml` value in units input. Example:
 
 Source `yaml`:
 
@@ -51,21 +51,21 @@ Rendered stack template:
 
 ## `remoteState` 
 
-Allows for passing data across units and stacks, can be used in pre/post hooks. 
+Pass data across units and stacks, can be used in pre/post hooks. 
 
 **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"stack_name.unit_name.output_name"`. Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`. 
-  
-**Allowed use**: 
 
-  * all units types: in `inputs`;
+The `remoteState` function is integrated with the `yaml` syntax and can be used in following cases:
 
-  * all units types: in units pre/post hooks;
+  * In units' inputs (all types of units) 
 
-  * in Kubernetes modules: in Kubernetes manifests.
+  * In units' pre/post hooks (all types of units)
+
+  * In Kubernetes manifests (Kubernetes units)
 
 ## `cidrSubnet`
 
-Calculates a subnet address within given IP network address prefix. Same as [Terraform function](https://www.terraform.io/docs/language/functions/cidrsubnet.html). Example:
+Calculate a subnet address within given IP network address prefix. Same as [Terraform function](https://www.terraform.io/docs/language/functions/cidrsubnet.html). Example:
 
   Source:
   ```bash
@@ -76,3 +76,35 @@ Calculates a subnet address within given IP network address prefix. Same as [Ter
   ```bash
     172.18.0.0/16
   ```
+
+## `readFile`
+
+Read the passed file and return its contents as a string. 
+
+**Argument**: path. The `readFile` function supports both absolute `readFile /path/to/file.txt` and relative paths `readFile ./files/data.yaml`. 
+
+A relative path must refer to a location where the function is used. When it is used in a template, the path's base folder will be the template directory. When it is used in one of the project files, the path will begin with the project directory.
+
+!!! Note
+
+    The file is read as is; templating is not applied. 
+
+## `workDir`
+
+Return absolute path to a working directory where a project runs, and the Terraform code is generated.  
+
+!!! Warning
+
+    Use the function with care since the absolute path that it returns varies depending on running conditions. This can affect the Cluster.dev's state.  
+
+## `reqEnv`
+
+Return an environment variable required for a system to run. Using the `reqEnv` function without specifying the variable will result in failing `cdev apply` with an error message. 
+
+## `bcrypt`
+
+Apply the bcrypt encryption algorithm to a passed string.
+
+!!! Warning
+
+    Use the function with care since it returns a unique hash with each calling, which can affect the Cluster.dev’s state.  
