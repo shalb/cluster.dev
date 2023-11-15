@@ -47,7 +47,9 @@ func Run() {
 	st.AbsoluteTime = profiler.Global.MainTimeLine().Duration().String()
 	st.RealTime = profiler.Global.MainTimeLine().Duration().String()
 	st.Operation = extendedErr.Command
-	st.ProcessedUnitsCount = p.ProcessedUnitsCount
+	if p != nil {
+		st.ProcessedUnitsCount = p.ProcessedUnitsCount
+	}
 	if extendedErr.Err == nil {
 		st.OperationResult = "ok"
 	} else {
