@@ -9,18 +9,21 @@ import (
 
 // planCmd represents the plan command
 var planCmd = &cobra.Command{
-	Use:   "plan",
-	Short: "Show changes than will be applied in current project",
-	Run: func(cmd *cobra.Command, args []string) {
+	Use:           "plan",
+	Short:         "Show changes than will be applied in current project",
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
 		project, err := project.LoadProjectFull()
 		if err != nil {
-			log.Fatalf("Fatal error: plan: %v", err.Error())
+			return NewCmdErr(nil, "plan", err)
 		}
 		log.Info("Planning...")
 		_, err = project.Plan()
 		if err != nil {
-			log.Fatalf("Fatal error: plan: %v", err.Error())
+			return NewCmdErr(project, "plan", err)
 		}
+		return NewCmdErr(project, "plan", nil)
 	},
 }
 

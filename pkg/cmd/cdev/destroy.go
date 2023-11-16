@@ -1,30 +1,32 @@
 package cdev
 
 import (
-	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/spf13/cobra"
 )
 
 var destroyCmd = &cobra.Command{
-	Use:   "destroy",
-	Short: "Destroys infrastructure deployed by current project",
-	Run: func(cmd *cobra.Command, args []string) {
+	Use:           "destroy",
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	Short:         "Destroys infrastructure deployed by current project",
+	RunE: func(cmd *cobra.Command, args []string) error {
 		project, err := project.LoadProjectFull()
 		if err != nil {
-			log.Fatalf("Fatal error: destroy: %v", err.Error())
+			return NewCmdErr(project, "destroy", err)
 		}
 		err = project.LockState()
 		if err != nil {
-			log.Fatalf("Fatal error: destroy: lock state: %v", err.Error())
+			return NewCmdErr(project, "destroy", err)
 		}
 		err = project.Destroy()
 		if err != nil {
 			project.UnLockState()
-			log.Fatalf("Fatal error: destroy: %v", err.Error())
+			return NewCmdErr(project, "destroy", err)
 		}
 		project.UnLockState()
+		return NewCmdErr(project, "destroy", nil)
 	},
 }
 

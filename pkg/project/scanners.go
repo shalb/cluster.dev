@@ -26,7 +26,7 @@ func OutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 			modKey := fmt.Sprintf("%s.%s", link.TargetStackName, link.TargetUnitName)
 			depUnit, exists := unit.Project().Units[modKey]
 			if !exists {
-				log.Fatalf("Depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.Stack().Name, unit.Name(), modKey)
+				return reflect.ValueOf(nil), fmt.Errorf("depend unit does not exists. Src: '%s.%s', depend: '%s'", unit.Stack().Name, unit.Name(), modKey)
 			}
 			// Add unit ptr to unit link.
 			if link.Unit == nil {
@@ -41,7 +41,7 @@ func OutputsScanner(data reflect.Value, unit Unit) (reflect.Value, error) {
 	return reflect.ValueOf(resString), nil
 }
 
-// OutputsReplacer - project scanner function, witch process dependencies markers in unit data setted by AddRemoteStateMarker template function.
+// OutputsReplacer - project scanner function, witch process dependencies markers in unit data created by AddRemoteStateMarker template function.
 func OutputsReplacer(data reflect.Value, unit Unit) (reflect.Value, error) {
 	var subVal = data
 	if data.Kind() != reflect.String {
@@ -53,10 +53,10 @@ func OutputsReplacer(data reflect.Value, unit Unit) (reflect.Value, error) {
 		if strings.Contains(resString, marker) {
 
 			if link.Unit == nil {
-				return reflect.ValueOf(nil), fmt.Errorf("replace output internal error: unit link does not initted")
+				return reflect.ValueOf(nil), fmt.Errorf("replace output internal error: unit link does not initialized")
 			}
 			if link.OutputData == nil {
-				log.Warnf("The output data is unavalible. Inserting placeholder <output %s.%s>.", link.TargetStackName, link.TargetUnitName)
+				log.Warnf("The output data is unavailable. Inserting placeholder <output %s.%s>.", link.TargetStackName, link.TargetUnitName)
 				resString = strings.ReplaceAll(resString, marker, fmt.Sprintf("<output %s.%s>", link.TargetStackName, link.TargetUnitName))
 			}
 			if resString == marker {

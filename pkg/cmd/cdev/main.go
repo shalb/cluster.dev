@@ -5,6 +5,8 @@ import (
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
+	"github.com/shalb/cluster.dev/pkg/profiler"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -28,9 +30,45 @@ func init() {
 }
 
 func Run() {
-
+	profiler.Global.MainTimeLine().Start()
 	err := rootCmd.Execute()
-	if err != nil {
+	extendedErr, ok := err.(*CmdErrExtended)
+	if !ok {
+		log.Debugf("Usage stats are unavailable in current command. Ignore.")
+		if err != nil {
+			log.Fatalf("Fatal error: %v", err.Error())
+		}
+		return
+	}
+	profiler.Global.MainTimeLine().SetPoint(rootCmd.Name())
+	p := extendedErr.ProjectPtr
+	//statsExporter := utils.StatsExporter{}
+	st := extendedErr.CdevUsage
+	st.AbsoluteTime = profiler.Global.MainTimeLine().Duration().String()
+	st.RealTime = profiler.Global.MainTimeLine().Duration().String()
+	st.Operation = extendedErr.Command
+	if p != nil {
+		st.ProcessedUnitsCount = p.ProcessedUnitsCount
+	}
+	if extendedErr.Err == nil {
+		st.OperationResult = "ok"
+	} else {
+		st.OperationResult = "fail"
+	}
+	if p != nil {
+		st.ProjectID = p.UUID
+		if len(p.Backends) == 0 || p.Backends[p.StateBackendName] == nil {
+			st.BackendType = p.Backends[p.StateBackendName].Provider()
+		} else {
+			st.BackendType = "null"
+		}
+	} else {
+		st.ProjectID = "null"
+		st.BackendType = "null"
+	}
+	exporter := utils.StatsExporter{}
+	_ = exporter.PushStats(st)
+	if extendedErr.Err != nil {
 		log.Fatalf("Fatal error: %v", err.Error())
 	}
 }

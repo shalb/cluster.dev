@@ -35,7 +35,6 @@ func (p *Project) parseProjectConfig() error {
 	if kn, ok := prjConfParsed["kind"].(string); !ok || kn != projectObjKindKey {
 		return fmt.Errorf("error in project config: kind is required")
 	}
-
 	if exports, ok := prjConfParsed["exports"]; ok {
 		err = p.ExportEnvs(exports)
 		if err != nil {

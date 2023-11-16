@@ -1,7 +1,6 @@
 package cdev
 
 import (
-	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/spf13/cobra"
@@ -9,27 +8,30 @@ import (
 
 // planCmd represents the plan command
 var applyCmd = &cobra.Command{
-	Use:   "apply",
-	Short: "Deploys or updates infrastructure according to project configuration",
-	Run: func(cmd *cobra.Command, args []string) {
+	Use:           "apply",
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	Short:         "Deploys or updates infrastructure according to project configuration",
+	RunE: func(cmd *cobra.Command, args []string) error {
 		project, err := project.LoadProjectFull()
+
 		if err != nil {
-			log.Fatalf("Fatal error: apply: %v", err.Error())
+			return NewCmdErr(project, "apply", err)
 		}
 		err = project.LockState()
 		if err != nil {
-			log.Fatalf("Fatal error: apply: lock state: %v", err.Error())
+			return NewCmdErr(project, "apply", err)
 		}
 		err = project.Apply()
 		if err != nil {
-			project.UnLockState()
-			log.Fatalf("Fatal error: apply: %v", err.Error())
+			return NewCmdErr(project, "apply", err)
 		}
 		err = project.PrintOutputs()
 		if err != nil {
-			log.Fatalf("Fatal error: apply: print outputs %v", err.Error())
+			return NewCmdErr(project, "apply", err)
 		}
 		project.UnLockState()
+		return NewCmdErr(project, "apply", nil)
 	},
 }
 

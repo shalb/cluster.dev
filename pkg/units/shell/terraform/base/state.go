@@ -23,7 +23,7 @@ func (u *Unit) GetStateUnit() *Unit {
 	}
 	err := utils.JSONCopy(*u, &unitState)
 	if err != nil {
-		log.Fatalf("read unit '%v': create state: %w", u.Name(), err)
+		log.Fatalf("read unit '%v': internal error, create state: %w", u.Name(), err)
 	}
 	unitState.Unit = *u.Unit.GetStateUnit()
 	unitState.ApplyConf = nil

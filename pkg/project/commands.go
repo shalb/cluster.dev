@@ -27,7 +27,6 @@ func (p *Project) Build() error {
 
 // Destroy all units.
 func (p *Project) Destroy() error {
-
 	fProject, err := p.LoadState()
 	if err != nil {
 		return fmt.Errorf("project destroy: %w", err)
@@ -64,6 +63,7 @@ func (p *Project) Destroy() error {
 		if err != nil {
 			return fmt.Errorf("project destroy: destroying deleted unit: %w", err)
 		}
+		p.ProcessedUnitsCount++
 		err = md.Destroy()
 		if err != nil {
 			return fmt.Errorf("project destroy: %w", err)
@@ -159,27 +159,28 @@ func (p *Project) Apply() error {
 			return nil
 		}
 
-		go func(mod Unit, finFunc func(error), stateP *StateProject) {
-			diff, stateUnit := stateP.CheckUnitChanges(mod)
+		go func(unit Unit, finFunc func(error), stateP *StateProject) {
+			diff, stateUnit := stateP.CheckUnitChanges(unit)
 			var res error
 			if len(diff) > 0 || config.Global.IgnoreState {
 				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying unit '%v':", md.Key()))
 				log.Debugf("Unit %v diff: \n%v", md.Key(), diff)
-				err = mod.Build()
+				err = unit.Build()
 				if err != nil {
 					log.Errorf("project apply: unit build error: %v", err.Error())
 					finFunc(err)
 					return
 				}
-				res := mod.Apply()
+				p.ProcessedUnitsCount++
+				res := unit.Apply()
 				if res == nil {
-					stateP.UpdateUnit(mod)
+					stateP.UpdateUnit(unit)
 					err := stateP.SaveState()
 					if err != nil {
 						finFunc(err)
 						return
 					}
-					err = mod.UpdateProjectRuntimeData(p)
+					err = unit.UpdateProjectRuntimeData(p)
 					if err != nil {
 						finFunc(err)
 						return
@@ -189,7 +190,7 @@ func (p *Project) Apply() error {
 				return
 			} else {
 				// Copy unit from state to project (to save raw output data for some units)
-				p.Units[mod.Key()] = stateUnit
+				p.Units[unit.Key()] = stateUnit
 			}
 			log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Unit '%v' has not changed. Skip applying.", md.Key()))
 			finFunc(res)
