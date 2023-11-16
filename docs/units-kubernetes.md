@@ -31,12 +31,14 @@ units:
     Example usage:
 
     ```yaml
-    units:
-      - name: argocd_apps
-        type: kubernetes
-        source: ./argocd-apps/app1.yaml
-        kubeconfig: ../kubeconfig
-        depends_on: this.argocd
+    name: cert-manager-issuer
+    type: kubernetes
+    depends_on: this.cert-manager
+    source: ./deployment.yaml
+    provider_conf:
+      host: k8s.example.com
+      username: "user"
+      password: "secretPassword"
     ```
 
     * `host` - *optional*. The hostname (in form of URI) of the Kubernetes API. Can be sourced from `KUBE_HOST`.
