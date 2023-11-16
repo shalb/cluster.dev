@@ -99,7 +99,11 @@ Return absolute path to a working directory where a project runs, and the Terraf
 
 ## `reqEnv`
 
-Return an environment variable required for a system to run. Using the `reqEnv` function without specifying the variable will result in failing `cdev apply` with an error message. 
+Return an environment variable required for a system to run. 
+
+**Argument**: `ENVNAME`.  
+
+Specifying a non-existent variable in `reqEnv` function will result in failing `cdev apply` with an error message. 
 
 ## `bcrypt`
 
