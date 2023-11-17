@@ -1,12 +1,12 @@
 # AWS-K3s Prometheus
 
-*The code, the text and the screencast prepared by [Oleksii Kurinnyi](https://github.com/gelo22), a monitoring engineer at SHALB.*  
+*The code, the text, and the screencast prepared by [Oleksii Kurinnyi](https://github.com/gelo22), a monitoring engineer at SHALB.*  
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/-oa-nbeRZ-0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Goal
 
-In this article we will use and modify the basic [AWS-K3s Cluster.dev template](https://github.com/shalb/cdev-aws-k3s) to deploy the Prometheus monitoring stack to a cluster. As a result we will have a [K3s cluster](https://rancher.com/docs/k3s/latest/en/) on AWS with a set of required controllers (Ingress, cert-manager, Argo CD) and installed [kube-prometheus](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack) stack. The code samples are available in the [GitHub repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).
+In this section we will use and modify the basic [AWS-K3s Cluster.dev template](https://github.com/shalb/cdev-aws-k3s) to deploy the Prometheus monitoring stack to a cluster. As a result, we will have a [K3s cluster](https://rancher.com/docs/k3s/latest/en/) on AWS with a set of required controllers (Ingress, cert-manager, Argo CD) and installed [kube-prometheus](https://github.com/prometheus-community/helm-charts/tree/kube-prometheus-stack-35.0.3/charts/kube-prometheus-stack) stack. The code samples are available in the [GitHub repository](https://github.com/shalb/monitoring-examples/tree/main/cdev/monitoring-cluster-blog).
 
 ## Requirements
 
@@ -20,7 +20,7 @@ We should install [Docker](https://docs.docker.com/engine/install/ubuntu/) to th
 
 ### AWS account 
 
-* Log in into existing AWS account or [register a new one](https://aws.amazon.com/ru/premiumsupport/knowledge-center/create-and-activate-aws-account/). 
+* Log in to an existing AWS account or [register a new one](https://aws.amazon.com/ru/premiumsupport/knowledge-center/create-and-activate-aws-account/). 
 
 * [Select](https://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/select-region.html) an AWS [region](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) in order to deploy the cluster in that region. 
 
@@ -63,17 +63,17 @@ editor project.yaml
 
 ### Customize project settings
 
-We shall set all the settings needed for our project in the `project.yaml` config file. We should customize all the variables that have `# example` comment in the end of line.
+We will set all the settings needed for our project in the `project.yaml` config file. All the variables that have `# example` comment in the end of a line should be customized.
 
 #### Select AWS region 
 
-We should replace the value of `region` key in config file `project.yaml` by our region.
+The value of the `region` key in the config file `project.yaml` should be replaced by our region.
 
 #### Set unique cluster name
 
-By default we shall use `cluster.dev` domain as a root domain for cluster [ingresses](https://kubernetes.github.io/ingress-nginx/). We should replace the value of `cluster_name` key by a unique string in config file `project.yaml`, because the default ingress will use it in resulting DNS name.
+By default we will use the `cluster.dev` domain as a root domain for cluster [ingresses](https://kubernetes.github.io/ingress-nginx/). We should also replace the value of the `cluster_name` key by a unique string in config file `project.yaml`, because the default ingress will use it in the resulting DNS name.
 
-This command may help us to generate a random name and check whether it is in use:
+This command will help us generate a random name and check whether it is in use:
 
 ```bash
 CLUSTER_NAME=$(echo "$(tr -dc a-z0-9 </dev/urandom | head -c 5)") 
@@ -90,7 +90,7 @@ We should have access to cluster nodes via SSH. To add the existing SSH key we s
 
 In our project we shall use [Argo CD](https://argo-cd.readthedocs.io/en/stable/) to deploy our applications to the cluster. To secure Argo CD we should replace the value of `argocd_server_admin_password` key by a unique password in config file `project.yaml`. The default value is a bcrypted password string.
 
-To encrypt our custom password we may use an [online tool](https://www.browserling.com/tools/bcrypt) or encrypt the password by command:
+To encrypt our custom password we can use an [online tool](https://www.browserling.com/tools/bcrypt) or encrypt the password by command:
 
 ```bash
 alias cdev_bash='docker run -it -v $(pwd):/workspace/cluster-dev --env-file=env --network=host --entrypoint="" clusterdev/cluster.dev:v0.6.3 bash'
@@ -103,7 +103,7 @@ exit
 
 #### Set Grafana password
 
-Now we are going to add a custom password for [Grafana](https://grafana.com/docs/grafana/latest/). To secure Grafana we should replace the value of `grafana_password` key by a unique password in config file `project.yaml`. This command may help us to generate a random password:
+Now we are going to add a custom password for [Grafana](https://grafana.com/docs/grafana/latest/). To secure Grafana we should replace the value of the `grafana_password` key by a unique password in config file `project.yaml`. This command will help us generate a random password:
 
 ```bash
 echo "$(tr -dc a-zA-Z0-9,._! </dev/urandom | head -c 20)"
@@ -125,7 +125,7 @@ Now we should deploy our project to AWS via `cdev` command:
 cdev apply -l debug | tee apply.log
 ```
 
-In case of successful deployment we should get further instructions on how to access Kubernetes, and the URLs of Argo CD and Grafana web UIs. Sometimes, because of DNS update delays we need to wait some time to access those web UIs. In such case we can forward all needed services via `kubectl` to the client host:
+Where deployment is successful, we should get further instructions on how to access Kubernetes, and the URLs of Argo CD and Grafana web UIs. Sometimes, because of DNS update delays we need to wait a while to access those web UIs. In this instance we can forward all needed services via `kubectl` to the client host:
 
 ```bash
 kubectl port-forward svc/argocd-server -n argocd 18080:443  > /dev/null 2>&1 &
@@ -152,5 +152,5 @@ cdev destroy -l debug | tee destroy.log
 
 ## Conclusion
 
-Within this article we have learnt how to deploy the Prometheus monitoring stack with the Cluster.dev AWS-K3s template. The resulting stack allows us to monitor workloads in our cluster. We can also reuse the stack as a prepared infrastructure pattern to launch environments for testing monitoring cases, before applying them to production.   
+In this section we have learnt how to deploy the Prometheus monitoring stack with the Cluster.dev AWS-K3s template. The resulting stack allows us to monitor workloads in our cluster. We can also reuse the stack as a prepared infrastructure pattern to launch environments for testing monitoring cases, before applying them to production.   
 
