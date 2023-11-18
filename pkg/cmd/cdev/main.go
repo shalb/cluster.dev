@@ -58,9 +58,9 @@ func Run() {
 	if p != nil {
 		st.ProjectID = p.UUID
 		if len(p.Backends) == 0 || p.Backends[p.StateBackendName] == nil {
-			st.BackendType = p.Backends[p.StateBackendName].Provider()
-		} else {
 			st.BackendType = "null"
+		} else {
+			st.BackendType = p.Backends[p.StateBackendName].Provider()
 		}
 	} else {
 		st.ProjectID = "null"
