@@ -149,7 +149,17 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 			}
 			valuesFileName, ok := valuesCatMap["file"].(string)
 			if !ok {
-				return fmt.Errorf("read unit config: 'values.file' is required field")
+				setData, ok := valuesCatMap["set"].(map[string]interface{})
+				if !ok {
+					return fmt.Errorf("read unit config: one of 'values.file' or 'values.set' required")
+				}
+				u.ValuesYAML = append(u.ValuesYAML, setData)
+				yamlDaya, err := yaml.Marshal(setData)
+				if err != nil {
+					return fmt.Errorf("read unit config: %w", err)
+				}
+				u.ValuesFilesList = append(u.ValuesFilesList, string(yamlDaya))
+				continue
 			}
 			vfPath := filepath.Join(u.Stack().TemplateDir, valuesFileName)
 			valuesFileContent, err := os.ReadFile(vfPath)

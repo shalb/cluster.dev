@@ -22,8 +22,13 @@ units:
     values:
       - file: ./argo/values.yaml
         apply_template: true
+      - set:
+          global:
+            image:
+              tag: "v1.8.3"
+      - set: {{ insertYaml .varables.argocd.values }}
     inputs:
-      global.image.tag: v1.8.3
+      global.image.tag: v1.8.3 # (same as values.set )
 ```
 
 In addition to common options the following are available:
@@ -39,11 +44,13 @@ In addition to common options the following are available:
 
 * `additional_options` - *map of any*, *optional*. Corresponds to [Terraform helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
 
-* `values` - *array*, *optional*. List of values files in raw yaml to be passed to Helm. Values will be merged, in order, as Helm does with multiple -f options.
+* `values` - *array*, *optional*. List of values (file name or values data) to be passed to Helm. Values will be merged, in order, as Helm does with multiple -f options.
 
-    * `file` - *string*, *required*. Path to the values file.
+    * `set` - *map of any*, *required one of set/file*. Set of helm values.
 
-    * `apply_template` - *bool*, *optional*. Defines whether a template should be applied to the values file. By default is set to `true`. 
+    * `file` - *string*, *required one of set/file*. Path to the values file.
+
+    * `apply_template` - *bool*, *optional*. Defines whether a template should be applied to the values file. By default is set to `true`. Used only with `file` option
 
 * `inputs` - *map of any*, *optional*. A map that represents [Terraform helm_release sets](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#set). This block allows to use functions `remoteState` and `insertYAML`. For example:
 
