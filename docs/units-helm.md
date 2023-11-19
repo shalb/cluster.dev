@@ -26,7 +26,7 @@ units:
           global:
             image:
               tag: "v1.8.3"
-      - set: {{ insertYaml .varables.argocd.values }}
+      - set: {{ insertYAML .variables.argocd.values }}
     inputs:
       global.image.tag: v1.8.3 # (same as values.set )
 ```
