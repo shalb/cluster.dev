@@ -2,7 +2,7 @@
 
 *The code and the text prepared by [Orest Kapko](https://github.com/AlKapkone), a DevOps engineer at SHALB.*  
 
-In this article we shall customize the basic [AWS-EKS Cluster.dev template](https://github.com/shalb/cdev-aws-eks) in order to add some features.
+In this section we shall customize the basic [AWS-EKS Cluster.dev template](https://github.com/shalb/cdev-aws-eks) in order to add some features.
 
 ## Workflow steps
 
@@ -62,7 +62,7 @@ In this article we shall customize the basic [AWS-EKS Cluster.dev template](http
     }
       ```
       
-4. As it was decided to use Traefik Ingress controller instead of basic Nginx, we spun up two load balancers (first - internet-facing ALB for public ingresses, and second - internal ALB for private ingresses) and security groups necessary for its work, and described them in albs unit. The unit configuration within the template:
+4. As it was decided to use Traefik Ingress controller instead of basic Nginx, we spun up two load balancers (first - internet-facing ALB for public ingresses, and second - internal ALB for private ingresses) and security groups necessary for its work, and described them in albs unit. The unit configuration within the template is as follows:
 
     ```yaml
     {{- if .variables.ingressControllerEnabled }}
@@ -81,7 +81,7 @@ In this article we shall customize the basic [AWS-EKS Cluster.dev template](http
     {{- end }}
     ```
     
-5. Also we have created a dedicated unit for testing Ingress through Route 53 records:
+5. We have also created a dedicated unit for testing Ingress through Route 53 records:
 
     ```yaml
     data "aws_route53_zone" "existing" {
