@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+  "github.com/apex/log"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -192,7 +193,7 @@ func (b *Backend) ReadState() (string, error) {
 	if err != nil {
 		// Check if the error message contains "BlobNotFound" to identify the error.
 		if strings.Contains(err.Error(), "BlobNotFound") {
-			fmt.Println("The blob does not exist.")
+			log.Debugf("The blob does not exist.")
 			return "", nil
 		}
 		return "", err
