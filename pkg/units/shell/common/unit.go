@@ -90,6 +90,12 @@ type Unit struct {
 	DependsOn        interface{}             `yaml:"depends_on,omitempty" json:"depends_on,omitempty"`
 	FApply           bool                    `yaml:"force_apply" json:"force_apply"`
 	lockedMux        *sync.Mutex             `yaml:"-" json:"-"`
+	Tainted          bool                    `yaml:"-" json:"tainted,omitempty"`
+}
+
+// IsTainted return true if unit have tainted state (failed previous apply or destroy).
+func (u *Unit) IsTainted() bool {
+	return u.Tainted
 }
 
 // Mux return unit mutex to lock apply.
@@ -263,6 +269,7 @@ func (u *Unit) Apply() error {
 	}
 	u.OutputRaw, err = u.runCommands(applyCommands, "apply")
 	if err != nil {
+		u.Tainted = true
 		return fmt.Errorf("apply unit '%v': %w", u.Key(), err)
 	}
 	// Get outputs.
@@ -274,12 +281,14 @@ func (u *Unit) Apply() error {
 		}
 		u.OutputRaw, err = u.runCommands(cmdConf, "retrieving outputs")
 		if err != nil {
+			u.Tainted = true
 			return fmt.Errorf("retrieving unit '%v' outputs: %w", u.Key(), err)
 		}
 	}
 	if u.GetOutputsConf != nil {
 		parser, exists := u.OutputParsers[u.GetOutputsConf.Type]
 		if !exists {
+			u.Tainted = true
 			return fmt.Errorf("retrieving unit '%v' outputs: parser %v doesn't exists", u.Key(), u.GetOutputsConf.Type)
 		}
 		err = parser(string(u.OutputRaw), u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(project.OutputLinkType))
@@ -287,11 +296,13 @@ func (u *Unit) Apply() error {
 
 			//str := fmt.Sprintf("Outputs data: %s", string(u.OutputRaw))
 			// log.Warnf("Len: %v", len(str))
+			u.Tainted = true
 			return fmt.Errorf("parse outputs '%v': %w", u.GetOutputsConf.Type, err)
 		}
 
 	}
 	if err == nil {
+		u.Tainted = false
 		u.Applied = true
 	}
 	return err

@@ -39,6 +39,8 @@ const (
 	LightWhiteBold
 	LightRedBold
 	PurpleBold
+	Orange
+	OrangeBold
 )
 
 var colored = true
@@ -65,6 +67,8 @@ var colorsMap map[Color]ColoredFmt = map[Color]ColoredFmt{
 	WhiteBold:      color.New(color.FgWhite, color.BgDefault, color.OpBold),
 	Yellow:         color.New(color.FgYellow, color.BgDefault),
 	YellowBold:     color.New(color.FgYellow, color.BgDefault, color.OpBold),
+	Orange:         color.RGB(255, 153, 51),
+	OrangeBold:     color.NewRGBStyle(color.RGB(255, 153, 51)).SetOpts(color.Opts{color.OpBold}),
 }
 
 // SetColored set all colors to default, if colored == false.

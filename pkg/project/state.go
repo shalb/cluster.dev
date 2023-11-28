@@ -217,24 +217,27 @@ func (p *Project) LoadState() (*StateProject, error) {
 	return &statePrj, nil
 }
 
-func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
+func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit, bool) {
 	unitStateCache := map[string]bool{}
 	unitInState, exists := sp.Units[unit.Key()]
 	if !exists {
-		return utils.Diff(nil, unit.GetDiffData(), true), nil
+		return utils.Diff(nil, unit.GetDiffData(), true), nil, false
 	}
 	diffData := unit.GetDiffData()
 	stateDiffData := unitInState.GetDiffData()
 	df := utils.Diff(stateDiffData, diffData, true)
 	if len(df) > 0 {
-		return df, unitInState
+		return df, unitInState, false
+	}
+	if unitInState.IsTainted() {
+		return colors.Fmt(colors.Yellow).Sprint(utils.Diff(nil, unit.GetDiffData(), false)), unitInState, true
 	}
 	for _, dep := range unit.Dependencies().UniqUnits() {
 		if sp.checkUnitChangesRecursive(dep, unitStateCache) {
-			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), unitInState
+			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), unitInState, false
 		}
 	}
-	return "", unitInState
+	return "", unitInState, false
 }
 
 func (sp *StateProject) checkUnitChangesRecursive(unit Unit, cacheUnitChanges map[string]bool) bool {

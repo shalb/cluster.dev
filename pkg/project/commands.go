@@ -27,49 +27,46 @@ func (p *Project) Build() error {
 
 // Destroy all units.
 func (p *Project) Destroy() error {
-	fProject, err := p.LoadState()
-	if err != nil {
-		return fmt.Errorf("project destroy: %w", err)
-	}
-	graph := grapher{}
-	if config.Global.IgnoreState {
-		graph.Init(p, 1, true)
-	} else {
-		graph.Init(&fProject.Project, 1, true)
-	}
-	defer graph.Close()
+	planStatus := ProjectPlanningStatus{}
+	p.planDestroyAll(&planStatus)
+	graph := planStatus.GetDestroyGraph()
 	if graph.Len() < 1 {
 		log.Info("Nothing to destroy, exiting")
 		return nil
 	}
 	destSeq := graph.GetSequenceSet()
 	if !config.Global.Force {
-		destList := planDestroy(destSeq, nil)
-		showPlanResults(nil, nil, destList, nil)
+		showPlanResults(&planStatus)
 		respond := climenu.GetText("Continue?(yes/no)", "no")
 		if respond != "yes" {
 			log.Info("Destroying cancelled")
 			return nil
 		}
 	}
-	err = p.ClearCacheDir()
+	err := p.ClearCacheDir()
 	if err != nil {
 		return fmt.Errorf("project destroy: clear cache dir: %w", err)
 	}
 	log.Info("Destroying...")
-	for _, md := range destSeq {
-		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Destroying unit '%v'", md.Key()))
-		err = md.Build()
+	for _, unit := range destSeq {
+		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Destroying unit '%v'", unit.Key()))
+		err = unit.Build()
 		if err != nil {
 			return fmt.Errorf("project destroy: destroying deleted unit: %w", err)
 		}
 		p.ProcessedUnitsCount++
-		err = md.Destroy()
+		err = unit.Destroy()
 		if err != nil {
+			if unit.IsTainted() {
+				err = p.OwnState.SaveState()
+				if err != nil {
+					return fmt.Errorf("project destroy: saving state: %w", err)
+				}
+			}
 			return fmt.Errorf("project destroy: %w", err)
 		}
-		fProject.DeleteUnit(md)
-		err = fProject.SaveState()
+		p.OwnState.DeleteUnit(unit)
+		err = p.OwnState.SaveState()
 		if err != nil {
 			return fmt.Errorf("project destroy: saving state: %w", err)
 		}
@@ -79,17 +76,12 @@ func (p *Project) Destroy() error {
 
 // Apply all units.
 func (p *Project) Apply() error {
-	grDebug := grapher{}
-	err := grDebug.Init(p, config.Global.MaxParallel, false)
+	planningStatus, err := p.Plan()
 	if err != nil {
 		return err
 	}
 	if !config.Global.Force {
-		hasChanges, err := p.Plan()
-		if err != nil {
-			return err
-		}
-		if !hasChanges {
+		if !planningStatus.HasChanges() {
 			return nil
 		}
 		respond := climenu.GetText("Continue?(yes/no)", "no")
@@ -103,38 +95,28 @@ func (p *Project) Apply() error {
 		return fmt.Errorf("project apply: clear cache dir: %v", err.Error())
 	}
 	log.Info("Applying...")
-	gr := grapher{}
-	err = gr.Init(p, config.Global.MaxParallel, false)
-	if err != nil {
-		return err
-	}
+	gr := planningStatus.GetApplyGraph()
 	defer gr.Close()
-	fProject, err := p.LoadState()
-	if err != nil {
-		return err
-	}
-
-	StateDestroyGraph := grapher{}
-	err = StateDestroyGraph.Init(&fProject.Project, 1, true)
-	if err != nil {
-		return err
-	}
+	StateDestroyGraph := planningStatus.GetDestroyGraph()
 	defer StateDestroyGraph.Close()
-	for _, md := range StateDestroyGraph.GetSequenceSet() {
-		_, exists := p.Units[md.Key()]
-		if exists {
-			continue
-		}
-		err = md.Build()
+
+	for _, unit := range StateDestroyGraph.GetSequenceSet() {
+		err = unit.Build()
 		if err != nil {
 			log.Errorf("project apply: destroying deleted unit: %v", err.Error())
 		}
-		err = md.Destroy()
+		err = unit.Destroy()
 		if err != nil {
+			if unit.IsTainted() {
+				err = p.OwnState.SaveState()
+				if err != nil {
+					return fmt.Errorf("project apply: saving state: %w", err)
+				}
+			}
 			return fmt.Errorf("project apply: destroying deleted unit: %v", err.Error())
 		}
-		fProject.DeleteUnit(md)
-		err = fProject.SaveState()
+		p.OwnState.DeleteUnit(unit)
+		err = p.OwnState.SaveState()
 		if err != nil {
 			return fmt.Errorf("project apply: %v", err.Error())
 		}
@@ -159,156 +141,108 @@ func (p *Project) Apply() error {
 			return nil
 		}
 
-		go func(unit Unit, finFunc func(error), stateP *StateProject) {
-			diff, stateUnit := stateP.CheckUnitChanges(unit)
-			var res error
-			if len(diff) > 0 || config.Global.IgnoreState {
-				log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying unit '%v':", md.Key()))
-				log.Debugf("Unit %v diff: \n%v", md.Key(), diff)
-				err = unit.Build()
-				if err != nil {
-					log.Errorf("project apply: unit build error: %v", err.Error())
-					finFunc(err)
+		go func(unit Unit, finFunc func(error)) {
+			log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying unit '%v':", md.Key()))
+			err = unit.Build()
+			if err != nil {
+				log.Errorf("project apply: unit build error: %v", err.Error())
+				finFunc(err)
+				return
+			}
+			p.ProcessedUnitsCount++
+			applyError := unit.Apply()
+			if applyError != nil {
+				if unit.IsTainted() {
+					unit.Project().OwnState.UpdateUnit(unit)
+					err := unit.Project().OwnState.SaveState()
+					if err != nil {
+						finFunc(err)
+						return
+					}
+					finFunc(applyError)
 					return
 				}
-				p.ProcessedUnitsCount++
-				res := unit.Apply()
-				if res == nil {
-					stateP.UpdateUnit(unit)
-					err := stateP.SaveState()
-					if err != nil {
-						finFunc(err)
-						return
-					}
-					err = unit.UpdateProjectRuntimeData(p)
-					if err != nil {
-						finFunc(err)
-						return
-					}
-				}
-				finFunc(res)
-				return
-			} else {
-				// Copy unit from state to project (to save raw output data for some units)
-				p.Units[unit.Key()] = stateUnit
 			}
-			log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Unit '%v' has not changed. Skip applying.", md.Key()))
-			finFunc(res)
-		}(md, fn, fProject)
+			unit.Project().OwnState.UpdateUnit(unit)
+			err := unit.Project().OwnState.SaveState()
+			if err != nil {
+				finFunc(err)
+				return
+			}
+			err = unit.UpdateProjectRuntimeData(p)
+			if err != nil {
+				finFunc(err)
+				return
+			}
+
+			finFunc(nil)
+		}(md, fn)
 	}
 }
 
 // Plan and output result.
-func (p *Project) Plan() (hasChanges bool, err error) {
-	fProject, err := p.LoadState()
-	if err != nil {
-		return
-	}
-
-	CurrentGraph := grapher{}
-	err = CurrentGraph.Init(p, 1, false)
-	if err != nil {
-		return
-	}
-	defer CurrentGraph.Close()
-	StateGraph := grapher{}
-	err = StateGraph.Init(&fProject.Project, 1, true)
-	if err != nil {
-		return
-	}
-	defer StateGraph.Close()
-	stateModsSeq := StateGraph.GetSequenceSet()
-	curModsSeq := CurrentGraph.GetSequenceSet()
-	modsForApply := []string{}
-	modsForUpdate := []string{}
-	modsUnchanged := []string{}
-	changedUnits := map[string]Unit{}
+func (p *Project) Plan() (*ProjectPlanningStatus, error) {
 	log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Checking units in state"))
-	modsForDestroy := planDestroy(stateModsSeq, curModsSeq)
-
-	for _, md := range curModsSeq {
-		_, exists := fProject.Units[md.Key()]
-		diff, stateUnit := fProject.CheckUnitChanges(md)
-		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning unit '%v':", md.Key()))
-		if len(diff) > 0 || config.Global.IgnoreState {
-			changedUnits[md.Key()] = md
-			if len(diff) > 0 {
-				fmt.Printf("%v\n", diff)
-			} else {
-				fmt.Println("<No changes>")
+	planningSt, err := p.buildPlan()
+	if err != nil {
+		return nil, err
+	}
+	if config.Global.ShowTerraformPlan {
+		err = p.ClearCacheDir()
+		for _, md := range planningSt.GetApplyGraph().GetSequenceSet() {
+			if err != nil {
+				return nil, fmt.Errorf("project plan: clear cache dir: %v", err.Error())
 			}
-			if exists {
-				modsForUpdate = append(modsForUpdate, md.Key())
-			} else {
-				modsForApply = append(modsForApply, md.Key())
+			allDepsDeployed := true
+			for _, planModDep := range md.Dependencies().Slice() {
+				dS := planningSt.FindUnit(planModDep.Unit)
+				if dS != nil && dS.Status != NotChanged {
+					allDepsDeployed = false
+				}
 			}
-			if config.Global.ShowTerraformPlan {
-				err = p.ClearCacheDir()
+			if allDepsDeployed {
+				err = md.Build()
 				if err != nil {
-					return false, fmt.Errorf("project plan: clear cache dir: %v", err.Error())
+					log.Errorf("terraform plan: unit build error: %v", err.Error())
+					return nil, err
 				}
-				allDepsDeployed := true
-				for _, planModDep := range md.Dependencies().Slice() {
-					_, exists := fProject.Units[planModDep.Unit.Key()]
-					if !exists {
-						allDepsDeployed = false
-						break
-					}
+				err = md.Plan()
+				if err != nil {
+					log.Errorf("unit '%v' terraform plan return an error: %v", md.Key(), err.Error())
+					return nil, err
 				}
-				if allDepsDeployed {
-					err = md.Build()
-					if err != nil {
-						log.Errorf("terraform plan: unit build error: %v", err.Error())
-						return
-					}
-					err = md.Plan()
-					if err != nil {
-						log.Errorf("unit '%v' terraform plan return an error: %v", md.Key(), err.Error())
-						return
-					}
-				} else {
-					log.Warnf("The unit '%v' has dependencies that have not yet been deployed. Can't show terraform plan.", md.Key())
-				}
-			}
-		} else {
-			if stateUnit != nil {
-				stateUnit.UpdateProjectRuntimeData(p)
-			}
-			modsUnchanged = append(modsUnchanged, md.Key())
-			// Unit was not changed. Copy unit outputs from state.
-			p.UnitLinks.JoinWithDataReplace(fProject.UnitLinks.ByTargetUnit(md))
-			// log.Warnf("Plan after: %+v", p.UnitLinks.List)
-			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
-		}
-	}
-	for _, un := range changedUnits {
-		for _, dep := range un.Dependencies().Map() {
-			if dep.Unit.ForceApply() {
-				if _, exists := changedUnits[dep.Unit.Key()]; !exists {
-					modsForUpdate = append(modsForUpdate, dep.Unit.Key())
-					changedUnits[dep.Unit.Key()] = dep.Unit
-				}
+			} else {
+				log.Warnf("The unit '%v' has dependencies that have not yet been deployed. Can't show terraform plan.", md.Key())
 			}
 		}
 	}
-	showPlanResults(modsForApply, modsForUpdate, modsForDestroy, modsUnchanged)
-	hasChanges = len(modsForApply)+len(modsForUpdate)+len(modsForDestroy) != 0
-	return
+	showPlanResults(planningSt)
+	return planningSt, nil
 }
 
 // planDestroy collect and show units for destroying.
-func planDestroy(stateList, projList []Unit) []string {
-	modsForDestroy := []string{}
-	for _, md := range stateList {
-		if i := findMod(projList, md); i >= 0 {
+func (p *Project) planDestroy(opStatus *ProjectPlanningStatus) {
+	for _, md := range p.OwnState.UnitsSlice() {
+		if i := findMod(p.UnitsSlice(), md); i >= 0 {
 			continue
 		}
 		diff := utils.Diff(md.GetDiffData(), nil, true)
-		log.Info(colors.Fmt(colors.Red).Sprintf("unit '%v' will be destroyed:", md.Key()))
-		fmt.Printf("%v\n", diff)
-		modsForDestroy = append(modsForDestroy, md.Key())
+		opStatus.Add(md, Destroy, diff, md.IsTainted())
 	}
-	return modsForDestroy
+}
+
+// planDestroyAll add all units from state for destroy.
+func (p *Project) planDestroyAll(opStatus *ProjectPlanningStatus) {
+	var units []Unit
+	if config.Global.IgnoreState {
+		units = p.UnitsSlice()
+	} else {
+		units = p.OwnState.UnitsSlice()
+	}
+	for _, md := range units {
+		diff := utils.Diff(md.GetDiffData(), nil, true)
+		opStatus.Add(md, Destroy, diff, md.IsTainted())
+	}
 }
 
 func findMod(list []Unit, mod Unit) int {
@@ -321,4 +255,53 @@ func findMod(list []Unit, mod Unit) int {
 		}
 	}
 	return -1
+}
+
+// Plan and output result.
+func (p *Project) buildPlan() (planningStatus *ProjectPlanningStatus, err error) {
+	err = checkUnitDependencies(p)
+	if err != nil {
+		return
+	}
+	planningStatus = &ProjectPlanningStatus{}
+	p.planDestroy(planningStatus)
+	for _, unit := range p.UnitsSlice() {
+		_, exists := p.OwnState.Units[unit.Key()]
+		diff, stateUnit, tainted := p.OwnState.CheckUnitChanges(unit)
+		if len(diff) > 0 || config.Global.IgnoreState {
+			if len(diff) > 0 {
+				if exists {
+					planningStatus.Add(unit, Update, diff, tainted)
+				} else {
+					planningStatus.Add(unit, Apply, diff, tainted)
+				}
+			}
+		} else {
+			if stateUnit != nil {
+				stateUnit.UpdateProjectRuntimeData(p)
+			}
+			planningStatus.Add(unit, NotChanged, "", false)
+
+			// Unit was not changed. Copy unit outputs from state.
+			p.UnitLinks.JoinWithDataReplace(p.OwnState.UnitLinks.ByTargetUnit(unit))
+		}
+	}
+	// planningStatus.Print()
+	changedUnits := planningStatus.OperationFilter(Apply, Update, Destroy)
+	for _, st := range changedUnits.Slice() {
+		err = DependenciesRecursiveIterate(st.UnitPtr, func(unitForCheck Unit) error {
+			if unitForCheck.ForceApply() {
+				fu := changedUnits.FindUnit(unitForCheck)
+				if fu == nil {
+					planningStatus.AddOrUpdate(unitForCheck, UpdateAsDep, colors.Fmt(colors.Yellow).Sprint("<Should be applied as a required with 'force_apply' option>"))
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return
 }

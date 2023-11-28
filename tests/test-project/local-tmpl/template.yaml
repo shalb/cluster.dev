@@ -17,6 +17,7 @@ units:
     source: ./s3-file/
     depends_on: this.create-bucket
     inputs:
+      # wrong_input: "taint state"
       bucket_name: {{ remoteState "this.create-bucket.id" }}
       data: {{ .variables.data }}
   -

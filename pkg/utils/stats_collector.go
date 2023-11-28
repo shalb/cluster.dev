@@ -46,7 +46,6 @@ func (e *StatsExporter) PushStats(stats interface{}) error {
 	client := http.Client{
 		Timeout: 3 * time.Second,
 	}
-	log.Warnf("Sending usage statistic. To disable statistics collection, export the CDEV_COLLECT_USAGE_STATS=false environment variable")
 	log.Debugf("Usage stats:\n%v", string(jsonBody))
 	res, err := client.Do(req)
 	if err != nil {

@@ -34,19 +34,16 @@ type grapher struct {
 	stopChan       chan struct{}
 }
 
-func (g *grapher) Init(project *Project, maxParallel int, reverse bool) error {
-	if err := checkUnitDependencies(project); err != nil {
-		return err
-	}
+func (g *grapher) InitP(planningStatus *ProjectPlanningStatus, maxParallel int, reverse bool) {
 	if maxParallel < 1 {
-		return fmt.Errorf("maxParallel should be greater then 0")
+		log.Fatal("Internal error, parallelism < 1.")
 	}
 	g.units = make(map[string]Unit)
 	g.unitsErrors = make(map[string]error)
 	g.unFinished = make(map[string]Unit)
-	for key, mod := range project.Units {
-		g.units[key] = mod
-		g.unFinished[key] = mod
+	for _, uStatus := range planningStatus.Slice() {
+		g.units[uStatus.UnitPtr.Key()] = uStatus.UnitPtr
+		g.unFinished[uStatus.UnitPtr.Key()] = uStatus.UnitPtr
 	}
 	g.maxParallel = maxParallel
 	g.queue.Init()
@@ -58,7 +55,6 @@ func (g *grapher) Init(project *Project, maxParallel int, reverse bool) error {
 	g.updateQueue()
 	g.stopChan = make(chan struct{})
 	g.listenHupSig()
-	return nil
 }
 
 func (g *grapher) HasError() bool {
@@ -96,16 +92,13 @@ func (g *grapher) updateDirectQueue() int {
 func (g *grapher) updateReverseQueue() int {
 	count := 0
 	for key, mod := range g.units {
-		isReady := true
 		dependedMods := findDependedUnits(g.unFinished, mod)
 		if len(dependedMods) > 0 {
-			isReady = false
+			continue
 		}
-		if isReady {
-			g.queue.PushBack(mod)
-			delete(g.units, key)
-			count++
-		}
+		g.queue.PushBack(mod)
+		delete(g.units, key)
+		count++
 	}
 	return count
 }
@@ -237,19 +230,15 @@ func checkUnitDependenciesCircle(chain []string) error {
 func findDependedUnits(modList map[string]Unit, targetMod Unit) map[string]Unit {
 	res := map[string]Unit{}
 	for key, mod := range modList {
-		// log.Infof("findDependedUnits '%v':", mod.Name())
 		if mod.Key() == targetMod.Key() {
 			continue
 		}
 		for _, dep := range mod.Dependencies().Slice() {
 			if dep.Unit.Key() == targetMod.Key() {
-				// log.Infof("      '%v':", dep.TargetUnitName)
-				// log.Warnf("Tm: %v, M: %v Dependency: %v", targetMod.Name(), mod.Name(), dep.TargetUnitName)
 				res[key] = mod
 			}
 		}
 	}
-	//log.Debugf("Searching depended from unit: %v\n Result: %v", targetMod.Name(), res)
 	return res
 }
 

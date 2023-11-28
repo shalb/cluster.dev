@@ -31,6 +31,7 @@ type Unit interface {
 	WasApplied() bool
 	ForceApply() bool
 	Mux() *sync.Mutex
+	IsTainted() bool
 }
 
 type UnitDriver interface {

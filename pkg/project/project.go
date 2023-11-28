@@ -362,3 +362,13 @@ func (p *Project) PrintOutputs() (err error) {
 	}
 	return nil
 }
+
+func (p *Project) UnitsSlice() []Unit {
+	res := make([]Unit, len(p.Units))
+	i := 0
+	for _, unit := range p.Units {
+		res[i] = unit
+		i++
+	}
+	return res
+}
