@@ -36,9 +36,9 @@ func (u *Unit) GetState() interface{} {
 		return u.SavedState
 	}
 	res := u.GetStateUnit()
-	return &res
-
+	return res
 }
+
 func (u *Unit) GetUnitDiff() UnitDiffSpec {
 	st := UnitDiffSpec{
 		Outputs:   make(map[string]string),

@@ -15,16 +15,24 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-func (sp *StateProject) UpdateUnit(mod Unit) {
+func (sp *StateProject) UpdateUnit(unit Unit) {
 	sp.StateMutex.Lock()
 	defer sp.StateMutex.Unlock()
-	sp.Units[mod.Key()] = mod
-	sp.ChangedUnits[mod.Key()] = mod
-	sp.UnitLinks.Join(sp.LoaderProjectPtr.UnitLinks.ByTargetUnit(mod))
+	sp.Units[unit.Key()] = unit
+	sp.ChangedUnits[unit.Key()] = unit
+	sp.UnitLinks.Join(sp.LoaderProjectPtr.UnitLinks.ByTargetUnit(unit))
 }
 
 func (sp *StateProject) DeleteUnit(mod Unit) {
 	delete(sp.Units, mod.Key())
+}
+
+func (sp *stateData) ClearULinks() {
+	for linkKey, link := range sp.UnitLinks.Map() {
+		if sp.Units[link.UnitKey()] == nil {
+			sp.UnitLinks.Delete(linkKey)
+		}
+	}
 }
 
 type StateProject struct {
@@ -46,6 +54,8 @@ func (p *Project) SaveState() error {
 	for key, mod := range p.Units {
 		st.Units[key] = mod.GetState()
 	}
+	// Remove all unit links, that not have a target unit.
+	st.ClearULinks()
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)
@@ -169,6 +179,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			return nil, fmt.Errorf("load state: %w", err)
 		}
 	}
+	stateD.ClearULinks()
 	p.UUID = stateD.ProjectUUID
 	if p.UUID == "" {
 		p.UUID = createProjectUUID()

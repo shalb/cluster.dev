@@ -32,6 +32,9 @@ type Unit interface {
 	ForceApply() bool
 	Mux() *sync.Mutex
 	IsTainted() bool
+	SetExecStatus(ExecutionStatus)
+	GetExecStatus() ExecutionStatus
+	ExecError() error
 }
 
 type UnitDriver interface {

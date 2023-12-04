@@ -23,7 +23,6 @@ const (
 	Destroy
 	Update
 	NotChanged
-	UpdateAsDep
 )
 
 func (u UnitOperation) String() string {
@@ -32,7 +31,6 @@ func (u UnitOperation) String() string {
 		2: colors.Fmt(colors.Red).Sprint("Destroy"),
 		3: colors.Fmt(colors.Yellow).Sprint("Update"),
 		4: colors.Fmt(colors.White).Sprint("NotChanged"),
-		5: colors.Fmt(colors.Yellow).Sprint("UpdateAsDep"),
 	}
 	return mapperStatus[uint16(u)]
 }
@@ -46,16 +44,23 @@ type UnitPlanningStatus struct {
 	Diff      string
 	Status    UnitOperation
 	IsTainted bool
+	Index     int
 }
 
 type ProjectPlanningStatus struct {
 	units []*UnitPlanningStatus
 }
 
-func (s *ProjectPlanningStatus) GetApplyGraph() *grapher {
-	CurrentGraph := grapher{}
-	CurrentGraph.InitP(s.OperationFilter(Apply, Update, UpdateAsDep), 1, false)
-	return &CurrentGraph
+func (s *ProjectPlanningStatus) GetApplyGraph() (*graph, error) {
+	log.Warnf("GetApplyGraph")
+	CurrentGraph := graph{}
+	var err error
+	if config.Global.IgnoreState {
+		err = CurrentGraph.BuildDirect(s, config.Global.MaxParallel)
+	} else {
+		err = CurrentGraph.BuildDirect(s.OperationFilter(Apply, Update), config.Global.MaxParallel)
+	}
+	return &CurrentGraph, err
 }
 
 func (s *ProjectPlanningStatus) FindUnit(unit Unit) *UnitPlanningStatus {
@@ -70,10 +75,11 @@ func (s *ProjectPlanningStatus) FindUnit(unit Unit) *UnitPlanningStatus {
 	return nil
 }
 
-func (s *ProjectPlanningStatus) GetDestroyGraph() *grapher {
-	CurrentGraph := grapher{}
-	CurrentGraph.InitP(s.OperationFilter(Destroy), 1, false)
-	return &CurrentGraph
+func (s *ProjectPlanningStatus) GetDestroyGraph() (*graph, error) {
+	log.Warnf("GetDestroyGraph")
+	CurrentGraph := graph{}
+	err := CurrentGraph.BuildReverse(s.OperationFilter(Destroy), 1)
+	return &CurrentGraph, err
 }
 
 func (s *ProjectPlanningStatus) OperationFilter(ops ...UnitOperation) *ProjectPlanningStatus {
@@ -99,6 +105,7 @@ func (s *ProjectPlanningStatus) Add(u Unit, op UnitOperation, diff string, isTai
 		Status:    op,
 		Diff:      diff,
 		IsTainted: isTainted,
+		Index:     -1,
 	}
 	s.units = append(s.units, &uo)
 }
@@ -333,20 +340,25 @@ func ProjectsFilesExists() bool {
 	return false
 }
 
-func showPlanResults(opStatus *ProjectPlanningStatus) {
+func showPlanResults(opStatus *ProjectPlanningStatus) error {
 	fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("Plan results:"))
 
 	if opStatus.Len() == 0 {
 		fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("No changes, nothing to do."))
-		return
+		return nil
 	}
 	table := tablewriter.NewWriter(os.Stdout)
 
 	headers := []string{}
 	unitsTable := []string{}
 
+	// indexedSlice, err := opStatus.OperationFilter(Apply, Update).GetApplyGraph()
+	// if err != nil {
+	// 	return fmt.Errorf("build graph for plan table: %w", err)
+	// }
+
 	var deployString, updateString, destroyString, unchangedString string
-	for _, unit := range opStatus.Slice() {
+	for _, unit := range opStatus.OperationFilter(Apply, Update).Slice() {
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning unit '%v':", unit.UnitPtr.Key()))
 		switch unit.Status {
 		case Apply:
@@ -356,12 +368,6 @@ func showPlanResults(opStatus *ProjectPlanningStatus) {
 			}
 			deployString += RenderUnitPlanningString(unit)
 		case Update:
-			fmt.Printf("%v\n", unit.Diff)
-			if len(updateString) != 0 {
-				updateString += "\n"
-			}
-			updateString += RenderUnitPlanningString(unit)
-		case UpdateAsDep:
 			fmt.Printf("%v\n", unit.Diff)
 			if len(updateString) != 0 {
 				updateString += "\n"
@@ -401,34 +407,39 @@ func showPlanResults(opStatus *ProjectPlanningStatus) {
 	table.SetHeader(headers)
 	table.Append(unitsTable)
 	table.Render()
+	return nil
 }
 
 func RenderUnitPlanningString(uStatus *UnitPlanningStatus) string {
+	keyForRender := uStatus.UnitPtr.Key()
+	if config.Global.LogLevel == "debug" {
+		keyForRender += fmt.Sprintf("(%v)", uStatus.Index)
+	}
 	switch uStatus.Status {
-	case Update, UpdateAsDep:
+	case Update:
 		if uStatus.IsTainted {
-			return colors.Fmt(colors.Orange).Sprintf("%s(tainted)", uStatus.UnitPtr.Key())
+			return colors.Fmt(colors.Orange).Sprintf("%s(tainted)", keyForRender)
 		} else {
-			return colors.Fmt(colors.Yellow).Sprint(uStatus.UnitPtr.Key())
+			return colors.Fmt(colors.Yellow).Sprint(keyForRender)
 		}
 	case Apply:
 		if uStatus.IsTainted {
-			return colors.Fmt(colors.Green).Sprintf("%s(tainted)", uStatus.UnitPtr.Key())
+			return colors.Fmt(colors.Green).Sprintf("%s(tainted)", keyForRender)
 		} else {
-			return colors.Fmt(colors.Green).Sprint(uStatus.UnitPtr.Key())
+			return colors.Fmt(colors.Green).Sprint(keyForRender)
 		}
 	case Destroy:
 		if uStatus.IsTainted {
-			return colors.Fmt(colors.Red).Sprintf("%s(tainted)", uStatus.UnitPtr.Key())
+			return colors.Fmt(colors.Red).Sprintf("%s(tainted)", keyForRender)
 		} else {
-			return colors.Fmt(colors.Red).Sprint(uStatus.UnitPtr.Key())
+			return colors.Fmt(colors.Red).Sprint(keyForRender)
 		}
 	case NotChanged:
-		return colors.Fmt(colors.White).Sprint(uStatus.UnitPtr.Key())
+		return colors.Fmt(colors.White).Sprint(keyForRender)
 	}
 	// Impossible, crush
 	log.Fatalf("Unexpected internal error. Unknown unit status '%v'", uStatus.Status.String())
-	return uStatus.UnitPtr.Key()
+	return ""
 }
 
 func DependenciesRecursiveIterate(u Unit, f func(Unit) error) error {

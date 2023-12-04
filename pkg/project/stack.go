@@ -43,6 +43,9 @@ func (p *Project) readStacks() error {
 			return err
 		}
 	}
+	if len(p.Stacks) == 0 {
+		return fmt.Errorf("no stacks found, at least one needed")
+	}
 	return nil
 }
 
@@ -51,6 +54,18 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 	if !ok {
 		return fmt.Errorf("stack object must contain field 'name'")
 	}
+	disabledInt := stackSpec.data["disabled"]
+	if disabledInt != nil {
+		disabled, ok := disabledInt.(bool)
+		if !ok {
+			return fmt.Errorf("stack option 'disabled' should be bool, not %T", disabledInt)
+		}
+		if disabled {
+			log.Debugf("stack '%v' is disabled, ignore", name)
+			return nil
+		}
+	}
+
 	// Check if stack with this name is already exists in project.
 	if _, ok = p.Stacks[name]; ok {
 		return fmt.Errorf("duplicate stack name '%s'", name)

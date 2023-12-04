@@ -114,8 +114,27 @@ func (u *Unit) Build() error {
 	return u.Unit.Build()
 }
 
+func (u *Unit) Destroy() (err error) {
+	err = u.Unit.Destroy()
+	if u.IsTainted() {
+		if u.SavedState != nil {
+			u.StateData.MarkTainted(err)
+		}
+	}
+	if err != nil {
+		return
+	}
+	// log.Warnf("Printer OutputRaw: %v", outputs)
+	return
+}
+
 func (u *Unit) Apply() (err error) {
 	err = u.Unit.Apply()
+	if u.IsTainted() {
+		if u.SavedState != nil {
+			u.StateData.MarkTainted(err)
+		}
+	}
 	if err != nil {
 		return
 	}

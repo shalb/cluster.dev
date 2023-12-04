@@ -91,6 +91,8 @@ type Unit struct {
 	FApply           bool                    `yaml:"force_apply" json:"force_apply"`
 	lockedMux        *sync.Mutex             `yaml:"-" json:"-"`
 	Tainted          bool                    `yaml:"-" json:"tainted,omitempty"`
+	ExecStatus       project.ExecutionStatus `yaml:"-" json:"-"`
+	ExecErr          error                   `yaml:"-" json:"-"`
 }
 
 // IsTainted return true if unit have tainted state (failed previous apply or destroy).
@@ -122,6 +124,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if stack == nil {
 		return fmt.Errorf("read shell unit: empty stack or project")
 	}
+	u.ExecStatus = project.Backlog // Set status 'backlog' by default.
 	u.StackPtr = stack
 	u.ProjectPtr = stack.ProjectPtr
 	u.SpecRaw = spec
@@ -269,7 +272,7 @@ func (u *Unit) Apply() error {
 	}
 	u.OutputRaw, err = u.runCommands(applyCommands, "apply")
 	if err != nil {
-		u.Tainted = true
+		u.MarkTainted(err)
 		return fmt.Errorf("apply unit '%v': %w", u.Key(), err)
 	}
 	// Get outputs.
@@ -281,14 +284,14 @@ func (u *Unit) Apply() error {
 		}
 		u.OutputRaw, err = u.runCommands(cmdConf, "retrieving outputs")
 		if err != nil {
-			u.Tainted = true
+			u.MarkTainted(err)
 			return fmt.Errorf("retrieving unit '%v' outputs: %w", u.Key(), err)
 		}
 	}
 	if u.GetOutputsConf != nil {
 		parser, exists := u.OutputParsers[u.GetOutputsConf.Type]
 		if !exists {
-			u.Tainted = true
+			u.MarkTainted(err)
 			return fmt.Errorf("retrieving unit '%v' outputs: parser %v doesn't exists", u.Key(), u.GetOutputsConf.Type)
 		}
 		err = parser(string(u.OutputRaw), u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(project.OutputLinkType))
@@ -296,16 +299,23 @@ func (u *Unit) Apply() error {
 
 			//str := fmt.Sprintf("Outputs data: %s", string(u.OutputRaw))
 			// log.Warnf("Len: %v", len(str))
-			u.Tainted = true
+			u.MarkTainted(err)
 			return fmt.Errorf("parse outputs '%v': %w", u.GetOutputsConf.Type, err)
 		}
 
 	}
 	if err == nil {
-		u.Tainted = false
 		u.Applied = true
 	}
 	return err
+}
+
+func (u *Unit) MarkTainted(err error) {
+	u.ExecErr = err
+	if u.SavedState != nil {
+		u.SavedState.(*Unit).Tainted = true
+	}
+	u.Tainted = true
 }
 
 func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, error) {
@@ -381,6 +391,9 @@ func (u *Unit) Destroy() error {
 		destroyCommands.Commands = append(destroyCommands.Commands, "./post_hook.sh")
 	}
 	_, err = u.runCommands(destroyCommands, "destroy")
+	if err != nil {
+		u.MarkTainted(err)
+	}
 	return err
 }
 
@@ -546,4 +559,17 @@ func (u *Unit) EnvSlice() []string {
 		i++
 	}
 	return res
+}
+
+func (u *Unit) SetExecStatus(status project.ExecutionStatus) {
+	if u.GetExecStatus() != status {
+		log.Warnf("Unit '%v' Status changed: %v --> %v", u.Key(), u.GetExecStatus(), status)
+		u.ExecStatus = status
+	}
+}
+func (u *Unit) GetExecStatus() project.ExecutionStatus {
+	return u.ExecStatus
+}
+func (u *Unit) ExecError() error {
+	return u.ExecErr
 }
