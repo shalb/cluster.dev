@@ -1,8 +1,10 @@
 package cdev
 
 import (
+	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
+	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +16,9 @@ var applyCmd = &cobra.Command{
 	Short:         "Deploys or updates infrastructure according to project configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		project, err := project.LoadProjectFull()
-
+		if utils.GetEnv("CDEV_COLLECT_USAGE_STATS", "false") == "true" {
+			log.Infof("Sending usage statistic. To disable statistics collection, export the CDEV_COLLECT_USAGE_STATS=false environment variable")
+		}
 		if err != nil {
 			return NewCmdErr(project, "apply", err)
 		}
