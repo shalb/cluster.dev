@@ -75,7 +75,7 @@ units:
   -
     name: thirdStep
     type: printer
-    depends_on: this.force_apply_unit
+    # depends_on: this.force_apply_unit
     outputs:
       longWay: {{ remoteState "this.secondUnit.longWay"}}-STEP3
       changed: true

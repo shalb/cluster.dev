@@ -1,0 +1,60 @@
+{
+  "version": "v0.8.2",
+  "project_uuid": "4cd452ee-ca12-4c45-a03c-f4674bf1cbf5",
+  "unit_links": {
+   "unit_links_list": {
+    "04bd8a74af4c330a799f39a235f34577.RemoteStateMarkers.cdev-tests-local.thirdStep.longWay.04bd8a74af4c330a799f39a235f34577": {
+     "link_type": "RemoteStateMarkers",
+     "target_unit_name": "thirdStep",
+     "target_stack_name": "cdev-tests-local",
+     "output_name": "longWay",
+     "output_data": null
+    }
+   },
+   "MapMutex": {}
+  },
+  "units": {
+   "cdev-tests-local.parallelWatcher1": {
+    "name": "parallelWatcher1",
+    "create_files": [],
+    "apply": {
+     "commands": [
+      "echo \"Waiting...\"",
+      "sleep 30"
+     ]
+    },
+    "type": "shell",
+    "backend_name": "aws-backend",
+    "force_apply": false
+   },
+   "cdev-tests-local.parallelWatcher5": {
+    "name": "parallelWatcher5",
+    "create_files": [],
+    "apply": {
+     "commands": [
+      "echo \"Waiting...\"",
+      "sleep 40"
+     ]
+    },
+    "type": "shell",
+    "backend_name": "aws-backend",
+    "force_apply": false
+   },
+   "cdev-tests-local.thirdStep": {
+    "name": "thirdStep",
+    "outputs_config": {
+     "command": "terraform output -json",
+     "type": "terraform"
+    },
+    "backend_name": "aws-backend",
+    "depends_on": "this.force_apply_unit",
+    "force_apply": false,
+    "output": "{\n  \"changed\": {\n    \"sensitive\": true,\n    \"type\": \"bool\",\n    \"value\": true\n  },\n  \"longWay\": {\n    \"sensitive\": true,\n    \"type\": \"string\",\n    \"value\": \"STEP1-STEP2-STEP3\"\n  }\n}\n",
+    "outputs": {
+     "changed": true,
+     "longWay": "9d79a12ca098d7d766e970f0756946d7.RemoteStateMarkers.cdev-tests-local.secondUnit.longWay.9d79a12ca098d7d766e970f0756946d7-STEP3"
+    },
+    "type": "printer"
+   }
+  }
+ }

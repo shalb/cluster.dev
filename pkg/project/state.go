@@ -152,6 +152,31 @@ func createProjectUUID() string {
 	return id.String()
 }
 
+func (p *Project) NewEmptyState() *StateProject {
+	stateD := stateData{
+		UnitLinks: &UnitLinksT{},
+	}
+	statePrj := StateProject{
+		Project: Project{
+			name:             p.Name(),
+			secrets:          p.secrets,
+			configData:       p.configData,
+			configDataFile:   p.configDataFile,
+			objects:          p.objects,
+			Units:            make(map[string]Unit),
+			UnitLinks:        stateD.UnitLinks,
+			Stacks:           make(map[string]*Stack),
+			Backends:         p.Backends,
+			CodeCacheDir:     config.Global.StateCacheDir,
+			StateBackendName: p.StateBackendName,
+			UUID:             p.UUID,
+		},
+		LoaderProjectPtr: p,
+		ChangedUnits:     make(map[string]Unit),
+	}
+	return &statePrj
+}
+
 func (p *Project) LoadState() (*StateProject, error) {
 	if _, err := os.Stat(config.Global.StateCacheDir); os.IsNotExist(err) {
 		err := os.Mkdir(config.Global.StateCacheDir, 0755)
@@ -187,33 +212,13 @@ func (p *Project) LoadState() (*StateProject, error) {
 	} else {
 		log.Debugf("Project UUID loaded from state: %v", p.UUID)
 	}
-	statePrj := StateProject{
-		Project: Project{
-			name:             p.Name(),
-			secrets:          p.secrets,
-			configData:       p.configData,
-			configDataFile:   p.configDataFile,
-			objects:          p.objects,
-			Units:            make(map[string]Unit),
-			UnitLinks:        stateD.UnitLinks,
-			Stacks:           make(map[string]*Stack),
-			Backends:         p.Backends,
-			CodeCacheDir:     config.Global.StateCacheDir,
-			StateBackendName: p.StateBackendName,
-			UUID:             p.UUID,
-		},
-		LoaderProjectPtr: p,
-		ChangedUnits:     make(map[string]Unit),
-	}
-	// log.Warnf("StateProject. Unit links: %+v", statePrj.UnitLinks)
-	// utils.JSONCopy(p.Markers, statePrj.Markers)
+	statePrj := p.NewEmptyState()
+	statePrj.UnitLinks = stateD.UnitLinks
 	for mName, mState := range stateD.Units {
-		// log.Debugf("Loading unit from state: %v", mName)
-
 		if mState == nil {
 			continue
 		}
-		unit, err := NewUnitFromState(mState.(map[string]interface{}), mName, &statePrj)
+		unit, err := NewUnitFromState(mState.(map[string]interface{}), mName, statePrj)
 		if err != nil {
 			return nil, fmt.Errorf("loading unit from state: %v", err.Error())
 		}
@@ -225,7 +230,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 		return nil, err
 	}
 
-	return &statePrj, nil
+	return statePrj, nil
 }
 
 func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit, bool) {

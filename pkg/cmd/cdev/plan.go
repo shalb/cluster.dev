@@ -1,6 +1,8 @@
 package cdev
 
 import (
+	"fmt"
+
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
@@ -16,12 +18,12 @@ var planCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		project, err := project.LoadProjectFull()
 		if err != nil {
-			return NewCmdErr(nil, "plan", err)
+			return NewCmdErr(nil, "plan", fmt.Errorf("load project configuration: %w", err))
 		}
 		log.Info("Planning...")
 		_, err = project.Plan()
 		if err != nil {
-			return NewCmdErr(project, "plan", err)
+			return NewCmdErr(project, "plan", fmt.Errorf("build plan: %w", err))
 		}
 		return NewCmdErr(project, "plan", nil)
 	},

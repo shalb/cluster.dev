@@ -130,6 +130,14 @@ func (g *graph) build(planningStatus *ProjectPlanningStatus, maxParallel int, re
 	// g.listenHupSig()
 }
 
+func (g *graph) BuildNew(planningStatus *ProjectPlanningStatus, maxParallel int) error {
+	g.units = NewExecSet(planningStatus)
+	g.maxParallel = maxParallel
+	g.waitUnitDone = make(chan Unit)
+	return g.checkAndBuildIndexes()
+	// g.listenHupSig()
+}
+
 func (g *graph) GetNextAsync() (Unit, func(error), error) {
 	g.mux.Lock()
 	defer g.mux.Unlock()
@@ -161,22 +169,10 @@ func (g *graph) GetNextAsync() (Unit, func(error), error) {
 }
 
 func (g *graph) checkAndBuildIndexes() error {
-	i := 0
-	for {
-		readyCount := g.updateQueue()
-		if readyCount == 0 {
-			if g.units.StatusFilter(Backlog).Len() > 0 {
-				return fmt.Errorf("the graph is broken, can't resolve sequence")
-			}
-			break
-		}
-		for _, u := range g.units.StatusFilter(ReadyForExec).Slice() {
-			u.Index = i
-			u.UnitPtr.SetExecStatus(Finished)
-		}
-		i++
+	slice := g.IndexedSlice()
+	if slice == nil {
+		return fmt.Errorf("the graph is broken, can't resolve sequence")
 	}
-	g.resetUnitsStatus() // back all units to backlog
 	return nil
 }
 
@@ -191,12 +187,42 @@ func (g *graph) Slice() []*UnitPlanningStatus {
 			}
 			break
 		}
+		res = append(res, g.units.StatusFilter(ReadyForExec).Slice()...)
+
+		i++
+	}
+	g.resetUnitsStatus() // back all units to backlog
+	return res
+}
+
+// IndexedSlice return the slice of units in sorted in order ready for exec.
+func (g *graph) IndexedSlice() []*UnitPlanningStatus {
+	i := 0
+	res := []*UnitPlanningStatus{}
+	apply := []*UnitPlanningStatus{}
+	for {
+		readyCount := g.updateQueueNew()
+		if readyCount == 0 {
+			if g.units.StatusFilter(Backlog).Len() > 0 {
+				return nil
+			}
+			break
+		}
 		for _, u := range g.units.StatusFilter(ReadyForExec).Slice() {
-			res = append(res, u)
+			if u.Operation == Destroy {
+				// Place 'destroy' units first in queue
+				res = append(res, u)
+			} else {
+				// Then place 'apply/update' units
+				apply = append(apply, u)
+			}
+			// Mark unit as finished for next updateQueue
+			u.UnitPtr.SetExecStatus(Finished)
 		}
 		i++
 	}
 	g.resetUnitsStatus() // back all units to backlog
+	res = append(res, apply...)
 	return res
 }
 
@@ -225,6 +251,37 @@ func (g *graph) updateQueue() int {
 		return g.updateReverseQueue()
 	}
 	return g.updateDirectQueue()
+}
+
+func (g *graph) updateQueueNew() int {
+	count := 0
+	for _, unit := range g.units.StatusFilter(Backlog).Slice() {
+		blockedByDep := false
+		switch unit.Operation {
+		case Apply, Update:
+			for _, dep := range unit.UnitPtr.Dependencies().Slice() {
+				if g.units.StatusFilter(Backlog, InProgress, ReadyForExec).Find(dep.Unit) != nil {
+					blockedByDep = true
+					break
+				}
+			}
+		case Destroy:
+			for _, dep := range unit.UnitPtr.Dependencies().Slice() {
+				if g.units.StatusFilter(Backlog, InProgress, ReadyForExec).Find(dep.Unit) != nil {
+					blockedByDep = true
+					break
+				}
+			}
+		case NotChanged:
+			unit.UnitPtr.SetExecStatus(Finished)
+		}
+		if !blockedByDep {
+			unit.UnitPtr.SetExecStatus(ReadyForExec)
+			count++
+			continue
+		}
+	}
+	return count
 }
 
 func (g *graph) updateDirectQueue() int {

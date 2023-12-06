@@ -228,7 +228,7 @@ func (p *Project) Plan() (*ProjectPlanningStatus, error) {
 			allDepsDeployed := true
 			for _, planModDep := range md.UnitPtr.Dependencies().Slice() {
 				dS := planningSt.FindUnit(planModDep.Unit)
-				if dS != nil && dS.Status != NotChanged {
+				if dS != nil && dS.Operation != NotChanged {
 					allDepsDeployed = false
 				}
 			}
@@ -255,7 +255,7 @@ func (p *Project) Plan() (*ProjectPlanningStatus, error) {
 // planDestroy collect and show units for destroying.
 func (p *Project) planDestroy(opStatus *ProjectPlanningStatus) {
 	for _, md := range p.OwnState.UnitsSlice() {
-		if i := findMod(p.UnitsSlice(), md); i >= 0 {
+		if i := findUnit(p.UnitsSlice(), md); i >= 0 {
 			continue
 		}
 		diff := utils.Diff(md.GetDiffData(), nil, true)
@@ -263,7 +263,7 @@ func (p *Project) planDestroy(opStatus *ProjectPlanningStatus) {
 	}
 }
 
-// planDestroyAll add all units from state for destroy.
+// planDestroyAll add all units from state for destroying.
 func (p *Project) planDestroyAll(opStatus *ProjectPlanningStatus) {
 	var units []Unit
 	if config.Global.IgnoreState {
@@ -278,12 +278,13 @@ func (p *Project) planDestroyAll(opStatus *ProjectPlanningStatus) {
 	}
 }
 
-func findMod(list []Unit, mod Unit) int {
+// findUnit returns the index of unitForSearch in the list. Returns -1 if not found.
+func findUnit(list []Unit, unitForSearch Unit) int {
 	if len(list) < 1 {
 		return -1
 	}
 	for index, m := range list {
-		if mod.Key() == m.Key() {
+		if unitForSearch.Key() == m.Key() {
 			return index
 		}
 	}
