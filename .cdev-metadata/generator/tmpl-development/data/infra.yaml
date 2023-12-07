@@ -1,9 +1,0 @@
-name: cdev-tests-local
-template: ./template/
-kind: Stack
-backend: aws-backend
-variables:
-  bucket_name: "tmpl-dev-test"
-  region: {{ .project.variables.region }}
-  organization: {{ .project.variables.organization }}
-  name: "Developer"

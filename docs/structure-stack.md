@@ -22,18 +22,20 @@ variables:
   vpc_id: "vpc-5ecf1234"
 ```
 
-* `name`: stack name. *Required*.
+* `name`- *Required*. The stack name. 
 
-* `kind`: object kind. `stack`. *Required*.
+* `kind`- *Required*. Object kind `stack`. 
 
-* `backend`: name of the backend that will be used to store the states of this stack. *Optional*.
+* `backend`- *Optional*. Name of the backend that will be used to store the states of this stack. 
 
-* `variables`: data set for the stack template rendering. See [variables](https://docs.cluster.dev/templating/#variables).
+* `variables`- data set for the stack template rendering. See [variables](https://docs.cluster.dev/templating/#variables).
 
-*  `template`: it's either a path to a local directory containing the stack template's configuration files, or a remote Git repository as the stack template source. For more details on stack templates please refer to [Stack Template](https://docs.cluster.dev/stack-templates-overview/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
+*  `template`- *Required*. Either a path to a local directory containing the stack template's configuration files, or a remote Git repository as the stack template source. For more details on stack templates please refer to [Stack Template](https://docs.cluster.dev/stack-templates-overview/) section. A local path must begin with either `/` for absolute path, `./` or `../` for relative path. For Git source, use this format: `<GIT_URL>//<PATH_TO_TEMPLATE_DIR>?ref=<BRANCH_OR_TAG>`:
     * `<GIT_URL>` - *required*. Standard Git repo url. See details on [official Git page](https://git-scm.com/docs/git-clone#_git_urls).
     * `<PATH_TO_TEMPLATE_DIR>` - *optional*, use it if the stack template's configuration is not in repo root.
     * `<BRANCH_OR_TAG>`- Git branch or tag.
+
+* `disabled`- *bool*, *optional*. Disable stack execution. By default is set to `false`. If set to `true` the stack won't be applied. 
 
 ## Examples
 

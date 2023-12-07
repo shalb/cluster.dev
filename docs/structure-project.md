@@ -19,12 +19,12 @@ exports:
   AWS_PROFILE: cluster-dev  
 ```
 
-* `name`: project name. *Required*.
+* `name`- project name. *Required*.
 
-* `kind`: object kind. Must be set as `project`. *Required*.
+* `kind`- object kind. Must be set as `project`. *Required*.
 
-* `backend`: name of the backend that will be used to store the Cluster.dev state of the current project. *Optional*. 
+* `backend`- name of the backend that will be used to store the Cluster.dev state of the current project. *Optional*. 
 
-* `variables`: a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the organization name will look like this: `{{ .project.variables.organization }}`.
+* `variables`- a set of data in yaml format that can be referenced in other configuration objects. For the example above, the link to the organization name will look like this: `{{ .project.variables.organization }}`.
 
-* `exports`: list of environment variables that will be exported while working with the project. *Optional*.
+* `exports`- list of environment variables that will be exported while working with the project. *Optional*.
