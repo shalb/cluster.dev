@@ -55,16 +55,15 @@ type ConfSpec struct {
 	UseCache           bool
 	OptFooTest         bool
 	IgnoreState        bool
-	NotLoadState       bool
-	ShowTerraformPlan  bool
-	StateCacheDir      string
-	TemplatesCacheDir  string
-	CacheDir           string
-	NoColor            bool
-	Force              bool
-	Interactive        bool
-	OutputJSON         bool
-	Targets            []string
+	// ShowTerraformPlan  bool
+	StateCacheDir     string
+	TemplatesCacheDir string
+	CacheDir          string
+	NoColor           bool
+	Force             bool
+	Interactive       bool
+	OutputJSON        bool
+	Targets           []string
 }
 
 // Global config for executor.

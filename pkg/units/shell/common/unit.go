@@ -40,25 +40,6 @@ type OutputsConfigSpec struct {
 	Separator string `yaml:"separator,omitempty" json:"separator,omitempty"`
 }
 
-// type StateConfigFileSpec struct {
-// 	Mask      string `yaml:"mask"`
-// 	Dir       string `yaml:"dir"`
-// 	Recursive bool   `yaml:"recursive"`
-// }
-
-// StateConfigSpec describes what data to save to the state.
-// type StateConfigSpec struct {
-// 	CreateFiles   bool
-// 	ApplyConf     bool
-// 	DestroyConf   bool
-// 	InitConf      bool
-// 	PlanConf      bool
-// 	Hooks         bool
-// 	Env           bool
-// 	WorkDir       bool
-// 	GetOutputConf bool
-// }
-
 // OutputParser represents function for parsing unit output.
 type OutputParser func(string, *project.UnitLinksT) error
 
@@ -80,7 +61,8 @@ type Unit struct {
 	DestroyConf      *OperationConfig        `yaml:"destroy,omitempty" json:"destroy,omitempty"`
 	GetOutputsConf   *OutputsConfigSpec      `yaml:"outputs,omitempty" json:"outputs_config,omitempty"`
 	OutputParsers    map[string]OutputParser `yaml:"-" json:"-"`
-	Applied          bool                    `yaml:"-" json:"-"`
+	AlreadyApplied   bool                    `yaml:"-" json:"-"`
+	AlreadyDestroyed bool                    `yaml:"-" json:"-"`
 	PreHook          *HookSpec               `yaml:"-" json:"pre_hook,omitempty"`
 	PostHook         *HookSpec               `yaml:"-" json:"post_hook,omitempty"`
 	UnitKind         string                  `yaml:"type" json:"type"`
@@ -93,6 +75,11 @@ type Unit struct {
 	Tainted          bool                    `yaml:"-" json:"tainted,omitempty"`
 	ExecStatus       project.ExecutionStatus `yaml:"-" json:"-"`
 	ExecErr          error                   `yaml:"-" json:"-"`
+}
+
+// IsTainted return true if unit have tainted state (failed previous apply or destroy).
+func (u *Unit) SetTainted(newValue bool) {
+	u.Tainted = newValue
 }
 
 // IsTainted return true if unit have tainted state (failed previous apply or destroy).
@@ -115,7 +102,7 @@ func (u *Unit) ForceApply() bool {
 
 // WasApplied return true if unit's method Apply was runned.
 func (u *Unit) WasApplied() bool {
-	return u.Applied
+	return u.AlreadyApplied
 }
 
 // ReadConfig reads unit spec (unmarshaled YAML) and init the unit.
@@ -209,6 +196,9 @@ func (u *Unit) Project() *project.Project {
 
 // StackName return unit stack name.
 func (u *Unit) StackName() string {
+	if u.StackPtr == nil {
+		return "<NAME_UNKNOWN>"
+	}
 	return u.StackPtr.Name
 }
 
@@ -232,32 +222,52 @@ func (u *Unit) Init() error {
 }
 
 func (u *Unit) forceApplyDependencies() (err error) {
-	for _, dep := range u.DependenciesList.Map() {
-		if dep.Unit.ForceApply() {
-			dep.Unit.Mux().Lock()
-			if dep.Unit.WasApplied() {
-				dep.Unit.Mux().Unlock()
-				continue
-			}
-			log.Debugf("Force applying dependency '%v'...", dep.Unit.Key())
-			err = dep.Unit.Build()
-			if err != nil {
-				dep.Unit.Mux().Unlock()
-				return err
-			}
-			err = dep.Unit.Apply()
-			if err != nil {
-				dep.Unit.Mux().Unlock()
-				return err
-			}
-			dep.Unit.Mux().Unlock()
+	for _, dep := range findForceApplyDependencies(u) {
+		if !dep.ForceApply() {
+			continue
+		}
+		log.Debugf("Force applying dependency '%v'...", dep.Key())
+		err = dep.Build()
+		if err != nil {
+			return err
+		}
+		err = dep.Apply()
+		if err != nil {
+			return err
 		}
 	}
 	return
 }
 
+func findForceApplyDependencies(u project.Unit) []project.Unit {
+	resMap := map[string]project.Unit{}
+	findForceApplyDependenciesRecursive(u, &resMap)
+	res := make([]project.Unit, len(resMap))
+	i := 0
+	for _, unit := range resMap {
+		res[i] = unit
+	}
+	return res
+}
+
+func findForceApplyDependenciesRecursive(u project.Unit, res *map[string]project.Unit) {
+	for _, dep := range u.Dependencies().Slice() {
+		if dep.Unit != nil && dep.Unit.ForceApply() {
+			// log.Warnf("findForceApplyDependenciesRecursive, unit added: %v", dep.Unit.Key())
+			(*res)[dep.Unit.Key()] = dep.Unit
+		}
+		findForceApplyDependenciesRecursive(dep.Unit, res)
+	}
+}
+
 // Apply runs unit apply procedure.
 func (u *Unit) Apply() error {
+	u.Mux().Lock()
+	defer u.Mux().Unlock()
+	if u.AlreadyApplied {
+		log.Debugf("A duplicate apply detected. Unit: '%v', skip...", u.Key())
+		return nil
+	}
 	err := u.forceApplyDependencies()
 	if err != nil {
 		return err
@@ -305,7 +315,7 @@ func (u *Unit) Apply() error {
 
 	}
 	if err == nil {
-		u.Applied = true
+		u.AlreadyApplied = true
 	}
 	return err
 }
@@ -315,6 +325,7 @@ func (u *Unit) MarkTainted(err error) {
 	if u.SavedState != nil {
 		u.SavedState.(*Unit).Tainted = true
 	}
+	// log.Errorf("MarkTainted: %v, %v", u.Key(), err.Error())
 	u.Tainted = true
 }
 
@@ -374,6 +385,12 @@ func (u *Unit) Plan() error {
 
 // Destroy unit.
 func (u *Unit) Destroy() error {
+	u.Mux().Lock()
+	defer u.Mux().Unlock()
+	if u.AlreadyDestroyed {
+		log.Debugf("A duplicate destroy detected. Unit: '%v', skip...", u.Key())
+		return nil
+	}
 	err := u.forceApplyDependencies()
 	if err != nil {
 		return err
@@ -393,6 +410,8 @@ func (u *Unit) Destroy() error {
 	_, err = u.runCommands(destroyCommands, "destroy")
 	if err != nil {
 		u.MarkTainted(err)
+	} else {
+		u.AlreadyDestroyed = true
 	}
 	return err
 }
@@ -563,7 +582,6 @@ func (u *Unit) EnvSlice() []string {
 
 func (u *Unit) SetExecStatus(status project.ExecutionStatus) {
 	if u.GetExecStatus() != status {
-		log.Warnf("Unit '%v' Status changed: %v --> %v", u.Key(), u.GetExecStatus(), status)
 		u.ExecStatus = status
 	}
 }

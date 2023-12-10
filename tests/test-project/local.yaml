@@ -3,6 +3,5 @@ template: ./graph-test/
 kind: Stack
 disabled: false
 backend: aws-backend
-disabled: false
 variables: {}
 

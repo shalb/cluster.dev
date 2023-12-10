@@ -52,23 +52,12 @@ type ProjectPlanningStatus struct {
 }
 
 func (s *ProjectPlanningStatus) BuildGraph() (*graph, error) {
-	CurrentGraph := graph{}
-	err := CurrentGraph.BuildDirect(s, config.Global.MaxParallel)
-	return &CurrentGraph, err
+	graphRet := graph{}
+	err := graphRet.BuildNew(s, config.Global.MaxParallel)
+	return &graphRet, err
 }
 
-func (s *ProjectPlanningStatus) GetApplyGraph() (*graph, error) {
-	log.Warnf("GetApplyGraph")
-	CurrentGraph := graph{}
-	var err error
-	if config.Global.IgnoreState {
-		err = CurrentGraph.BuildDirect(s, config.Global.MaxParallel)
-	} else {
-		err = CurrentGraph.BuildDirect(s.OperationFilter(Apply, Update), config.Global.MaxParallel)
-	}
-	return &CurrentGraph, err
-}
-
+// FindUnit searching unit by pointer, return *UnitPlanningStatus only for same unit
 func (s *ProjectPlanningStatus) FindUnit(unit Unit) *UnitPlanningStatus {
 	if unit == nil {
 		return nil
@@ -81,11 +70,18 @@ func (s *ProjectPlanningStatus) FindUnit(unit Unit) *UnitPlanningStatus {
 	return nil
 }
 
-func (s *ProjectPlanningStatus) GetDestroyGraph() (*graph, error) {
-	log.Warnf("GetDestroyGraph")
-	CurrentGraph := graph{}
-	err := CurrentGraph.BuildReverse(s.OperationFilter(Destroy), 1)
-	return &CurrentGraph, err
+// FindUnit searching unit by pointer, return *UnitPlanningStatus if unit with same key
+// exists (possible to have 2 different units ptr with same key - project/projectState)
+func (s *ProjectPlanningStatus) FindUnitByKey(unit Unit) *UnitPlanningStatus {
+	if unit == nil {
+		return nil
+	}
+	for _, us := range s.units {
+		if us.UnitPtr.Key() == unit.Key() {
+			return us
+		}
+	}
+	return nil
 }
 
 func (s *ProjectPlanningStatus) OperationFilter(ops ...UnitOperation) *ProjectPlanningStatus {
@@ -105,22 +101,24 @@ func (s *ProjectPlanningStatus) OperationFilter(ops ...UnitOperation) *ProjectPl
 	return &res
 }
 
-func (s *ProjectPlanningStatus) Add(u Unit, op UnitOperation, diff string, isTainted bool) {
+func (s *ProjectPlanningStatus) Add(u Unit, op UnitOperation, diff string, tainted bool) {
 	uo := UnitPlanningStatus{
 		UnitPtr:   u,
 		Operation: op,
 		Diff:      diff,
-		IsTainted: isTainted,
 		Index:     -1,
+		IsTainted: tainted,
 	}
 	s.units = append(s.units, &uo)
 }
 
-func (s *ProjectPlanningStatus) AddOrUpdate(u Unit, op UnitOperation, diff string) {
+func (s *ProjectPlanningStatus) AddOrUpdate(u Unit, op UnitOperation, diff string, tainted bool) {
 	uo := UnitPlanningStatus{
 		UnitPtr:   u,
 		Operation: op,
 		Diff:      diff,
+		Index:     -1,
+		IsTainted: tainted,
 	}
 	existingUnit := s.FindUnit(u)
 	if existingUnit == nil {
@@ -128,6 +126,21 @@ func (s *ProjectPlanningStatus) AddOrUpdate(u Unit, op UnitOperation, diff strin
 	} else {
 		existingUnit.Diff = diff
 		existingUnit.Operation = op
+	}
+}
+
+func (s *ProjectPlanningStatus) AddIfNotExists(u Unit, op UnitOperation, diff string, tainted bool) {
+	existingUnit := s.FindUnitByKey(u)
+	if existingUnit == nil {
+		uo := UnitPlanningStatus{
+			UnitPtr:   u,
+			Operation: op,
+			Diff:      diff,
+			IsTainted: tainted,
+			Index:     -1,
+		}
+		log.Errorf("ProjectPlanningStatus AddOrUpdate: %v", u.Key())
+		s.units = append(s.units, &uo)
 	}
 }
 
@@ -294,7 +307,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 		// log.Warn("interface")
 		if reflect.TypeOf(out.Interface()).Kind() == reflect.String {
 			if !out.CanSet() {
-				return fmt.Errorf("Internal error: can't set interface field.")
+				return fmt.Errorf("internal error: can't set interface field")
 			}
 			val, err := procFunc(out, unit)
 			if err != nil {
@@ -346,7 +359,7 @@ func ProjectsFilesExists() bool {
 	return false
 }
 
-func showPlanResults(opStatus *ProjectPlanningStatus) error {
+func showPlanResults(opStatus *graph) error {
 	fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("Plan results:"))
 
 	if opStatus.Len() == 0 {
@@ -358,13 +371,8 @@ func showPlanResults(opStatus *ProjectPlanningStatus) error {
 	headers := []string{}
 	unitsTable := []string{}
 
-	gr, err := opStatus.BuildGraph()
-	if err != nil {
-		return fmt.Errorf("build graph for plan table: %w", err)
-	}
-
 	var deployString, updateString, destroyString, unchangedString string
-	for _, unit := range gr.IndexedSlice() {
+	for _, unit := range opStatus.IndexedSlice() {
 		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning unit '%v':", unit.UnitPtr.Key()))
 		switch unit.Operation {
 		case Apply:
@@ -394,19 +402,19 @@ func showPlanResults(opStatus *ProjectPlanningStatus) error {
 		}
 	}
 
-	if opStatus.OperationFilter(Apply).Len() > 0 {
+	if opStatus.planningUnits.OperationFilter(Apply).Len() > 0 {
 		headers = append(headers, "Will be deployed")
 		unitsTable = append(unitsTable, deployString)
 	}
-	if opStatus.OperationFilter(Update).Len() > 0 {
+	if opStatus.planningUnits.OperationFilter(Update).Len() > 0 {
 		headers = append(headers, "Will be updated")
 		unitsTable = append(unitsTable, updateString)
 	}
-	if opStatus.OperationFilter(Destroy).Len() > 0 {
+	if opStatus.planningUnits.OperationFilter(Destroy).Len() > 0 {
 		headers = append(headers, "Will be destroyed")
 		unitsTable = append(unitsTable, destroyString)
 	}
-	if opStatus.OperationFilter(NotChanged).Len() > 0 {
+	if opStatus.planningUnits.OperationFilter(NotChanged).Len() > 0 {
 		headers = append(headers, "Unchanged")
 		unitsTable = append(unitsTable, unchangedString)
 	}

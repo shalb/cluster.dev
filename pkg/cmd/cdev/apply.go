@@ -16,7 +16,7 @@ var applyCmd = &cobra.Command{
 	Short:         "Deploys or updates infrastructure according to project configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		project, err := project.LoadProjectFull()
-		if utils.GetEnv("CDEV_COLLECT_USAGE_STATS", "false") == "true" {
+		if utils.GetEnv("CDEV_COLLECT_USAGE_STATS", "true") != "false" {
 			log.Infof("Sending usage statistic. To disable statistics collection, export the CDEV_COLLECT_USAGE_STATS=false environment variable")
 		}
 		if err != nil {
@@ -31,6 +31,7 @@ var applyCmd = &cobra.Command{
 		if err != nil {
 			return NewCmdErr(project, "apply", err)
 		}
+		log.Info("The project was successfully applied")
 		err = project.PrintOutputs()
 		if err != nil {
 			return NewCmdErr(project, "apply", err)

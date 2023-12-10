@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/apex/log"
@@ -169,6 +170,8 @@ func (p *Project) NewEmptyState() *StateProject {
 			Backends:         p.Backends,
 			CodeCacheDir:     config.Global.StateCacheDir,
 			StateBackendName: p.StateBackendName,
+			StateMutex:       sync.Mutex{},
+			InitLock:         sync.Mutex{},
 			UUID:             p.UUID,
 		},
 		LoaderProjectPtr: p,
@@ -233,27 +236,27 @@ func (p *Project) LoadState() (*StateProject, error) {
 	return statePrj, nil
 }
 
-func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit, bool) {
+func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
 	unitStateCache := map[string]bool{}
 	unitInState, exists := sp.Units[unit.Key()]
 	if !exists {
-		return utils.Diff(nil, unit.GetDiffData(), true), nil, false
+		return utils.Diff(nil, unit.GetDiffData(), true), nil
 	}
 	diffData := unit.GetDiffData()
 	stateDiffData := unitInState.GetDiffData()
 	df := utils.Diff(stateDiffData, diffData, true)
 	if len(df) > 0 {
-		return df, unitInState, false
+		return df, unitInState
 	}
 	if unitInState.IsTainted() {
-		return colors.Fmt(colors.Yellow).Sprint(utils.Diff(nil, unit.GetDiffData(), false)), unitInState, true
+		return colors.Fmt(colors.Yellow).Sprintf("Unit is tainted!\n%v", utils.Diff(nil, unit.GetDiffData(), false)), unitInState
 	}
 	for _, dep := range unit.Dependencies().UniqUnits() {
 		if sp.checkUnitChangesRecursive(dep, unitStateCache) {
-			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), unitInState, false
+			return colors.Fmt(colors.Yellow).Sprintf("+/- There are changes in the unit dependencies."), unitInState
 		}
 	}
-	return "", unitInState, false
+	return "", unitInState
 }
 
 func (sp *StateProject) checkUnitChangesRecursive(unit Unit, cacheUnitChanges map[string]bool) bool {

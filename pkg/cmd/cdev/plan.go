@@ -31,6 +31,6 @@ var planCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(planCmd)
-	planCmd.Flags().BoolVar(&config.Global.ShowTerraformPlan, "tf-plan", false, "Also show units terraform plan if possible.")
+	// planCmd.Flags().BoolVar(&config.Global.ShowTerraformPlan, "tf-plan", false, "Also show units terraform plan if possible.")
 	planCmd.Flags().BoolVar(&config.Global.IgnoreState, "force", false, "Show plan (if set tf-plan) even if the state has not changed.")
 }

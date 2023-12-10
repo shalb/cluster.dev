@@ -1,6 +1,7 @@
 package cdev
 
 import (
+	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/spf13/cobra"
@@ -26,6 +27,7 @@ var destroyCmd = &cobra.Command{
 			project.UnLockState()
 			return NewCmdErr(project, "destroy", err)
 		}
+		log.Info("The project was successfully destroyed")
 		project.UnLockState()
 		return NewCmdErr(project, "destroy", nil)
 	},

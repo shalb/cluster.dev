@@ -15,7 +15,7 @@ const unitKind string = "shell"
 func NewEmptyUnit() *Unit {
 	unit := Unit{
 		//UnitMarkers: make(map[string]interface{}),
-		Applied:          false,
+		AlreadyApplied:   false,
 		UnitKind:         unitKind,
 		CreateFiles:      &FilesListT{},
 		DependenciesList: project.NewUnitLinksT(),

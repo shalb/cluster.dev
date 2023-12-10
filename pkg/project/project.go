@@ -132,14 +132,12 @@ func LoadProjectFull() (*Project, error) {
 	if err != nil {
 		return nil, fmt.Errorf("prepare objects: %w", err)
 	}
-	if !config.Global.NotLoadState {
-		if config.Global.IgnoreState {
-			project.OwnState = project.NewEmptyState()
-		} else {
-			project.OwnState, err = project.LoadState()
-			if err != nil {
-				return nil, fmt.Errorf("load state: %w", err)
-			}
+	if config.Global.IgnoreState {
+		project.OwnState = project.NewEmptyState()
+	} else {
+		project.OwnState, err = project.LoadState()
+		if err != nil {
+			return nil, fmt.Errorf("load state: %w", err)
 		}
 	}
 	err = project.readUnits()
@@ -199,7 +197,6 @@ func (p *Project) prepareObjects() error {
 func (p *Project) readUnits() error {
 	// Read units from all stacks.
 	for stackName, stack := range p.Stacks {
-		log.Warnf("Check units in stack: '%v'", stackName)
 		for _, stackTmpl := range stack.Templates {
 			for _, unitData := range stackTmpl.Units {
 				unit, err := NewUnit(unitData, stack)
@@ -214,7 +211,7 @@ func (p *Project) readUnits() error {
 					return fmt.Errorf("stack '%v', reading units: duplicate unit name: %v", stackName, unit.Name())
 				}
 				p.Units[unit.Key()] = unit
-				log.Debugf("Unit added: '%v'", unit.Key())
+				log.Debugf("Unit added: '%v', tainted: %v", unit.Key(), unit.IsTainted())
 			}
 		}
 	}
