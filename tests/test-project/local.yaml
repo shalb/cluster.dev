@@ -4,4 +4,14 @@ kind: Stack
 disabled: false
 backend: aws-backend
 variables: {}
-
+---
+name: cdev-local-two
+template: ./local-tmpl/
+kind: Stack
+disabled: false
+backend: aws-backend
+variables:
+  list_one:
+  - "1"
+  - "2"
+  region: {{ .project.variables.region }}

@@ -30,6 +30,7 @@ units:
     type: printer
     depends_on: this.create-s3-object
     outputs:
+      new_output: "test2"
       bucket_name: Bucket name is {{ remoteState "this.create-bucket.id" }}
       test_insert_yaml: {{ insertYAML .variables.list_one }}
       test_map_output: {{ remoteState "this.test-complex-output-data.map[\"key\"]" }}

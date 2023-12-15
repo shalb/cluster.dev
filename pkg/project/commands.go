@@ -166,6 +166,11 @@ func applyRoutine(graphUnit *UnitPlanningStatus, finFunc func(error), p *Project
 		finFunc(fmt.Errorf("project apply: destroying deleted unit: %v", err.Error()))
 		return
 	}
+	err = graphUnit.UnitPtr.UpdateProjectRuntimeData(p)
+	if err != nil {
+		finFunc(err)
+		return
+	}
 	p.OwnState.UpdateUnit(graphUnit.UnitPtr)
 	graphUnit.UnitPtr.SetExecStatus(Finished)
 	finFunc(nil)

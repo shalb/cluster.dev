@@ -246,6 +246,7 @@ func findForceApplyDependencies(u project.Unit) []project.Unit {
 	i := 0
 	for _, unit := range resMap {
 		res[i] = unit
+		i++
 	}
 	return res
 }
@@ -253,7 +254,6 @@ func findForceApplyDependencies(u project.Unit) []project.Unit {
 func findForceApplyDependenciesRecursive(u project.Unit, res *map[string]project.Unit) {
 	for _, dep := range u.Dependencies().Slice() {
 		if dep.Unit != nil && dep.Unit.ForceApply() {
-			// log.Warnf("findForceApplyDependenciesRecursive, unit added: %v", dep.Unit.Key())
 			(*res)[dep.Unit.Key()] = dep.Unit
 		}
 		findForceApplyDependenciesRecursive(dep.Unit, res)
