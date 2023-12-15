@@ -43,6 +43,14 @@ units:
   -
     name: parallelWatcher4
     type: shell
+    create_files:
+      - file: test.txt
+        content: |
+          Some test
+          multiline
+          This can create a very unique
+          and immersive experience for players, as it allows them
+          new Line
     depends_on: this.force_apply_unit
     apply:
       commands:

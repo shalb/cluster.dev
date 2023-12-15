@@ -14,7 +14,7 @@ import (
 type UnitDiffSpec struct {
 	Outputs map[string]string `json:"outputs,omitempty"`
 	// CreateFiles     *FilesListT            `json:"create_files,omitempty"`
-	CreateFilesDiff map[string][]string    `json:"-"`
+	CreateFilesDiff map[string][]string    `json:"create_files,omitempty"`
 	ApplyConf       *OperationConfig       `json:"apply,omitempty"`
 	Env             map[string]interface{} `json:"env,omitempty"`
 	OutputsConfig   *OutputsConfigSpec     `json:"outputs_config,omitempty"`
