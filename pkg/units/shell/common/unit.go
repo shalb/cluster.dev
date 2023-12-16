@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 
@@ -323,10 +324,9 @@ func (u *Unit) Apply() error {
 func (u *Unit) MarkTainted(err error) {
 	u.ExecErr = err
 	if u.SavedState != nil {
-		u.SavedState.(*Unit).Tainted = true
+		rf := reflect.ValueOf(u.SavedState).Interface().(project.Unit)
+		rf.SetTainted(true)
 	}
-	// log.Errorf("MarkTainted: %v, %v", u.Key(), err.Error())
-	u.Tainted = true
 }
 
 func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, error) {
