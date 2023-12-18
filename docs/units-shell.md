@@ -60,7 +60,7 @@ units:
 
 ## Options
 
-* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is changed.
 
 * `env` - *map*, *optional*. The list of environment variables that will be exported before executing commands of this unit. The variables defined in shell unit have a priority over variables defined in the project (the option `exports`) and will rewrite them.
 

@@ -20,7 +20,7 @@ units:
     depends_on: this.argocd
 ```
 
-* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is changed.
 
 * `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of Kubernetes  provider. **Source file will be rendered with the stack template, and also allows to use functions `remoteState` and `insertYAML`**.
 

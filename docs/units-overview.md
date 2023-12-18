@@ -4,7 +4,7 @@
 
 ## Description
 
-Units are building blocks that stack templates are made of. It could be anything — a Terraform module, Helm you want to install or a Bash script that you want to run. Units can be remote or stored in the same repo with other Cluster.dev code. Units may contain reference to other files that are required for work. These files should be located inside the current directory (within the stack template's context). As some of the files will also be rendered with the project's data, you can use Go templates in them.
+Units are fundamental components forming the basis of stack templates. They can include Terraform modules, Helm charts for installation, or Bash scripts for execution. Units may reside remotely or within the same repository as other Cluster.dev code. These units may reference necessary files, which should be located within the current directory (in the context of the stack template). Since some of these files are rendered with project data, you can use Go templates in them.  
 
 !!! tip
 

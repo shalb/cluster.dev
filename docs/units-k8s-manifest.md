@@ -21,7 +21,7 @@ Example:
 
 ## Options
 
-* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is changed.
 
 * `namespace` - *optional*. Corresponds to `kubectl -n`.
 

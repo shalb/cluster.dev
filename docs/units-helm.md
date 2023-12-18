@@ -33,7 +33,7 @@ units:
 
 In addition to common options the following are available:
 
-* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is changed.
 
 * `source` - *map*, *required*. This block describes Helm chart source.
 
