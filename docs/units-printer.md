@@ -19,6 +19,6 @@ units:
 
 * `outputs` - *any*, *required* - a map that represents data to be printed in the log. The block **allows to use functions `remoteState` and `insertYAML`**.
 
-* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is planned to be changed.
+* `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is changed.
 
 

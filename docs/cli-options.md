@@ -30,4 +30,5 @@
 
 * `-h`, `--help`         Help for destroy.
 
-* `--ignore-state`       Destroy current configuration and ignore state.
+* `--ignore-state`       Destroy current configuration of units employed in a project, and ignore the state. 
+
