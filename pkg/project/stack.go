@@ -65,6 +65,7 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 			return nil
 		}
 	}
+
 	// Check if stack with this name is already exists in project.
 	if _, ok = p.Stacks[name]; ok {
 		return fmt.Errorf("duplicate stack name '%s'", name)

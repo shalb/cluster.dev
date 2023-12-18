@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/apex/log"
@@ -15,16 +16,24 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-func (sp *StateProject) UpdateUnit(mod Unit) {
+func (sp *StateProject) UpdateUnit(unit Unit) {
 	sp.StateMutex.Lock()
 	defer sp.StateMutex.Unlock()
-	sp.Units[mod.Key()] = mod
-	sp.ChangedUnits[mod.Key()] = mod
-	sp.UnitLinks.Join(sp.LoaderProjectPtr.UnitLinks.ByTargetUnit(mod))
+	sp.Units[unit.Key()] = unit
+	sp.ChangedUnits[unit.Key()] = unit
+	sp.UnitLinks.Join(sp.LoaderProjectPtr.UnitLinks.ByTargetUnit(unit))
 }
 
 func (sp *StateProject) DeleteUnit(mod Unit) {
 	delete(sp.Units, mod.Key())
+}
+
+func (sp *stateData) ClearULinks() {
+	for linkKey, link := range sp.UnitLinks.Map() {
+		if sp.Units[link.UnitKey()] == nil {
+			sp.UnitLinks.Delete(linkKey)
+		}
+	}
 }
 
 type StateProject struct {
@@ -46,6 +55,8 @@ func (p *Project) SaveState() error {
 	for key, mod := range p.Units {
 		st.Units[key] = mod.GetState()
 	}
+	// Remove all unit links, that not have a target unit.
+	st.ClearULinks()
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
 	encoder.SetEscapeHTML(false)
@@ -142,6 +153,33 @@ func createProjectUUID() string {
 	return id.String()
 }
 
+func (p *Project) NewEmptyState() *StateProject {
+	stateD := stateData{
+		UnitLinks: &UnitLinksT{},
+	}
+	statePrj := StateProject{
+		Project: Project{
+			name:             p.Name(),
+			secrets:          p.secrets,
+			configData:       p.configData,
+			configDataFile:   p.configDataFile,
+			objects:          p.objects,
+			Units:            make(map[string]Unit),
+			UnitLinks:        stateD.UnitLinks,
+			Stacks:           make(map[string]*Stack),
+			Backends:         p.Backends,
+			CodeCacheDir:     config.Global.StateCacheDir,
+			StateBackendName: p.StateBackendName,
+			StateMutex:       sync.Mutex{},
+			InitLock:         sync.Mutex{},
+			UUID:             p.UUID,
+		},
+		LoaderProjectPtr: p,
+		ChangedUnits:     make(map[string]Unit),
+	}
+	return &statePrj
+}
+
 func (p *Project) LoadState() (*StateProject, error) {
 	if _, err := os.Stat(config.Global.StateCacheDir); os.IsNotExist(err) {
 		err := os.Mkdir(config.Global.StateCacheDir, 0755)
@@ -169,6 +207,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			return nil, fmt.Errorf("load state: %w", err)
 		}
 	}
+	stateD.ClearULinks()
 	p.UUID = stateD.ProjectUUID
 	if p.UUID == "" {
 		p.UUID = createProjectUUID()
@@ -176,33 +215,13 @@ func (p *Project) LoadState() (*StateProject, error) {
 	} else {
 		log.Debugf("Project UUID loaded from state: %v", p.UUID)
 	}
-	statePrj := StateProject{
-		Project: Project{
-			name:             p.Name(),
-			secrets:          p.secrets,
-			configData:       p.configData,
-			configDataFile:   p.configDataFile,
-			objects:          p.objects,
-			Units:            make(map[string]Unit),
-			UnitLinks:        stateD.UnitLinks,
-			Stacks:           make(map[string]*Stack),
-			Backends:         p.Backends,
-			CodeCacheDir:     config.Global.StateCacheDir,
-			StateBackendName: p.StateBackendName,
-			UUID:             p.UUID,
-		},
-		LoaderProjectPtr: p,
-		ChangedUnits:     make(map[string]Unit),
-	}
-	// log.Warnf("StateProject. Unit links: %+v", statePrj.UnitLinks)
-	// utils.JSONCopy(p.Markers, statePrj.Markers)
+	statePrj := p.NewEmptyState()
+	statePrj.UnitLinks = stateD.UnitLinks
 	for mName, mState := range stateD.Units {
-		// log.Debugf("Loading unit from state: %v", mName)
-
 		if mState == nil {
 			continue
 		}
-		unit, err := NewUnitFromState(mState.(map[string]interface{}), mName, &statePrj)
+		unit, err := NewUnitFromState(mState.(map[string]interface{}), mName, statePrj)
 		if err != nil {
 			return nil, fmt.Errorf("loading unit from state: %v", err.Error())
 		}
@@ -214,7 +233,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 		return nil, err
 	}
 
-	return &statePrj, nil
+	return statePrj, nil
 }
 
 func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
@@ -228,6 +247,9 @@ func (sp *StateProject) CheckUnitChanges(unit Unit) (string, Unit) {
 	df := utils.Diff(stateDiffData, diffData, true)
 	if len(df) > 0 {
 		return df, unitInState
+	}
+	if unitInState.IsTainted() {
+		return colors.Fmt(colors.Yellow).Sprintf("Unit is tainted!\n%v", utils.Diff(nil, unit.GetDiffData(), false)), unitInState
 	}
 	for _, dep := range unit.Dependencies().UniqUnits() {
 		if sp.checkUnitChangesRecursive(dep, unitStateCache) {

@@ -106,7 +106,7 @@ func LoadProjectBase() (*Project, error) {
 func LoadProjectFull() (*Project, error) {
 	project, err := LoadProjectBase()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load base configuration: %w", err)
 	}
 	for filename, cnf := range project.objectsFiles {
 		templatedConf, isWarn, err := project.TemplateTry(cnf, filename)
@@ -119,37 +119,35 @@ func LoadProjectFull() (*Project, error) {
 				rel, _ := filepath.Rel(config.Global.WorkingDir, filename)
 				log.Warnf("File %v has unresolved template key: \n%v", rel, err.Error())
 			} else {
-				return nil, err
+				return nil, fmt.Errorf("render template: %w", err)
 			}
 		}
 		err = project.readObjects(templatedConf, filename)
 		if err != nil {
-			return nil, fmt.Errorf("load project: %w", err)
+			return nil, fmt.Errorf("read objects: %w", err)
 		}
 	}
 
 	err = project.prepareObjects()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("prepare objects: %w", err)
 	}
-	if !config.Global.NotLoadState {
+	if config.Global.IgnoreState {
+		project.OwnState = project.NewEmptyState()
+	} else {
 		project.OwnState, err = project.LoadState()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("load state: %w", err)
 		}
 	}
 	err = project.readUnits()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read units: %w", err)
 	}
 	err = project.prepareUnits()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("prepare units: %w", err)
 	}
-	// for _, un := range project.Units {
-	// 	un.PrintEnv()
-	// }
-	// log.Errorf("LoadProjectFull: %+v", project.UnitLinks)
 	return project, nil
 }
 
@@ -201,7 +199,7 @@ func (p *Project) readUnits() error {
 	for stackName, stack := range p.Stacks {
 		for _, stackTmpl := range stack.Templates {
 			for _, unitData := range stackTmpl.Units {
-				mod, err := NewUnit(unitData, stack)
+				unit, err := NewUnit(unitData, stack)
 				if err != nil {
 					traceUnitView, errYaml := yaml.Marshal(unitData)
 					if errYaml != nil {
@@ -209,10 +207,11 @@ func (p *Project) readUnits() error {
 					}
 					return fmt.Errorf("stack '%v', reading units: %v\nUnit data:\n%v", stackName, err.Error(), string(traceUnitView))
 				}
-				if _, exists := p.Units[mod.Key()]; exists {
-					return fmt.Errorf("stack '%v', reading units: duplicate unit name: %v", stackName, mod.Name())
+				if _, exists := p.Units[unit.Key()]; exists {
+					return fmt.Errorf("stack '%v', reading units: duplicate unit name: %v", stackName, unit.Name())
 				}
-				p.Units[mod.Key()] = mod
+				p.Units[unit.Key()] = unit
+				log.Debugf("Unit added: '%v', tainted: %v", unit.Key(), unit.IsTainted())
 			}
 		}
 	}
@@ -361,4 +360,14 @@ func (p *Project) PrintOutputs() (err error) {
 		}
 	}
 	return nil
+}
+
+func (p *Project) UnitsSlice() []Unit {
+	res := make([]Unit, len(p.Units))
+	i := 0
+	for _, unit := range p.Units {
+		res[i] = unit
+		i++
+	}
+	return res
 }

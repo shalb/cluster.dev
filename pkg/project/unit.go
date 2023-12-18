@@ -31,6 +31,11 @@ type Unit interface {
 	WasApplied() bool
 	ForceApply() bool
 	Mux() *sync.Mutex
+	IsTainted() bool
+  SetTainted(newValue bool)
+	SetExecStatus(ExecutionStatus)
+	GetExecStatus() ExecutionStatus
+	ExecError() error
 }
 
 type UnitDriver interface {
@@ -96,6 +101,14 @@ func NewUnitFromState(state map[string]interface{}, name string, p *StateProject
 			return nil, fmt.Errorf("internal error: bad unit type in state '%v'", mType)
 		}
 	}
+  // stateUnit, err  := modDrv.NewFromState(state, name, p)
+  // if err != nil {
+  //   return nil, err
+  // }
+  // curUnit := p.LoaderProjectPtr.Units[stateUnit.Key()]
+  // if curUnit != nil {
+  //   curUnit.SetTainted()
+  // }
 	return modDrv.NewFromState(state, name, p)
 }
 

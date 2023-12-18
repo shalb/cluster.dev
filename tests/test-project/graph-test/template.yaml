@@ -1,0 +1,115 @@
+name: graphTest
+kind: StackTemplate
+units:
+  -
+    name: force_apply_zero
+    type: shell
+    force_apply: true
+    apply:
+      commands:
+        - echo "Waiting..."
+        - sleep 5
+  -
+    name: force_apply_unit
+    type: shell
+    depends_on: this.force_apply_zero
+    force_apply: true
+    apply:
+      commands:
+        - echo "Waiting..."
+        - sleep 4
+  -
+    name: parallelWatcher1
+    type: shell
+    apply:
+      commands:
+        - echo "Waiting..."
+        - sleep 8
+  -
+    name: parallelWatcher2
+    type: shell
+    apply:
+      commands:
+        - echo "Waiting..."
+        - sleep 5
+  -
+    name: parallelWatcher3
+    type: shell
+    depends_on: this.force_apply_unit
+    apply:
+      commands:
+        - echo "Waiting..."
+        - sleep 2
+  -
+    name: parallelWatcher4
+    type: shell
+    create_files:
+      - file: test.txt
+        content: |
+          Some test
+          multiline
+          This can create a very unique
+          and immersive experience for players, as it allows them
+          new Line
+    depends_on: this.force_apply_unit
+    apply:
+      commands:
+        - echo "Waiting..."
+        - sleep 10
+  -
+    name: parallelWatcher5
+    type: shell
+    depends_on: this.force_apply_unit
+    apply:
+      commands:
+        - echo "Waiting..."
+        - sleep 7
+  -
+    name: parallelWatcher6
+    type: shell
+    depends_on: this.force_apply_unit
+    apply:
+      commands:
+        - echo "Waiting..."
+        - sleep 10
+        - exit 0
+  -
+    name: firstUnit
+    type: printer
+    outputs:
+      longWay: "STEP1"
+      update_count: "1"
+  -
+    name: secondUnit
+    type: printer
+    outputs:
+      longWay: {{ remoteState "this.firstUnit.longWay"}}-STEP2
+  -
+    name: thirdStep
+    type: printer
+    depends_on: this.force_apply_unit
+    outputs:
+      longWay: {{ remoteState "this.secondUnit.longWay"}}-STEP3
+      changed: false
+  -
+    name: foursUnit
+    type: printer
+    outputs:
+      NewKey: "foo"
+      longWay: {{ remoteState "this.thirdStep.longWay"}}-STEP4
+  -
+    name: fifthStep
+    type: printer
+    outputs:
+      longWay: {{ remoteState "this.foursUnit.longWay"}}-STEP5
+  -
+    name: outputs
+    type: printer
+    outputs:
+      WayReport: {{ remoteState "this.thirdStep.longWay"}}
+      Text: |
+        Yes, there are several games where the world is created
+        based on the player's responses. These games are often referred to as
+        "procedural" games, and they use AI algorithms to generate new content on the fly.
+        This can create a very unique and immersive experience for players, as it allows them
+        to feel like they are truly shaping the game world. foo bar two

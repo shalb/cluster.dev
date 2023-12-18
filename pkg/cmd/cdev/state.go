@@ -18,6 +18,7 @@ var stateUnlockCmd = &cobra.Command{
 	Use:   "unlock",
 	Short: "Unlock state force",
 	Run: func(cmd *cobra.Command, args []string) {
+		config.Global.IgnoreState = true
 		project, err := project.LoadProjectFull()
 		if err != nil {
 			log.Fatalf("Fatal error: state unlock: %v", err.Error())
@@ -35,7 +36,7 @@ var stateUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Updates the state of the current project to version %v. Make sure that the state of the project is consistent (run cdev apply with the old version before)",
 	Run: func(cmd *cobra.Command, args []string) {
-		config.Global.NotLoadState = true
+		config.Global.IgnoreState = true
 		project, err := project.LoadProjectFull()
 		if err != nil {
 			log.Fatalf("Fatal error: state update: %v", err.Error())
@@ -61,7 +62,7 @@ var statePullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Downloads the remote state",
 	Run: func(cmd *cobra.Command, args []string) {
-		config.Global.NotLoadState = true
+		config.Global.IgnoreState = true
 		project, err := project.LoadProjectFull()
 		if err != nil {
 			log.Fatalf("Fatal error: state pull: %v", err.Error())

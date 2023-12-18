@@ -8,11 +8,164 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/apex/log"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/shalb/cluster.dev/pkg/colors"
 	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
+
+type UnitOperation uint16
+
+const (
+	Apply UnitOperation = iota + 1
+	Destroy
+	Update
+	NotChanged
+)
+
+func (u UnitOperation) String() string {
+	mapperStatus := map[uint16]string{
+		1: colors.Fmt(colors.Green).Sprint("Apply"),
+		2: colors.Fmt(colors.Red).Sprint("Destroy"),
+		3: colors.Fmt(colors.Yellow).Sprint("Update"),
+		4: colors.Fmt(colors.White).Sprint("NotChanged"),
+	}
+	return mapperStatus[uint16(u)]
+}
+
+func (u UnitOperation) HasChanges() bool {
+	return u != NotChanged
+}
+
+type UnitPlanningStatus struct {
+	UnitPtr   Unit
+	Diff      string
+	Operation UnitOperation
+	IsTainted bool
+	Index     int
+}
+
+type ProjectPlanningStatus struct {
+	units []*UnitPlanningStatus
+}
+
+func (s *ProjectPlanningStatus) BuildGraph() (*graph, error) {
+	graphRet := graph{}
+	err := graphRet.BuildNew(s, config.Global.MaxParallel)
+	return &graphRet, err
+}
+
+// FindUnit searching unit by pointer, return *UnitPlanningStatus only for same unit
+func (s *ProjectPlanningStatus) FindUnit(unit Unit) *UnitPlanningStatus {
+	if unit == nil {
+		return nil
+	}
+	for _, us := range s.units {
+		if us.UnitPtr == unit {
+			return us
+		}
+	}
+	return nil
+}
+
+// FindUnit searching unit by pointer, return *UnitPlanningStatus if unit with same key
+// exists (possible to have 2 different units ptr with same key - project/projectState)
+func (s *ProjectPlanningStatus) FindUnitByKey(unit Unit) *UnitPlanningStatus {
+	if unit == nil {
+		return nil
+	}
+	for _, us := range s.units {
+		if us.UnitPtr.Key() == unit.Key() {
+			return us
+		}
+	}
+	return nil
+}
+
+func (s *ProjectPlanningStatus) OperationFilter(ops ...UnitOperation) *ProjectPlanningStatus {
+	res := ProjectPlanningStatus{
+		units: make([]*UnitPlanningStatus, 0),
+	}
+	if len(ops) == 0 {
+		return &res
+	}
+	for _, uo := range s.units {
+		for _, op := range ops {
+			if uo.Operation == op {
+				res.units = append(res.units, uo)
+			}
+		}
+	}
+	return &res
+}
+
+func (s *ProjectPlanningStatus) Add(u Unit, op UnitOperation, diff string, tainted bool) {
+	uo := UnitPlanningStatus{
+		UnitPtr:   u,
+		Operation: op,
+		Diff:      diff,
+		Index:     -1,
+		IsTainted: tainted,
+	}
+	s.units = append(s.units, &uo)
+}
+
+func (s *ProjectPlanningStatus) AddOrUpdate(u Unit, op UnitOperation, diff string, tainted bool) {
+	uo := UnitPlanningStatus{
+		UnitPtr:   u,
+		Operation: op,
+		Diff:      diff,
+		Index:     -1,
+		IsTainted: tainted,
+	}
+	existingUnit := s.FindUnit(u)
+	if existingUnit == nil {
+		s.units = append(s.units, &uo)
+	} else {
+		existingUnit.Diff = diff
+		existingUnit.Operation = op
+	}
+}
+
+func (s *ProjectPlanningStatus) AddIfNotExists(u Unit, op UnitOperation, diff string, tainted bool) {
+	existingUnit := s.FindUnitByKey(u)
+	if existingUnit == nil {
+		uo := UnitPlanningStatus{
+			UnitPtr:   u,
+			Operation: op,
+			Diff:      diff,
+			IsTainted: tainted,
+			Index:     -1,
+		}
+		log.Errorf("ProjectPlanningStatus AddOrUpdate: %v", u.Key())
+		s.units = append(s.units, &uo)
+	}
+}
+
+func (s *ProjectPlanningStatus) HasChanges() bool {
+	for _, un := range s.units {
+		if un.Operation != NotChanged {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *ProjectPlanningStatus) Len() int {
+	return len(s.units)
+}
+
+func (s *ProjectPlanningStatus) Print() {
+	for _, unitStatus := range s.units {
+		fmt.Printf("UnitName: %v, Unit status: %v\n", unitStatus.UnitPtr.Key(), unitStatus.Operation.String())
+	}
+}
+
+func (s *ProjectPlanningStatus) Slice() []*UnitPlanningStatus {
+	return s.units
+}
 
 // CreateMarker generate hash string for template markers.
 func CreateMarker(link ULinkT) (string, error) {
@@ -39,7 +192,7 @@ func CreateMarker(link ULinkT) (string, error) {
 
 // EscapeForMarkerStr convert URL to string which can be used as marker.
 func EscapeForMarkerStr(in string) (string, error) {
-	reg, err := regexp.Compile("[^A-Za-z0-9_\\-\\.]+")
+	reg, err := regexp.Compile(`[^A-Za-z0-9_\-\.]+`)
 	if err != nil {
 		return "", err
 	}
@@ -154,7 +307,7 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 		// log.Warn("interface")
 		if reflect.TypeOf(out.Interface()).Kind() == reflect.String {
 			if !out.CanSet() {
-				return fmt.Errorf("Internal error: can't set interface field.")
+				return fmt.Errorf("internal error: can't set interface field")
 			}
 			val, err := procFunc(out, unit)
 			if err != nil {
@@ -206,12 +359,12 @@ func ProjectsFilesExists() bool {
 	return false
 }
 
-func showPlanResults(deployList, updateList, destroyList, unchangedList []string) {
+func showPlanResults(opStatus *graph) error {
 	fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("Plan results:"))
 
-	if len(deployList)+len(updateList)+len(destroyList) == 0 {
+	if opStatus.Len() == 0 {
 		fmt.Println(colors.Fmt(colors.WhiteBold).Sprint("No changes, nothing to do."))
-		return
+		return nil
 	}
 	table := tablewriter.NewWriter(os.Stdout)
 
@@ -219,47 +372,104 @@ func showPlanResults(deployList, updateList, destroyList, unchangedList []string
 	unitsTable := []string{}
 
 	var deployString, updateString, destroyString, unchangedString string
-	for i, modName := range deployList {
-		if i != 0 {
-			deployString += "\n"
+	for _, unit := range opStatus.IndexedSlice() {
+		log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Planning unit '%v':", unit.UnitPtr.Key()))
+		switch unit.Operation {
+		case Apply:
+			fmt.Printf("%v\n", unit.Diff)
+			if len(deployString) != 0 {
+				deployString += "\n"
+			}
+			deployString += RenderUnitPlanningString(unit)
+		case Update:
+			fmt.Printf("%v\n", unit.Diff)
+			if len(updateString) != 0 {
+				updateString += "\n"
+			}
+			updateString += RenderUnitPlanningString(unit)
+		case Destroy:
+			fmt.Printf("%v\n", unit.Diff)
+			if len(destroyString) != 0 {
+				destroyString += "\n"
+			}
+			destroyString += RenderUnitPlanningString(unit)
+		case NotChanged:
+			log.Infof(colors.Fmt(colors.GreenBold).Sprint("Not changed."))
+			if len(unchangedString) != 0 {
+				unchangedString += "\n"
+			}
+			unchangedString += RenderUnitPlanningString(unit)
 		}
-		deployString += colors.Fmt(colors.Green).Sprint(modName)
 	}
-	for i, modName := range updateList {
-		if i != 0 {
-			updateString += "\n"
-		}
-		updateString += colors.Fmt(colors.Yellow).Sprint(modName)
-	}
-	for i, modName := range destroyList {
-		if i != 0 {
-			destroyString += "\n"
-		}
-		destroyString += colors.Fmt(colors.Red).Sprint(modName)
-	}
-	for i, modName := range unchangedList {
-		if i != 0 {
-			unchangedString += "\n"
-		}
-		unchangedString += colors.Fmt(colors.White).Sprint(modName)
-	}
-	if len(deployList) > 0 {
+
+	if opStatus.planningUnits.OperationFilter(Apply).Len() > 0 {
 		headers = append(headers, "Will be deployed")
 		unitsTable = append(unitsTable, deployString)
 	}
-	if len(updateList) > 0 {
+	if opStatus.planningUnits.OperationFilter(Update).Len() > 0 {
 		headers = append(headers, "Will be updated")
 		unitsTable = append(unitsTable, updateString)
 	}
-	if len(destroyList) > 0 {
+	if opStatus.planningUnits.OperationFilter(Destroy).Len() > 0 {
 		headers = append(headers, "Will be destroyed")
 		unitsTable = append(unitsTable, destroyString)
 	}
-	if len(unchangedList) > 0 {
+	if opStatus.planningUnits.OperationFilter(NotChanged).Len() > 0 {
 		headers = append(headers, "Unchanged")
 		unitsTable = append(unitsTable, unchangedString)
 	}
 	table.SetHeader(headers)
 	table.Append(unitsTable)
 	table.Render()
+	return nil
+}
+
+func RenderUnitPlanningString(uStatus *UnitPlanningStatus) string {
+	keyForRender := uStatus.UnitPtr.Key()
+	if config.Global.LogLevel == "debug" {
+		keyForRender += fmt.Sprintf("(%v)", uStatus.Index)
+	}
+	switch uStatus.Operation {
+	case Update:
+		if uStatus.IsTainted {
+			return colors.Fmt(colors.Orange).Sprintf("%s(tainted)", keyForRender)
+		} else {
+			return colors.Fmt(colors.Yellow).Sprint(keyForRender)
+		}
+	case Apply:
+		if uStatus.IsTainted {
+			return colors.Fmt(colors.Green).Sprintf("%s(tainted)", keyForRender)
+		} else {
+			return colors.Fmt(colors.Green).Sprint(keyForRender)
+		}
+	case Destroy:
+		if uStatus.IsTainted {
+			return colors.Fmt(colors.Red).Sprintf("%s(tainted)", keyForRender)
+		} else {
+			return colors.Fmt(colors.Red).Sprint(keyForRender)
+		}
+	case NotChanged:
+		return colors.Fmt(colors.White).Sprint(keyForRender)
+	}
+	// Impossible, crush
+	log.Fatalf("Unexpected internal error. Unknown unit status '%v'", uStatus.Operation.String())
+	return ""
+}
+
+func DependenciesRecursiveIterate(u Unit, f func(Unit) error) error {
+	return dependenciesRecursiveIterateDepth(u, f, 0)
+}
+
+func dependenciesRecursiveIterateDepth(u Unit, f func(Unit) error, depth int) error {
+	if depth > 20 {
+		log.Fatalf("Internal error: may be unexpected dependencies loop")
+	}
+	for _, dep := range u.Dependencies().Slice() {
+		err := f(dep.Unit)
+		if err != nil {
+			return err
+		}
+		dependenciesRecursiveIterateDepth(dep.Unit, f, depth+1)
+	}
+	return nil
 }

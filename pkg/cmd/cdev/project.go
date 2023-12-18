@@ -33,7 +33,7 @@ var projectLs = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		p, err := project.LoadProjectFull()
 		if err != nil {
-			log.Errorf("No project found in the current directory. Configuration error: %v", err.Error())
+			log.Errorf("Project configuration error: %v", err.Error())
 			return
 		}
 		log.Info("Project info:")

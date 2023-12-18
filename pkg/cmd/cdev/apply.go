@@ -16,7 +16,7 @@ var applyCmd = &cobra.Command{
 	Short:         "Deploys or updates infrastructure according to project configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		project, err := project.LoadProjectFull()
-		if utils.GetEnv("CDEV_COLLECT_USAGE_STATS", "false") == "true" {
+		if utils.GetEnv("CDEV_COLLECT_USAGE_STATS", "true") != "false" {
 			log.Infof("Sending usage statistic. To disable statistics collection, export the CDEV_COLLECT_USAGE_STATS=false environment variable")
 		}
 		if err != nil {
@@ -31,11 +31,11 @@ var applyCmd = &cobra.Command{
 		if err != nil {
 			return NewCmdErr(project, "apply", err)
 		}
+		log.Info("The project was successfully applied")
 		err = project.PrintOutputs()
 		if err != nil {
 			return NewCmdErr(project, "apply", err)
 		}
-		project.UnLockState()
 		return NewCmdErr(project, "apply", nil)
 	},
 }
@@ -44,4 +44,5 @@ func init() {
 	rootCmd.AddCommand(applyCmd)
 	applyCmd.Flags().BoolVar(&config.Global.IgnoreState, "ignore-state", false, "Apply even if the state has not changed.")
 	applyCmd.Flags().BoolVar(&config.Global.Force, "force", false, "Skip interactive approval.")
+	applyCmd.Flags().StringArrayVarP(&config.Global.Targets, "target", "t", []string{}, "Units and stack that will be applied. All others will not apply.")
 }

@@ -1,12 +1,17 @@
 name: cdev-tests-local
+template: ./graph-test/
+kind: Stack
+disabled: false
+backend: aws-backend
+variables: {}
+---
+name: cdev-local-two
 template: ./local-tmpl/
 kind: Stack
 disabled: false
 backend: aws-backend
 variables:
-  data: {{ remoteState "cdev-tests.create-bucket.test" }}
-  region: {{ .project.variables.region }}
   list_one:
-    - one
-    - two
-    - three
+  - "1"
+  - "2"
+  region: {{ .project.variables.region }}

@@ -53,20 +53,30 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 
 	modType, ok := spec["type"].(string)
 	if !ok {
-		return fmt.Errorf("Incorrect unit type")
+		return fmt.Errorf("incorrect unit type")
 	}
 	if modType != u.KindKey() {
-		return fmt.Errorf("Incorrect unit type")
+		return fmt.Errorf("incorrect unit type")
 	}
 	mOutputs, ok := spec["outputs"].(map[string]interface{})
 	if !ok {
 		mOutputs, ok = spec["inputs"].(map[string]interface{})
 		if !ok {
-			return fmt.Errorf("Incorrect unit inputs")
+			return fmt.Errorf("incorrect unit inputs")
 		}
 		log.Warnf("Printer unit '%v' has field 'inputs', this field is deprecated and will be removed in future. Use 'outputs' instead", u.Key())
 	}
 	u.Outputs = mOutputs
+	if stack.ProjectPtr.OwnState != nil {
+		myStateIntf := stack.ProjectPtr.OwnState.Units[u.Key()]
+		if myStateIntf == nil {
+			return nil
+		}
+		switch stateOutput := myStateIntf.(type) {
+		case *Unit:
+			u.OutputRaw = stateOutput.OutputRaw
+		}
+	}
 	return nil
 }
 
@@ -114,8 +124,27 @@ func (u *Unit) Build() error {
 	return u.Unit.Build()
 }
 
+func (u *Unit) Destroy() (err error) {
+	err = u.Unit.Destroy()
+	if u.IsTainted() {
+		if u.SavedState != nil {
+			u.StateData.MarkTainted(err)
+		}
+	}
+	if err != nil {
+		return
+	}
+	// log.Warnf("Printer OutputRaw: %v", outputs)
+	return
+}
+
 func (u *Unit) Apply() (err error) {
 	err = u.Unit.Apply()
+	if u.IsTainted() {
+		if u.SavedState != nil {
+			u.StateData.MarkTainted(err)
+		}
+	}
 	if err != nil {
 		return
 	}

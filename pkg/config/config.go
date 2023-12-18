@@ -55,15 +55,15 @@ type ConfSpec struct {
 	UseCache           bool
 	OptFooTest         bool
 	IgnoreState        bool
-	NotLoadState       bool
-	ShowTerraformPlan  bool
-	StateCacheDir      string
-	TemplatesCacheDir  string
-	CacheDir           string
-	NoColor            bool
-	Force              bool
-	Interactive        bool
-	OutputJSON         bool
+	// ShowTerraformPlan  bool
+	StateCacheDir     string
+	TemplatesCacheDir string
+	CacheDir          string
+	NoColor           bool
+	Force             bool
+	Interactive       bool
+	OutputJSON        bool
+	Targets           []string
 }
 
 // Global config for executor.
@@ -102,13 +102,8 @@ func InitConfig() {
 			log.Fatal(err.Error())
 		}
 	}
-	Interrupted = false
-}
-
-// getEnv Helper for args parse.
-func getEnv(key string, defaultVal string) string {
-	if envVal, ok := os.LookupEnv(key); ok {
-		return envVal
+	if Global.MaxParallel == 0 {
+		log.Fatal("Parallelism should be greater then 0.")
 	}
-	return defaultVal
+	Interrupted = false
 }

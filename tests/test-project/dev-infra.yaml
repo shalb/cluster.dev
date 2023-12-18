@@ -2,6 +2,7 @@ name: cdev-tests
 template: https://github.com/shalb/cdev-test-template?ref=v0.0.3
 kind: Stack
 backend: aws-backend
+disabled: true
 variables:
   name: "cdev-gha-test"
   region: {{ .project.variables.region }}
