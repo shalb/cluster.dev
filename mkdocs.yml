@@ -25,6 +25,7 @@ nav:
       - DO-K8s: examples-do-k8s.md
       - Modify AWS-EKS: examples-modify-aws-eks.md
       - HF LLM in EKS: examples-eks-model.md
+      - External Articles: examples-external-articles.md
     - Installation and Upgrade: installation-upgrade.md
     - Cluster.dev vs. Others:
       - Cluster.dev vs. Terragrunt: cdev-vs-terragrunt.md
