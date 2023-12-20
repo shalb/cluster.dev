@@ -24,6 +24,7 @@ nav:
       - AWS-K3s Prometheus: examples-aws-k3s-prometheus.md
       - DO-K8s: examples-do-k8s.md
       - Modify AWS-EKS: examples-modify-aws-eks.md
+      - HF LLM in EKS: examples-eks-model.md
     - Installation and Upgrade: installation-upgrade.md
     - Cluster.dev vs. Others:
       - Cluster.dev vs. Terragrunt: cdev-vs-terragrunt.md

@@ -12,6 +12,8 @@ In the Examples section you will find ready-to-use Cluster.dev samples that will
 
 * [Dedicated monitoring cluster in AWS](https://docs.cluster.dev/examples-aws-k3s-prometheus/) 
 
+* [Launching a chat-enabled Hugging Face LLM on top of EKS cluster in AWS](https://docs.cluster.dev/examples-eks-model/)
+
 You will also find examples on how to customize the existing templates in order to expand their functionality: 
 
 * [Modify AWS-EKS template](https://docs.cluster.dev/examples-modify-aws-eks/)
@@ -19,4 +21,5 @@ You will also find examples on how to customize the existing templates in order 
 Also please check our [Medium blog](https://medium.com/@cluster.dev)
 
 * [GitOps for Terraform and Helm with Cluster.dev](https://medium.com/@cluster.dev/gitops-for-terraform-and-helm-with-cluster-dev-f605c9859f2)
+
 * [Building UI for DevOps operations with Cluster.dev and Streamlit](https://medium.com/@cluster.dev/building-ui-for-devops-operations-with-cluster-dev-and-streamlit-5c0a5548cfc5)

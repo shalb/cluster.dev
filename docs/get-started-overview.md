@@ -30,3 +30,8 @@ Create fully featured Kubernetes clusters with required addons:
 | AWS            | K3s + Prometheus| [**AWS-K3s Prometheus**](https://docs.cluster.dev/examples-aws-k3s-prometheus/) | <img src="https://docs.cluster.dev/images/AWS.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/K3s.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/Prometheus.png" width="50" height="50"> |
 | DO             | K8s             | [**DO-K8s**](https://docs.cluster.dev/examples-do-k8s/)             | <img src="https://docs.cluster.dev/images/Digital Ocean.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/Kubernetes.png" width="50" height="50"> |
 
+## Deploying LLM on top of Kubernetes cluster 
+
+| Cloud Provider | Kubernetes Type | Sample Link             | Technologies       |
+|----------------|-----------------|-------------------------|------------------|
+| AWS            | EKS             | [**HF LLM in EKS**](https://docs.cluster.dev/examples-eks-model/)            | <img src="https://docs.cluster.dev/images/AWS.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/Kubernetes.png" width="50" height="50"> <img src="https://docs.cluster.dev/images/Hugging Face.png" width="50" height="50"> |
