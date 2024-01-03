@@ -55,7 +55,7 @@ func (f *ExtendedFuncMap) Get(path string, s *Stack) template.FuncMap {
 		p = config.Global.ProjectConfigsPath
 	} else {
 		pathFuncName = "templatePath"
-		p = filepath.Join(s.TemplateDir)
+		p = filepath.Join(config.Global.ProjectConfigsPath, s.TemplateDir)
 	}
 	getPath := func() string {
 		return p
