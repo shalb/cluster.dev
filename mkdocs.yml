@@ -53,6 +53,7 @@ nav:
       - Overview: stack-templates-overview.md
       - Functions: stack-templates-functions.md
       - Templating: templating.md
+      - File System: stack-templates-file-system.md
       - Generators: generators-overview.md
     - CLI Reference:
       - CLI Commands: cli-commands.md

@@ -91,11 +91,15 @@ A relative path must refer to a location where the function is used. When it is 
 
 ## `workDir`
 
-Return absolute path to a working directory where a project runs, and the Terraform code is generated.  
+Return the absolute path to a working directory where a project runs, and the Terraform code is generated.  
 
 !!! Warning
 
-    Use the function with care since the absolute path that it returns varies depending on running conditions. This can affect the Cluster.dev's state.  
+    Use the function with caution since the absolute path that it returns varies depending on running conditions. This can affect the Cluster.dev's state.  
+
+## `templatePath`
+
+Return the absolute path to the `stackTemplate` directory. It is designed exclusively for use within templates and cannot be employed in other objects, such as a `project` or `stack`.
 
 ## `reqEnv`
 
@@ -111,4 +115,4 @@ Apply the bcrypt encryption algorithm to a passed string.
 
 !!! Warning
 
-    Use the function with care since it returns a unique hash with each calling, which can affect the Cluster.dev’s state.  
+    Use the function with caution since it returns a unique hash with each calling, which can affect the Cluster.dev’s state.  
