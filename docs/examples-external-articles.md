@@ -7,3 +7,5 @@ Links to external articles about Cluster.dev:
 * [Mastering Cloud Infrastructure with Cluster.dev](https://medium.com/@AlexanderObregon/mastering-cloud-infrastructure-with-cluster-dev-37cc88a8edc0)
 
 * [Revolutionizing Infrastructure Management with Cluster.dev: A Journey into Effortless Orchestration](https://medium.com/@sidathasiri/revolutionizing-infrastructure-management-with-cluster-dev-a-journey-into-effortless-orchestration-759b9379cebe)
+
+* [Discover Cluster.dev: A Simple Solution for Cloud Infrastructure Management](https://medium.com/@seifeddinerajhi/discover-cluster-dev-a-simple-solution-for-cloud-infrastructure-management-42cba1ab75fc)
