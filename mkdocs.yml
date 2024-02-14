@@ -20,6 +20,7 @@ nav:
       - Overview: examples-overview.md
       - AWS-EKS: examples-aws-eks.md
       - AWS-K3s: examples-aws-k3s.md
+      - Azure-AKS: examples-azure-aks.md
       - GCP-GKE: examples-gcp-gke.md
       - AWS-K3s Prometheus: examples-aws-k3s-prometheus.md
       - DO-K8s: examples-do-k8s.md

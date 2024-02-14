@@ -6,6 +6,8 @@ In the Examples section you will find ready-to-use Cluster.dev samples that will
 
 * [K3s cluster in AWS](https://docs.cluster.dev/examples-aws-k3s/)
 
+* [AKS cluster in Azure](https://docs.cluster.dev/examples-azure-aks/)
+
 * [GKE cluster in GCP](https://docs.cluster.dev/examples-gcp-gke/)
 
 * [Kubernetes cluster in DigitalOcean](https://docs.cluster.dev/examples-do-k8s/) 
