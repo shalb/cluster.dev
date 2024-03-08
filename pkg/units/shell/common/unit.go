@@ -325,7 +325,7 @@ func (u *Unit) MarkTainted(err error) {
 	u.ExecErr = err
 	if u.SavedState != nil {
 		rf := reflect.ValueOf(u.SavedState).MethodByName("SetTainted")
-		if rf.IsZero() {
+		if !rf.IsValid() {
 			return
 		}
 		// # .Interface().(project.Unit)
