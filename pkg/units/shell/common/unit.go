@@ -324,8 +324,12 @@ func (u *Unit) Apply() error {
 func (u *Unit) MarkTainted(err error) {
 	u.ExecErr = err
 	if u.SavedState != nil {
-		rf := reflect.ValueOf(u.SavedState).Interface().(project.Unit)
-		rf.SetTainted(true)
+		rf := reflect.ValueOf(u.SavedState).MethodByName("SetTainted")
+		if rf.IsZero() {
+			return
+		}
+		// # .Interface().(project.Unit)
+		rf.Call([]reflect.Value{reflect.ValueOf(true)})
 	}
 }
 
