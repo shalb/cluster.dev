@@ -31,7 +31,12 @@ func init() {
 
 func Run() {
 	profiler.Global.MainTimeLine().Start()
-	err := rootCmd.Execute()
+	log.Info("Checking for newer releases...")
+	err := utils.DiscoverCdevLastRelease()
+	if err != nil {
+		log.Warnf("fail to check for new cluster.dev releases: %v", err)
+	}
+	err = rootCmd.Execute()
 	extendedErr, ok := err.(*CmdErrExtended)
 	if !ok {
 		log.Debugf("Usage stats are unavailable in current command. Ignore.")

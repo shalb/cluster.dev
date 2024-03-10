@@ -1,0 +1,51 @@
+{
+  "version": "v0.9.1",
+  "project_uuid": "043b3d05-e66a-43ab-ba47-d37a43ccddc3",
+  "unit_links": {
+   "unit_links_list": {
+    "4da5b70d784b47d730815d196e967b09.RemoteStateMarkers.cdev-local-two.test-complex-output-data.map_key_.4da5b70d784b47d730815d196e967b09": {
+     "link_type": "RemoteStateMarkers",
+     "target_unit_name": "test-complex-output-data",
+     "target_stack_name": "cdev-local-two",
+     "output_name": "map[\"key\"]",
+     "output_data": null
+    },
+    "54e45eb194ac9c3e95f859582a94cff8.RemoteStateMarkers.cdev-local-two.test-complex-output-data.map.key.54e45eb194ac9c3e95f859582a94cff8": {
+     "link_type": "RemoteStateMarkers",
+     "target_unit_name": "test-complex-output-data",
+     "target_stack_name": "cdev-local-two",
+     "output_name": "map.key",
+     "output_data": null
+    }
+   },
+   "MapMutex": {}
+  },
+  "units": {
+   "cdev-local-two.test-complex-output-data": {
+    "name": "test-complex-output-data",
+    "outputs_config": {
+     "command": "terraform output -json",
+     "type": "terraform"
+    },
+    "backend_name": "aws-backend",
+    "force_apply": false,
+    "providers": [
+     {
+      "aws": {
+       "region": "eu-central-1"
+      }
+     }
+    ],
+    "source": "./complex-output/",
+    "local_module": [
+     {
+      "FileName": "main.tf",
+      "FileMode": 436,
+      "Content": "variable \"data\" {\n  type    = string\n  default = \"\"\n}\n\noutput \"map\" {\n  value = {\n    key  = \"value\",\n    key2 = \"value2\",\n    key3 = \"value3\"\n  }\n}\n"
+     }
+    ],
+    "create_files": [],
+    "type": "tfmodule"
+   }
+  }
+ }

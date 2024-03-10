@@ -53,6 +53,7 @@ type Project struct {
 	OwnState            *StateProject
 	UUID                string
 	ProcessedUnitsCount uint
+	HupUnlockChan       chan os.Signal
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.

@@ -3,6 +3,8 @@ package base
 import (
 	"fmt"
 
+	"github.com/apex/log"
+
 	"github.com/shalb/cluster.dev/pkg/project"
 	"github.com/shalb/cluster.dev/pkg/units/shell/common"
 	"github.com/shalb/cluster.dev/pkg/utils"
@@ -13,14 +15,15 @@ type UnitDiffSpec struct {
 	Manifests interface{} `json:"manifests"`
 }
 
-func (u *Unit) GetState() interface{} {
+func (u *Unit) GetState() project.Unit {
 	if u.SavedState != nil {
 		return u.SavedState
 	}
 	unitState := Unit{}
 	err := utils.JSONCopy(u, &unitState)
 	if err != nil {
-		return fmt.Errorf("read unit '%v': create state: %w", u.Name(), err)
+		log.Fatalf("read unit '%v': create state: %w", u.Name(), err)
+		// return nil
 	}
 	unitState.Unit = *u.Unit.GetStateUnit()
 	unitState.ApplyConf = nil

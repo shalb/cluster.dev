@@ -38,12 +38,12 @@ func (u *Unit) GetStateUnit() *Unit {
 	return &unitState
 }
 
-func (u *Unit) GetState() interface{} {
+func (u *Unit) GetState() project.Unit {
 
-	if u.StateData != nil {
-		return u.StateData
+	if u.SavedState != nil {
+		return u.SavedState
 	}
-	return *u.GetStateUnit()
+	return u.GetStateUnit()
 }
 
 func (u *Unit) GetUnitDiff() UnitDiffSpec {

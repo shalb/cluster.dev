@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"sync"
 
@@ -69,7 +68,7 @@ type Unit struct {
 	UnitKind         string                  `yaml:"type" json:"type"`
 	BackendPtr       *project.Backend        `yaml:"-" json:"-"`
 	BackendName      string                  `yaml:"-" json:"backend_name"`
-	SavedState       interface{}             `yaml:"-" json:"-"`
+	SavedState       project.Unit            `yaml:"-" json:"-"`
 	DependsOn        interface{}             `yaml:"depends_on,omitempty" json:"depends_on,omitempty"`
 	FApply           bool                    `yaml:"force_apply" json:"force_apply"`
 	lockedMux        *sync.Mutex             `yaml:"-" json:"-"`
@@ -79,8 +78,14 @@ type Unit struct {
 }
 
 // IsTainted return true if unit have tainted state (failed previous apply or destroy).
-func (u *Unit) SetTainted(newValue bool) {
+func (u *Unit) SetTainted(newValue bool, err error) {
 	u.Tainted = newValue
+	u.ExecErr = err
+	log.Warnf("SetTainted %v", u.Key())
+	if u.SavedState != nil {
+		log.Warnf("SetTainted %v", u.SavedState.Key())
+		u.SavedState.SetTainted(newValue, err)
+	}
 }
 
 // IsTainted return true if unit have tainted state (failed previous apply or destroy).
@@ -282,8 +287,10 @@ func (u *Unit) Apply() error {
 		applyCommands.Commands = append(applyCommands.Commands, "./post_hook.sh")
 	}
 	u.OutputRaw, err = u.runCommands(applyCommands, "apply")
+	// unitIsTainted := err != nil
+
 	if err != nil {
-		u.MarkTainted(err)
+		u.SetTainted(true, err)
 		return fmt.Errorf("apply unit '%v': %w", u.Key(), err)
 	}
 	// Get outputs.
@@ -295,14 +302,14 @@ func (u *Unit) Apply() error {
 		}
 		u.OutputRaw, err = u.runCommands(cmdConf, "retrieving outputs")
 		if err != nil {
-			u.MarkTainted(err)
+			u.SetTainted(true, err)
 			return fmt.Errorf("retrieving unit '%v' outputs: %w", u.Key(), err)
 		}
 	}
 	if u.GetOutputsConf != nil {
 		parser, exists := u.OutputParsers[u.GetOutputsConf.Type]
 		if !exists {
-			u.MarkTainted(err)
+			u.SetTainted(true, err)
 			return fmt.Errorf("retrieving unit '%v' outputs: parser %v doesn't exists", u.Key(), u.GetOutputsConf.Type)
 		}
 		err = parser(string(u.OutputRaw), u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(project.OutputLinkType))
@@ -310,7 +317,7 @@ func (u *Unit) Apply() error {
 
 			//str := fmt.Sprintf("Outputs data: %s", string(u.OutputRaw))
 			// log.Warnf("Len: %v", len(str))
-			u.MarkTainted(err)
+			u.SetTainted(true, err)
 			return fmt.Errorf("parse outputs '%v': %w", u.GetOutputsConf.Type, err)
 		}
 
@@ -321,17 +328,13 @@ func (u *Unit) Apply() error {
 	return err
 }
 
-func (u *Unit) MarkTainted(err error) {
-	u.ExecErr = err
-	if u.SavedState != nil {
-		rf := reflect.ValueOf(u.SavedState).MethodByName("SetTainted")
-		if !rf.IsValid() {
-			return
-		}
-		// # .Interface().(project.Unit)
-		rf.Call([]reflect.Value{reflect.ValueOf(true)})
-	}
-}
+// func (u *Unit) MarkTainted(err error) {
+// 	u.ExecErr = err
+// 	if u.SavedState != nil {
+// 		u.SavedState.SetTainted(true)
+// 		log.Warnf("MarkTainted %v", u.SavedState.IsTainted())
+// 	}
+// }
 
 func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, error) {
 	if len(commandsCnf.Commands) == 0 {
@@ -365,7 +368,7 @@ func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, er
 	}
 	otp, errMsg, err := rn.Run(cmd)
 	if err != nil {
-		log.Errorf("%v", string(errMsg))
+		// log.Errorf("%v", string(errMsg))
 		return otp, fmt.Errorf("%w, error output:\n %v", err, string(errMsg))
 	}
 	return otp, err
@@ -413,7 +416,7 @@ func (u *Unit) Destroy() error {
 	}
 	_, err = u.runCommands(destroyCommands, "destroy")
 	if err != nil {
-		u.MarkTainted(err)
+		u.SetTainted(true, err)
 	} else {
 		u.AlreadyDestroyed = true
 	}

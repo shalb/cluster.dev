@@ -21,7 +21,7 @@ type Unit interface {
 	Plan() error
 	Destroy() error
 	Key() string
-	GetState() interface{}
+	GetState() Unit
 	GetDiffData() interface{}
 	GetStateDiffData() interface{}
 	LoadState(interface{}, string, *StateProject) error
@@ -32,7 +32,7 @@ type Unit interface {
 	ForceApply() bool
 	Mux() *sync.Mutex
 	IsTainted() bool
-  SetTainted(newValue bool)
+	SetTainted(newValue bool, err error)
 	SetExecStatus(ExecutionStatus)
 	GetExecStatus() ExecutionStatus
 	ExecError() error
@@ -101,14 +101,14 @@ func NewUnitFromState(state map[string]interface{}, name string, p *StateProject
 			return nil, fmt.Errorf("internal error: bad unit type in state '%v'", mType)
 		}
 	}
-  // stateUnit, err  := modDrv.NewFromState(state, name, p)
-  // if err != nil {
-  //   return nil, err
-  // }
-  // curUnit := p.LoaderProjectPtr.Units[stateUnit.Key()]
-  // if curUnit != nil {
-  //   curUnit.SetTainted()
-  // }
+	// stateUnit, err  := modDrv.NewFromState(state, name, p)
+	// if err != nil {
+	//   return nil, err
+	// }
+	// curUnit := p.LoaderProjectPtr.Units[stateUnit.Key()]
+	// if curUnit != nil {
+	//   curUnit.SetTainted()
+	// }
 	return modDrv.NewFromState(state, name, p)
 }
 

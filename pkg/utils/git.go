@@ -1,11 +1,15 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
 
+	"github.com/Masterminds/semver"
 	"github.com/apex/log"
+	"github.com/google/go-github/v60/github"
+	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/executor"
 )
 
@@ -78,4 +82,34 @@ func ParseGitUrl(gitURL string) (repo GitRepo, err error) {
 	}
 	// log.Warnf("ParseGitUrl %+v", repo)
 	return
+}
+
+func DiscoverCdevLastRelease() error {
+	var (
+		client         = github.NewClient(nil)
+		ctx            = context.Background()
+		org     string = "shalb"
+		project string = "cluster.dev"
+	)
+
+	latestRelease, _, err := client.Repositories.GetLatestRelease(ctx, org, project)
+	if err != nil {
+		return err
+	}
+	// config.Version = "v0.9.0"
+	curVersion, err := semver.NewVersion(config.Version)
+	if err != nil {
+		// log.Debugf("semver cant resolve the current version: %v, version '%v'", err.Error(), config.Global.Version)
+		return fmt.Errorf("%v, current version: %v", err, config.Global.Version)
+	}
+	reqVerConstraints, err := semver.NewConstraint(*latestRelease.TagName)
+	if err != nil {
+		// log.Debugf("semver cant resolve last release version: %v, version '%v'", err.Error(), *latestRelease.TagName)
+		return fmt.Errorf("%v, latest release version: %v", err, *latestRelease.TagName)
+	}
+	ok, _ := reqVerConstraints.Validate(curVersion)
+	if !ok {
+		log.Warnf("The new cdev version is available. Current version: '%v', last stable release: '%v'. Visit https://docs.cluster.dev/installation-upgrade/ to upgrade.", curVersion, *latestRelease.TagName)
+	}
+	return nil
 }

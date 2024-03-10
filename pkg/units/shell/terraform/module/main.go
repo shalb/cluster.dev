@@ -20,14 +20,14 @@ import (
 
 type Unit struct {
 	base.Unit
-	Source               string                 `yaml:"-" json:"source"`
-	Version              string                 `yaml:"-" json:"version,omitempty"`
-	Inputs               map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
-	LocalModule          *common.FilesListT     `yaml:"-" json:"local_module"`
-	CustomFiles          *common.FilesListT     `yaml:"create_files,omitempty" json:"create_files,omitempty"`
-	UnitKind             string                 `yaml:"-" json:"type"`
-	StateData            interface{}            `yaml:"-" json:"-"`
-	LocalModuleCachePath string                 `yaml:"-" json:"-"`
+	Source      string                 `yaml:"-" json:"source"`
+	Version     string                 `yaml:"-" json:"version,omitempty"`
+	Inputs      map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
+	LocalModule *common.FilesListT     `yaml:"-" json:"local_module"`
+	CustomFiles *common.FilesListT     `yaml:"create_files,omitempty" json:"create_files,omitempty"`
+	UnitKind    string                 `yaml:"-" json:"type"`
+	// StateData            project.Unit           `yaml:"-" json:"-"`
+	LocalModuleCachePath string `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {

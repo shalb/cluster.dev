@@ -17,6 +17,10 @@ import (
 )
 
 func (sp *StateProject) UpdateUnit(unit Unit) {
+	// log.Warnf("UpdateUnit %v", unit.Key())
+	// for u, _ := range sp.Units {
+	// 	log.Warnf("     %v", u)
+	// }
 	sp.StateMutex.Lock()
 	defer sp.StateMutex.Unlock()
 	sp.Units[unit.Key()] = unit
@@ -52,8 +56,9 @@ func (p *Project) SaveState() error {
 		Units:       map[string]interface{}{},
 	}
 	// log.Errorf("units links: %+v\n Project: %+v", st.UnitLinks, p.UnitLinks)
-	for key, mod := range p.Units {
-		st.Units[key] = mod.GetState()
+	for key, unit := range p.Units {
+		log.Warnf("SaveState %v", key)
+		st.Units[key] = unit.GetState()
 	}
 	// Remove all unit links, that not have a target unit.
 	st.ClearULinks()
@@ -231,6 +236,9 @@ func (p *Project) LoadState() (*StateProject, error) {
 	err = statePrj.prepareUnits()
 	if err != nil {
 		return nil, err
+	}
+	for key, _ := range statePrj.Units {
+		log.Warnf("LoadState %v", key)
 	}
 
 	return statePrj, nil

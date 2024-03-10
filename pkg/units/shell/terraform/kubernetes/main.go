@@ -24,7 +24,7 @@ type Unit struct {
 	// providerVersion string                 `yaml:"-" json:"-"`
 	ProviderConf ProviderConfigSpec `yaml:"-" json:"provider_conf"`
 	UnitKind     string             `yaml:"-" json:"type"`
-	StateData    interface{}        `yaml:"-" json:"-"`
+	StateData    project.Unit       `yaml:"-" json:"-"`
 }
 
 type ExecNestedSchema struct {

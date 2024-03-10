@@ -1,6 +1,8 @@
 module github.com/shalb/cluster.dev
 
-go 1.20
+go 1.21
+
+toolchain go1.21.3
 
 require (
 	cloud.google.com/go/storage v1.33.0
@@ -38,6 +40,9 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.8.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
+	github.com/google/go-github v17.0.0+incompatible // indirect
+	github.com/google/go-github/v60 v60.0.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 )
 
 require (

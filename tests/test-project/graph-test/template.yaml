@@ -8,7 +8,7 @@ units:
     apply:
       commands:
         - echo "Waiting..."
-        - sleep 5
+        - sleep 1
   -
     name: force_apply_unit
     type: shell
@@ -17,21 +17,21 @@ units:
     apply:
       commands:
         - echo "Waiting..."
-        - sleep 4
+        - sleep 2
   -
     name: parallelWatcher1
     type: shell
     apply:
       commands:
         - echo "Waiting..."
-        - sleep 8
+        - sleep 3
   -
     name: parallelWatcher2
     type: shell
     apply:
       commands:
         - echo "Waiting..."
-        - sleep 5
+        - sleep 2
   -
     name: parallelWatcher3
     type: shell
@@ -39,7 +39,7 @@ units:
     apply:
       commands:
         - echo "Waiting..."
-        - sleep 2
+        - sleep 1
   -
     name: parallelWatcher4
     type: shell
@@ -55,7 +55,7 @@ units:
     apply:
       commands:
         - echo "Waiting..."
-        - sleep 10
+        - sleep 1
   -
     name: parallelWatcher5
     type: shell
@@ -63,7 +63,7 @@ units:
     apply:
       commands:
         - echo "Waiting..."
-        - sleep 7
+        - sleep 3
   -
     name: parallelWatcher6
     type: shell
@@ -71,7 +71,7 @@ units:
     apply:
       commands:
         - echo "Waiting..."
-        - sleep 10
+        - sleep 1
         - exit 0
   -
     name: firstUnit
