@@ -41,8 +41,14 @@ func (p *Project) Destroy() error {
 		return nil
 	}
 	if !config.Global.Force {
+		stopChan := make(chan struct{})
+		p.StartSigTrap(stopChan)
 		showPlanResults(destroyGraph)
+		if p.NewVersionMessage != "" {
+			log.Info(p.NewVersionMessage)
+		}
 		respond := climenu.GetText("Continue?(yes/no)", "no")
+		stopChan <- struct{}{}
 		if respond != "yes" {
 			log.Info("Destroying cancelled")
 			return nil
@@ -126,9 +132,11 @@ func (p *Project) Apply() error {
 		if !applyGraph.planningUnits.HasChanges() {
 			return nil
 		}
+		if p.NewVersionMessage != "" {
+			log.Info(p.NewVersionMessage)
+		}
 		stopChan := make(chan struct{})
 		p.StartSigTrap(stopChan)
-
 		respond := climenu.GetText("Continue?(yes/no)", "no")
 		stopChan <- struct{}{}
 		if respond != "yes" {
