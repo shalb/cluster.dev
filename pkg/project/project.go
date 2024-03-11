@@ -53,10 +53,13 @@ type Project struct {
 	OwnState            *StateProject
 	UUID                string
 	ProcessedUnitsCount uint
+	HupUnlockChan       chan os.Signal
+	NewVersionMessage   string
 }
 
 // NewEmptyProject creates new empty project. The configuration will not be loaded.
 func NewEmptyProject() *Project {
+
 	project := &Project{
 		SessionId:           utils.Md5(utils.RandString(64)),
 		Stacks:              make(map[string]*Stack),
@@ -72,6 +75,12 @@ func NewEmptyProject() *Project {
 			PrintersOutputs: make([]PrinterOutput, 0),
 		},
 		CodeCacheDir: config.Global.CacheDir,
+	}
+	log.Info("Checking for newer releases...")
+	err := utils.DiscoverCdevLastRelease()
+	if err != nil {
+		log.Warnf("Version check: %v.", err)
+		project.NewVersionMessage = fmt.Sprintf("Version check: %v", err.Error())
 	}
 	return project
 }

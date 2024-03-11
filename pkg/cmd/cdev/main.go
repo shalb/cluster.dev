@@ -31,6 +31,7 @@ func init() {
 
 func Run() {
 	profiler.Global.MainTimeLine().Start()
+
 	err := rootCmd.Execute()
 	extendedErr, ok := err.(*CmdErrExtended)
 	if !ok {

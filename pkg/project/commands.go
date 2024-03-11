@@ -2,6 +2,9 @@ package project
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/apex/log"
 	"github.com/paulrademacher/climenu"
@@ -38,8 +41,14 @@ func (p *Project) Destroy() error {
 		return nil
 	}
 	if !config.Global.Force {
+		stopChan := make(chan struct{})
+		p.StartSigTrap(stopChan)
 		showPlanResults(destroyGraph)
+		if p.NewVersionMessage != "" {
+			log.Info(p.NewVersionMessage)
+		}
 		respond := climenu.GetText("Continue?(yes/no)", "no")
+		stopChan <- struct{}{}
 		if respond != "yes" {
 			log.Info("Destroying cancelled")
 			return nil
@@ -87,6 +96,31 @@ func (p *Project) Destroy() error {
 	}
 }
 
+func (p *Project) StartSigTrap(stop chan struct{}) {
+	p.HupUnlockChan = make(chan os.Signal, 1)
+	signals := []os.Signal{syscall.SIGTERM, syscall.SIGINT}
+	signal.Notify(p.HupUnlockChan, signals...)
+	go func() {
+		for {
+			select {
+			case <-p.HupUnlockChan:
+				fmt.Println()
+				log.Warnf("Execution halted. Unlocking state and exiting...")
+				p.UnLockState()
+				close(p.HupUnlockChan)
+				os.Exit(0)
+			case <-stop:
+				close(p.HupUnlockChan)
+				return
+			}
+		}
+	}()
+}
+
+func (p *Project) StopSigTrap() {
+	close(p.HupUnlockChan)
+}
+
 // Apply all units.
 func (p *Project) Apply() error {
 	// var applyGraph *ProjectPlanningStatus
@@ -98,7 +132,13 @@ func (p *Project) Apply() error {
 		if !applyGraph.planningUnits.HasChanges() {
 			return nil
 		}
+		if p.NewVersionMessage != "" {
+			log.Info(p.NewVersionMessage)
+		}
+		stopChan := make(chan struct{})
+		p.StartSigTrap(stopChan)
 		respond := climenu.GetText("Continue?(yes/no)", "no")
+		stopChan <- struct{}{}
 		if respond != "yes" {
 			log.Info("Cancelled")
 			return nil
@@ -113,7 +153,7 @@ func (p *Project) Apply() error {
 	for {
 		// log.Warnf("FOR Project apply. Unit links: %+v", p.UnitLinks)
 		if applyGraph.Len() == 0 {
-			return p.SaveState()
+			return p.OwnState.SaveState()
 		}
 		gUnit, fn, err := applyGraph.GetNextAsync()
 		if err != nil {
@@ -126,7 +166,7 @@ func (p *Project) Apply() error {
 			for _, e := range applyGraph.Errors() {
 				log.Errorf("unit: '%v':\n%v", e.Key(), e.ExecError())
 			}
-			err := p.SaveState()
+			err := p.OwnState.SaveState()
 			if err != nil {
 				return fmt.Errorf("save state after error: %w", err)
 			}
@@ -134,7 +174,7 @@ func (p *Project) Apply() error {
 		}
 		// Check if graph return nil unit - applying finished, return
 		if gUnit == nil {
-			p.SaveState()
+			p.OwnState.SaveState()
 			return nil
 		}
 		switch gUnit.Operation {
@@ -153,17 +193,20 @@ func applyRoutine(graphUnit *UnitPlanningStatus, finFunc func(error), p *Project
 	log.Infof(colors.Fmt(colors.LightWhiteBold).Sprintf("Applying unit '%v':", graphUnit.UnitPtr.Key()))
 	err := graphUnit.UnitPtr.Build()
 	if err != nil {
-		log.Errorf("project apply: unit build error: %v", err.Error())
+		log.Errorf("unit build error: %v", err.Error())
 		finFunc(err)
 		return
 	}
 	p.ProcessedUnitsCount++
 	err = graphUnit.UnitPtr.Apply()
 	if err != nil {
+		state, _ := utils.JSONEncode(graphUnit.UnitPtr)
+		log.Warnf("applyRoutine: %v", string(state))
 		if graphUnit.UnitPtr.IsTainted() {
+			// log.Warnf("applyRoutine: tainted %v", graphUnit.UnitPtr.Key())
 			p.OwnState.UpdateUnit(graphUnit.UnitPtr)
 		}
-		finFunc(fmt.Errorf("project apply: destroying deleted unit: %v", err.Error()))
+		finFunc(fmt.Errorf("apply unit: %v", err.Error()))
 		return
 	}
 	err = graphUnit.UnitPtr.UpdateProjectRuntimeData(p)
@@ -188,7 +231,7 @@ func destroyRoutine(graphUnit *UnitPlanningStatus, finFunc func(error), p *Proje
 	p.ProcessedUnitsCount++
 	err = graphUnit.UnitPtr.Destroy()
 	if err != nil {
-		finFunc(fmt.Errorf("project apply: destroying deleted unit: %v", err.Error()))
+		finFunc(fmt.Errorf("destroy unit: %v", err.Error()))
 		return
 	}
 	p.OwnState.DeleteUnit(graphUnit.UnitPtr)

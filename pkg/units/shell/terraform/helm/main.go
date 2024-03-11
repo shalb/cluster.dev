@@ -28,7 +28,7 @@ type Unit struct {
 	ValuesFilesList []string                 `yaml:"-" json:"values,omitempty"`
 	ValuesYAML      []map[string]interface{} `yaml:"-" json:"-"`
 	UnitKind        string                   `yaml:"-" json:"type"`
-	StateData       interface{}              `yaml:"-" json:"-"`
+	StateData       project.Unit             `yaml:"-" json:"-"`
 	CustomFiles     *common.FilesListT       `yaml:"create_files,omitempty" json:"create_files,omitempty"`
 }
 

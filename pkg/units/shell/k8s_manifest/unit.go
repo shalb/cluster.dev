@@ -35,7 +35,6 @@ type Unit struct {
 	ApplyTemplate      bool               `yaml:"apply_template" json:"-"`
 	recursive          bool               `yaml:"-" json:"-"`
 	UnitKind           string             `yaml:"-" json:"type"`
-	SavedState         interface{}        `yaml:"-" json:"-"`
 	manifestsForDelete *common.FilesListT `yaml:"-" json:"-"`
 	CreateNamespaces   bool               `yaml:"create_namespaces" json:"-"`
 	createNSList       []string           `yaml:"-" json:"-"`

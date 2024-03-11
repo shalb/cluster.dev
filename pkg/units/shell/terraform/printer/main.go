@@ -18,7 +18,7 @@ type Unit struct {
 	InputsDeprecated map[string]interface{} `yaml:"-" json:"inputs,omitempty"`
 	Outputs          map[string]interface{} `yaml:"-" json:"outputs"`
 	UnitKind         string                 `yaml:"-" json:"type"`
-	StateData        *Unit                  `yaml:"-" json:"-"`
+	// StateData        *Unit                  `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -75,6 +75,8 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		switch stateOutput := myStateIntf.(type) {
 		case *Unit:
 			u.OutputRaw = stateOutput.OutputRaw
+		default:
+			log.Fatalf("Internal error. Type mismatch")
 		}
 	}
 	return nil
@@ -105,7 +107,7 @@ func (u *Unit) Prepare() error {
 // Build generate all terraform code for project.
 func (u *Unit) Build() error {
 	// Save state before outputs replacing.
-	u.StateData = u.GetStateUnit()
+	u.SavedState = u.GetStateUnit()
 	// Replace outputs.
 	err := u.ScanData(project.OutputsReplacer)
 	if err != nil {
@@ -126,11 +128,11 @@ func (u *Unit) Build() error {
 
 func (u *Unit) Destroy() (err error) {
 	err = u.Unit.Destroy()
-	if u.IsTainted() {
-		if u.SavedState != nil {
-			u.StateData.MarkTainted(err)
-		}
-	}
+	// if u.IsTainted() {
+	// 	if u.SavedState != nil {
+	// 		u.SavedState.SetTainted(true, err)
+	// 	}
+	// }
 	if err != nil {
 		return
 	}
@@ -140,11 +142,11 @@ func (u *Unit) Destroy() (err error) {
 
 func (u *Unit) Apply() (err error) {
 	err = u.Unit.Apply()
-	if u.IsTainted() {
-		if u.SavedState != nil {
-			u.StateData.MarkTainted(err)
-		}
-	}
+	// if u.IsTainted() {
+	// 	if u.SavedState != nil {
+	// 		u.SavedState.SetTainted(true)
+	// 	}
+	// }
 	if err != nil {
 		return
 	}
@@ -153,7 +155,7 @@ func (u *Unit) Apply() (err error) {
 		return
 	}
 	u.OutputRaw = outputs
-	u.StateData.OutputRaw = outputs
+	u.SavedState.(*Unit).OutputRaw = outputs
 	// log.Warnf("Printer OutputRaw: %v", outputs)
 	return
 }

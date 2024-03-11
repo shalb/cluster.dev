@@ -31,7 +31,8 @@ type Unit struct {
 	Providers         interface{}                 `yaml:"-" json:"providers,omitempty"`
 	RequiredProviders map[string]RequiredProvider `yaml:"-" json:"required_providers,omitempty"`
 	InitDone          bool                        `yaml:"-" json:"-"` // True if unit was initted in this session.
-	StateData         interface{}                 `yaml:"-" json:"-"`
+	// StateData         project.Unit                `yaml:"-" json:"-"`
+	// SavedState        string
 }
 
 func (u *Unit) AddRequiredProvider(name, source, version string) {

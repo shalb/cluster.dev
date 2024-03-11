@@ -24,11 +24,9 @@ var destroyCmd = &cobra.Command{
 		}
 		err = project.Destroy()
 		if err != nil {
-			project.UnLockState()
 			return NewCmdErr(project, "destroy", err)
 		}
 		log.Info("The project was successfully destroyed")
-		project.UnLockState()
 		return NewCmdErr(project, "destroy", nil)
 	},
 }

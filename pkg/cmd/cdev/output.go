@@ -17,6 +17,7 @@ var outputCmd = &cobra.Command{
 			log.Fatalf("Fatal error: outputs: %v", err.Error())
 		}
 		err = project.LockState()
+		defer project.UnLockState()
 		if err != nil {
 			log.Fatalf("Fatal error: outputs: lock state: %v", err.Error())
 		}
@@ -24,7 +25,6 @@ var outputCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Fatal error: outputs: print %v", err.Error())
 		}
-		project.UnLockState()
 	},
 }
 
