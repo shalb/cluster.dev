@@ -79,7 +79,7 @@ func NewEmptyProject() *Project {
 	log.Info("Checking for newer releases...")
 	err := utils.DiscoverCdevLastRelease()
 	if err != nil {
-		log.Warnf("Version check: %v", err)
+		log.Warnf("Version check: %v.", err)
 		project.NewVersionMessage = fmt.Sprintf("Version check: %v", err.Error())
 	}
 	return project
