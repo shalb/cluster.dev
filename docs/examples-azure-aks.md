@@ -99,4 +99,14 @@ On this page you will find guidance on how to start an AKS cluster on Azure usin
     kubectl -n argocd get secret argocd-initial-admin-secret  -o jsonpath="{.data.password}" | base64 -d; echo
     ```
 
+## Destroy sample architecture
+
+1. Run `cdev destroy`
+
+2. Remove NS records for subdomain in parent domain.
+
+3. Delete Azure Storage Account and a container for Terraform backend:
+    ```
+    az group delete --name cdevResourceGroup
+    ```
     
