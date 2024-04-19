@@ -16,6 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.50.2
 	github.com/getsops/sops/v3 v3.8.1
+	github.com/google/go-github/v60 v60.0.0
 	github.com/gookit/color v1.5.4
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.48
 	github.com/hashicorp/hcl/v2 v2.19.1
@@ -40,8 +41,6 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.8.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
-	github.com/google/go-github v17.0.0+incompatible // indirect
-	github.com/google/go-github/v60 v60.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 )
 
@@ -192,7 +191,7 @@ require (
 	go.starlark.net v0.0.0-20231016134836-22325403fcb3 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/mod v0.13.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.4.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
