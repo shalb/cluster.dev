@@ -15,19 +15,13 @@ import (
 // FileExists check if file exists.
 func FileExists(filename string) bool {
 	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return true
+	return !os.IsNotExist(err)
 }
 
 func IsLocalPath(path string) bool {
 	re := regexp.MustCompile(`^(/|\./|\.\./).*`)
 	outputName := re.FindString(path)
-	if len(outputName) < 1 {
-		return false
-	}
-	return true
+	return len(outputName) >= 1
 }
 
 func IsAbsolutePath(path string) bool {
@@ -186,10 +180,10 @@ func Copy(srcFile, dstFile string) error {
 	defer out.Close()
 
 	in, err := os.Open(srcFile)
-	defer in.Close()
 	if err != nil {
 		return err
 	}
+	defer in.Close()
 
 	_, err = io.Copy(out, in)
 	if err != nil {

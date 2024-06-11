@@ -100,7 +100,7 @@ func (h *DelayHandler) loop() {
 		case <-h.done:
 			ticker.Stop()
 			if !h.afterTimeOut {
-				fmt.Println("\n\n\n\n")
+				fmt.Print("\n\n\n\n\n")
 			}
 			return
 		}
