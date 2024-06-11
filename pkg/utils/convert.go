@@ -70,6 +70,7 @@ func JSONDecode(in []byte, out interface{}) error {
 }
 
 func MergeMaps(mOne, mTwo map[string]interface{}) (res map[string]interface{}) {
+	res = make(map[string]interface{})
 	for k, v := range mOne {
 		res[k] = v
 	}

@@ -8,6 +8,17 @@ import (
 	"github.com/shalb/cluster.dev/pkg/colors"
 )
 
+// global log level
+var logLevel = "info"
+
+func LogLevel() string {
+	return logLevel
+}
+
+func TraceLog() bool {
+	return traceLog
+}
+
 // color function.
 type colorFunc func(string, ...interface{}) string
 
@@ -30,7 +41,7 @@ var Strings = [...]string{
 }
 
 // utilStartTime time.
-var utilStartTime = time.Now()
+// var utilStartTime = time.Now()
 
 // loggingInit - initial function for logging subsystem.
 func init() {
@@ -45,6 +56,7 @@ func InitLogLevel(ll string, trace bool) {
 		log.Fatalf("Can't parse logging level '%s': %s", ll, err.Error())
 	}
 	log.SetLevel(lvl)
+	logLevel = ll
 	traceLog = trace
 	Colors = []colorFunc{
 		log.DebugLevel: colors.Fmt(colors.Purple).Sprintf,

@@ -14,7 +14,6 @@ import (
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/pkg/colors"
-	"github.com/shalb/cluster.dev/pkg/config"
 	"github.com/shalb/cluster.dev/pkg/logging"
 )
 
@@ -25,7 +24,7 @@ type ShRunner struct {
 	Timeout           time.Duration
 	LogLabels         []string
 	ShowResultMessage bool
-	Interrupted       bool
+	Interrupted       *bool
 }
 
 // Env - global list of environment variables.
@@ -35,7 +34,7 @@ var Env []string
 var DefaultLogWriter io.Writer
 
 // NewExecutor - create new sh runner.
-func NewExecutor(workingDir string, envVariables ...string) (*ShRunner, error) {
+func NewExecutor(workingDir string, interruptPointer *bool, envVariables ...string) (*ShRunner, error) {
 	fi, err := os.Stat(workingDir)
 	if workingDir != "" {
 		if os.IsNotExist(err) {
@@ -47,7 +46,7 @@ func NewExecutor(workingDir string, envVariables ...string) (*ShRunner, error) {
 	}
 	// Create runner.
 	runner := ShRunner{
-		Interrupted:       false,
+		Interrupted:       interruptPointer,
 		workingDir:        workingDir,
 		Timeout:           0,
 		Env:               envVariables,
@@ -59,7 +58,7 @@ func NewExecutor(workingDir string, envVariables ...string) (*ShRunner, error) {
 
 func (b *ShRunner) commandExecCommon(outputBuff io.Writer, errBuff io.Writer, command string, args ...string) error {
 	// Prepare command, set outputs, run.
-	if config.Interrupted {
+	if *b.Interrupted {
 		return fmt.Errorf("interrupted")
 	}
 	var ctx context.Context
@@ -85,7 +84,7 @@ func (b *ShRunner) commandExecCommon(outputBuff io.Writer, errBuff io.Writer, co
 	// Run command.
 
 	stopChan := make(chan struct{})
-	sigChan := StartSigTrap(cmd, stopChan)
+	sigChan := b.StartSigTrap(cmd, stopChan)
 	defer sigChan.Close()
 	cmd.Start()
 	err := cmd.Wait()
@@ -98,8 +97,8 @@ func (b *ShRunner) commandExecCommon(outputBuff io.Writer, errBuff io.Writer, co
 }
 
 func (b *ShRunner) commandExecCommonInShell(command string, outputBuff io.Writer, errBuff io.Writer) error {
-	// Prepere command, set outputs, run.
-	if config.Interrupted {
+	// Prepare command, set outputs, run.
+	if *b.Interrupted {
 		return fmt.Errorf("interrupted")
 	}
 	var ctx context.Context
@@ -124,7 +123,7 @@ func (b *ShRunner) commandExecCommonInShell(command string, outputBuff io.Writer
 	cmd.Env = append(envTmp, b.Env...)
 	// Run command.
 	stopChan := make(chan struct{})
-	sigChan := StartSigTrap(cmd, stopChan)
+	sigChan := b.StartSigTrap(cmd, stopChan)
 	defer sigChan.Close()
 	cmd.Start()
 	err := cmd.Wait()
@@ -175,7 +174,7 @@ func (b *ShRunner) Run(command string) ([]byte, []byte, error) {
 	errOutput := &bytes.Buffer{}
 
 	bannerStopChan := make(chan struct{})
-	if config.Global.LogLevel != "debug" {
+	if logging.LogLevel() != "debug" {
 
 		// banner = fmt.Sprintf("%s[dir='%s'][cmd='%s']", banner, "./"+dir, command)
 		banner := fmt.Sprintf("%s executing in progress...", logPrefix)
@@ -238,7 +237,7 @@ func showBanner(banner string, done chan struct{}) {
 
 type SigTrap chan os.Signal
 
-func StartSigTrap(cmd *exec.Cmd, stop chan struct{}) SigTrap {
+func (b *ShRunner) StartSigTrap(cmd *exec.Cmd, stop chan struct{}) SigTrap {
 	sChan := make(chan os.Signal, 1)
 	signals := []os.Signal{syscall.SIGTERM, syscall.SIGINT}
 	signal.Notify(sChan, signals...)
@@ -246,9 +245,8 @@ func StartSigTrap(cmd *exec.Cmd, stop chan struct{}) SigTrap {
 		for {
 			select {
 			case s := <-sChan:
-				config.Interrupted = true
-				config.Global.LogLevel = "debug"
-				logging.InitLogLevel(config.Global.LogLevel, config.Global.TraceLog)
+				*b.Interrupted = true
+				logging.InitLogLevel("debug", logging.TraceLog()) // add trace log
 				log.Debugf("executor: forward signal %v", s)
 				err := cmd.Process.Signal(s)
 				if err != nil {
