@@ -2,8 +2,9 @@ _p: &provider_aws
 - aws:
     region: {{ .variables.region }}
 
-name: l
+name: local-template
 kind: StackTemplate
+cliVersion: "~>0.9.2"
 units:
   -
     name: create-bucket
