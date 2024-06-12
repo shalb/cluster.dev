@@ -17,7 +17,7 @@ SRC        	 := $(shell find . -type f -name '*.go' -print)
 
 VERSION      = `git describe --tag --abbrev=0`
 BUILD        = `date +%FT%T%z`
-CONFIG_PKG   = "github.com/shalb/cluster.dev/pkg/config"
+CONFIG_PKG   = "github.com/shalb/cluster.dev/internal/config"
 
 TLIST        = `cdev project create --list-templates`
 
