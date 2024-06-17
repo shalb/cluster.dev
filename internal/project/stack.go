@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
@@ -155,8 +156,26 @@ func (s *Stack) ReadTemplate(src string) (err error) {
 	if err != nil {
 		return err
 	}
+	ignoreFileFullPath := filepath.Join(s.TemplateDir, ignoreFileName)
+	ignoreData, _ := os.ReadFile(ignoreFileFullPath) // Ignore error, its ok
+	ignoreList := strings.Split(string(ignoreData), "\n")
+
+	ignoreFileCheck := func(filename string) bool {
+		for _, ignoreFile := range ignoreList {
+			if ignoreFile == filename {
+				return true
+			}
+		}
+		return false
+	}
 	s.Templates = []stackTemplate{}
 	for _, fn := range templatesFilesList {
+		// if ignoreFileCheck(fn)
+		checkFileName, _ := filepath.Rel(s.TemplateDir, fn)
+		if ignoreFileCheck(checkFileName) {
+			log.Debugf("Ignore stackTemplate file: %v", fn)
+			continue
+		}
 		tmplData, err := os.ReadFile(fn)
 		if err != nil {
 			return err
