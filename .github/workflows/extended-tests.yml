@@ -4,6 +4,10 @@ on:
     branches:
       - cdev-ignore
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   tests:
     name: Test branch
