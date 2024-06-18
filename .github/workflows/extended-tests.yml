@@ -17,13 +17,13 @@ jobs:
 
     - name: Build image
       run: |
+        set -x
         apk update
         apk add docker make terraform git curl bash
         pwd
         ls -la
-        # git config --global --add safe.directory /__w/cluster.dev/cluster.dev
-        # git fetch --prune --unshallow --tags && make quick-install
+        git config --global --add safe.directory /__w/cluster.dev/cluster.dev
+        git fetch --prune --unshallow --tags
+        make quick-install
         # cdev version
-        # set -x
-        # ls -la
         # docker ps
