@@ -4,24 +4,34 @@ on:
     branches:
       - cdev-ignore
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
   tests:
-    name: Test branch
+    name: Check dnd
     runs-on: ubuntu-latest
     container: golang:1.21.3-alpine
     steps:
 
+    - name: Install soft
+      run: |
+        apk add make bash jq curl git zip
+        wget https://releases.hashicorp.com/terraform/1.4.4/terraform_1.4.4_linux_amd64.zip
+        unzip terraform_1.4.4_linux_amd64.zip
+        cp terraform /usr/local/bin/
+
     - name: Code checkout
       uses: actions/checkout@v2
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 2
 
-    - name: Build
+    - name: Build image
       run: |
+        set -x
+        apk update
+        apk add docker make terraform git curl bash
+        pwd
+        ls -la
         git config --global --add safe.directory /__w/cluster.dev/cluster.dev
-        git fetch --prune --unshallow --tags && make && cp ./bin/linux-amd64/cdev /usr/local/bin/
+        git fetch --prune --unshallow --tags
+        make quick-install
+        cdev version
+        # docker ps
