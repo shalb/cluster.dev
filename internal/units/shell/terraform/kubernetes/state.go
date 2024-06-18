@@ -7,6 +7,7 @@ import (
 
 	"github.com/shalb/cluster.dev/internal/project"
 	"github.com/shalb/cluster.dev/internal/units/shell/terraform/base"
+	"github.com/shalb/cluster.dev/internal/units/shell/terraform/types"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
@@ -29,8 +30,8 @@ func (u *Unit) GetState() project.Unit {
 
 type UnitDiffSpec struct {
 	base.UnitDiffSpec
-	ProviderConf ProviderConfigSpec `json:"provider_conf"`
-	Inputs       interface{}        `json:"inputs"`
+	ProviderConf types.ProviderConfigSpec `json:"provider_conf"`
+	Inputs       interface{}              `json:"inputs"`
 }
 
 func (u *Unit) GetUnitDiff() UnitDiffSpec {

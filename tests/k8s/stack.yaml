@@ -1,0 +1,7 @@
+name: kube-helm
+template: ./kube-helm/
+kind: Stack
+disabled: false
+backend: default
+variables: {}
+

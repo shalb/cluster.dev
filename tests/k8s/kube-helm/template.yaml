@@ -1,0 +1,44 @@
+_p: &provider_aws
+- aws:
+    region: {{ .variables.region }}
+
+name: local-template
+kind: StackTemplate
+cliVersion: "~>0.9.2"
+units:
+  -
+    name: consul
+    type: helm
+    source:
+      repository: "https://charts.bitnami.com/bitnami"
+      chart: "consul"
+      version: "10.9.12"
+    kubeconfig: /home/kk
+    provider_conf:
+      config_path: /home/user/.kube/config
+      cluster_ca_certificate: |
+        asdasd
+        asd
+        asd
+        asdasdasd
+    additional_options:
+      namespace: default
+      create_namespace: true
+    values:
+      - file: ./values/consul.yaml
+  -
+    name: cert-manager-issuer
+    type: kubernetes
+    source: ./deployment.yaml
+    provider_conf:
+      config_paths:
+        - ./deployment.yaml
+      host: k8s.example.com
+      username: "user"
+      password: "secretPassword"
+  -
+    name: outputs
+    type: printer
+    outputs:
+      new_output: "test2"
+
