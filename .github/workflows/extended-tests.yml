@@ -8,7 +8,7 @@ jobs:
   tests:
     name: Check dnd
     runs-on: ubuntu-latest
-    container: golang:1.21.3-alpine
+    # container: golang:1.21.3-alpine
     steps:
 
     - name: Install soft
@@ -26,7 +26,12 @@ jobs:
     - uses: rinx/setup-k3d@v0.0.2
       name: install k3d
 
+    - name: Get cluster info
+      run: |
+        kubectl cluster-info
+
     - name: Build image
+      image: golang:1.21.3-alpine
       run: |
         set -x
         apk update
