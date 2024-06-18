@@ -1,4 +1,4 @@
-name: k8s tests
+name: k8s
 on:
   push:
     branches:
@@ -8,12 +8,15 @@ jobs:
   tests:
     name: Check dnd
     runs-on: ubuntu-latest
+    container: golang:1.21.3-alpine
     steps:
       - name: Code checkout
         uses: actions/checkout@v2
 
       - name: Build image
         run: |
+          apk update
+          apk add docker
           set -x
           ls -la
           docker ps
