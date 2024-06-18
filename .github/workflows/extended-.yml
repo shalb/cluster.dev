@@ -1,4 +1,4 @@
-name: Pr Tests
+name: k8s tests
 on:
   push:
     branches:
@@ -6,9 +6,8 @@ on:
 
 jobs:
   tests:
-    name: Build and run tests
+    name: Check dnd
     runs-on: ubuntu-latest
-    container: golang:1.21.3-alpine
     steps:
       - name: Code checkout
         uses: actions/checkout@v2
