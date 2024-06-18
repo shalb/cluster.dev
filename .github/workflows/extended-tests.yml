@@ -13,9 +13,13 @@ jobs:
 
     - name: Install soft
       run: |
-        apk add make bash jq curl git zip terraform
+        apt update
+        apt install -y make jq curl git zip
         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
         install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        wget https://releases.hashicorp.com/terraform/1.4.4/terraform_1.4.4_linux_amd64.zip
+        unzip terraform_1.4.4_linux_amd64.zip
+        cp terraform /usr/local/bin/
 
     - name: Code checkout
       uses: actions/checkout@v2
