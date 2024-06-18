@@ -6,22 +6,17 @@ on:
 
 jobs:
   tests:
-    name: Check dnd
+    name: Test branch
+    runs-on: ubuntu-latest
     container: golang:1.21.3-alpine
     steps:
+
     - name: Code checkout
       uses: actions/checkout@v2
       with:
         fetch-depth: 2
 
-    - name: Build image
+    - name: Build
       run: |
-        set -x
-        apk update
-        apk add docker make terraform git curl bash
-        pwd
-        ls -la
         git config --global --add safe.directory /__w/cluster.dev/cluster.dev
-        make quick-install
-        # cdev version
-        # docker ps
+        git fetch --prune --unshallow --tags && make && cp ./bin/linux-amd64/cdev /usr/local/bin/
