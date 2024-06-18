@@ -17,7 +17,6 @@ jobs:
         run: |
           apk update
           apk add docker make terraform git curl bash
-          git config --global --add safe.directory
           make quick-install
           cdev version
           set -x
