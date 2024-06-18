@@ -7,7 +7,6 @@ on:
 jobs:
   tests:
     name: Check dnd
-    runs-on: ubuntu-latest
     container: golang:1.21.3-alpine
     steps:
     - name: Code checkout
@@ -24,5 +23,5 @@ jobs:
         ls -la
         git config --global --add safe.directory /__w/cluster.dev/cluster.dev
         make quick-install
-        cdev version
+        # cdev version
         # docker ps
