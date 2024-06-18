@@ -18,6 +18,7 @@ jobs:
     - name: Code checkout
       uses: actions/checkout@v2
       with:
+        token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 2
 
     - name: Build
