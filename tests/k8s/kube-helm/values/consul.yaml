@@ -1,2 +1,0 @@
-replicaCount: 1
-fullnameOverride: {{ .variables.consul.name_override | default "consul" }}

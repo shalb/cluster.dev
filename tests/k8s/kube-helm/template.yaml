@@ -7,18 +7,18 @@ kind: StackTemplate
 cliVersion: "~>0.9.2"
 units:
   -
-    name: consul
+    name: redis
     type: helm
     source:
       repository: "https://charts.bitnami.com/bitnami"
-      chart: "consul"
-      version: "10.9.12"
+      chart: "redis"
+      version: "19.5.5"
     provider_conf: {{ insertYAML .variables.k8s_conf }}
     additional_options:
       namespace: default
       create_namespace: true
     values:
-      - file: ./values/consul.yaml
+      - file: ./values/redis.yaml
         apply_template: true
   -
     name: cert-manager-issuer
