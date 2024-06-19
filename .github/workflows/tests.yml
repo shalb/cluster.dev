@@ -34,7 +34,7 @@ jobs:
     - name: Build cdev
       run: |
         kubectl get node
-        ls -la ~/.k3d/
+        ls -la /github/home/k3d/k3d.yaml
         env
         exit 1
         git config --global --add safe.directory /__w/cluster.dev/cluster.dev
