@@ -6,6 +6,9 @@ on:
   pull_request:
     branches:
       - master
+env:
+  KUBECONFIG: "~/.kube/config"
+
 jobs:
   tests:
     name: e2e testing
@@ -34,7 +37,7 @@ jobs:
       run: |
         kubectl get node
         ls -la ~/.kube/
-        cat .config
+        cat ~/.kube/config
         env
         exit 1
         git config --global --add safe.directory /__w/cluster.dev/cluster.dev
