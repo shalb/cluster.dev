@@ -47,4 +47,4 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     - name: Run kubernetes/k8s-manifest/helm tests
-      run: cd tests/tests/k8s/ && cdev apply --force -l debug && cdev destroy --force -l debug
+      run: cd tests/k8s/ && cdev apply --force -l debug && cdev destroy --force -l debug
