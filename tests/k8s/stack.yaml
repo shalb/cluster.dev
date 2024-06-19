@@ -6,7 +6,7 @@ backend: default
 variables:
   k8s_conf:
     config_path: {{ reqEnv "KUBECONFIG" }}
-    config_context: "k3d-test"
+    config_context: {{ reqEnv "KUBE_CONTEXT" }}
   consul:
     name_override: renamed-redis
   nginx:
