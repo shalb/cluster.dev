@@ -5,7 +5,7 @@ disabled: false
 backend: default
 variables:
   k8s_conf:
-    config_path: "/github/home/k3d/k3d.yaml"
+    config_path: {{ reqEnv "KUBECONFIG" }}
     config_context: "k3d-test"
   consul:
     name_override: renamed-redis
