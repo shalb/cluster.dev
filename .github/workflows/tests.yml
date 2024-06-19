@@ -8,7 +8,7 @@ on:
       - master
 jobs:
   tests:
-    name: Check dnd
+    name: e2e testing
     runs-on: ubuntu-latest
     steps:
 
