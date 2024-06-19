@@ -81,9 +81,8 @@ type Unit struct {
 func (u *Unit) SetTainted(newValue bool, err error) {
 	u.Tainted = newValue
 	u.ExecErr = err
-	log.Warnf("SetTainted %v", u.Key())
 	if u.SavedState != nil {
-		log.Warnf("SetTainted %v", u.SavedState.Key())
+		log.Debugf("SetTainted %v", u.SavedState.Key())
 		u.SavedState.SetTainted(newValue, err)
 	}
 }

@@ -49,7 +49,7 @@ func (e *StatsExporter) PushStats(stats interface{}) error {
 	log.Debugf("Usage stats:\n%v", string(jsonBody))
 	res, err := client.Do(req)
 	if err != nil {
-		log.Warnf("Cant push usage stats: client: error making http request: %s\n", err)
+		log.Warnf("Can't push usage stats: client: error making http request: %s\n", err)
 		return err
 	}
 	respondBody, err := io.ReadAll(res.Body)

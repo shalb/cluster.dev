@@ -3,8 +3,6 @@ package project
 import (
 	"fmt"
 	"sync"
-
-	"github.com/apex/log"
 )
 
 // ULinkT describe unit link betwen one target unit and multiple cli units, which uses this unit (output or remote state, or custom unit dependency).
@@ -214,9 +212,7 @@ func (o *UnitLinksT) UniqUnits() map[string]Unit {
 		if unit != nil {
 			continue
 		}
-		if el.Unit == nil {
-			log.Warnf("Dev debug. Nil unit pointer %v. Pls check.", el.UnitKey())
-		}
+
 		res[el.UnitKey()] = el.Unit
 	}
 	return res

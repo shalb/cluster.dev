@@ -79,7 +79,6 @@ func NewEmptyProject() *Project {
 	log.Info("Checking for newer releases...")
 	err := DiscoverCdevLastRelease()
 	if err != nil {
-		log.Warnf("Version check: %v.", err)
 		project.NewVersionMessage = fmt.Sprintf("Version check: %v", err.Error())
 	}
 	return project
@@ -273,16 +272,16 @@ func (p *Project) ClearCacheDir() error {
 		return nil
 	}
 	if !config.Global.UseCache {
-		log.Debugf("Removes all old content: './%s'", relPath)
+		log.Debugf("Removes all old content: './%s'", p.CodeCacheDir)
 
-		err := removeDirContent(p.CodeCacheDir)
+		err := utils.RemoveDirContent(p.CodeCacheDir)
 		if err != nil {
 			return err
 		}
 		if _, err := os.Stat(config.Global.TemplatesCacheDir); os.IsNotExist(err) {
 			return nil
 		}
-		return removeDirContent(config.Global.TemplatesCacheDir)
+		return utils.RemoveDirContent(config.Global.TemplatesCacheDir)
 	}
 	return nil
 }

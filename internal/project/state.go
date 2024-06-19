@@ -57,7 +57,6 @@ func (p *Project) SaveState() error {
 	}
 	// log.Errorf("units links: %+v\n Project: %+v", st.UnitLinks, p.UnitLinks)
 	for key, unit := range p.Units {
-		log.Warnf("SaveState %v", key)
 		st.Units[key] = unit.GetState()
 	}
 	// Remove all unit links, that not have a target unit.
@@ -192,7 +191,7 @@ func (p *Project) LoadState() (*StateProject, error) {
 			return nil, fmt.Errorf("load state: create state cache dir: %w", err)
 		}
 	}
-	err := removeDirContent(config.Global.StateCacheDir)
+	err := utils.RemoveDirContent(config.Global.StateCacheDir)
 	if err != nil {
 		return nil, fmt.Errorf("load state: remove state cache dir: %w", err)
 	}

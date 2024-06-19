@@ -18,10 +18,10 @@ var destroyCmd = &cobra.Command{
 			return NewCmdErr(project, "destroy", err)
 		}
 		err = project.LockState()
-		defer project.UnLockState()
 		if err != nil {
 			return NewCmdErr(project, "destroy", err)
 		}
+		defer project.UnLockState()
 		err = project.Destroy()
 		if err != nil {
 			return NewCmdErr(project, "destroy", err)

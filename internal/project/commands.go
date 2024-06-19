@@ -111,6 +111,7 @@ func (p *Project) StartSigTrap(stop chan struct{}) {
 				os.Exit(0)
 			case <-stop:
 				close(p.HupUnlockChan)
+				signal.Stop(p.HupUnlockChan)
 				return
 			}
 		}
@@ -200,10 +201,7 @@ func applyRoutine(graphUnit *UnitPlanningStatus, finFunc func(error), p *Project
 	p.ProcessedUnitsCount++
 	err = graphUnit.UnitPtr.Apply()
 	if err != nil {
-		state, _ := utils.JSONEncode(graphUnit.UnitPtr)
-		log.Warnf("applyRoutine: %v", string(state))
 		if graphUnit.UnitPtr.IsTainted() {
-			// log.Warnf("applyRoutine: tainted %v", graphUnit.UnitPtr.Key())
 			p.OwnState.UpdateUnit(graphUnit.UnitPtr)
 		}
 		finFunc(fmt.Errorf("apply unit: %v", err.Error()))

@@ -85,13 +85,13 @@ func (s *sopsDriver) Create(files map[string][]byte) error {
 		command := fmt.Sprintf("sops -e --encrypted-regex ^encrypted_data$ -i %s", filename)
 		err = runner.RunWithTty(command)
 		if err != nil {
-			os.RemoveAll(filename)
+			os.Remove(filename)
 			return fmt.Errorf("create sops secret: %v", err.Error())
 		}
 		command = fmt.Sprintf("sops %s", filename)
 		err = runner.RunWithTty(command)
 		if err != nil && err.Error() != "exit status 200" {
-			os.RemoveAll(filename)
+			os.Remove(filename)
 			log.Debugf("err %+v", err)
 			return fmt.Errorf("create sops secret: %v", err.Error())
 		}

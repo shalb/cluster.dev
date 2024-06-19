@@ -13,29 +13,18 @@ units:
       repository: "https://charts.bitnami.com/bitnami"
       chart: "consul"
       version: "10.9.12"
-    kubeconfig: /home/kk
-    provider_conf:
-      config_path: /home/user/.kube/config
-      cluster_ca_certificate: |
-        asdasd
-        asd
-        asd
-        asdasdasd
+    provider_conf: {{ insertYAML .variables.k8s_conf }}
     additional_options:
       namespace: default
       create_namespace: true
     values:
       - file: ./values/consul.yaml
+        apply_template: true
   -
     name: cert-manager-issuer
     type: kubernetes
     source: ./deployment.yaml
-    provider_conf:
-      config_paths:
-        - ./deployment.yaml
-      host: k8s.example.com
-      username: "user"
-      password: "secretPassword"
+    provider_conf: {{ insertYAML .variables.k8s_conf }}
   -
     name: outputs
     type: printer
