@@ -13,6 +13,7 @@ import (
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 
 	"github.com/shalb/cluster.dev/internal/project"
+	"github.com/shalb/cluster.dev/internal/units/shell/terraform/types"
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
@@ -22,30 +23,9 @@ type Unit struct {
 	Kubeconfig string                 `yaml:"-" json:"kubeconfig"`
 	Inputs     map[string]interface{} `yaml:"-" json:"inputs"`
 	// providerVersion string                 `yaml:"-" json:"-"`
-	ProviderConf ProviderConfigSpec `yaml:"-" json:"provider_conf"`
-	UnitKind     string             `yaml:"-" json:"type"`
-	StateData    project.Unit       `yaml:"-" json:"-"`
-}
-
-type ExecNestedSchema struct {
-	APIVersion string            `yaml:"api_version,omitempty" json:"api_version,omitempty"`
-	Args       []string          `yaml:"args,omitempty" json:"args,omitempty"`
-	Command    string            `yaml:"command,omitempty" json:"command,omitempty"`
-	Env        map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
-}
-
-type ProviderConfigSpec struct {
-	ConfigPath           string            `yaml:"config_path,omitempty" json:"config_path,omitempty"`
-	ClientCertificate    string            `yaml:"client_certificate,omitempty" json:"client_certificate,omitempty"`
-	ConfigContext        string            `yaml:"config_context,omitempty" json:"config_context,omitempty"`
-	ConfigContextCluster string            `yaml:"config_context_cluster,omitempty" json:"config_context_cluster,omitempty"`
-	ConfigContextUser    string            `yaml:"config_context_user,omitempty"  json:"config_context_user,omitempty"`
-	Exec                 *ExecNestedSchema `yaml:"exec,omitempty" json:"exec,omitempty"`
-	Host                 string            `yaml:"host,omitempty" json:"host,omitempty"`
-	Insecure             string            `yaml:"insecure,omitempty" json:"insecure,omitempty"`
-	Password             string            `yaml:"password,omitempty" json:"password,omitempty"`
-	Token                string            `yaml:"token,omitempty" json:"token,omitempty"`
-	Username             string            `yaml:"username,omitempty" json:"username,omitempty"`
+	ProviderConf types.ProviderConfigSpec `yaml:"provider_conf" json:"provider_conf"`
+	UnitKind     string                   `yaml:"-" json:"type"`
+	StateData    project.Unit             `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -139,7 +119,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		return fmt.Errorf("the kubernetes unit must contain at least one manifest")
 	}
 
-	err = utils.JSONCopy(spec, &u.ProviderConf)
+	err = utils.YAMLInterfaceToType(spec, u)
 	if err != nil {
 		return err
 	}

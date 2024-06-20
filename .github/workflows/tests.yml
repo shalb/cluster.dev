@@ -1,0 +1,53 @@
+name: k8s
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  tests:
+    name: e2e testing
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Install soft
+      run: |
+        sudo apt update
+        sudo apt install -y make jq curl git zip
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        wget https://releases.hashicorp.com/terraform/1.4.4/terraform_1.4.4_linux_amd64.zip
+        unzip terraform_1.4.4_linux_amd64.zip
+        sudo cp terraform /usr/local/bin/
+
+    - name: Code checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+
+    - uses: rinx/setup-k3d@v0.0.2
+      name: Deploy k3d cluster
+
+    - name: Build cdev
+      run: |
+        git config --global --add safe.directory /__w/cluster.dev/cluster.dev
+        git fetch --prune --unshallow --tags
+        cp Dockerfile-alpine Dockerfile
+        docker build -t tmp-cdev:latest .
+        id=$(docker create tmp-cdev:latest)
+        docker cp $id:/bin/cdev /usr/local/bin/
+        docker rm -v $id
+
+    - name: Run AWS deploy/destroy and 'cdev deep graph' tests
+      run: cd tests/test-project/ && cdev apply --force -l debug && cdev destroy --force -l debug
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    - name: Run kubernetes/k8s-manifest/helm tests
+      run: |
+        export KUBE_CONTEXT=$(kubectl config current-context)
+        cd tests/k8s/ && cdev apply --force -l debug && cdev destroy --force -l debug

@@ -1,0 +1,4 @@
+foo: bar
+key: val
+
+# Non cdev yaml file, should be ignored with .cdevignore

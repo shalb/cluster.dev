@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -232,25 +231,6 @@ func EscapeForMarkerStr(in string) (string, error) {
 
 func printVersion() string {
 	return config.Global.Version
-}
-
-func removeDirContent(dir string) error {
-	d, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(dir, name))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // ScanMarkers use marker scanner function to replace templated markers.

@@ -13,6 +13,7 @@ import (
 	"github.com/shalb/cluster.dev/internal/project"
 	"github.com/shalb/cluster.dev/internal/units/shell/common"
 	"github.com/shalb/cluster.dev/internal/units/shell/terraform/base"
+	"github.com/shalb/cluster.dev/internal/units/shell/terraform/types"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 	"github.com/shalb/cluster.dev/pkg/utils"
 	"github.com/zclconf/go-cty/cty"
@@ -21,15 +22,16 @@ import (
 
 type Unit struct {
 	base.Unit
-	Source          string                   `yaml:"-" json:"source"`
-	HelmOpts        map[string]interface{}   `yaml:"-" json:"helm_opts,omitempty"`
-	Sets            map[string]interface{}   `yaml:"-" json:"sets,omitempty"`
-	Kubeconfig      *string                  `yaml:"-" json:"kubeconfig"`
-	ValuesFilesList []string                 `yaml:"-" json:"values,omitempty"`
-	ValuesYAML      []map[string]interface{} `yaml:"-" json:"-"`
-	UnitKind        string                   `yaml:"-" json:"type"`
-	StateData       project.Unit             `yaml:"-" json:"-"`
-	CustomFiles     *common.FilesListT       `yaml:"create_files,omitempty" json:"create_files,omitempty"`
+	Source          string                    `yaml:"-,omitempty" json:"source"`
+	HelmOpts        map[string]interface{}    `yaml:"-" json:"helm_opts,omitempty"`
+	Sets            map[string]interface{}    `yaml:"-" json:"sets,omitempty"`
+	Kubeconfig      *string                   `yaml:"-" json:"kubeconfig"`
+	ValuesFilesList []string                  `yaml:"-" json:"values,omitempty"`
+	ValuesYAML      []map[string]interface{}  `yaml:"-" json:"-"`
+	UnitKind        string                    `yaml:"-" json:"type"`
+	StateData       project.Unit              `yaml:"-" json:"-"`
+	CustomFiles     *common.FilesListT        `yaml:"create_files,omitempty" json:"create_files,omitempty"`
+	ProviderConf    *types.ProviderConfigSpec `yaml:"provider_conf" json:"provider_conf"`
 }
 
 func (u *Unit) KindKey() string {
@@ -44,13 +46,22 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	f := hclwrite.NewEmptyFile()
 	providerBody := &hclwrite.Body{}
 	rootBody := f.Body()
-	if u.Kubeconfig != nil {
+	if u.ProviderConf != nil || u.Kubeconfig != nil {
 		providerBlock := rootBody.AppendNewBlock("provider", []string{"helm"})
 		providerBody = providerBlock.Body()
-		provederKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
-		provederKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(*u.Kubeconfig))
-		if config.Global.LogLevel == "debug" {
-			providerBody.SetAttributeValue("debug", cty.BoolVal(true))
+		providerKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
+		if u.ProviderConf != nil {
+			providerCty, err := hcltools.InterfaceToCty(*u.ProviderConf)
+			if err != nil {
+				return nil, err
+			}
+			for key, val := range providerCty.AsValueMap() {
+				providerKubernetesBlock.Body().SetAttributeValue(key, val)
+			}
+		}
+		if u.Kubeconfig != nil {
+			log.Warn("Deprecation warning: helm unit option 'kubeconfig' is deprecated. Please use 'provider_conf.config_path' instead.")
+			providerKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(*u.Kubeconfig))
 		}
 	}
 	helmBlock := rootBody.AppendNewBlock("resource", []string{"helm_release", project.ConvertToTfVarName(u.Name())})
@@ -91,7 +102,10 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 }
 
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
-
+	err := utils.YAMLInterfaceToType(spec, u)
+	if err != nil {
+		return fmt.Errorf("read 'provider_conf': %w", err)
+	}
 	source, ok := spec["source"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("read unit config: incorrect unit source, %v", u.Key())

@@ -23,10 +23,10 @@ var applyCmd = &cobra.Command{
 			return NewCmdErr(project, "apply", err)
 		}
 		err = project.LockState()
-		defer project.UnLockState()
 		if err != nil {
 			return NewCmdErr(project, "apply", err)
 		}
+		defer project.UnLockState()
 		err = project.Apply()
 		if err != nil {
 			return NewCmdErr(project, "apply", err)

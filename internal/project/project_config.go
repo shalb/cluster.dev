@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/apex/log"
 	"github.com/shalb/cluster.dev/internal/config"
@@ -13,6 +14,7 @@ import (
 )
 
 const defaultProjectName = "default-project"
+const ignoreFileName = ".cdevignore"
 
 func (p *Project) parseProjectConfig() error {
 
@@ -60,9 +62,26 @@ func (p *Project) readManifests() (err error) {
 	files = append(files, filesYML...)
 	objFiles := make(map[string][]byte)
 
+	ignoreFileFullPath := filepath.Join(config.Global.WorkingDir, ignoreFileName)
+	ignoreData, _ := os.ReadFile(ignoreFileFullPath) // Ignore error, its ok
+	ignoreList := strings.Split(string(ignoreData), "\n")
+
+	ignoreFileCheck := func(filename string) bool {
+		for _, ignoreFile := range ignoreList {
+			if ignoreFile == filename {
+				return true
+			}
+		}
+		return false
+	}
+
 	for _, file := range files {
-		// log.Warnf("Read Files: %v", file)
+		// log.Warnf("Read Files: %v, list: %v", file, ignoreList)
 		fileName, _ := filepath.Rel(config.Global.WorkingDir, file)
+		if ignoreFileCheck(fileName) {
+			log.Debugf("File ignored: %v", fileName)
+			continue
+		}
 		isProjectConfig := regexp.MustCompile(ConfigFilePattern).MatchString(fileName)
 		if isProjectConfig {
 			p.configDataFile, err = os.ReadFile(file)
