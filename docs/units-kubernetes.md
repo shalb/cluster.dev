@@ -81,9 +81,9 @@ units:
 
         * `env` - *optional*. Map of environment variables to set when executing the plugin.
     
-    * `ignore_annotations` - *optional*.  List of Kubernetes metadata annotations to ignore across all resources handled by this provider for situations where external systems are managing certain resource annotations. Each item is a regular expression.
+    * `ignore_annotations` - *optional*.  List of Kubernetes metadata annotations to ignore across all resources handled by this provider for situations where external systems are managing certain resource annotations. This option does not affect annotations within a template block. Each item is a regular expression.
 
-    * `ignore_labels` - *optional*. List of Kubernetes metadata labels to ignore across all resources handled by this provider for situations where external systems are managing certain resource labels. Each item is a regular expression.
+    * `ignore_labels` - *optional*. List of Kubernetes metadata labels to ignore across all resources handled by this provider for situations where external systems are managing certain resource labels. This option does not affect annotations within a template block. Each item is a regular expression.
 
 
 

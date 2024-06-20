@@ -19,3 +19,13 @@ units:
 ```
 
 Stack templates can utilize all kinds of Go templates and Sprig functions (similar to Helm). Along with that it is enhanced with functions like `insertYAML` that could pass `yaml` blocks directly.
+
+## `.cdevignore`
+
+The `.cdevignore` file is used to specify files that you don't want to be read as project/stacktemplate configs. With this file in the project dir and in the stackTemplate dir, cdev will ignore the list of specified yaml/yml files as it configs. These files should be specified as a list of full names. Templates and patterns are not supported. Example of the `.cdevignore` file:
+
+```yaml
+deployment.yaml
+foo.yml
+bar.yaml
+```
