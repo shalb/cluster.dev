@@ -10,9 +10,8 @@ import (
 	"github.com/shalb/cluster.dev/pkg/utils"
 )
 
-// CreateCodeDir generate all terraform code for project.
+// createCodeDir generate all terraform code for project.
 func (u *Unit) createCodeDir() error {
-
 	err := os.Mkdir(u.CacheDir, 0755)
 	if err != nil {
 		log.Debugf("build unit '%v': mkdir '%v': '%v'", u.Name(), u.CacheDir, err.Error())
@@ -23,13 +22,6 @@ func (u *Unit) createCodeDir() error {
 			return fmt.Errorf("read unit '%v': creating cache: '%v'", u.Name(), err.Error())
 		}
 	}
-	// for _, f := range *m.CreateFiles {
-	// 	if m.ProjectPtr.CheckContainsMarkers(f.Content) {
-	// 		log.Debugf("Unprocessed markers:\n %+v", f.Content)
-	// 		return fmt.Errorf("misuse of functions in a template: unit: '%s.%s'", m.StackPtr.Name, m.MyName)
-	// 	}
-	// }
-
 	return u.CreateFiles.WriteFiles(u.CacheDir)
 }
 
