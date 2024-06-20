@@ -51,3 +51,10 @@ jobs:
       run: |
         export KUBE_CONTEXT=$(kubectl config current-context)
         cd tests/k8s/ && cdev apply --force -l debug && cdev destroy --force -l debug
+
+    - name: Run project generator tests
+      run: |
+        mkdir tmp
+        cd tmp
+        cdev project create https://github.com/shalb/cdev-do-k8
+        ls

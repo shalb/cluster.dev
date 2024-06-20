@@ -409,10 +409,6 @@ func ClearScreen() {
 func GetTemplateGenerators(tmplSrc string) (tmplDir string, err error) {
 	if !config.Global.UseCache {
 		utils.RemoveDirContent(config.Global.TemplatesCacheDir)
-		err = os.Remove(config.Global.TemplatesCacheDir)
-		if err != nil {
-			return
-		}
 	}
 	err = os.MkdirAll(config.Global.TemplatesCacheDir, os.ModePerm)
 	if err != nil {

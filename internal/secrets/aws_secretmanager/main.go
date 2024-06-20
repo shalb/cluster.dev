@@ -111,7 +111,7 @@ func (s *smDriver) Create(files map[string][]byte) error {
 		command := fmt.Sprintf("%s %s", editor, filename)
 		err = runner.RunWithTty(command)
 		if err != nil {
-			os.Remove(filename)
+			os.RemoveAll(filename)
 			return fmt.Errorf("secrets: create secret: %v", err.Error())
 		}
 	}

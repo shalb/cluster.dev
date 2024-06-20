@@ -2,7 +2,7 @@ _p: &provider_aws
 - aws:
     region: {{ .variables.region }}
 
-name: local-template
+name: k8s-helm
 kind: StackTemplate
 cliVersion: "~>0.9.2"
 units:
