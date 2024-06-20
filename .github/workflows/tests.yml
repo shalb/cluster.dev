@@ -55,7 +55,6 @@ jobs:
     - name: Run project generator tests
       run: |
         mkdir tmp
-        git config --global user.name "Shalb"
         cd tmp
-        cdev project create https://github.com/shalb/cdev-do-k8
+        cdev project create https://github.com/shalb/cdev-do-k8s
         ls
