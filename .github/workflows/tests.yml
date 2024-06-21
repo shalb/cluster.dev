@@ -56,5 +56,5 @@ jobs:
       run: |
         mkdir tmp
         cd tmp
-        cdev project create https://github.com/shalb/cdev-do-k8
+        cdev project create https://github.com/shalb/cdev-do-k8s
         ls
