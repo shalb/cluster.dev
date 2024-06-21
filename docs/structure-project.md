@@ -5,6 +5,8 @@ Project is a storage for variables related to all stacks. It is a high-level abs
 File: `project.yaml`. *Optional*.
 Represents a set of configuration options for the whole project. Contains global project variables that can be used in other configuration objects, such as backend or stack (except of `secrets`). Note that the `project.conf` file is not rendered with the template and you cannot use template units in it.
 
+The [`.cdevignore`](https://docs.cluster.dev/stack-templates-overview/#cdevignore) file in the project dir indicates that the yaml/yml files it contains will be ignored during cdev configs. 
+
 Example of `project.yaml`:
 
 ```yaml
