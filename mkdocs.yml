@@ -10,29 +10,23 @@ nav:
     - Overview:
       - What Is Cluster.dev?: index.md
       - How Does It Work?: how-does-cdev-work.md
-    - Getting Started:
-      - Overview: get-started-overview.md
-      - Quick Start on AWS: get-started-cdev-aws.md
-      - Quick Start on Azure: get-started-cdev-azure.md
-      - Quick Start on GCP: get-started-cdev-gcp.md
-      - Quick Start with Kubernetes: get-started-cdev-helm.md
-    - Examples:
-      - Overview: examples-overview.md
-      - AWS-EKS: examples-aws-eks.md
-      - AWS-K3s: examples-aws-k3s.md
-      - Azure-AKS: examples-azure-aks.md
-      - GCP-GKE: examples-gcp-gke.md
-      - AWS-K3s Prometheus: examples-aws-k3s-prometheus.md
-      - DO-K8s: examples-do-k8s.md
-      - Modify AWS-EKS: examples-modify-aws-eks.md
-      - HF LLM in EKS: examples-eks-model.md
-      - External Articles: examples-external-articles.md
     - Installation and Upgrade: installation-upgrade.md
-    - Cluster.dev vs. Others:
-      - Cluster.dev vs. Terragrunt: cdev-vs-terragrunt.md
-      - Cluster.dev vs. Helmfile: cdev-vs-helmfile.md
-      - Cluster.dev vs. Terraform: cdev-vs-terraform.md
-      - Cluster.dev vs. Pulumi & Crossplane: cdev-vs-pulumi.md
+  - Getting Started:
+    - Overview: get-started-overview.md
+    - Quick Start on AWS: get-started-cdev-aws.md
+    - Quick Start on Azure: get-started-cdev-azure.md
+    - Quick Start on GCP: get-started-cdev-gcp.md
+    - Quick Start with Kubernetes: get-started-cdev-helm.md
+  - Examples:
+    - Overview: examples-overview.md
+    - AWS-EKS: examples-aws-eks.md
+    - AWS-K3s: examples-aws-k3s.md
+    - Azure-AKS: examples-azure-aks.md
+    - GCP-GKE: examples-gcp-gke.md
+    - AWS-K3s Prometheus: examples-aws-k3s-prometheus.md
+    - DO-K8s: examples-do-k8s.md
+    - Modify AWS-EKS: examples-modify-aws-eks.md
+    - HF LLM in EKS: examples-eks-model.md
   - Reference:
     - Structure:
       - Overview: structure-overview.md
@@ -62,6 +56,13 @@ nav:
       - Environment variables: env-variables.md
     - How-to Articles:
       - Use Different Terraform versions: howto-tf-versions.md
+  - Resources:
+    - External Articles: examples-external-articles.md
+    - Cluster.dev vs. Other Technologies:
+      - Cluster.dev vs. Terragrunt: cdev-vs-terragrunt.md
+      - Cluster.dev vs. Helmfile: cdev-vs-helmfile.md
+      - Cluster.dev vs. Terraform: cdev-vs-terraform.md
+      - Cluster.dev vs. Pulumi & Crossplane: cdev-vs-pulumi.md
 
 
 markdown_extensions:

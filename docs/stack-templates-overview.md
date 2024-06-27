@@ -1,6 +1,6 @@
 # Overview
 
-![cdev template diagram](./images/cdev-template-shema2.png)
+<a href="https://docs.cluster.dev/images/cdev-template-shema2.png" target="_blank"><img src="https://docs.cluster.dev/images/cdev-template-shema2.png" /></a>
 
 ## Description
 

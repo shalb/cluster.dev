@@ -15,11 +15,11 @@ Cluster.dev is an open-source tool designed to manage cloud native infrastructur
 
 Stack templates are composed of [units](https://docs.cluster.dev/units-overview/) - Lego-like building blocks responsible for passing variables to a particular technology.
 
-![cdev unit example diagram](./images/cdev-unit-example.png)
+<a href="https://docs.cluster.dev/images/cdev-unit-example.png" target="_blank"><img src="https://docs.cluster.dev/images/cdev-unit-example.png" /></a>
 
 Templates define infrastructure patterns or even the whole platform.
 
-![cdev template example diagram](./images/cdev-template-example.png)
+<a href="https://docs.cluster.dev/images/cdev-template-example.png" target="_blank"><img src="https://docs.cluster.dev/images/cdev-template-example.png" /></a>
 
 ## Features
 

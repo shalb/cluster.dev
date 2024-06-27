@@ -2,6 +2,8 @@
 
 Describes direct invocation of Terraform modules.
 
+## Example usage
+
 In the example below we use the `tfmodule` unit to create an S3 bucket for hosting a static web page. The `tfmodule` unit applies a dedicated Terraform module.   
 
 ```yaml
@@ -36,7 +38,7 @@ units:
         }
 ```
 
-In addition to common options the following are available:
+## Options
 
 * `source` - *string*, *required*. Terraform module [source](https://www.terraform.io/docs/language/modules/syntax.html#source). **It is not allowed to use local folders in source!**
 

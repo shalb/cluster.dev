@@ -1,6 +1,6 @@
 # Overview
 
-![cdev unit diagram](./images/cdev-unit-shema4.png)
+<a href="https://docs.cluster.dev/images/cdev-unit-example.png" target="_blank"><img src="https://docs.cluster.dev/images/cdev-unit-example.png" /></a>
 
 ## Description
 

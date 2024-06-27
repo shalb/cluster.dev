@@ -13,7 +13,7 @@ Capabilities:
 
 ## Basic diagram
 
-![cdev diagram](./images/cdev-base-diagram-shema1_red.png)
+<a href="https://docs.cluster.dev/images/cdev-base-diagram-shema1_red.png" target="_blank"><img src="https://docs.cluster.dev/images/cdev-base-diagram-shema1_red.png" /></a>
 
 ## Templating
 

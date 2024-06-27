@@ -6,7 +6,7 @@
 
 Applies Kubernetes resources from manifests. 
 
-Example:
+## Example usage
 
 ```yaml
 - name: kubectl-test2

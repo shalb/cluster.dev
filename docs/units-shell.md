@@ -2,6 +2,8 @@
 
 Executes Shell commands and scripts. 
 
+## Example usage
+
 Example of a `shell` unit that creates an index.html file with a greeting message and downloads the file into an S3 bucket. The bucket name is passed as a variable:
 
 ```yaml
@@ -66,61 +68,77 @@ units:
 
 * `work_dir` - *string*, *required*. The working directory within which the code of the unit will be executed.
 
-* `apply` - *optional*, *map*. Describes commands to be executed when running `cdev apply`.
+* [`apply`](#apply) - *optional*, *map*. Describes commands to be executed when running `cdev apply`. For details see below. 
 
-    * `init` - *optional*. Describes commands to be executed prior to running `cdev apply`.
+* [`plan`](#plan) - *optional*, *map*. Describes commands to be executed when running `cdev plan`. For details see below.
 
-    * `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev apply`.
+* [`destroy`](#destroy) - *optional*, *map*. Describes commands to be executed when running `cdev destroy`. For details see below.
 
-* `plan` - *optional*, *map*. Describes commands to be executed when running `cdev plan`.
-
-    * `init` - *optional*. Describes commands to be executed prior to running `cdev plan`.
-    
-    * `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev plan`.
-
-* `destroy` - *optional*, *map*. Describes commands to be executed when running `cdev destroy`.
-
-    * `init` - *optional*. Describes commands to be executed prior to running `cdev destroy`.
-
-    * `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev destroy`.
-
-* `outputs` - *optional*, *map*. Describes how to get outputs from a command.
-
-    * `type` - *string*, *required*. A type of format to deliver the output. Could have 3 options: JSON, regexp, separator. According to the type specified, further options will differ.
-
-    * `JSON` - if the `type` is defined as JSON, outputs will be parsed as key-value JSON. This type of output makes all other options not required.
-
-    * `regexp` - if the `type` is defined as regexp, this introduces an additional required option `regexp`. Regexp is a regular expression which defines how to parse each line in the module output. Example:
-
-        ```yaml
-        outputs: # how to get outputs
-          type: regexp
-          regexp: "^(.*)=(.*)$"
-          command: | 
-          echo "key1=val1\nkey2=val2"
-        ```
-
-    * `separator` - if the `type` is defined as separator, this introduces an additional option `separator` (*string*). Separator is a symbol that defines how a line is divided in two parts: the key and the value.
-
-        ```yaml
-        outputs: # how to get outputs
-          type: separator
-          separator: "="
-          command: |
-          echo "key1=val1\nkey2=val2"
-        ```
-    * `command` - *string*, *optional*. The command to take the outputs from. Is used regardless of the type option. If the command is not defined, cdev takes the outputs from the `apply` command.
+* [`outputs`](#outputs) - *optional*, *map*. Describes how to get outputs from a command. For details see below.
 
 * `create_files` - *list of files*, *optional*. The list of files that have to be saved in the state in case of their changing.
 
-* `pre_hook` and `post_hook` blocks: describe the shell commands to be executed before and after the unit, respectively. The commands will be executed in the same context as the actions of the unit. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the unit execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the unit.
+* [`pre_hook` and `post_hook` blocks](#pre_hook-and-post_hook-blocks): describe the shell commands to be executed before and after the unit, respectively. The commands will be executed in the same context as the actions of the unit. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the unit execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the unit. For details see below.
 
-    * `command` - *string*. Shell command in text format. Will be executed in Bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
+###  `apply`
 
-    * `script` - *string*. Path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
+* `init` - *optional*. Describes commands to be executed prior to running `cdev apply`.
 
-    * `on_apply` *bool*, *optional*. Turn off/on when unit applying. **Default: "true"**.
+* `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev apply`.
 
-    * `on_destroy` - *bool*, *optional*. Turn off/on when unit destroying. **Default: "false"**.
+### `plan`
 
-    * `on_plan` - *bool*, *optional*. Turn off/on when unit plan executing. **Default: "false"**.
+* `init` - *optional*. Describes commands to be executed prior to running `cdev plan`.
+    
+* `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev plan`.
+
+### `destroy`
+
+* `init` - *optional*. Describes commands to be executed prior to running `cdev destroy`.
+
+* `commands` - *list of strings*, *required*. The list of commands to be executed when running `cdev destroy`.
+
+### `outputs`
+
+* `type` - *string*, *required*. A type of format to deliver the output. Could have 3 options: JSON, regexp, separator. According to the type specified, further options will differ.
+
+* `JSON` - if the `type` is defined as JSON, outputs will be parsed as key-value JSON. This type of output makes all other options not required.
+
+* `regexp` - if the `type` is defined as regexp, this introduces an additional required option `regexp`. Regexp is a regular expression which defines how to parse each line in the module output. Example:
+
+  ```yaml
+  outputs: # how to get outputs
+    type: regexp
+    regexp: "^(.*)=(.*)$"
+    command: | 
+    echo "key1=val1\nkey2=val2"
+  ```
+
+* `separator` - if the `type` is defined as separator, this introduces an additional option `separator` (*string*). Separator is a symbol that defines how a line is divided in two parts: the key and the value.
+
+  ```yaml
+  outputs: # how to get outputs
+    type: separator
+    separator: "="
+    command: |
+    echo "key1=val1\nkey2=val2"
+  ```
+* `command` - *string*, *optional*. The command to take the outputs from. Is used regardless of the type option. If the command is not defined, cdev takes the outputs from the `apply` command.
+
+### `pre_hook` and `post_hook` blocks
+
+* `command` - *string*. Shell command in text format. Will be executed in Bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
+
+* `script` - *string*. Path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
+
+* `on_apply` *bool*, *optional*. Turn off/on when unit applying. **Default: "true"**.
+
+* `on_destroy` - *bool*, *optional*. Turn off/on when unit destroying. **Default: "false"**.
+
+* `on_plan` - *bool*, *optional*. Turn off/on when unit plan executing. **Default: "false"**.
+
+
+
+
+
+
