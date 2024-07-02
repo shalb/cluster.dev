@@ -84,7 +84,7 @@ For example:
 
 Example usage:
 
-    ```yaml
+  ```yaml
     name: cert-manager-issuer
     type: kubernetes
     depends_on: this.cert-manager
@@ -93,7 +93,7 @@ Example usage:
       host: k8s.example.com
       username: "user"
       password: "secretPassword"
-    ```
+  ```
 
 * `host` - *optional*. The hostname (in form of URI) of the Kubernetes API. Can be sourced from `KUBE_HOST`.
 

@@ -123,6 +123,7 @@ units:
     command: |
     echo "key1=val1\nkey2=val2"
   ```
+  
 * `command` - *string*, *optional*. The command to take the outputs from. Is used regardless of the type option. If the command is not defined, cdev takes the outputs from the `apply` command.
 
 ### `pre_hook` and `post_hook` blocks
