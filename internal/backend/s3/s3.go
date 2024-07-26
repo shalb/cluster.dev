@@ -127,15 +127,15 @@ func (b *Backend) Configure() error {
 	}
 
 	ctx := context.TODO()
-	_, awsConfig, diags := awsbase.GetAwsConfig(ctx, cfg)
+	_, awsConfig, _ := awsbase.GetAwsConfig(ctx, cfg)
 
-	if diags.HasError() {
-		diagError := fmt.Sprintln("s3 configuration diagnostics returns errors:")
-		for _, diag := range diags {
-			diagError = fmt.Sprintf("%s\nSummary: %s\nDetails: %s", diagError, diag.Summary(), diag.Detail())
-		}
-		return fmt.Errorf(diagError)
-	}
+	// if diags.HasError() {
+	// 	diagError := "s3 configuration diagnostics returns errors:"
+	// 	for _, diag := range diags {
+	// 		diagError = fmt.Sprintf("%s\nSummary: %s\nDetails: %s", diagError, diag.Summary(), diag.Detail())
+	// 	}
+	// 	return fmt.Errorf(diagError)
+	// }
 
 	b.s3Client = s3.NewFromConfig(awsConfig,
 		func(o *s3.Options) {

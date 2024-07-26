@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/apex/log"
+	"github.com/gookit/color"
 	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/project"
 	"github.com/shalb/cluster.dev/internal/project/ui"
@@ -20,17 +21,18 @@ var listAllTemplates bool
 
 func init() {
 	rootCmd.AddCommand(projectCmd)
-	projectCmd.AddCommand(projectLs)
+	projectCmd.AddCommand(projectInfo)
 	projectCmd.AddCommand(projectCreate)
 	projectCreate.Flags().BoolVar(&config.Global.Interactive, "interactive", false, "Use interactive mode for project generation")
 	projectCreate.Flags().BoolVar(&listAllTemplates, "list-templates", false, "Show all available templates for project generation")
 }
 
 // projectsCmd represents the plan command
-var projectLs = &cobra.Command{
+var projectInfo = &cobra.Command{
 	Use:   "info",
 	Short: "Shows detailed information about the current project, such as the number of units and their types. Number of stacks, etc",
 	Run: func(cmd *cobra.Command, args []string) {
+		config.Global.IgnoreState = true
 		p, err := project.LoadProjectFull()
 		if err != nil {
 			log.Errorf("Project configuration error: %v", err.Error())
@@ -38,6 +40,7 @@ var projectLs = &cobra.Command{
 		}
 		log.Info("Project info:")
 		p.PrintInfo()
+		log.Infof("Project configuration check: %v", color.Style{color.FgGreen, color.OpBold}.Sprintf("valid"))
 	},
 }
 
