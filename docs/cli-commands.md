@@ -6,15 +6,19 @@
 
 * `build`       Build cache dirs for all units in the current project.
 
-* `destroy`     Destroy an infrastructure deployed by the current project.
-
 * `cdev`        Refer to [Cluster.dev docs](https://docs.cluster.dev/) for details. 
+
+* `destroy`     Destroy an infrastructure deployed by the current project.
 
 * `help`        Get help about any command.
 
 * `output`      Display project outputs.
 
 * `plan`        Show changes that will be applied in the current project.
+
+* `validate`    Validate the configuration files in a directory, referring only to the configuration and not accessing any remote state buckets.
+
+    Validate runs checks that verify whether a configuration is syntactically valid and internally consistent, regardless of any provided variables or existing state. It is thus primarily useful for general verification of reusable stack templates. 
 
 ## Project
 
