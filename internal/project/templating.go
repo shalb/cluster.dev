@@ -175,9 +175,9 @@ func (d *GlobalTemplateDriver) AddTemplateFunctions(mp template.FuncMap, p *Proj
 
 	addOutputMarkerFunk := func(path string) (string, error) {
 		splittedPath := strings.Split(path, ".")
-		// if len(splittedPath) != 3 {
-		// 	return "", fmt.Errorf("bad dependency path 2")
-		// }
+		if len(splittedPath) == 2 {
+			splittedPath = append([]string{"this"}, splittedPath...)
+		}
 
 		dep := ULinkT{
 			Unit:            nil,

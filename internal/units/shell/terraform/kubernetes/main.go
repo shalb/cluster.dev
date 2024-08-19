@@ -9,6 +9,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/units/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 
@@ -71,30 +72,40 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	if !ok {
 		return fmt.Errorf("reading kubernetes unit '%v': malformed unit source", u.Key())
 	}
-	tmplDir := u.Stack().TemplateDir
 	var absSource string
-	if source[1:2] == "/" {
-		absSource = filepath.Join(tmplDir, source)
-	} else {
-		absSource = source
-	}
-	fileInfo, err := os.Stat(absSource)
-	if err != nil {
-		return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
-	}
 	var filesList []string
-	if fileInfo.IsDir() {
-		filesList, err = filepath.Glob(absSource + "/*.yaml")
+	if utils.IsLocalPath(source) {
+		if utils.IsAbsolutePath(source) {
+			absSource = source
+		} else {
+			absSource = filepath.Join(config.Global.ProjectConfigsPath, u.Stack().TemplateDir, source)
+		}
+
+		fileInfo, err := os.Stat(absSource)
 		if err != nil {
-			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
+			return fmt.Errorf("reading kubernetes unit '%v': check file: '%v': %v", u.Key(), source, err.Error())
+		}
+		if fileInfo.IsDir() {
+			filesList, err = utils.ListFilesByRegex(absSource, `\.ya{0,1}ml$`) //filepath.Glob(absSource + "/*.yaml")
+			if err != nil {
+				return fmt.Errorf("reading kubernetes unit '%v': list manifests in dir '%v': %v", u.Key(), source, err.Error())
+			}
+		} else {
+			filesList = append(filesList, absSource)
 		}
 	} else {
-		filesList = append(filesList, absSource)
+		filesList = append(filesList, source)
 	}
 	for _, fileName := range filesList {
-		file, err := os.ReadFile(fileName)
+		var file []byte
+		var err error
+		if utils.IsLocalPath(fileName) {
+			file, err = os.ReadFile(fileName)
+		} else {
+			file, err = utils.GetFileByUrlByte(fileName)
+		}
 		if err != nil {
-			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
+			return fmt.Errorf("reading kubernetes unit '%v': read manifest from '%v': %v", u.Key(), source, err.Error())
 		}
 		manifest, errIsWarn, err := u.Stack().TemplateTry(file, fileName)
 		if err != nil {
@@ -119,7 +130,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		return fmt.Errorf("the kubernetes unit must contain at least one manifest")
 	}
 
-	err = utils.YAMLInterfaceToType(spec, u)
+	err := utils.YAMLInterfaceToType(spec, u)
 	if err != nil {
 		return err
 	}

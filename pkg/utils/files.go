@@ -240,3 +240,32 @@ func RemoveDirContent(dir string) error {
 	}
 	return nil
 }
+
+func ListFilesByRegex(dirPath, pattern string) ([]string, error) {
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("invalid regex pattern: %s", err)
+	}
+
+	var matches []string
+	err = filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		if re.MatchString(info.Name()) {
+			matches = append(matches, path)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error walking directory: %s", err)
+	}
+
+	return matches, nil
+}

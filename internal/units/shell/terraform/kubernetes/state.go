@@ -18,13 +18,21 @@ func (u *Unit) GetStateUnit() *Unit {
 		log.Fatalf("read unit '%v': create state: %w", u.Name(), err)
 	}
 	unitState.Unit = *u.Unit.GetStateUnit()
+	// unitState.GetOutputsConf = nil
 	return &unitState
+}
+
+func printStateDebug(state interface{}, comment string) {
+	js, _ := utils.JSONEncodeString(state)
+	log.Warnf("printStateDebug [%v]: %v", comment, js)
 }
 
 func (u *Unit) GetState() project.Unit {
 	if u.StateData != nil {
+		// printStateDebug(u.StateData, "GetState")
 		return u.StateData
 	}
+	// printStateDebug(u.GetStateUnit(), "GetState")
 	return u.GetStateUnit()
 }
 
@@ -47,8 +55,10 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 func (u *Unit) GetDiffData() interface{} {
 	st := u.GetUnitDiff()
 	res := map[string]interface{}{}
+	st.Outputs = nil
 	utils.JSONCopy(st, &res)
 	project.ScanMarkers(res, base.StringRemStScanner, u)
+	// printStateDebug(res, "GetDiffData")
 	return res
 }
 
@@ -61,5 +71,8 @@ func (u *Unit) LoadState(stateData interface{}, modKey string, p *project.StateP
 	if err != nil {
 		return fmt.Errorf("load state: %v", err.Error())
 	}
+	// u.GetState()
+	// u.GetDiffData()
+	u.GetOutputsConf = nil
 	return nil
 }

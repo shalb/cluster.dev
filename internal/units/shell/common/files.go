@@ -12,7 +12,7 @@ import (
 	"github.com/apex/log"
 )
 
-var fileSizeLimit int64 = 102400
+var fileSizeLimit int64 = 1024000
 var ignorePatterns []string = []string{
 	".*\\.terraform/.*",
 	".*\\.git/.*",

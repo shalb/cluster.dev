@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .variables.nginx.name_override | default "nginx-deployment" }}
-  labels:
-    app: nginx
+  name: "nginx-deployment-four"
+  namespace: default
+  annotations:
+    app: nginx-tree
+    remoteState: {{ remoteState "this.print-test-value.one" }}
 spec:
   replicas: 1
   selector:

@@ -28,11 +28,7 @@ type OperationConfig struct {
 	Commands []interface{} `yaml:"commands" json:"commands"`
 }
 
-type OutputsT struct {
-	List map[string]*project.ULinkT `json:"outputs_list,omitempty"`
-}
-
-// OutputsConfigSpec describe how to retrive parse unit outputs.
+// OutputsConfigSpec describe how to retrieve parse unit outputs.
 type OutputsConfigSpec struct {
 	Command   string `yaml:"command,omitempty" json:"command,omitempty"`
 	Type      string `yaml:"type" json:"type"`
@@ -105,7 +101,7 @@ func (u *Unit) ForceApply() bool {
 	return u.FApply
 }
 
-// WasApplied return true if unit's method Apply was runned.
+// WasApplied return true if unit's method Apply was ran.
 func (u *Unit) WasApplied() bool {
 	return u.AlreadyApplied
 }
@@ -314,8 +310,6 @@ func (u *Unit) Apply() error {
 		err = parser(string(u.OutputRaw), u.ProjectPtr.UnitLinks.ByTargetUnit(u).ByLinkTypes(project.OutputLinkType))
 		if err != nil {
 
-			//str := fmt.Sprintf("Outputs data: %s", string(u.OutputRaw))
-			// log.Warnf("Len: %v", len(str))
 			u.SetTainted(true, err)
 			return fmt.Errorf("parse outputs '%v': %w", u.GetOutputsConf.Type, err)
 		}
@@ -326,14 +320,6 @@ func (u *Unit) Apply() error {
 	}
 	return err
 }
-
-// func (u *Unit) MarkTainted(err error) {
-// 	u.ExecErr = err
-// 	if u.SavedState != nil {
-// 		u.SavedState.SetTainted(true)
-// 		log.Warnf("MarkTainted %v", u.SavedState.IsTainted())
-// 	}
-// }
 
 func (u *Unit) runCommands(commandsCnf OperationConfig, name string) ([]byte, error) {
 	if len(commandsCnf.Commands) == 0 {
@@ -439,7 +425,6 @@ func (u *Unit) UpdateProjectRuntimeData(p *project.Project) error {
 }
 
 func (u *Unit) ScanData(scanner project.MarkerScanner) error {
-	// log.Warnf("Replacing markers...")
 	if u.Env != nil {
 		err := project.ScanMarkers(u.Env, scanner, u)
 		if err != nil {
@@ -547,7 +532,7 @@ func readHook(hookData interface{}, hookType string) (*HookSpec, error) {
 	cmd, cmdExists := hook["command"].(string)
 
 	if !cmdExists {
-		return nil, fmt.Errorf("error in %s config, use 'script' option", hookType)
+		return nil, fmt.Errorf("error in %s config, 'command' option is required", hookType)
 	}
 
 	ScriptData := HookSpec{
@@ -586,14 +571,19 @@ func (u *Unit) EnvSlice() []string {
 	return res
 }
 
+// SetExecStatus set unit execution status (backlog, in progress, etc).
 func (u *Unit) SetExecStatus(status project.ExecutionStatus) {
 	if u.GetExecStatus() != status {
 		u.ExecStatus = status
 	}
 }
+
+// GetExecStatus get current execution status.
 func (u *Unit) GetExecStatus() project.ExecutionStatus {
 	return u.ExecStatus
 }
+
+// ExecError return last execution error
 func (u *Unit) ExecError() error {
 	return u.ExecErr
 }

@@ -120,6 +120,7 @@
     "subcommand",
     "submodules",
     "sysctl",
+    "templating",
     "testrepo",
     "tfmodule",
     "tfplan",
