@@ -4,7 +4,7 @@ Executes Shell commands and scripts.
 
 ## Example usage
 
-Example of a `shell` unit that creates an index.html file with a greeting message and downloads the file into an S3 bucket. The bucket name is passed as a variable:
+Example of a `shell` unit that creates an `index.html` file with a greeting message and downloads the file into an S3 bucket. The bucket name is passed as a variable:
 
 ```yaml
 units:
@@ -52,6 +52,16 @@ units:
       regexp_value: "regexp"
       separator: "="
       command: terraform output -json
+    pre_hook:
+      on_apply: true
+      on_destroy: true
+      command: |
+        cat ./main.tf
+    post_hook:
+      on_apply: false
+      on_destroy: true
+      command: |
+        terraform output
     create_files:
         - file: ./my_text_file.txt
           mode: 0644
@@ -78,7 +88,7 @@ units:
 
 * `create_files` - *list of files*, *optional*. The list of files that have to be saved in the state in case of their changing.
 
-* [`pre_hook` and `post_hook` blocks](#pre_hook-and-post_hook-blocks): describe the shell commands to be executed before and after the unit, respectively. The commands will be executed in the same context as the actions of the unit. Environment variables are common to the shell commands, the pre_hook and post_hook scripts, and the unit execution. You can export a variable in the pre_hook and it will be available in the post_hook or in the unit. For details see below.
+* [`pre_hook` and `post_hook` blocks](#pre_hook-and-post_hook-blocks): describe shell commands to be executed before and after the unit, respectively. The commands will be executed in the same context as the actions of the unit. Environment variables are common to shell commands, the `pre_hook` and `post_hook` scripts, and unit execution. You can export a variable in the `pre_hook` and it will be available in the `post_hook` or in the unit. For details see below.
 
 ###  `apply`
 
@@ -104,7 +114,7 @@ units:
 
 * `JSON` - if the `type` is defined as JSON, outputs will be parsed as key-value JSON. This type of output makes all other options not required.
 
-* `regexp` - if the `type` is defined as regexp, this introduces an additional required option `regexp`. Regexp is a regular expression which defines how to parse each line in the module output. Example:
+* `regexp` - if the `type` is defined as `regexp`, this introduces an additional required option `regexp`: a regular expression which defines how to parse each line in the module output. Example:
 
   ```yaml
   outputs: # how to get outputs
@@ -128,9 +138,19 @@ units:
 
 ### `pre_hook` and `post_hook` blocks
 
-* `command` - *string*. Shell command in text format. Will be executed in Bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
+Example usage:
 
-* `script` - *string*. Path to shell script file which is relative to template directory. Can be used if the "command" option is not used. One of `command` or `script` is required.
+```yaml
+units:
+    ....
+    pre_hook:
+      on_apply: true
+      on_destroy: true
+      command: |
+        cat ./main.tf
+```
+
+* `command` - *string*. Shell command in text format. Will be executed in Bash -c "command". Can be used if the "script" option is not used. One of `command` or `script` is required.
 
 * `on_apply` *bool*, *optional*. Turn off/on when unit applying. **Default: "true"**.
 
