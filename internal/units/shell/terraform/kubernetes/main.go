@@ -20,13 +20,13 @@ import (
 
 type Unit struct {
 	base.Unit
-	Source     string                 `yaml:"-" json:"source"`
-	Kubeconfig string                 `yaml:"-" json:"kubeconfig"`
-	Inputs     map[string]interface{} `yaml:"-" json:"inputs"`
-	// providerVersion string                 `yaml:"-" json:"-"`
-	ProviderConf types.ProviderConfigSpec `yaml:"provider_conf" json:"provider_conf"`
-	UnitKind     string                   `yaml:"-" json:"type"`
-	StateData    project.Unit             `yaml:"-" json:"-"`
+	Source        string                   `yaml:"-" json:"source"`
+	Kubeconfig    string                   `yaml:"-" json:"kubeconfig"`
+	Inputs        map[string]interface{}   `yaml:"-" json:"inputs"`
+	ApplyTemplate bool                     `yaml:"apply_template" json:"-"`
+	ProviderConf  types.ProviderConfigSpec `yaml:"provider_conf" json:"provider_conf"`
+	UnitKind      string                   `yaml:"-" json:"type"`
+	StateData     project.Unit             `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -68,6 +68,11 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 }
 
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+	u.ApplyTemplate = true
+	err := utils.YAMLInterfaceToType(spec, u)
+	if err != nil {
+		return err
+	}
 	source, ok := spec["source"].(string)
 	if !ok {
 		return fmt.Errorf("reading kubernetes unit '%v': malformed unit source", u.Key())
@@ -107,14 +112,21 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		if err != nil {
 			return fmt.Errorf("reading kubernetes unit '%v': read manifest from '%v': %v", u.Key(), source, err.Error())
 		}
-		manifest, errIsWarn, err := u.Stack().TemplateTry(file, fileName)
-		if err != nil {
-			if errIsWarn {
-				log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
-			} else {
-				return err
+		var manifest []byte
+		if u.ApplyTemplate {
+			var errIsWarn bool
+			manifest, errIsWarn, err = u.Stack().TemplateTry(file, fileName)
+			if err != nil {
+				if errIsWarn {
+					log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
+				} else {
+					return err
+				}
 			}
+		} else {
+			manifest = file
 		}
+
 		manifests, err := utils.ReadYAMLObjects(manifest)
 		if err != nil {
 			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
@@ -130,10 +142,6 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		return fmt.Errorf("the kubernetes unit must contain at least one manifest")
 	}
 
-	err := utils.YAMLInterfaceToType(spec, u)
-	if err != nil {
-		return err
-	}
 	kubeconfig, ok := spec["kubeconfig"].(string)
 	if ok && u.ProviderConf.ConfigPath == "" {
 		u.ProviderConf.ConfigPath = kubeconfig

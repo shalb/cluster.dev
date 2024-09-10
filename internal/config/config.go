@@ -64,6 +64,7 @@ type ConfSpec struct {
 	Interactive       bool
 	OutputJSON        bool
 	Targets           []string
+	TargetsExclude    []string
 }
 
 // Global config for executor.
@@ -104,6 +105,9 @@ func InitConfig() {
 	}
 	if Global.MaxParallel == 0 {
 		log.Fatal("Parallelism should be greater then 0.")
+	}
+	if len(Global.Targets) > 0 && len(Global.TargetsExclude) > 0 {
+		log.Fatalf("Option conflict: both options --target and --target-exclude are set, use one: %s", err.Error())
 	}
 	Interrupted = false
 }

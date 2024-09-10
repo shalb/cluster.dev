@@ -219,6 +219,9 @@ func (u *Unit) Dependencies() *project.UnitLinksT {
 // Init runs init procedure for unit.
 func (u *Unit) Init() error {
 	_, err := u.runCommands(*u.InitConf, "init")
+	if err != nil {
+		u.SetTainted(true, err)
+	}
 	return err
 }
 

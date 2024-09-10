@@ -44,5 +44,6 @@ func init() {
 	rootCmd.AddCommand(applyCmd)
 	applyCmd.Flags().BoolVar(&config.Global.IgnoreState, "ignore-state", false, "Apply even if the state has not changed.")
 	applyCmd.Flags().BoolVar(&config.Global.Force, "force", false, "Skip interactive approval.")
-	applyCmd.Flags().StringArrayVarP(&config.Global.Targets, "target", "t", []string{}, "Units and stack that will be applied. All others will not apply.")
+	// applyCmd.Flags().StringArrayVarP(&config.Global.Targets, "target", "t", []string{}, "Units and stack that will be applied. All others will not apply.")
+	// applyCmd.Flags().StringArrayVarP(&config.Global.Targets, "target-except", "", []string{}, "Units and stack that will be applied. All others will not apply.")
 }

@@ -115,7 +115,7 @@ func templateMust(data []byte, values interface{}, p *Project, s *Stack, fileNam
 	return tmplWithMissingKey(data, values, "error", p, s, fileName)
 }
 
-// templateMust apply values to template data, considering template file path (if empty will be used project path).
+// templateTry apply values to template data, considering template file path (if empty will be used project path).
 // If template has unresolved variables - warn will be set to true.
 func templateTry(data []byte, values interface{}, p *Project, s *Stack, fileName string) (res []byte, warn bool, err error) {
 	res, err = tmplWithMissingKey(data, values, "default", p, s, fileName)
