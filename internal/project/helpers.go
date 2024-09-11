@@ -483,3 +483,37 @@ func dependenciesRecursiveIterateDepth(u Unit, f func(Unit) error, depth int) er
 	}
 	return nil
 }
+
+func checkUnitPath(u Unit, path string) bool {
+	pathSpl := strings.Split(path, ".")
+	if len(pathSpl) == 1 { // path is only stack name, so it include all units of stack
+		return u.Stack().Name == pathSpl[0]
+	}
+	if len(pathSpl) == 2 {
+		return (u.Stack().Name == pathSpl[0] && u.Name() == pathSpl[1])
+	}
+
+	return false
+}
+
+func IsUnitExcludedByTarget(u Unit) bool {
+	if len(config.Global.Targets) == 0 && len(config.Global.TargetsExclude) == 0 {
+		return false
+	}
+	// Target is set
+	if len(config.Global.Targets) > 0 {
+		for _, uPath := range config.Global.Targets {
+			if checkUnitPath(u, uPath) {
+				return false
+			}
+		}
+		return true
+	}
+	// Exclude-target is set
+	for _, uPath := range config.Global.TargetsExclude {
+		if checkUnitPath(u, uPath) {
+			return true
+		}
+	}
+	return false
+}

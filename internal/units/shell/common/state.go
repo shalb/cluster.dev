@@ -56,10 +56,9 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 	for _, file := range *u.CreateFiles {
 		fileLines := strings.Split(file.Content, "\n")
 		if len(fileLines) < 2 {
-			filesListDiff[file.FileName][0] = file.Content
+			filesListDiff[file.FileName] = append(filesListDiff[file.FileName], file.Content)
 		} else {
 			for _, line := range fileLines {
-				//log.Warnf("filesListDiff %v", line)
 				if line == "" {
 					continue // Ignore empty lines
 				}

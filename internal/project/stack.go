@@ -72,6 +72,8 @@ func (p *Project) readStackObj(stackSpec ObjectData) error {
 		return fmt.Errorf("duplicate stack name '%s'", name)
 	}
 
+	stackSpec.data["project"] = p.configData["project"]
+
 	stack := Stack{
 		ProjectPtr: p,
 		ConfigData: stackSpec.data,

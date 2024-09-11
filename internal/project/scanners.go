@@ -86,6 +86,7 @@ func StateOutputsReplacer(data reflect.Value, unit Unit) (reflect.Value, error) 
 	resString := subVal.String()
 	markersList := unit.Project().UnitLinks.ByLinkTypes(OutputLinkType).Map()
 	for key, marker := range markersList {
+		// log.Warnf("StateOutputsReplacer: %v", key)
 		if strings.Contains(resString, key) {
 			resString = strings.ReplaceAll(resString, key, fmt.Sprintf("<output %v.%v.%v>", marker.TargetStackName, marker.TargetUnitName, marker.OutputName))
 		}

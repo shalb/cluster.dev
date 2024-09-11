@@ -1,0 +1,6 @@
+
+architecture: standalone
+fullnameOverride: {{ .variables.redis.name_override | default "redis" }}
+auth:
+  enabled: false
+  sentinel: false

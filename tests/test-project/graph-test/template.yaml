@@ -9,6 +9,7 @@ units:
       commands:
         - echo "Waiting..."
         - sleep 1
+        - echo region {{ .project.variables.region }}
   -
     name: force_apply_unit
     type: shell

@@ -43,16 +43,15 @@ func (u *Unit) GetUnitDiff() UnitDiffSpec {
 		Source:       u.Source,
 		HelmOpts:     u.HelmOpts,
 		Sets:         u.Sets,
-		//		Values:       u.ValuesFilesList,
 	}
 	filesListDiff := make([]interface{}, len(u.ValuesFilesList))
+	st.Outputs = nil
 	for i, str := range u.ValuesFilesList {
 		fileLines := strings.Split(str, "\n")
 		if len(fileLines) < 2 {
 			filesListDiff[i] = str
 		} else {
 			for _, line := range fileLines {
-				//log.Warnf("filesListDiff %v", line)
 				if line == "" {
 					continue // Ignore empty lines
 				}
@@ -69,6 +68,7 @@ func (u *Unit) GetDiffData() interface{} {
 	res := map[string]interface{}{}
 	utils.JSONCopy(st, &res)
 	project.ScanMarkers(res, base.StringRemStScanner, u)
+	project.ScanMarkers(res, project.OutputsReplacer, u)
 	return res
 }
 

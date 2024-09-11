@@ -236,10 +236,6 @@ func (p *Project) LoadState() (*StateProject, error) {
 	if err != nil {
 		return nil, err
 	}
-	for key := range statePrj.Units {
-		log.Warnf("LoadState %v", key)
-	}
-
 	return statePrj, nil
 }
 

@@ -1,6 +1,0 @@
-
-architecture: standalone
-fullnameOverride: {{ .variables.consul.name_override | default "redis" }}
-auth:
-  enabled: false
-  sentinel: false

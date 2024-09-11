@@ -123,7 +123,7 @@ func (u *Unit) ReadManifestsPath(src string) error {
 		}
 		if isDir {
 			u.ManifestsFiles.ReadDir(manifestsPath, baseDir, `.ya{0,1}ml$`)
-			// log.Debugf("List %v", u.ManifestsFiles.SPrintLs())
+			log.Debugf("List %v", u.ManifestsFiles.SPrintLs())
 			if u.ManifestsFiles.IsEmpty() {
 				return fmt.Errorf("read unit '%v': no manifests found in path %v", u.Name(), u.Path)
 			}
@@ -139,7 +139,7 @@ func (u *Unit) ReadManifestsPath(src string) error {
 	} else {
 		manifest, err := utils.GetFileByUrl(src)
 		if err != nil {
-			return fmt.Errorf("get remote file: %w", err)
+			return fmt.Errorf("get remote file by url (%v): %w", src, err)
 		}
 		err = u.ManifestsFiles.AddOverride("./main.yaml", manifest, fs.ModePerm)
 		if err != nil {
@@ -215,6 +215,9 @@ func (u *Unit) GetManifestsMap() (res map[string]interface{}, namespaces []strin
 	res = make(map[string]interface{})
 	namespaces = []string{}
 	nsUniq := map[string]bool{}
+	if u == nil {
+		return
+	}
 	for _, file := range *u.ManifestsFiles {
 		mns, err := utils.ReadYAMLObjects([]byte(file.Content))
 		if err != nil {

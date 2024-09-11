@@ -1,12 +1,12 @@
 name: kube-helm
-template: ./kube-helm/
+template: ./templates/kube-helm/
 kind: Stack
 disabled: false
 backend: default
 variables:
   k8s_conf:
     config_path: {{ reqEnv "KUBECONFIG" }}
-    config_context: {{ reqEnv "KUBE_CONTEXT" }}
+    config_context: {{ env "KUBE_CONTEXT" }}
   consul:
     name_override: renamed-redis
   nginx:

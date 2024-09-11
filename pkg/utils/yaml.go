@@ -20,7 +20,9 @@ func ReadYAMLObjects(objData []byte) ([]map[string]interface{}, error) {
 			// log.Debugf("can't decode config to yaml: %s", err.Error())
 			return nil, fmt.Errorf("can't decode config to yaml: %s", ResolveYamlError(objData, err))
 		}
-		objects = append(objects, parsedConf)
+		if len(parsedConf) > 0 { // Ignore empty yaml parts, like two '---' with only comment between.
+			objects = append(objects, parsedConf)
+		}
 	}
 	return objects, nil
 }

@@ -23,10 +23,7 @@ type Unit interface {
 	Key() string
 	GetState() Unit
 	GetDiffData() interface{}
-	GetStateDiffData() interface{}
-	LoadState(interface{}, string, *StateProject) error
 	KindKey() string
-	CodeDir() string
 	UpdateProjectRuntimeData(p *Project) error
 	WasApplied() bool
 	ForceApply() bool
@@ -101,14 +98,6 @@ func NewUnitFromState(state map[string]interface{}, name string, p *StateProject
 			return nil, fmt.Errorf("internal error: bad unit type in state '%v'", mType)
 		}
 	}
-	// stateUnit, err  := modDrv.NewFromState(state, name, p)
-	// if err != nil {
-	//   return nil, err
-	// }
-	// curUnit := p.LoaderProjectPtr.Units[stateUnit.Key()]
-	// if curUnit != nil {
-	//   curUnit.SetTainted()
-	// }
 	return modDrv.NewFromState(state, name, p)
 }
 

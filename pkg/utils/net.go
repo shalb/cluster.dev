@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -59,4 +61,21 @@ func GetFileByUrl(srcUrl string) (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+func GetFileByUrlByte(URL string) ([]byte, error) {
+	response, err := http.Get(URL)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return nil, errors.New(response.Status)
+	}
+	var data bytes.Buffer
+	_, err = io.Copy(&data, response.Body)
+	if err != nil {
+		return nil, err
+	}
+	return data.Bytes(), nil
 }

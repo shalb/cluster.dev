@@ -1,0 +1,61 @@
+_p: &provider_aws
+- aws:
+    region: {{ .variables.region }}
+
+name: k8s-helm
+kind: StackTemplate
+cliVersion: "~>0.9.2"
+units:
+  -
+    name: print-test-value
+    type: printer
+    outputs:
+      one: "test2"
+      two:
+        two1: "foo"
+        two2: "bar"
+  -
+    name: redis
+    type: helm
+    source:
+      repository: "https://charts.bitnami.com/bitnami"
+      chart: "redis"
+      version: "19.5.5"
+    provider_conf: {{ insertYAML .variables.k8s_conf }}
+    additional_options:
+      namespace: default
+      create_namespace: true
+    values:
+      - file: ./values/redis.yaml
+        apply_template: true
+  -
+    name: test-deployment
+    type: kubernetes
+    source: ./deployment.yaml
+    provider_conf: {{ insertYAML .variables.k8s_conf }}
+  -
+    name: out-of-dir
+    type: kubernetes
+    source: ../out_of_tmpl_dir.yaml
+    provider_conf: {{ insertYAML .variables.k8s_conf }}
+  -
+    name: remote-manifest1
+    type: kubernetes
+    source: https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick.yml
+    provider_conf: {{ insertYAML .variables.k8s_conf }}
+  -
+    name: list
+    type: kubernetes
+    source: ./manifests-list/
+    post_hook:
+      command: |
+        sleep 5
+        kubectl rollout status deployment/nginx-deployment-tree -n default --timeout 30s
+        kubectl rollout status deployment/nginx-deployment-two -n default --timeout 30s
+    provider_conf: {{ insertYAML .variables.k8s_conf }}
+
+  -
+    name: outputs
+    type: printer
+    outputs:
+      new_output: "test2"

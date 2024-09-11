@@ -9,6 +9,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/shalb/cluster.dev/internal/config"
 	"github.com/shalb/cluster.dev/internal/units/shell/terraform/base"
 	"github.com/shalb/cluster.dev/pkg/hcltools"
 
@@ -19,13 +20,13 @@ import (
 
 type Unit struct {
 	base.Unit
-	Source     string                 `yaml:"-" json:"source"`
-	Kubeconfig string                 `yaml:"-" json:"kubeconfig"`
-	Inputs     map[string]interface{} `yaml:"-" json:"inputs"`
-	// providerVersion string                 `yaml:"-" json:"-"`
-	ProviderConf types.ProviderConfigSpec `yaml:"provider_conf" json:"provider_conf"`
-	UnitKind     string                   `yaml:"-" json:"type"`
-	StateData    project.Unit             `yaml:"-" json:"-"`
+	Source        string                   `yaml:"-" json:"source"`
+	Kubeconfig    string                   `yaml:"-" json:"kubeconfig"`
+	Inputs        map[string]interface{}   `yaml:"-" json:"inputs"`
+	ApplyTemplate bool                     `yaml:"apply_template" json:"-"`
+	ProviderConf  types.ProviderConfigSpec `yaml:"provider_conf" json:"provider_conf"`
+	UnitKind      string                   `yaml:"-" json:"type"`
+	StateData     project.Unit             `yaml:"-" json:"-"`
 }
 
 func (u *Unit) KindKey() string {
@@ -67,43 +68,65 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 }
 
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
+	u.ApplyTemplate = true
+	err := utils.YAMLInterfaceToType(spec, u)
+	if err != nil {
+		return err
+	}
 	source, ok := spec["source"].(string)
 	if !ok {
 		return fmt.Errorf("reading kubernetes unit '%v': malformed unit source", u.Key())
 	}
-	tmplDir := u.Stack().TemplateDir
 	var absSource string
-	if source[1:2] == "/" {
-		absSource = filepath.Join(tmplDir, source)
-	} else {
-		absSource = source
-	}
-	fileInfo, err := os.Stat(absSource)
-	if err != nil {
-		return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
-	}
 	var filesList []string
-	if fileInfo.IsDir() {
-		filesList, err = filepath.Glob(absSource + "/*.yaml")
+	if utils.IsLocalPath(source) {
+		if utils.IsAbsolutePath(source) {
+			absSource = source
+		} else {
+			absSource = filepath.Join(config.Global.ProjectConfigsPath, u.Stack().TemplateDir, source)
+		}
+
+		fileInfo, err := os.Stat(absSource)
 		if err != nil {
-			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
+			return fmt.Errorf("reading kubernetes unit '%v': check file: '%v': %v", u.Key(), source, err.Error())
+		}
+		if fileInfo.IsDir() {
+			filesList, err = utils.ListFilesByRegex(absSource, `\.ya{0,1}ml$`) //filepath.Glob(absSource + "/*.yaml")
+			if err != nil {
+				return fmt.Errorf("reading kubernetes unit '%v': list manifests in dir '%v': %v", u.Key(), source, err.Error())
+			}
+		} else {
+			filesList = append(filesList, absSource)
 		}
 	} else {
-		filesList = append(filesList, absSource)
+		filesList = append(filesList, source)
 	}
 	for _, fileName := range filesList {
-		file, err := os.ReadFile(fileName)
-		if err != nil {
-			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
+		var file []byte
+		var err error
+		if utils.IsLocalPath(fileName) {
+			file, err = os.ReadFile(fileName)
+		} else {
+			file, err = utils.GetFileByUrlByte(fileName)
 		}
-		manifest, errIsWarn, err := u.Stack().TemplateTry(file, fileName)
 		if err != nil {
-			if errIsWarn {
-				log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
-			} else {
-				return err
+			return fmt.Errorf("reading kubernetes unit '%v': read manifest from '%v': %v", u.Key(), source, err.Error())
+		}
+		var manifest []byte
+		if u.ApplyTemplate {
+			var errIsWarn bool
+			manifest, errIsWarn, err = u.Stack().TemplateTry(file, fileName)
+			if err != nil {
+				if errIsWarn {
+					log.Warnf("File %v has unresolved template key: \n%v", fileName, err.Error())
+				} else {
+					return err
+				}
 			}
+		} else {
+			manifest = file
 		}
+
 		manifests, err := utils.ReadYAMLObjects(manifest)
 		if err != nil {
 			return fmt.Errorf("reading kubernetes unit '%v': reading kubernetes manifests form source '%v': %v", u.Key(), source, err.Error())
@@ -119,10 +142,6 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 		return fmt.Errorf("the kubernetes unit must contain at least one manifest")
 	}
 
-	err = utils.YAMLInterfaceToType(spec, u)
-	if err != nil {
-		return err
-	}
 	kubeconfig, ok := spec["kubeconfig"].(string)
 	if ok && u.ProviderConf.ConfigPath == "" {
 		u.ProviderConf.ConfigPath = kubeconfig
