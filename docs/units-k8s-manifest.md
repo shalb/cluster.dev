@@ -27,7 +27,7 @@ Applies Kubernetes resources from manifests.
 
 * `create_namespaces` - *bool*, *optional*. By default is false. If set to true, cdev will create namespaces required for the unit (i.e. the namespaces listed in manifests and the one specified within the `namespace` option), in case they don't exist.
 
-* `path` - *required*, *string*. Indicates the resources that are to be applied: a file (in case of a file path), a directory recursively (in case of a directory path) or URL. In case of URL path the unit will download the resources by the link and then apply them.  
+* `path` - *required*, *string*. Indicates the resources that are to be applied: a file (in case of a file path), a directory recursively (in case of a directory path) or URL. In case of URL path, the unit will download the resources by the link and then apply them.  
 
     Example of URL `path`:
 
@@ -39,15 +39,11 @@ Applies Kubernetes resources from manifests.
       kubeconfig: {{ output "this.kubeconfig.kubeconfig_path" }}
     ```
 
-* `apply_template` - *bool*. By default is set to `true`. See [Templating usage](#templating-usage) below.
+* `apply_template` - *bool*. By default is set to `true`. Enables applying [templating](https://docs.cluster.dev/templating/) to all Kubernetes manifests located in the specified `path`. 
 
 * `kubeconfig` - *optional*. Specifies the path to a kubeconfig file. See [How to get kubeconfig](#how-to-get-kubeconfig) subsection below.
 
 * `kubectl_opts` - *optional*. Lists additional arguments of the `kubectl` command.
-
-## Templating usage
-
-As manifests are part of a stack template, they also maintain [templating](https://docs.cluster.dev/templating/) options. Specifying the `apply_template` option enables you to use templating in all Kubernetes manifests located with the specified `path`.
 
 ## How to get kubeconfig
 
@@ -79,13 +75,13 @@ The kubeconfig can then be passed as an output to other units:
   kubeconfig: {{ output "this.kubeconfig.kubeconfig_path" }}
 ```
 
-An alternative (but not recommended) way is to create a yaml hook in a stack template that would take the required set of commands:
+An alternative (but not recommended) way is to create a `yaml` hook in a stack template that would take the required set of commands:
 
 ```yaml
 _: &getKubeconfig "rm -f ../kubeconfig_{{ .name }}; aws eks --region {{ .variables.region }} update-kubeconfig --name {{ .name }} --kubeconfig ../kubeconfig_{{ .name }}"
 ```
 
-and execute it with a pre-hook in each unit:
+And execute it with a pre-hook in each unit:
 
 ```yaml
 - name: cert-manager-issuer

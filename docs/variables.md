@@ -16,6 +16,8 @@ variables:
 
 The values of the variables are passed to a stack template to configure the resulting infrastructure.  
 
+Starting from the [release version v0.9.6](https://github.com/shalb/cluster.dev/releases/tag/v0.9.6), it is possible to source variables into stack templates directly from `project.yaml`.   
+
 ## Passing variables across stacks 
 
 Cluster.dev allows passing variable values across different stacks within one project. This is made possible in 2 ways:

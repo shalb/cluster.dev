@@ -6,7 +6,7 @@
 
 [Stack template](https://docs.cluster.dev/stack-templates-overview/) – a set of units linked together into one infrastructure pattern (describes whole infrastructure). You can think of it like a complex Helm chart or compound Terraform Module.
 
-[Stack](https://docs.cluster.dev/structure-stack/) – a set of variables that would be applied to a stack template (like `values.yaml` in Helm or `tfvars` file in Terraform). Is used to configure the resulting infrastructure.
+[Stack](https://docs.cluster.dev/structure-stack/) – a set of variables that would be applied to a stack template (like `values.yaml` in Helm or `tfvars` file in Terraform). IT is used to configure the resulting infrastructure.
 
 [Project](https://docs.cluster.dev/structure-project/) – a high-level metaobject that could arrange multiple stacks and keep global variables. An infrastructure can consist of multiple stacks, while a project acts like an umbrella object for these stacks.
 

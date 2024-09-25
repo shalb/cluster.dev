@@ -23,9 +23,11 @@ units:
 
 * `force_apply` - *bool*, *optional*. By default is false. If set to true, the unit will be applied when any dependent unit is changed.
 
-* `source` - *string*, *required*. Path to Kubernetes manifest that will be converted into a representation of Kubernetes  provider. **Source file will be rendered with the stack template, and also allows to use functions `remoteState` and `insertYAML`**.
+* `source` - *string*, *required*. Similar to option `path` in the `k8s-manifest` unit. Indicates the resources that are to be applied: a file (in case of a file path), a directory recursively (in case of a directory path) or URL. In case of URL path, the unit will download the resources by the link and then apply them. **Source file will be rendered with the stack template, and also allows to use functions `remoteState` and `insertYAML`**.
 
 * `kubeconfig` - *string*, *required*. Path to the kubeconfig file, which is relative to the directory where the unit was executed.
+
+* `apply_template` - *bool*. By default is set to `true`. Enables applying [templating](https://docs.cluster.dev/templating/) to all Kubernetes manifests located in the specified `path`. 
 
 * [`provider_conf`](#provider_conf) - configuration block that describes authorization in Kubernetes. Supports the same arguments as the [Terraform Kubernetes provider](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs#argument-reference). It is allowed to use the `remoteState` function and Cluster.dev templates within the block. For details see below.
 

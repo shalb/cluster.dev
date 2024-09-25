@@ -26,3 +26,7 @@ The templating process could be described as follows:
 
 7.	Executing the project.
 
+!!! Note
+    Starting from the [release version v0.9.6](https://github.com/shalb/cluster.dev/releases/tag/v0.9.6), it is possible to source variables into stack templates directly from `project.yaml`.   
+
+
