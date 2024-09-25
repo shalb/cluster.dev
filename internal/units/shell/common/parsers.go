@@ -19,7 +19,7 @@ func (u *Unit) JSONOutputParser(in string, out *project.UnitLinksT) error {
 	}
 	outTmp := make(map[string]interface{})
 
-	err := utils.JSONDecode([]byte(in), outTmp)
+	err := utils.JSONDecode([]byte(in), &outTmp)
 	if err != nil {
 		return err
 	}
