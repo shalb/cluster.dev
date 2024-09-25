@@ -53,6 +53,10 @@ Rendered stack template:
 
 Pass data across units and stacks, can be used in pre/post hooks. 
 
+!!! Important
+
+    The function can take input only from Terraform-based units, i.e. Tfmodule, Kubernetes, Helm, and Printer. 
+
 **Argument**: string, path to remote state consisting of 3 parts separated by a dot: `"stack_name.unit_name.output_name"`. Since the name of the stack is unknown inside the stack template, you can use "this" instead:`"this.unit_name.output_name"`. 
 
 The `remoteState` function is integrated with the `yaml` syntax and can be used in following cases:
