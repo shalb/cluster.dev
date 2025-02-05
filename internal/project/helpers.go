@@ -307,6 +307,9 @@ func ScanMarkers(data interface{}, procFunc MarkerScanner, unit Unit) error {
 				}
 				out.Field(i).Set(val)
 			} else {
+				if !out.Field(i).CanInterface() {
+					continue
+				}
 				err := ScanMarkers(out.Field(i).Interface(), procFunc, unit)
 				if err != nil {
 					return err
