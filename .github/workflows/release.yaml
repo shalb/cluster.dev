@@ -18,7 +18,7 @@ jobs:
     name: Release bin version
     runs-on: ubuntu-latest
     # if: github.event_name != 'workflow_dispatch'
-    container: golang:1.21.3-alpine
+    container: golang:1.22-alpine
     steps:
 
     - name: Install make
