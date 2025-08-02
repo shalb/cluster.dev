@@ -32,10 +32,30 @@ type Unit struct {
 	StateData       project.Unit              `yaml:"-" json:"-"`
 	CustomFiles     *common.FilesListT        `yaml:"create_files,omitempty" json:"create_files,omitempty"`
 	ProviderConf    *types.ProviderConfigSpec `yaml:"provider_conf" json:"provider_conf"`
+	ProviderVersion string                    `yaml:"-" json:"provider_version,omitempty"`
 }
 
 func (u *Unit) KindKey() string {
 	return unitKind
+}
+
+// isHelmProviderV3OrLater determines if the Helm provider version is v3.0.0 or later
+// where kubernetes, registry, and experiments are nested objects instead of blocks
+func (u *Unit) isHelmProviderV3OrLater() bool {
+	if u.ProviderVersion == "" {
+		// Default to v3 behavior for new installations
+		return true
+	}
+	
+	// Parse version string and check if >= 3.0.0
+	// For simplicity, we'll check if version starts with "3." or higher
+	if len(u.ProviderVersion) > 0 {
+		firstChar := u.ProviderVersion[0]
+		if firstChar >= '3' {
+			return true
+		}
+	}
+	return false
 }
 
 func (u *Unit) genMainCodeBlock() ([]byte, error) {
@@ -49,19 +69,19 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 	if u.ProviderConf != nil || u.Kubeconfig != nil {
 		providerBlock := rootBody.AppendNewBlock("provider", []string{"helm"})
 		providerBody = providerBlock.Body()
-		providerKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
-		if u.ProviderConf != nil {
-			providerCty, err := hcltools.InterfaceToCty(*u.ProviderConf)
+		
+		if u.isHelmProviderV3OrLater() {
+			// Helm provider v3+: kubernetes is a nested object
+			err := u.generateV3ProviderConfig(providerBody)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("generate v3 provider config: %w", err)
 			}
-			for key, val := range providerCty.AsValueMap() {
-				providerKubernetesBlock.Body().SetAttributeValue(key, val)
+		} else {
+			// Helm provider v2: kubernetes is a block
+			err := u.generateV2ProviderConfig(providerBody)
+			if err != nil {
+				return nil, fmt.Errorf("generate v2 provider config: %w", err)
 			}
-		}
-		if u.Kubeconfig != nil {
-			log.Warn("Deprecation warning: helm unit option 'kubeconfig' is deprecated. Please use 'provider_conf.config_path' instead.")
-			providerKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(*u.Kubeconfig))
 		}
 	}
 	helmBlock := rootBody.AppendNewBlock("resource", []string{"helm_release", project.ConvertToTfVarName(u.Name())})
@@ -99,6 +119,57 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 		hcltools.ReplaceStingMarkerInBody(providerBody, hash, refStr)
 	}
 	return f.Bytes(), nil
+}
+
+// generateV2ProviderConfig generates Helm provider configuration for v2.x (kubernetes as block)
+func (u *Unit) generateV2ProviderConfig(providerBody *hclwrite.Body) error {
+	providerKubernetesBlock := providerBody.AppendNewBlock("kubernetes", []string{})
+	
+	if u.ProviderConf != nil {
+		providerCty, err := hcltools.InterfaceToCty(*u.ProviderConf)
+		if err != nil {
+			return err
+		}
+		for key, val := range providerCty.AsValueMap() {
+			providerKubernetesBlock.Body().SetAttributeValue(key, val)
+		}
+	}
+	
+	if u.Kubeconfig != nil {
+		log.Warn("Deprecation warning: helm unit option 'kubeconfig' is deprecated. Please use 'provider_conf.config_path' instead.")
+		providerKubernetesBlock.Body().SetAttributeValue("config_path", cty.StringVal(*u.Kubeconfig))
+	}
+	
+	return nil
+}
+
+// generateV3ProviderConfig generates Helm provider configuration for v3.x+ (kubernetes as nested object)
+func (u *Unit) generateV3ProviderConfig(providerBody *hclwrite.Body) error {
+	// Create kubernetes configuration as a nested object
+	kubernetesConfig := make(map[string]cty.Value)
+	
+	if u.ProviderConf != nil {
+		providerCty, err := hcltools.InterfaceToCty(*u.ProviderConf)
+		if err != nil {
+			return err
+		}
+		for key, val := range providerCty.AsValueMap() {
+			kubernetesConfig[key] = val
+		}
+	}
+	
+	if u.Kubeconfig != nil {
+		log.Warn("Deprecation warning: helm unit option 'kubeconfig' is deprecated. Please use 'provider_conf.config_path' instead.")
+		kubernetesConfig["config_path"] = cty.StringVal(*u.Kubeconfig)
+	}
+	
+	// Convert to cty object and set as nested object
+	if len(kubernetesConfig) > 0 {
+		kubernetesCty := cty.ObjectVal(kubernetesConfig)
+		providerBody.SetAttributeValue("kubernetes", kubernetesCty)
+	}
+	
+	return nil
 }
 
 func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) error {
@@ -202,6 +273,7 @@ func (u *Unit) ReadConfig(spec map[string]interface{}, stack *project.Stack) err
 	}
 	pv, ok := spec["provider_version"].(string)
 	if ok {
+		u.ProviderVersion = pv
 		u.AddRequiredProvider("helm", "hashicorp/helm", pv)
 	}
 	return nil

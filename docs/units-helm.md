@@ -42,7 +42,7 @@ units:
 * `chart`, `repository`, `version` - correspond to options with the same name from helm_release resource. See [chart](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#chart), [repository](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#repository) and [version](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#version).
 
 * `kubeconfig` - *string*, *required*. Path to the kubeconfig file which is relative to the directory where the unit was executed.
-* `provider_version` - *string*, *optional*. Version of Terraform Helm provider to use. Default - latest. See [terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest)  
+* `provider_version` - *string*, *optional*. Version of Terraform Helm provider to use. **Default behavior uses v3.x syntax** (nested objects). For v2.x compatibility, explicitly specify a v2 version (e.g., `"2.15.0"`). See [terraform helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest) and [Provider Version Compatibility](#provider-version-compatibility) below  
 
 * `additional_options` - *map of any*, *optional*. Corresponds to [Terraform helm_release resource options](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#argument-reference). Will be passed as is.
 
@@ -139,4 +139,71 @@ Example usage:
 
 * `ignore_labels` - *optional*. List of Kubernetes metadata labels to ignore across all resources handled by this provider for situations where external systems are managing certain resource labels. This option does not affect annotations within a template block. Each item is a regular expression.
 
+## Provider Version Compatibility
+
+The Helm unit supports both Terraform Helm provider v2.x and v3.x, which have different syntax requirements for the `kubernetes` configuration block.
+
+### Default Behavior (v3.x Syntax)
+
+When no `provider_version` is specified, the unit defaults to **v3.x syntax** using nested objects:
+
+```yaml
+units:
+  - name: my-chart
+    type: helm
+    source:
+      repository: "https://charts.example.com"
+      chart: "my-chart"
+      version: "1.0.0"
+    provider_conf:
+      config_path: "/path/to/kubeconfig"
+      config_context: "my-context"
+```
+
+Generates Terraform code:
+```hcl
+provider "helm" {
+  kubernetes = {
+    config_path    = "/path/to/kubeconfig"
+    config_context = "my-context"
+  }
+}
+```
+
+### v2.x Compatibility (Block Syntax)
+
+To use the legacy v2.x block syntax, explicitly specify a v2 provider version:
+
+```yaml
+units:
+  - name: my-chart
+    type: helm
+    provider_version: "2.15.0"
+    source:
+      repository: "https://charts.example.com"
+      chart: "my-chart"
+      version: "1.0.0"
+    provider_conf:
+      config_path: "/path/to/kubeconfig"
+      config_context: "my-context"
+```
+
+Generates Terraform code:
+```hcl
+provider "helm" {
+  kubernetes {
+    config_path    = "/path/to/kubeconfig"
+    config_context = "my-context"
+  }
+}
+```
+
+### Version Detection
+
+- **No `provider_version` specified**: Uses v3.x syntax (nested objects)
+- **`provider_version` starts with "3" or higher**: Uses v3.x syntax (nested objects)  
+- **`provider_version` starts with "2" or lower**: Uses v2.x syntax (blocks)
+
+!!! note "Migration from v2 to v3"
+    If you're upgrading from Helm provider v2.x to v3.x, you can simply remove the `provider_version` field from your unit configuration to use the new v3.x syntax, or update it to a v3.x version number.
 
