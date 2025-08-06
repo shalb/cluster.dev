@@ -93,14 +93,21 @@ func (u *Unit) genMainCodeBlock() ([]byte, error) {
 		}
 		helmBody.SetAttributeValue(key, ctyVal)
 	}
-	for key, val := range u.Sets {
-		ctyVal, err := hcltools.InterfaceToCty(val)
-		if err != nil {
-			return nil, err
+	// Handle set values with version-specific syntax
+	if len(u.Sets) > 0 {
+		if u.isHelmProviderV3OrLater() {
+			// v3 syntax: set as list of objects
+			err := u.generateV3SetValues(helmBody)
+			if err != nil {
+				return nil, fmt.Errorf("generate v3 set values: %w", err)
+			}
+		} else {
+			// v2 syntax: set as blocks
+			err := u.generateV2SetValues(helmBody)
+			if err != nil {
+				return nil, fmt.Errorf("generate v2 set values: %w", err)
+			}
 		}
-		setBlock := helmBody.AppendNewBlock("set", []string{})
-		setBlock.Body().SetAttributeValue("name", cty.StringVal(key))
-		setBlock.Body().SetAttributeValue("value", ctyVal)
 	}
 	if len(u.ValuesFilesList) > 0 {
 		ctyValuesList := []cty.Value{}
@@ -169,6 +176,43 @@ func (u *Unit) generateV3ProviderConfig(providerBody *hclwrite.Body) error {
 		providerBody.SetAttributeValue("kubernetes", kubernetesCty)
 	}
 	
+	return nil
+}
+
+// generateV2SetValues generates set values for Helm provider v2.x (blocks)
+func (u *Unit) generateV2SetValues(helmBody *hclwrite.Body) error {
+	for key, val := range u.Sets {
+		ctyVal, err := hcltools.InterfaceToCty(val)
+		if err != nil {
+			return err
+		}
+		setBlock := helmBody.AppendNewBlock("set", []string{})
+		setBlock.Body().SetAttributeValue("name", cty.StringVal(key))
+		setBlock.Body().SetAttributeValue("value", ctyVal)
+	}
+	return nil
+}
+
+// generateV3SetValues generates set values for Helm provider v3.x+ (list of objects)
+func (u *Unit) generateV3SetValues(helmBody *hclwrite.Body) error {
+	setList := make([]cty.Value, 0, len(u.Sets))
+	
+	for key, val := range u.Sets {
+		ctyVal, err := hcltools.InterfaceToCty(val)
+		if err != nil {
+			return err
+		}
+		
+		// Create set object with name and value
+		setObj := cty.ObjectVal(map[string]cty.Value{
+			"name":  cty.StringVal(key),
+			"value": ctyVal,
+		})
+		setList = append(setList, setObj)
+	}
+	
+	// Set as list attribute
+	helmBody.SetAttributeValue("set", cty.ListVal(setList))
 	return nil
 }
 
