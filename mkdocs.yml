@@ -3,6 +3,7 @@ site_name: Cluster.dev
 repo_name: 'shalb/cluster.dev'
 repo_url: 'https://github.com/shalb/cluster.dev'
 site_url: 'https://docs.cluster.dev'
+use_directory_urls: true
 
 
 nav:
